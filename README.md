@@ -204,7 +204,32 @@ Flags:
 - `--force` / `--yolo` — auto-approve shell commands (orchestrators need this headless)
 - `--approve-mcps` — for `--e2e` workflows with Playwright (`mcp.json` in bundle)
 
-Optional: copy plugin to `~/.cursor/plugins/local/maister-cursor` — CLI auto-discovers it without `--plugin-dir`.
+### Local install (no `--plugin-dir` each run)
+
+Cursor CLI and IDE auto-discover plugins in `~/.cursor/plugins/local/`:
+
+```bash
+# One-time copy (stable snapshot)
+bash platforms/cursor/smoke-install.sh
+
+# Dev: symlink to repo — updates visible after make build-cursor (no re-install)
+bash platforms/cursor/smoke-install.sh --symlink
+```
+
+Manual equivalent:
+
+```bash
+make build-cursor
+cp -r plugins/maister-cursor ~/.cursor/plugins/local/maister-cursor
+# or:
+ln -sfn "$(pwd)/plugins/maister-cursor" ~/.cursor/plugins/local/maister-cursor
+```
+
+Then **Developer → Reload Window** in Cursor IDE. CLI works without reload:
+
+```bash
+agent --workspace . -p --trust --force "/maister-init"
+```
 
 ### Commands
 
@@ -218,7 +243,7 @@ bash platforms/cursor/smoke-cli.sh
 
 ### IDE (optional)
 
-If you also use Cursor IDE: `cp -r plugins/maister-cursor ~/.cursor/plugins/local/maister-cursor` then **Developer → Reload Window**. Hooks (`beforeShellExecution`, `preCompact`) are IDE-oriented; CLI relies on `--force` and orchestrator rules instead.
+If you also use Cursor IDE, install locally (see **Local install** above) then **Developer → Reload Window**. Hooks (`beforeShellExecution`, `preCompact`) are IDE-oriented; CLI relies on `--force` and orchestrator rules instead.
 
 ## Learn More
 

@@ -6,8 +6,8 @@ Manual verification after `make build-cursor` and local install.
 
 ```bash
 make build-cursor
-cp -r plugins/maister-cursor ~/.cursor/plugins/local/maister-cursor
-# Developer: Reload Window
+bash platforms/cursor/smoke-install.sh          # copy
+# or: bash platforms/cursor/smoke-install.sh --symlink   # dev
 ```
 
 Use a **fresh test project** (or disposable branch) for each full run.

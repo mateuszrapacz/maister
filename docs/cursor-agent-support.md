@@ -55,12 +55,16 @@ git merge upstream/master   # na master forka, potem merge/rebase do cursor
 
 **Instalacja pluginu (bez marketplace):**
 ```bash
-git clone -b cursor git@github.com:TWOJ-ORG/maister.git
-cd maister && make build-cursor
-cp -r plugins/maister-cursor ~/.cursor/plugins/local/maister-cursor
-# lub symlink (macOS; na Windows czasem wymaga cp)
+git clone git@github.com:mateuszrapacz/maister.git
+cd maister
+
+# Kopia (stabilna)
+bash platforms/cursor/smoke-install.sh
+
+# Symlink (dev — po make build-cursor bez ponownej instalacji)
+bash platforms/cursor/smoke-install.sh --symlink
 ```
-Potem: **Developer: Reload Window** w Cursor.
+Potem: **Developer: Reload Window** w Cursor (IDE). CLI działa od razu bez `--plugin-dir`.
 
 Licencja upstream: **MIT** — fork i dystrybucja dozwolone (zachować LICENSE).
 
