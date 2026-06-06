@@ -209,11 +209,7 @@ Flags:
 Cursor CLI and IDE auto-discover plugins in `~/.cursor/plugins/local/`:
 
 ```bash
-# One-time copy (stable snapshot)
 bash platforms/cursor/smoke-install.sh
-
-# Dev: symlink to repo — updates visible after make build-cursor (no re-install)
-bash platforms/cursor/smoke-install.sh --symlink
 ```
 
 Manual equivalent:
@@ -221,9 +217,9 @@ Manual equivalent:
 ```bash
 make build-cursor
 cp -r plugins/maister-cursor ~/.cursor/plugins/local/maister-cursor
-# or:
-ln -sfn "$(pwd)/plugins/maister-cursor" ~/.cursor/plugins/local/maister-cursor
 ```
+
+Re-run after `make build-cursor` when developing the plugin.
 
 Then **Developer → Reload Window** in Cursor IDE. CLI works without reload:
 

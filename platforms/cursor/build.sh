@@ -20,8 +20,24 @@ cp -r "$CORE" "$OUT"
 
 # 1. Manifest: .claude-plugin → .cursor-plugin
 mv "$OUT/.claude-plugin" "$OUT/.cursor-plugin"
-sedi 's/"name": "maister"/"name": "maister-cursor"/' "$OUT/.cursor-plugin/plugin.json"
-sedi 's/Claude Code/Cursor Agent/g' "$OUT/.cursor-plugin/plugin.json"
+PLUGIN_VERSION=$(grep '"version"' "$OUT/.cursor-plugin/plugin.json" | sed 's/.*: "\([^"]*\)".*/\1/')
+cat > "$OUT/.cursor-plugin/plugin.json" << EOF
+{
+  "name": "maister-cursor",
+  "displayName": "Maister",
+  "description": "Structured, standards-aware development workflows for Cursor Agent",
+  "version": "${PLUGIN_VERSION}",
+  "author": {
+    "name": "Skillpanel",
+    "email": "marek@skillpanel.com"
+  },
+  "keywords": ["development", "sdlc", "workflows", "skills"],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "commands": "./commands/",
+  "hooks": "./hooks/hooks.json"
+}
+EOF
 
 # 2. Command names: maister:foo → maister-foo
 find "$OUT/commands" -name "*.md" | while read -r f; do
@@ -123,11 +139,7 @@ Structured, standards-aware development workflows for Cursor Agent.
 ## Install (local)
 
 ```bash
-# Copy (stable snapshot)
 bash platforms/cursor/smoke-install.sh
-
-# Symlink (dev — updates after make build-cursor, no re-install)
-bash platforms/cursor/smoke-install.sh --symlink
 ```
 
 Then: **Developer: Reload Window** in Cursor IDE. CLI auto-discovers the plugin without `--plugin-dir`.

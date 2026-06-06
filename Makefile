@@ -53,6 +53,8 @@ validate-cursor:
 	@! grep -r 'subagent_type.*Explore' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: Explore (capitalized) found" && exit 1)
 	@echo "Checking .cursor-plugin manifest..."
 	@test -f plugins/maister-cursor/.cursor-plugin/plugin.json || (echo "FAIL: .cursor-plugin/plugin.json missing" && exit 1)
+	@grep -q '"skills":' plugins/maister-cursor/.cursor-plugin/plugin.json || (echo "FAIL: plugin.json missing skills path" && exit 1)
+	@grep -q '"commands":' plugins/maister-cursor/.cursor-plugin/plugin.json || (echo "FAIL: plugin.json missing commands path" && exit 1)
 	@test ! -d plugins/maister-cursor/.claude-plugin || (echo "FAIL: .claude-plugin should not exist" && exit 1)
 	@echo "Checking no maister: prefixes..."
 	@! grep -r 'maister:' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: maister: prefix found" && exit 1)

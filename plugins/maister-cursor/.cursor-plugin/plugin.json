@@ -1,9 +1,15 @@
 {
   "name": "maister-cursor",
-  "version": "2.1.8",
+  "displayName": "Maister",
   "description": "Structured, standards-aware development workflows for Cursor Agent",
+  "version": "2.1.8",
   "author": {
     "name": "Skillpanel",
     "email": "marek@skillpanel.com"
-  }
+  },
+  "keywords": ["development", "sdlc", "workflows", "skills"],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "commands": "./commands/",
+  "hooks": "./hooks/hooks.json"
 }
