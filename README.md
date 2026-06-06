@@ -249,4 +249,3 @@ If you also use Cursor IDE, install locally (see **Local install** above) then *
 
 - [Workflow Details](docs/workflows.md) - phases, examples, and task structure for each workflow type
 - [Full Command Reference](docs/commands.md) - all workflow, review, utility, and quick commands
-- [Cursor Agent Support](docs/cursor-agent-support.md) - architecture and platform decisions
