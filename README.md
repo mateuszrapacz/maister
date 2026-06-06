@@ -176,7 +176,52 @@ You can also append additional instructions to narrow scope or guide the workflo
 /maister:development .maister/tasks/development/2026-03-24-my-feature
 ```
 
+## Cursor Agent (CLI)
+
+Maister ships a **Cursor Agent** variant (`maister-cursor`) for the **`agent` CLI** (headless / terminal). No IDE required.
+
+### Prerequisites
+
+```bash
+agent status   # must be logged in
+make build-cursor
+```
+
+### Run workflows (CLI)
+
+```bash
+# From your project directory
+agent --plugin-dir /path/to/maister/plugins/maister-cursor \
+  --workspace . \
+  -p --trust --force \
+  "/maister-init"
+```
+
+Flags:
+- `--plugin-dir` — path to built plugin (repeatable)
+- `-p` / `--print` — non-interactive output (scripts/CI)
+- `--trust` — trust workspace without prompt (required with `-p`)
+- `--force` / `--yolo` — auto-approve shell commands (orchestrators need this headless)
+- `--approve-mcps` — for `--e2e` workflows with Playwright (`mcp.json` in bundle)
+
+Optional: copy plugin to `~/.cursor/plugins/local/maister-cursor` — CLI auto-discovers it without `--plugin-dir`.
+
+### Commands
+
+Prefix `maister-`: `/maister-init`, `/maister-development`, `/maister-quick-plan`, etc.
+
+### Smoke test (CLI)
+
+```bash
+bash platforms/cursor/smoke-cli.sh
+```
+
+### IDE (optional)
+
+If you also use Cursor IDE: `cp -r plugins/maister-cursor ~/.cursor/plugins/local/maister-cursor` then **Developer → Reload Window**. Hooks (`beforeShellExecution`, `preCompact`) are IDE-oriented; CLI relies on `--force` and orchestrator rules instead.
+
 ## Learn More
 
 - [Workflow Details](docs/workflows.md) - phases, examples, and task structure for each workflow type
 - [Full Command Reference](docs/commands.md) - all workflow, review, utility, and quick commands
+- [Cursor Agent Support](docs/cursor-agent-support.md) - architecture and platform decisions
