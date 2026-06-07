@@ -1,0 +1,13 @@
+{
+  "name": "maister-reality-assessor",
+  "description": "Reality assessment specialist orchestrating multi-agent validation workflow. Validates functional reality vs claims, ensures work solves actual problems, detects false completions, and creates pragmatic action plans. Strictly read-only.",
+  "model": "inherit",
+  "tools": [
+    "read",
+    "grep",
+    "glob",
+    "list",
+    "write"
+  ],
+  "promptFile": "instructions/maister-reality-assessor.md"
+}

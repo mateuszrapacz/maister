@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# Delegation, todo & explore transforms (Task Group 5) — steps 7, 13–15.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+OUT="$ROOT/plugins/maister-kiro"
+PLATFORM="$ROOT/platforms/kiro-cli"
+
+pass=0
+fail=0
+
+assert() {
+  local desc="$1"
+  shift
+  if "$@"; then
+    echo "PASS: $desc"
+    pass=$((pass + 1))
+  else
+    echo "FAIL: $desc"
+    fail=$((fail + 1))
+  fi
+}
+
+run_build() {
+  (cd "$ROOT" && make build-kiro)
+}
+
+# Single build for all assertions (each test function only greps output)
+run_build
+
+# 1. Zero TaskCreate / TaskUpdate (rule 20)
+test_no_task_create_update() {
+  ! grep -rE 'TaskCreate|TaskUpdate' "$OUT" --include="*.md" 2>/dev/null
+}
+
+# 2. Zero subagent_type Explore / explore subagent refs (rule 12)
+test_no_explore_subagent_type() {
+  ! grep -rE 'subagent_type.*[Ee]xplore' "$OUT" --include="*.md" 2>/dev/null && \
+    ! grep -rE 'Explore (subagents|agents|agent)' "$OUT" --include="*.md" 2>/dev/null
+}
+
+# 3. Task tool → subagent in sample agent instruction
+test_task_to_subagent() {
+  local f="$OUT/agents/instructions/maister-docs-operator.md"
+  test -f "$f" && \
+    grep -q 'subagent tool' "$f" && \
+    ! grep -q 'Task tool' "$f"
+}
+
+# 4. Skill tool → /maister-* slash semantics in orchestrator skill
+test_skill_to_slash() {
+  local f="$OUT/skills/maister-development/SKILL.md"
+  test -f "$f" && \
+    grep -q '/maister-' "$f" && \
+    ! grep -q 'Skill tool' "$f"
+}
+
+# 5. Todo transforms applied to orchestrator-framework (TaskCreate → todo)
+test_todo_on_orchestrator_glob() {
+  local f="$OUT/skills/maister-orchestrator-framework/SKILL.md"
+  grep -q 'todo' "$f" && \
+    ! grep -qE 'TaskCreate|TaskUpdate' "$f"
+}
+
+# 6. orchestrator-patterns-todo.md appended
+test_orchestrator_patterns_todo_patch() {
+  local f="$OUT/skills/maister-orchestrator-framework/references/orchestrator-patterns.md"
+  test -f "$PLATFORM/patches/orchestrator-patterns-todo.md" && \
+    grep -q 'Kiro: todo Patterns' "$f"
+}
+
+# 7. user-invocable: false stripped from 5 internal skills (T16)
+test_user_invocable_stripped() {
+  local count
+  count=$(grep -r '^user-invocable: false' "$OUT/skills/" --include="SKILL.md" 2>/dev/null | wc -l | tr -d ' ')
+  test "$count" -eq 0
+}
+
+# 8. Transform doc exists
+test_transform_doc_exists() {
+  test -f "$PLATFORM/transforms/task-to-kiro-todo.md"
+}
+
+echo "=== Kiro CLI delegation/todo tests (Task Group 5) ==="
+
+assert "zero TaskCreate/TaskUpdate in output" test_no_task_create_update
+assert "zero Explore subagent_type / Explore agent refs" test_no_explore_subagent_type
+assert "Task tool rewritten to subagent in docs-operator instruction" test_task_to_subagent
+assert "Skill tool rewritten to /maister-* slash in development skill" test_skill_to_slash
+assert "todo transforms on orchestrator-framework skill" test_todo_on_orchestrator_glob
+assert "orchestrator-patterns-todo.md appended to orchestrator-patterns" test_orchestrator_patterns_todo_patch
+assert "user-invocable: false stripped from internal skills" test_user_invocable_stripped
+assert "transforms/task-to-kiro-todo.md exists" test_transform_doc_exists
+
+echo ""
+echo "Results: $pass passed, $fail failed"
+
+if [ "$fail" -gt 0 ]; then
+  exit 1
+fi

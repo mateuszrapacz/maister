@@ -1,0 +1,13 @@
+{
+  "name": "maister-codebase-analysis-reporter",
+  "description": "Merges raw findings from parallel maister-explore agents into a structured codebase analysis report. Deduplicates files, cross-references analysis with tests, assesses complexity and risk, and produces actionable recommendations.",
+  "model": "inherit",
+  "tools": [
+    "read",
+    "grep",
+    "glob",
+    "list",
+    "write"
+  ],
+  "promptFile": "instructions/maister-codebase-analysis-reporter.md"
+}

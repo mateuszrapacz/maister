@@ -1,0 +1,12 @@
+{
+  "name": "maister-explore",
+  "description": "Read-only codebase exploration (replaces built-in explore)",
+  "model": "inherit",
+  "tools": [
+    "read",
+    "grep",
+    "glob",
+    "list"
+  ],
+  "promptFile": "instructions/maister-explore.md"
+}

@@ -1,0 +1,89 @@
+{
+  "defaults": {
+    "tools": ["read", "grep", "glob", "list"]
+  },
+  "agents": {
+    "bottleneck-analyzer": {
+      "tools": ["read", "grep", "glob", "list"]
+    },
+    "codebase-analysis-reporter": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "code-quality-pragmatist": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "code-reviewer": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "docs-operator": {
+      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+    },
+    "e2e-test-verifier": {
+      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+    },
+    "gap-analyzer": {
+      "tools": ["read", "grep", "glob", "list"]
+    },
+    "implementation-completeness-checker": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "implementation-planner": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "information-gatherer": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "production-readiness-checker": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "project-analyzer": {
+      "tools": ["read", "grep", "glob", "list"]
+    },
+    "reality-assessor": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "research-planner": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "research-synthesizer": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "solution-brainstormer": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "solution-designer": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "spec-auditor": {
+      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+    },
+    "specification-creator": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "task-classifier": {
+      "tools": ["read", "grep", "glob", "list"]
+    },
+    "task-group-implementer": {
+      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+    },
+    "test-suite-runner": {
+      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+    },
+    "ui-mockup-generator": {
+      "tools": ["read", "grep", "glob", "list", "write"]
+    },
+    "user-docs-generator": {
+      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+    }
+  },
+  "synthetic": {
+    "maister": {
+      "tools": ["read", "grep", "glob", "list", "write", "subagent", "todo"],
+      "orchestrator": true,
+      "trustedAgents": ["maister-*"]
+    },
+    "maister-explore": {
+      "tools": ["read", "grep", "glob", "list"]
+    }
+  }
+}

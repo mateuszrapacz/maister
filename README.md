@@ -241,8 +241,60 @@ bash platforms/cursor/smoke-cli.sh
 
 If you also use Cursor IDE, install locally (see **Local install** above) then **Developer → Reload Window**. Hooks (`beforeShellExecution`, `preCompact`) are IDE-oriented; CLI relies on `--force` and orchestrator rules instead.
 
+## Kiro CLI
+
+Maister ships a **Kiro CLI** variant (`maister-kiro`) for the **`kiro-cli`** agent. Uses an isolated `KIRO_HOME` profile so your personal `~/.kiro/` is never modified.
+
+### Prerequisites
+
+```bash
+kiro-cli --version   # must be installed
+make build-kiro
+```
+
+### Run workflows (CLI)
+
+```bash
+# From your project directory
+maister-kiro chat --agent maister
+```
+
+Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister-development`) or `@prompts` shortcuts (`@init`, `@dev`, `@plan`, …).
+
+### Local install
+
+```bash
+bash platforms/kiro-cli/smoke-install.sh
+```
+
+Manual equivalent:
+
+```bash
+make build-kiro
+cp -r plugins/maister-kiro ~/.kiro-maister
+```
+
+Uninstall:
+
+```bash
+bash platforms/kiro-cli/smoke-uninstall.sh
+```
+
+### Smoke test (CLI)
+
+```bash
+bash platforms/kiro-cli/smoke-cli.sh
+```
+
+### Hooks note
+
+Kiro has no `preCompact` hook equivalent. After context compaction, use `@status` / `@resume` or read `orchestrator-state.yml` manually. See `steering/maister-workflows.md` in the install profile.
+
+Full guide: [Kiro CLI Support](docs/kiro-cli-support.md) (install, daily use, E2E matrix, manual commit checkpoint).
+
 ## Learn More
 
 - [Workflow Details](docs/workflows.md) - phases, examples, and task structure for each workflow type
 - [Full Command Reference](docs/commands.md) - all workflow, review, utility, and quick commands
 - [Cursor Agent Support](docs/cursor-agent-support.md) - architecture and platform decisions
+- [Kiro CLI Support](docs/kiro-cli-support.md) - Kiro install, workflows, and E2E verification

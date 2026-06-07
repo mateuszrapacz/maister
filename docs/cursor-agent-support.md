@@ -1,8 +1,8 @@
 # Analiza: wsparcie Cursor Agent dla Maister
 
-Repozytorium ma sprawdzony wzorzec multi-platformy: **`plugins/maister`** to źródło prawdy (Claude Code), a warianty platformowe są **generowane** przez `platforms/*/build.sh`. Dla Cursor: **`plugins/maister-cursor`** via `platforms/cursor/build.sh`.
+Repozytorium ma sprawdzony wzorzec multi-platformy: **`plugins/maister`** to źródło prawdy (Claude Code), a warianty platformowe są **generowane** przez `platforms/*/build.sh`. Dla Cursor: **`plugins/maister-cursor`** via `platforms/cursor/build.sh`. Dla Kiro CLI: **`plugins/maister-kiro`** via `platforms/kiro-cli/build.sh` — pełny przewodnik: **[Kiro CLI Support](kiro-cli-support.md)**.
 
-> **Status:** analiza techniczna + **podjęte decyzje** (sesja grill, 2026-06).
+> **Status:** analiza techniczna + **podjęte decyzje** (sesja grill, 2026-06). Kiro CLI: **zaimplementowane** (2026-06).
 
 ---
 
@@ -75,11 +75,11 @@ fork/
 │   ├── maister              ← sync z upstream (nie edytować platform-specific)
 │   ├── maister-copilot      ← make build-copilot
 │   ├── maister-cursor       ← make build-cursor
-│   └── maister-kiro         ← make build-kiro (planowane)
+│   └── maister-kiro         ← make build-kiro
 ├── platforms/
 │   ├── copilot-cli/build.sh
 │   ├── cursor/build.sh
-│   └── kiro-cli/build.sh    ← planowane
+│   └── kiro-cli/build.sh
 ├── .claude-plugin/marketplace.json
 └── .cursor-plugin/marketplace.json
 ```
@@ -95,7 +95,7 @@ flowchart LR
   CORE["plugins/maister<br/>(source of truth)"]
   BUILD_COPILOT["platforms/copilot-cli/build.sh"]
   BUILD_CURSOR["platforms/cursor/build.sh"]
-  BUILD_KIRO["platforms/kiro-cli/build.sh<br/>(planowane)"]
+  BUILD_KIRO["platforms/kiro-cli/build.sh"]
   COPILOT["plugins/maister-copilot"]
   CURSOR["plugins/maister-cursor"]
   KIRO["plugins/maister-kiro"]
