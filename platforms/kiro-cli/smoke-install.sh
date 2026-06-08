@@ -24,7 +24,7 @@ ALIAS_END_MARKER='# <<< maister-kiro aliases <<<'
 
 SET_DEFAULT=""
 SET_ALIAS=""
-RTK_ENABLED=1
+RTK_ENABLED=0
 DEST=""
 
 usage() {
@@ -38,7 +38,8 @@ Usage: smoke-install.sh [OPTIONS] [DEST]
   --no-default      Do not set chat.defaultAgent (default in CI/non-TTY)
   --set-alias       Add maister-kiro and mk aliases to shell rc
   --no-alias        Do not add shell aliases (default in CI/non-TTY)
-  --no-rtk          Do not install RTK token optimization hook
+  --with-rtk        Install RTK token optimization hook
+  --full            Shorthand for --set-alias --set-default --with-rtk
   --help            Show this help
 
 Never modifies personal ~/.kiro/ — only the target KIRO_HOME directory.
@@ -233,6 +234,16 @@ main() {
         ;;
       --no-rtk)
         RTK_ENABLED=0
+        shift
+        ;;
+      --with-rtk)
+        RTK_ENABLED=1
+        shift
+        ;;
+      --full)
+        SET_ALIAS=1
+        SET_DEFAULT=1
+        RTK_ENABLED=1
         shift
         ;;
       -*)
