@@ -6,12 +6,18 @@
     "read",
     "grep",
     "glob",
-    "list",
+    "write",
+    "shell"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
     "write",
     "shell"
   ],
   "resources": [
-    "file://~/.kiro-maister/skills/maister-docs-manager/SKILL.md"
+    "skill://~/.kiro-maister/skills/maister-docs-manager/SKILL.md"
   ],
   "promptFile": "instructions/maister-docs-operator.md"
 }

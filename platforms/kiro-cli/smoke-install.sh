@@ -82,6 +82,8 @@ fix_hook_paths() {
       def fix_res(r):
         if (r | startswith("file://~/.kiro-maister/")) then
           ("file://" + $home + "/" + (r | ltrimstr("file://~/.kiro-maister/")))
+        elif (r | startswith("skill://~/.kiro-maister/")) then
+          ("skill://" + $home + "/" + (r | ltrimstr("skill://~/.kiro-maister/")))
         else r end;
       if .hooks then
         .hooks |= with_entries(.value |= map(

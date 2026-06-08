@@ -14,6 +14,9 @@
   ],
   "toolsSettings": {
     "subagent": {
+      "availableAgents": [
+        "maister-*"
+      ],
       "trustedAgents": [
         "maister-*"
       ]
@@ -25,31 +28,31 @@
       {
         "matcher": "shell",
         "command": "~/.kiro-maister/hooks/block-destructive-commands-kiro.sh",
-        "timeout": 5
+        "timeout_ms": 5000
       },
       {
         "matcher": "subagent",
         "command": "~/.kiro-maister/hooks/subagent-spawn-tracker.sh",
-        "timeout": 5
+        "timeout_ms": 5000
       }
     ],
     "postToolUse": [
       {
         "matcher": "subagent",
         "command": "~/.kiro-maister/hooks/subagent-complete-cleanup.sh",
-        "timeout": 5
+        "timeout_ms": 5000
       }
     ],
     "agentSpawn": [
       {
         "command": "~/.kiro-maister/hooks/skill-invocation-reminder.sh",
-        "timeout": 10
+        "timeout_ms": 10000
       }
     ],
     "userPromptSubmit": [
       {
         "command": "~/.kiro-maister/hooks/skill-invocation-reminder.sh",
-        "timeout": 10
+        "timeout_ms": 10000
       }
     ]
   }

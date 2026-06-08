@@ -63,13 +63,6 @@ test_tui_progress_on_orchestrator_glob() {
     ! grep -qE 'TaskCreate|TaskUpdate' "$f"
 }
 
-# 6. orchestrator-patterns-tui.md appended
-test_orchestrator_patterns_tui_patch() {
-  local f="$OUT/skills/maister-orchestrator-framework/references/orchestrator-patterns.md"
-  test -f "$PLATFORM/patches/orchestrator-patterns-tui.md" && \
-    grep -q 'Kiro TUI: Progress Tracking' "$f"
-}
-
 # 7. No classic-only enableTodoList setup in output
 test_no_classic_enable_todo_list() {
   ! grep -rE 'enableTodoList true|settings chat\.ui.*classic|chat\.ui "classic"' "$OUT" 2>/dev/null
@@ -82,11 +75,6 @@ test_default_tui_settings() {
     jq -e '.["chat.enableTodoList"] == null' "$OUT/settings/cli.json" >/dev/null
 }
 
-# 9. Transform doc exists
-test_transform_doc_exists() {
-  test -f "$PLATFORM/transforms/task-to-kiro-tui.md"
-}
-
 echo "=== Kiro CLI delegation/TUI progress tests (Task Group 5) ==="
 
 assert "zero TaskCreate/TaskUpdate in output" test_no_task_create_update
@@ -94,14 +82,12 @@ assert "zero Explore subagent_type / Explore agent refs" test_no_explore_subagen
 assert "Task tool rewritten to subagent in docs-operator instruction" test_task_to_subagent
 assert "Skill tool rewritten to /maister-* slash in development skill" test_skill_to_slash
 assert "TUI progress transforms on orchestrator-framework skill" test_tui_progress_on_orchestrator_glob
-assert "orchestrator-patterns-tui.md appended to orchestrator-patterns" test_orchestrator_patterns_tui_patch
 assert "no enableTodoList or classic UI references in output" test_no_classic_enable_todo_list
 assert "settings/cli.json ships chat.ui=tui without enableTodoList" test_default_tui_settings
-assert "transforms/task-to-kiro-tui.md exists" test_transform_doc_exists
 
 echo ""
 echo "Results: $pass passed, $fail failed"
 
-if [ "$fail" -gt 0; then
+if [ "$fail" -gt 0 ]; then
   exit 1
 fi

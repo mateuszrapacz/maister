@@ -5,11 +5,15 @@
   "tools": [
     "read",
     "grep",
-    "glob",
-    "list"
+    "glob"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob"
   ],
   "resources": [
-    "file://~/.kiro-maister/skills/maister-thermo-nuclear-code-quality-review/SKILL.md"
+    "skill://~/.kiro-maister/skills/maister-thermo-nuclear-code-quality-review/SKILL.md"
   ],
   "promptFile": "instructions/maister-thermo-nuclear-code-quality-review-subagent.md"
 }

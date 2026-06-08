@@ -41,7 +41,7 @@ skill_to_resource() {
   local stem="$skill"
   stem="${stem#maister:}"
   stem="${stem#maister-}"
-  echo "file://~/.kiro-maister/skills/maister-${stem}/SKILL.md"
+  echo "skill://~/.kiro-maister/skills/maister-${stem}/SKILL.md"
 }
 
 build_resources_json() {
@@ -124,6 +124,7 @@ generate_agent() {
       --arg model "$model" \
       --arg promptFile "instructions/${prefixed}.md" \
       --argjson tools "$tools_json" \
+      --argjson allowedTools "$tools_json" \
       --argjson resources "$resources_json" \
       --argjson toolsSettings "$trusted_json" \
       '{
@@ -131,6 +132,7 @@ generate_agent() {
         description: $description,
         model: $model,
         tools: $tools,
+        allowedTools: $allowedTools,
         resources: $resources,
         toolsSettings: $toolsSettings,
         promptFile: $promptFile
@@ -142,12 +144,14 @@ generate_agent() {
       --arg model "$model" \
       --arg promptFile "instructions/${prefixed}.md" \
       --argjson tools "$tools_json" \
+      --argjson allowedTools "$tools_json" \
       --argjson resources "$resources_json" \
       '{
         name: $name,
         description: $description,
         model: $model,
         tools: $tools,
+        allowedTools: $allowedTools,
         resources: $resources,
         promptFile: $promptFile
       }' > "$json_out"
@@ -158,12 +162,14 @@ generate_agent() {
       --arg model "$model" \
       --arg promptFile "instructions/${prefixed}.md" \
       --argjson tools "$tools_json" \
+      --argjson allowedTools "$tools_json" \
       --argjson toolsSettings "$trusted_json" \
       '{
         name: $name,
         description: $description,
         model: $model,
         tools: $tools,
+        allowedTools: $allowedTools,
         toolsSettings: $toolsSettings,
         promptFile: $promptFile
       }' > "$json_out"
@@ -174,11 +180,13 @@ generate_agent() {
       --arg model "$model" \
       --arg promptFile "instructions/${prefixed}.md" \
       --argjson tools "$tools_json" \
+      --argjson allowedTools "$tools_json" \
       '{
         name: $name,
         description: $description,
         model: $model,
         tools: $tools,
+        allowedTools: $allowedTools,
         promptFile: $promptFile
       }' > "$json_out"
   fi

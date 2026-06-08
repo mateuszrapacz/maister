@@ -66,7 +66,6 @@ Init Phase 3 standards selection and development verification Q1 are primary 3C 
 
 ## Documented exceptions (grep audit)
 
-See `transforms/chat-gate-audit.md` for source vs output gate counts and allowed exceptions.
 
 | Exception | Reason | Resolved by |
 |-----------|--------|-------------|

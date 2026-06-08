@@ -162,14 +162,18 @@ strip_plan_mode_references() {
     sedi 's/`ExitPlanMode`[^`]*`//g' "$f"
     sedi 's/EnterPlanMode/structured planning flow/g' "$f"
     sedi 's/ExitPlanMode/plan approval gate/g' "$f"
+    sedi "s/Enter Claude Code's planning mode/Plan a task with file-based artifacts/g" "$f"
+    sedi "s/Claude Code's builtin planning mode/file-based planning (\.maister\/plans\/)/g" "$f"
+    sedi 's/plan mode as context/the plan file as context/g' "$f"
+    sedi 's/plan mode phases/plan phases/g' "$f"
+    sedi 's/BEFORE plan mode/BEFORE writing the plan/g' "$f"
+    sedi 's/(BEFORE plan mode)/(BEFORE writing the plan)/g' "$f"
+    sedi 's/into plan mode/into file-based planning/g' "$f"
+    sedi 's/carry into plan mode/carry into the plan file/g' "$f"
   done < <(find "$OUT" -name "*.md" -print0)
 }
 
 apply_kiro_overrides() {
-  if [ -f "$PLATFORM/overrides/skills/development/SKILL.md" ]; then
-    mkdir -p "$OUT/skills/maister-development"
-    cp "$PLATFORM/overrides/skills/development/SKILL.md" "$OUT/skills/maister-development/SKILL.md"
-  fi
   if [ -f "$PLATFORM/overrides/commands/quick-plan.md" ]; then
     mkdir -p "$OUT/skills/maister-quick-plan"
     cp "$PLATFORM/overrides/commands/quick-plan.md" "$OUT/skills/maister-quick-plan/SKILL.md"
@@ -398,11 +402,6 @@ done
 sedi 's/metadata: {restored: true}/(restored from state — mark completed)/g' \
   "$OUT/skills/maister-orchestrator-framework/references/orchestrator-patterns.md"
 
-if [ -f "$PLATFORM/patches/orchestrator-patterns-tui.md" ]; then
-  cat "$PLATFORM/patches/orchestrator-patterns-tui.md" >> \
-    "$OUT/skills/maister-orchestrator-framework/references/orchestrator-patterns.md"
-fi
-
 while IFS= read -r -d '' f; do
   strip_user_invocable "$f"
 done < <(find "$OUT/skills" -name "SKILL.md" -print0)
@@ -480,12 +479,14 @@ EOF
     --arg name "maister-explore" \
     --arg description "Read-only codebase exploration (replaces built-in explore)" \
     --arg promptFile "instructions/maister-explore.md" \
-    --argjson tools '["read","grep","glob","list"]' \
+    --argjson tools '["read","grep","glob"]' \
+    --argjson allowedTools '["read","grep","glob"]' \
     '{
       name: $name,
       description: $description,
       model: "inherit",
       tools: $tools,
+      allowedTools: $allowedTools,
       promptFile: $promptFile
     }' > "$OUT/agents/maister-explore.json"
 
@@ -496,7 +497,7 @@ EOF
     --argjson tools '["*"]' \
     --argjson allowedTools '["*"]' \
     --argjson resources '["skill://~/.kiro-maister/skills/**/SKILL.md"]' \
-    --argjson toolsSettings '{"subagent":{"trustedAgents":["maister-*"]}}' \
+    --argjson toolsSettings '{"subagent":{"availableAgents":["maister-*"],"trustedAgents":["maister-*"]}}' \
     --arg hook_block "$hook_block" \
     --arg hook_subagent_spawn "$hook_subagent_spawn" \
     --arg hook_subagent_complete "$hook_subagent_complete" \
@@ -513,17 +514,17 @@ EOF
       promptFile: $promptFile,
       hooks: {
         preToolUse: [
-          {matcher: "shell", command: $hook_block, timeout: 5},
-          {matcher: "subagent", command: $hook_subagent_spawn, timeout: 5}
+          {matcher: "shell", command: $hook_block, timeout_ms: 5000},
+          {matcher: "subagent", command: $hook_subagent_spawn, timeout_ms: 5000}
         ],
         postToolUse: [
-          {matcher: "subagent", command: $hook_subagent_complete, timeout: 5}
+          {matcher: "subagent", command: $hook_subagent_complete, timeout_ms: 5000}
         ],
         agentSpawn: [
-          {command: $hook_skill_reminder, timeout: 10}
+          {command: $hook_skill_reminder, timeout_ms: 10000}
         ],
         userPromptSubmit: [
-          {command: $hook_skill_reminder, timeout: 10}
+          {command: $hook_skill_reminder, timeout_ms: 10000}
         ]
       }
     }' > "$OUT/agents/maister.json"

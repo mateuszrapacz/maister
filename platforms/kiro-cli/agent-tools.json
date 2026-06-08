@@ -1,85 +1,85 @@
 {
   "defaults": {
-    "tools": ["read", "grep", "glob", "list"]
+    "tools": ["read", "grep", "glob"]
   },
   "agents": {
     "bottleneck-analyzer": {
-      "tools": ["read", "grep", "glob", "list"]
+      "tools": ["read", "grep", "glob"]
     },
     "codebase-analysis-reporter": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "code-quality-pragmatist": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "code-reviewer": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "docs-operator": {
-      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell"]
     },
     "e2e-test-verifier": {
-      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell"]
     },
     "gap-analyzer": {
-      "tools": ["read", "grep", "glob", "list"]
+      "tools": ["read", "grep", "glob"]
     },
     "implementation-completeness-checker": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "implementation-planner": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "information-gatherer": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "production-readiness-checker": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "project-analyzer": {
-      "tools": ["read", "grep", "glob", "list"]
+      "tools": ["read", "grep", "glob"]
     },
     "reality-assessor": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "research-planner": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "research-synthesizer": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "solution-brainstormer": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "solution-designer": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "spec-auditor": {
-      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell"]
     },
     "specification-creator": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "task-classifier": {
-      "tools": ["read", "grep", "glob", "list"]
+      "tools": ["read", "grep", "glob"]
     },
     "task-group-implementer": {
-      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell"]
     },
     "thermo-nuclear-code-quality-review-subagent": {
-      "tools": ["read", "grep", "glob", "list"]
+      "tools": ["read", "grep", "glob"]
     },
     "thermo-nuclear-review-subagent": {
-      "tools": ["read", "grep", "glob", "list", "shell"]
+      "tools": ["read", "grep", "glob", "shell"]
     },
     "test-suite-runner": {
-      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell"]
     },
     "ui-mockup-generator": {
-      "tools": ["read", "grep", "glob", "list", "write"]
+      "tools": ["read", "grep", "glob", "write"]
     },
     "user-docs-generator": {
-      "tools": ["read", "grep", "glob", "list", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell"]
     }
   },
   "synthetic": {
@@ -89,7 +89,7 @@
       "trustedAgents": ["maister-*"]
     },
     "maister-explore": {
-      "tools": ["read", "grep", "glob", "list"]
+      "tools": ["read", "grep", "glob"]
     }
   }
 }

@@ -46,11 +46,6 @@ test_no_ask_question() {
   test -z "$(banned_question_tools | grep AskQuestion || true)"
 }
 
-# 3. Transform reference doc exists (rule 27)
-test_transform_doc_exists() {
-  test -f "$TRANSFORM_DOC"
-}
-
 # 4. Orchestrator development skill contains CHAT GATE markers (rule 26 spot-check)
 test_development_has_chat_gate() {
   run_build
@@ -86,7 +81,6 @@ echo "=== Kiro CLI chat gate tests (Task Group 4) ==="
 
 assert "zero AskUserQuestion in output *.md (rule 25)" test_no_ask_user_question
 assert "zero AskQuestion in output *.md" test_no_ask_question
-assert "transforms/askuser-to-chat-gate.md exists (rule 27)" test_transform_doc_exists
 assert "maister-development/SKILL.md contains CHAT GATE markers" test_development_has_chat_gate
 assert "headless defaults table in transform doc (3B)" test_headless_defaults_table
 assert "multi-select → sequential in maister-init (3C)" test_multiselect_sequential_rewrite

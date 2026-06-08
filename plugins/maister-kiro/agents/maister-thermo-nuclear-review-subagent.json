@@ -6,11 +6,16 @@
     "read",
     "grep",
     "glob",
-    "list",
+    "shell"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
     "shell"
   ],
   "resources": [
-    "file://~/.kiro-maister/skills/maister-thermo-nuclear-review/SKILL.md"
+    "skill://~/.kiro-maister/skills/maister-thermo-nuclear-review/SKILL.md"
   ],
   "promptFile": "instructions/maister-thermo-nuclear-review-subagent.md"
 }

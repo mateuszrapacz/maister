@@ -5,7 +5,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 OUT="$ROOT/plugins/maister-kiro"
-TRANSFORM_DOC="$ROOT/platforms/kiro-cli/transforms/askuser-to-chat-gate.md"
 
 pass=0
 fail=0
@@ -104,7 +103,6 @@ test_phase2_rules() {
     [ -x "$f" ] || ok=0
   done
   test "$ok" -eq 1
-  test -f "$TRANSFORM_DOC"
 }
 
 echo "=== Kiro CLI validate-kiro tests (Task Group 7) ==="

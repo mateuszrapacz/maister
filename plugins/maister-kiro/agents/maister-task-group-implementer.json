@@ -6,7 +6,13 @@
     "read",
     "grep",
     "glob",
-    "list",
+    "write",
+    "shell"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
     "write",
     "shell"
   ],
