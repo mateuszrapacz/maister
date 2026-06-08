@@ -493,7 +493,9 @@ EOF
     --arg name "maister" \
     --arg description "Maister workflow orchestrator — invokes /maister-* skills and delegates to maister-* subagents" \
     --arg promptFile "instructions/maister.md" \
-    --argjson tools '["read","grep","glob","list","write","subagent","todo"]' \
+    --argjson tools '["*"]' \
+    --argjson allowedTools '["*"]' \
+    --argjson resources '["skill://~/.kiro-maister/skills/**/SKILL.md"]' \
     --argjson toolsSettings '{"subagent":{"trustedAgents":["maister-*"]}}' \
     --arg hook_block "$hook_block" \
     --arg hook_subagent_spawn "$hook_subagent_spawn" \
@@ -504,6 +506,9 @@ EOF
       description: $description,
       model: "inherit",
       tools: $tools,
+      allowedTools: $allowedTools,
+      includeMcpJson: true,
+      resources: $resources,
       toolsSettings: $toolsSettings,
       promptFile: $promptFile,
       hooks: {

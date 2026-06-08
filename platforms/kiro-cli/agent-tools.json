@@ -84,7 +84,7 @@
   },
   "synthetic": {
     "maister": {
-      "tools": ["read", "grep", "glob", "list", "write", "subagent", "todo"],
+      "tools": ["*"],
       "orchestrator": true,
       "trustedAgents": ["maister-*"]
     },

@@ -3,13 +3,14 @@
   "description": "Maister workflow orchestrator — invokes /maister-* skills and delegates to maister-* subagents",
   "model": "inherit",
   "tools": [
-    "read",
-    "grep",
-    "glob",
-    "list",
-    "write",
-    "subagent",
-    "todo"
+    "*"
+  ],
+  "allowedTools": [
+    "*"
+  ],
+  "includeMcpJson": true,
+  "resources": [
+    "skill://~/.kiro-maister/skills/**/SKILL.md"
   ],
   "toolsSettings": {
     "subagent": {
