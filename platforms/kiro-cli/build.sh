@@ -480,11 +480,12 @@ hook_command() {
 
 # Step 18: Synthesize maister.json (orchestrator) + maister-explore.json
 synthesize_orchestrator_agents() {
-  local hook_block hook_subagent_spawn hook_subagent_complete hook_skill_reminder
+  local hook_block hook_subagent_spawn hook_subagent_complete hook_skill_reminder hook_rtk
   hook_block=$(hook_command "block-destructive-commands-kiro.sh")
   hook_subagent_spawn=$(hook_command "subagent-spawn-tracker.sh")
   hook_subagent_complete=$(hook_command "subagent-complete-cleanup.sh")
   hook_skill_reminder=$(hook_command "skill-invocation-reminder.sh")
+  hook_rtk=$(hook_command "rtk-rewrite.sh")
 
   mkdir -p "$OUT/agents/instructions"
 
@@ -535,6 +536,7 @@ EOF
     --arg hook_subagent_spawn "$hook_subagent_spawn" \
     --arg hook_subagent_complete "$hook_subagent_complete" \
     --arg hook_skill_reminder "$hook_skill_reminder" \
+    --arg hook_rtk "$hook_rtk" \
     '{
       name: $name,
       description: $description,
@@ -548,6 +550,7 @@ EOF
       hooks: {
         preToolUse: [
           {matcher: "shell", command: $hook_block, timeout_ms: 5000},
+          {matcher: "shell", command: $hook_rtk, timeout_ms: 5000},
           {matcher: "subagent", command: $hook_subagent_spawn, timeout_ms: 5000}
         ],
         postToolUse: [
