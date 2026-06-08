@@ -67,6 +67,8 @@ Auto-classifies tasks and routes to the appropriate workflow orchestrator. Suppo
 
 ### Step 1: Parse Input and Detect Task Folder
 
+**Input**: `$ARGUMENTS`
+
 **Check if input is an existing task folder:**
 
 1. Try path as-is (absolute path)
