@@ -10,16 +10,20 @@
 #   --help          Show usage
 #   --set-default   Set chat.defaultAgent to maister in this profile
 #   --no-default    Do not set chat.defaultAgent (default when non-interactive)
-#   --set-alias     Print shell alias for maister-kiro wrapper
+#   --set-alias     Add maister-kiro and mk aliases to shell rc
+#   --no-alias      Do not add shell aliases (default when non-interactive)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SOURCE="$ROOT/plugins/maister-kiro"
 DEFAULT_DEST="${KIRO_HOME:-$HOME/.kiro-maister}"
+WRAPPER="$SCRIPT_DIR/maister-kiro"
+ALIAS_BEGIN_MARKER='# >>> maister-kiro aliases (managed by smoke-install.sh) >>>'
+ALIAS_END_MARKER='# <<< maister-kiro aliases <<<'
 
 SET_DEFAULT=""
-SET_ALIAS=0
+SET_ALIAS=""
 DEST=""
 
 usage() {
@@ -31,7 +35,8 @@ Usage: smoke-install.sh [OPTIONS] [DEST]
   DEST              Install directory (default: \$KIRO_HOME or ~/.kiro-maister)
   --set-default     Set chat.defaultAgent=maister for this profile
   --no-default      Do not set chat.defaultAgent (default in CI/non-TTY)
-  --set-alias       Print suggested shell alias after install
+  --set-alias       Add maister-kiro and mk aliases to shell rc
+  --no-alias        Do not add shell aliases (default in CI/non-TTY)
   --help            Show this help
 
 Never modifies personal ~/.kiro/ — only the target KIRO_HOME directory.
@@ -113,6 +118,81 @@ prompt_set_default() {
   fi
 }
 
+prompt_set_alias() {
+  if [ -t 0 ] && [ -t 1 ]; then
+    local answer
+    read -r -p "Add maister-kiro and mk shell aliases? [y/N] " answer
+    case "$answer" in
+      [yY]|[yY][eE][sS]) SET_ALIAS=1 ;;
+      *) SET_ALIAS=0 ;;
+    esac
+  else
+    SET_ALIAS=0
+  fi
+}
+
+detect_shell_rc() {
+  if [ -n "${MAISTER_SHELL_RC:-}" ]; then
+    echo "$MAISTER_SHELL_RC"
+    return 0
+  fi
+  case "$(basename "${SHELL:-}")" in
+    zsh) echo "$HOME/.zshrc" ;;
+    bash)
+      if [ -f "$HOME/.bashrc" ]; then
+        echo "$HOME/.bashrc"
+      else
+        echo "$HOME/.bash_profile"
+      fi
+      ;;
+    *) echo "$HOME/.zshrc" ;;
+  esac
+}
+
+remove_alias_block() {
+  local rc="$1"
+  local tmp
+  tmp=$(mktemp)
+  awk -v begin="$ALIAS_BEGIN_MARKER" -v end="$ALIAS_END_MARKER" '
+    $0 == begin { inblock=1; next }
+    $0 == end { inblock=0; next }
+    !inblock { print }
+  ' "$rc" >"$tmp"
+  mv "$tmp" "$rc"
+}
+
+write_alias_block() {
+  local dest="$1"
+  cat <<EOF
+$ALIAS_BEGIN_MARKER
+# Maister Kiro CLI — isolated profile ($dest)
+alias maister-kiro='KIRO_HOME="$dest" $WRAPPER'
+alias mk='maister-kiro chat'
+$ALIAS_END_MARKER
+EOF
+}
+
+install_shell_aliases() {
+  local dest="$1"
+  local rc
+  rc=$(detect_shell_rc)
+  mkdir -p "$(dirname "$rc")"
+  touch "$rc"
+
+  if grep -qF "$ALIAS_BEGIN_MARKER" "$rc"; then
+    remove_alias_block "$rc"
+  fi
+
+  {
+    echo ""
+    write_alias_block "$dest"
+    echo ""
+  } >>"$rc"
+
+  echo "Shell aliases installed in $rc (maister-kiro, mk)"
+  echo "Run: source $rc   (or open a new terminal)"
+}
+
 apply_default_agent() {
   local dest="$1"
   if [ "$SET_DEFAULT" = "1" ] && command -v kiro-cli >/dev/null 2>&1; then
@@ -142,6 +222,10 @@ main() {
         SET_ALIAS=1
         shift
         ;;
+      --no-alias)
+        SET_ALIAS=0
+        shift
+        ;;
       -*)
         echo "Unknown option: $1" >&2
         usage >&2
@@ -162,18 +246,24 @@ main() {
     prompt_set_default
   fi
 
+  if [ -z "$SET_ALIAS" ]; then
+    prompt_set_alias
+  fi
+
   install_to "$DEST"
   apply_default_agent "$DEST"
 
+  if [ "$SET_ALIAS" = "1" ]; then
+    install_shell_aliases "$DEST"
+  fi
+
   echo "Done."
   echo "KIRO_HOME=$DEST"
-  echo "Run: KIRO_HOME=\"$DEST\" $SCRIPT_DIR/maister-kiro chat --agent maister"
-  echo "Or:  $SCRIPT_DIR/maister-kiro chat --agent maister  (when KIRO_HOME defaults to ~/.kiro-maister)"
-
-  if [ "$SET_ALIAS" -eq 1 ]; then
-    echo ""
-    echo "Suggested alias:"
-    echo "  alias maister-kiro='KIRO_HOME=\"$DEST\" $SCRIPT_DIR/maister-kiro'"
+  if [ "$SET_ALIAS" = "1" ]; then
+    echo "Run: mk   (from your project directory)"
+  else
+    echo "Run: KIRO_HOME=\"$DEST\" $WRAPPER chat"
+    echo "Or:  $WRAPPER chat  (when KIRO_HOME defaults to ~/.kiro-maister)"
   fi
 }
 

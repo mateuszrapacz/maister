@@ -35,7 +35,7 @@ make validate-kiro
 bash platforms/kiro-cli/smoke-install.sh
 ```
 
-Options: `--set-default` (set `chat.defaultAgent=maister`), `--set-alias` (print shell alias).
+Options: `--set-default` (set `chat.defaultAgent=maister`), `--set-alias` / `--no-alias` (add `maister-kiro` and `mk` to shell rc; prompts when omitted in a TTY).
 
 Manual equivalent:
 

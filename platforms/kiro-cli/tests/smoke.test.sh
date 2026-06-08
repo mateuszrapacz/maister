@@ -80,7 +80,25 @@ test_fix_agent_prompts() {
   rm -rf "$tmp"
 }
 
-# 5. Ephemeral KIRO_HOME + workspace .kiro/ copy pattern
+# 5. --set-alias writes idempotent maister-kiro/mk block to shell rc
+test_install_shell_aliases() {
+  local dest rc
+  dest=$(mktemp -d)
+  rc=$(mktemp)
+  MAISTER_SHELL_RC="$rc" "$SMOKE_INSTALL" --no-default --set-alias "$dest" >/dev/null
+  grep -qF '# >>> maister-kiro aliases' "$rc"
+  grep -q "alias maister-kiro='KIRO_HOME=\"$dest\"" "$rc"
+  grep -q "alias mk='maister-kiro chat'" "$rc"
+  local count
+  count=$(grep -c "alias mk='maister-kiro chat'" "$rc" || true)
+  test "$count" -eq 1
+  MAISTER_SHELL_RC="$rc" "$SMOKE_INSTALL" --no-default --set-alias "$dest" >/dev/null
+  count=$(grep -c "alias mk='maister-kiro chat'" "$rc" || true)
+  test "$count" -eq 1
+  rm -rf "$dest" "$rc"
+}
+
+# 6. Ephemeral KIRO_HOME + workspace .kiro/ copy pattern
 test_workspace_kiro_copy() {
   local kiro_home ws
   kiro_home=$(mktemp -d)
@@ -128,6 +146,7 @@ assert "smoke-install.sh --help documents KIRO_HOME" test_smoke_install_help
 assert "smoke-install to temp KIRO_HOME does not touch ~/.kiro/" test_smoke_install_isolated
 assert "maister-kiro wrapper sets KIRO_HOME default" test_wrapper_default_kiro_home
 assert "fix_agent_prompts converts promptFile to file:// prompt" test_fix_agent_prompts
+assert "--set-alias installs maister-kiro and mk in shell rc" test_install_shell_aliases
 assert "ephemeral KIRO_HOME + workspace .kiro/ copy works" test_workspace_kiro_copy
 assert "smoke-cli test 1 — maister-init skill detection" test_smoke_cli_init_detection
 assert "smoke-cli test 2 — maister-gap-analyzer delegation" test_smoke_cli_gap_analyzer
