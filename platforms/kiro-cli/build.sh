@@ -174,6 +174,11 @@ strip_plan_mode_references() {
 }
 
 apply_kiro_overrides() {
+  # Inject $ARGUMENTS placeholder into maister-work so /work <text> passes argument
+  if [ -f "$OUT/skills/maister-work/SKILL.md" ]; then
+    sedi 's/### Step 1: Parse Input and Detect Task Folder/### Step 1: Parse Input and Detect Task Folder\n\n**Input**: `$ARGUMENTS`/' \
+      "$OUT/skills/maister-work/SKILL.md"
+  fi
   if [ -f "$PLATFORM/overrides/commands/quick-plan.md" ]; then
     mkdir -p "$OUT/skills/maister-quick-plan"
     cp "$PLATFORM/overrides/commands/quick-plan.md" "$OUT/skills/maister-quick-plan/SKILL.md"
