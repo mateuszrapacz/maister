@@ -3,6 +3,8 @@ name: maister-work
 description: Unified entry point — auto-classifies tasks and routes to appropriate workflow. ALWAYS execute when invoked via slash command.
 ---
 
+**User input**: `$ARGUMENTS`
+
 **NOTE**: This is a multi-step workflow that invokes the task-classifier subagent and orchestrator skills at specific steps. The `<command-name>` tag refers to THIS command only — you MUST still use the `/maister-*` slash skill to invoke those other skills when instructed below. Follow ALL steps in order.
 
 # Unified Work Entry Point
@@ -66,8 +68,6 @@ Auto-classifies tasks and routes to the appropriate workflow orchestrator. Suppo
 ## Workflow
 
 ### Step 1: Parse Input and Detect Task Folder
-
-**Input**: `$ARGUMENTS`
 
 **Check if input is an existing task folder:**
 

@@ -3,6 +3,8 @@ name: maister-quick-dev
 description: Implement task directly with AI SDLC standards awareness (no planning mode)
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Quick Development with Standards Awareness
 
 Implement a task directly without entering planning mode, while still applying project standards from `.maister/docs/`.

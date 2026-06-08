@@ -174,11 +174,39 @@ strip_plan_mode_references() {
 }
 
 apply_kiro_overrides() {
-  # Inject $ARGUMENTS placeholder into maister-work so /work <text> passes argument
-  if [ -f "$OUT/skills/maister-work/SKILL.md" ]; then
-    sedi 's/### Step 1: Parse Input and Detect Task Folder/### Step 1: Parse Input and Detect Task Folder\n\n**Input**: `$ARGUMENTS`/' \
-      "$OUT/skills/maister-work/SKILL.md"
-  fi
+  # Inject $ARGUMENTS after frontmatter in skills that accept user input.
+  # Kiro substitutes text after /slash-command into $ARGUMENTS placeholders.
+  local skills_needing_args=(
+    maister-work
+    maister-development
+    maister-quick-dev
+    maister-quick-plan
+    maister-quick-bugfix
+    maister-research
+    maister-migration
+    maister-performance
+    maister-product-design
+    maister-grill-me
+    maister-reviews-code
+    maister-reviews-pragmatic
+    maister-reviews-production-readiness
+    maister-reviews-reality-check
+    maister-reviews-spec-audit
+    maister-standards-update
+    maister-standards-discover
+    maister-thermo-nuclear-review
+    maister-thermo-nuclear-code-quality-review
+    maister-thermos
+  )
+  for skill in "${skills_needing_args[@]}"; do
+    local sf="$OUT/skills/$skill/SKILL.md"
+    [ -f "$sf" ] || continue
+    grep -q '\$ARGUMENTS' "$sf" && continue
+    # Insert after second --- (end of frontmatter)
+    awk 'BEGIN{n=0} /^---$/{n++; if(n==2){print; print ""; print "**User input**: `$ARGUMENTS`"; next}} {print}' "$sf" > "${sf}.tmp"
+    mv "${sf}.tmp" "$sf"
+  done
+
   if [ -f "$PLATFORM/overrides/commands/quick-plan.md" ]; then
     mkdir -p "$OUT/skills/maister-quick-plan"
     cp "$PLATFORM/overrides/commands/quick-plan.md" "$OUT/skills/maister-quick-plan/SKILL.md"

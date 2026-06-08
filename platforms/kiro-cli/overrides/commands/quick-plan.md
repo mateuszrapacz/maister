@@ -3,6 +3,8 @@ name: maister-quick-plan
 description: Plan a task with AI SDLC standards awareness (Kiro)
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Planning with Standards Awareness
 
 Plan a task with automatic discovery of project standards from `.maister/docs/`. Uses a file-based plan artifact and **CHAT GATE** approval instead of built-in plan mode.

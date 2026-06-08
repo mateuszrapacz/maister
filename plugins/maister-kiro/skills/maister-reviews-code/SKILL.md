@@ -3,6 +3,8 @@ name: maister-reviews-code
 description: Run automated code quality, security, and performance analysis on your code
 ---
 
+**User input**: `$ARGUMENTS`
+
 **ACTION REQUIRED**: This command delegates to a subagent. The `<command-name>` tag refers to THIS command, not the target. Invoke the code-reviewer subagent via the subagent tool NOW. Pass path and scope arguments. Do not read files, explore code, or execute workflow steps yourself.
 
 You are running a comprehensive code review using the `code-reviewer` subagent.

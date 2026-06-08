@@ -4,6 +4,8 @@ description: Orchestrates the complete migration workflow from current state ana
 user-invocable: true
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Migration Orchestrator
 
 Systematic migration workflow from current state analysis to verified migration with rollback capabilities.

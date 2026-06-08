@@ -4,6 +4,8 @@ description: Unified orchestrator for all development tasks. ALWAYS execute when
 user-invocable: true
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Development Orchestrator
 
 Unified workflow for all development tasks — bug fixes, enhancements, and new features. Phases activate based on context and analysis findings, not predetermined task types.

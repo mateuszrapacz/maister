@@ -4,6 +4,8 @@ description: Orchestrates comprehensive research workflows from question definit
 user-invocable: true
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Research Orchestrator
 
 Systematic research workflow from question definition to evidence-based documentation.

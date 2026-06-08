@@ -3,6 +3,8 @@ name: maister-standards-discover
 description: Discover coding standards from project configuration files, code patterns, documentation, and external sources (PRs, CI/CD)
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Standards Discovery Skill
 
 Analyzes multiple project sources in parallel to discover coding standards, conventions, and best practices. Aggregates findings with confidence scoring, presents for user approval, and applies approved standards via `docs-manager` skill.

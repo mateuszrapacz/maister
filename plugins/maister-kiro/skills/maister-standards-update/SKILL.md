@@ -4,6 +4,8 @@ description: Update or create project standards from conversation context or exp
 argument-hint: "[description of standard/convention] [--from=PATH]"
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Update Project Standards
 
 Update or create standards in `.maister/docs/standards/` based on conversation context or a provided description. Automatically detects the best-matching category and file. Supports both baseline categories (global, frontend, backend, testing) and custom user-defined categories.

@@ -3,6 +3,8 @@ name: maister-reviews-production-readiness
 description: Verify production deployment readiness with comprehensive checks
 ---
 
+**User input**: `$ARGUMENTS`
+
 **ACTION REQUIRED**: This command delegates to a subagent. The `<command-name>` tag refers to THIS command, not the target. Invoke the production-readiness-checker subagent via the subagent tool NOW. Pass path and target arguments. Do not read files, explore code, or execute workflow steps yourself.
 
 You are verifying production deployment readiness using the `production-readiness-checker` subagent.

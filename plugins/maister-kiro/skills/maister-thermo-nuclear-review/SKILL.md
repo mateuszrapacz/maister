@@ -4,6 +4,8 @@ description: Comprehensive security and correctness audit of a branch's changes.
 disable-model-invocation: true
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Thermo Nuclear Review
 
 Use this skill for a comprehensive security and correctness audit of a checked-out branch.

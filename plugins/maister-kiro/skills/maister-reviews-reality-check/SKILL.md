@@ -3,6 +3,8 @@ name: maister-reviews-reality-check
 description: Comprehensive reality assessment of completed work to verify it actually works and is production-ready
 ---
 
+**User input**: `$ARGUMENTS`
+
 **ACTION REQUIRED**: This command delegates to a different skill. The `<command-name>` tag refers to THIS command, not the target. Call the subagent tool with agent="maister-reality-assessor" NOW. Pass the task path in the prompt. Do not read files, explore code, or execute workflow steps yourself.
 
 You are running a comprehensive reality check using the `reality-assessor` agent.

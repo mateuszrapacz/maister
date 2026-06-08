@@ -4,6 +4,8 @@ description: Interactive product/feature design orchestrator. Transforms fuzzy i
 user-invocable: true
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Product Design Orchestrator
 
 Interactive workflow for product and feature design -- from fuzzy idea to development-ready product brief. Phases adapt based on detected design characteristics (greenfield vs enhancement, simple vs complex, UI-focused vs backend). Uses a hybrid interaction architecture: agents for unbiased generative work, inline interactive phases for convergent and evaluative work. Visual companion renders HTML/CSS mockups in a browser for rich design feedback.

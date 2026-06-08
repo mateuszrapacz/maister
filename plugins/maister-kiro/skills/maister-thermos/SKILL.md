@@ -4,6 +4,8 @@ description: "Launch both thermo-nuclear review subagents in parallel, then synt
 disable-model-invocation: true
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Thermos
 
 Run the two thermo review passes as async background subagents in parallel, then synthesize their results.

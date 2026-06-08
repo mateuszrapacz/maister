@@ -4,6 +4,8 @@ description: Orchestrates performance optimization workflows using static code a
 user-invocable: true
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Performance Orchestrator
 
 Static-analysis-first performance optimization workflow. Identifies bottlenecks by reading code, then uses the standard specification/planning/implementation/verification pipeline to fix them.

@@ -3,6 +3,8 @@ name: maister-reviews-pragmatic
 description: Run pragmatic code review to detect over-engineering and ensure code matches project scale
 ---
 
+**User input**: `$ARGUMENTS`
+
 **ACTION REQUIRED**: This command delegates to a different skill. The `<command-name>` tag refers to THIS command, not the target. Call the subagent tool with agent="maister-code-quality-pragmatist" NOW. Pass the path to analyze in the prompt. Do not read files, explore code, or execute workflow steps yourself.
 
 You are running a pragmatic code review using the `code-quality-pragmatist` agent.

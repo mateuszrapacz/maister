@@ -4,6 +4,8 @@ description: Quick bug fix with TDD red/green gates and complexity escalation
 argument-hint: "[bug description]"
 ---
 
+**User input**: `$ARGUMENTS`
+
 # Quick Bug Fix
 
 Lightweight TDD-driven bug fix workflow with file-based fix plan. Analyze the bug, present a fix plan for approval, then reproduce with a failing test, fix, and verify.
