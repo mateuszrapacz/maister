@@ -15,6 +15,7 @@
     "skill://.kiro/skills/maister-codebase-analyzer/SKILL.md",
     "skill://.kiro/skills/maister-development/SKILL.md",
     "skill://.kiro/skills/maister-docs-manager/SKILL.md",
+    "skill://.kiro/skills/maister-grill-me/SKILL.md",
     "skill://.kiro/skills/maister-implementation-plan-executor/SKILL.md",
     "skill://.kiro/skills/maister-implementation-verifier/SKILL.md",
     "skill://.kiro/skills/maister-init/SKILL.md",
@@ -33,6 +34,9 @@
     "skill://.kiro/skills/maister-reviews-spec-audit/SKILL.md",
     "skill://.kiro/skills/maister-standards-discover/SKILL.md",
     "skill://.kiro/skills/maister-standards-update/SKILL.md",
+    "skill://.kiro/skills/maister-thermo-nuclear-code-quality-review/SKILL.md",
+    "skill://.kiro/skills/maister-thermo-nuclear-review/SKILL.md",
+    "skill://.kiro/skills/maister-thermos/SKILL.md",
     "skill://.kiro/skills/maister-work/SKILL.md"
   ],
   "toolsSettings": {

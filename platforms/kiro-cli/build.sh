@@ -574,8 +574,8 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 ## Layout
 
 - `agents/maister.json` — orchestrator with embedded hooks
-- `agents/maister-*.json` — 24 subagents + `maister-explore`
-- `skills/maister-*/` — 22 slash skills
+- `agents/maister-*.json` — 26 subagents + `maister-explore`
+- `skills/maister-*/` — 26 slash skills
 - `steering/maister-workflows.md` — plugin workflows and Kiro platform notes
 - `hooks/` — hook scripts (`../hooks/*.sh` from agents/; absolute `$KIRO_HOME/hooks/` fallback via smoke-install)
 - `prompts/` — nine `@prompts` shortcuts (`@init`, `@dev`, …)

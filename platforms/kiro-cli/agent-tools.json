@@ -66,6 +66,12 @@
     "task-group-implementer": {
       "tools": ["read", "grep", "glob", "list", "write", "shell"]
     },
+    "thermo-nuclear-code-quality-review-subagent": {
+      "tools": ["read", "grep", "glob", "list"]
+    },
+    "thermo-nuclear-review-subagent": {
+      "tools": ["read", "grep", "glob", "list", "shell"]
+    },
     "test-suite-runner": {
       "tools": ["read", "grep", "glob", "list", "write", "shell"]
     },
