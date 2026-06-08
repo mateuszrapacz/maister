@@ -58,12 +58,14 @@ Wait for completion. Store analysis results for use in Phases 3 and 6.
 
 **Step 2**: Use AskQuestion to confirm analysis accuracy. If corrections needed, collect them.
 
-**Step 3**: Gather additional context via AskQuestion (adapt to project type):
-1. Project name (if not obvious)
-2. Project description (1-2 sentences)
-3. Primary goals (adapt question to new/existing/legacy project)
-4. Team context (optional)
-5. Special requirements (optional)
+**Step 3**: Gather additional context. Present your best guesses (inferred from codebase analysis) and ask the user to confirm or correct in a **single** AskQuestion:
+- Project name (infer from package.json/README/repo name)
+- Project description (1-2 sentences — draft from README or code purpose)
+- Primary goals (infer from recent commits, TODOs, roadmap files)
+- Team context (optional — infer from git log authors)
+- Special requirements (optional — infer from CI/CD, compliance configs)
+
+Format: present all inferred values in one message, ask "Does this look right? Correct anything that's off."
 
 **Step 4**: Ask which project documentation to generate using AskQuestion (multi-select):
 - "Vision" — Project vision, goals, and purpose
