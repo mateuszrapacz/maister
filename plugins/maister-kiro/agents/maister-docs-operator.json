@@ -11,7 +11,7 @@
     "shell"
   ],
   "resources": [
-    "skill://.kiro/skills/maister-docs-manager/SKILL.md"
+    "file://~/.kiro-maister/skills/maister-docs-manager/SKILL.md"
   ],
   "promptFile": "instructions/maister-docs-operator.md"
 }

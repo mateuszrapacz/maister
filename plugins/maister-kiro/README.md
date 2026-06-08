@@ -26,7 +26,7 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 - `agents/maister-*.json` — 26 subagents + `maister-explore`
 - `skills/maister-*/` — 26 slash skills
 - `steering/maister-workflows.md` — plugin workflows and Kiro platform notes
-- `hooks/` — hook scripts (`../hooks/*.sh` from agents/; absolute `$KIRO_HOME/hooks/` fallback via smoke-install)
+- `hooks/` — hook scripts (`~/.kiro-maister/hooks/*.sh`; `smoke-install.sh` rewrites for non-default installs)
 - `prompts/` — `@prompts` shortcuts (`@init`, `@dev`, `@grill-me`, `@thermos`, …)
 - `settings/mcp.json` — Playwright MCP for `--e2e` workflows
 

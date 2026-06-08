@@ -62,29 +62,38 @@ fix_agent_prompts() {
   done
 }
 
-# Patch hook commands to absolute $KIRO_HOME/hooks/ if ../hooks/*.sh does not resolve.
+# Patch hook commands and skill resource paths to use $dest/ (source ships ~/.kiro-maister/*).
 fix_hook_paths() {
   local dest="$1"
-  local agent="$dest/agents/maister.json"
-  [ -f "$agent" ] || return 0
+  [ -d "$dest/agents" ] || return 0
 
-  if (cd "$dest/agents" && [ -x "../hooks/skill-invocation-reminder.sh" ]); then
-    return 0
-  fi
+  # If dest is the default, paths already correct
+  [[ "$dest" == "$HOME/.kiro-maister" ]] && return 0
 
-  local tmp="${agent}.tmp.$$"
-  jq --arg home "$dest" '
-    def abs_hook(cmd):
-      if (cmd | type) == "string" and (cmd | startswith("../hooks/")) then
-        ($home + "/hooks/" + (cmd | ltrimstr("../hooks/")))
-      else cmd end;
-    if .hooks then
-      .hooks |= with_entries(.value |= map(
-        if .command then .command = abs_hook(.command) else . end
-      ))
-    else . end
-  ' "$agent" >"$tmp"
-  mv "$tmp" "$agent"
+  local f tmp
+  for f in "$dest"/agents/*.json; do
+    [ -f "$f" ] || continue
+    tmp="${f}.tmp.$$"
+    jq --arg home "$dest" '
+      def fix(cmd):
+        if (cmd | type) == "string" and (cmd | contains("/hooks/")) then
+          ($home + "/hooks/" + (cmd | split("/hooks/") | last))
+        else cmd end;
+      def fix_res(r):
+        if (r | startswith("file://~/.kiro-maister/")) then
+          ("file://" + $home + "/" + (r | ltrimstr("file://~/.kiro-maister/")))
+        else r end;
+      if .hooks then
+        .hooks |= with_entries(.value |= map(
+          if .command then .command = fix(.command) else . end
+        ))
+      else . end
+      | if .resources then
+          .resources |= map(fix_res(.))
+        else . end
+    ' "$f" >"$tmp"
+    mv "$tmp" "$f"
+  done
 }
 
 install_to() {
@@ -106,29 +115,11 @@ install_to() {
 }
 
 prompt_set_default() {
-  if [ -t 0 ] && [ -t 1 ]; then
-    local answer
-    read -r -p "Set chat.defaultAgent=maister for this profile? [y/N] " answer
-    case "$answer" in
-      [yY]|[yY][eE][sS]) SET_DEFAULT=1 ;;
-      *) SET_DEFAULT=0 ;;
-    esac
-  else
-    SET_DEFAULT=0
-  fi
+  SET_DEFAULT=1
 }
 
 prompt_set_alias() {
-  if [ -t 0 ] && [ -t 1 ]; then
-    local answer
-    read -r -p "Add maister-kiro and mk shell aliases? [y/N] " answer
-    case "$answer" in
-      [yY]|[yY][eE][sS]) SET_ALIAS=1 ;;
-      *) SET_ALIAS=0 ;;
-    esac
-  else
-    SET_ALIAS=0
-  fi
+  SET_ALIAS=1
 }
 
 detect_shell_rc() {
@@ -167,7 +158,7 @@ write_alias_block() {
 $ALIAS_BEGIN_MARKER
 # Maister Kiro CLI — isolated profile ($dest)
 alias maister-kiro='KIRO_HOME="$dest" $WRAPPER'
-alias mk='maister-kiro chat'
+alias mk='maister-kiro chat --trust-all-tools'
 $ALIAS_END_MARKER
 EOF
 }

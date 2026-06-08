@@ -10,7 +10,7 @@
     "shell"
   ],
   "resources": [
-    "skill://.kiro/skills/maister-thermo-nuclear-review/SKILL.md"
+    "file://~/.kiro-maister/skills/maister-thermo-nuclear-review/SKILL.md"
   ],
   "promptFile": "instructions/maister-thermo-nuclear-review-subagent.md"
 }

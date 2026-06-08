@@ -11,34 +11,6 @@
     "subagent",
     "todo"
   ],
-  "resources": [
-    "skill://.kiro/skills/maister-codebase-analyzer/SKILL.md",
-    "skill://.kiro/skills/maister-development/SKILL.md",
-    "skill://.kiro/skills/maister-docs-manager/SKILL.md",
-    "skill://.kiro/skills/maister-grill-me/SKILL.md",
-    "skill://.kiro/skills/maister-implementation-plan-executor/SKILL.md",
-    "skill://.kiro/skills/maister-implementation-verifier/SKILL.md",
-    "skill://.kiro/skills/maister-init/SKILL.md",
-    "skill://.kiro/skills/maister-migration/SKILL.md",
-    "skill://.kiro/skills/maister-orchestrator-framework/SKILL.md",
-    "skill://.kiro/skills/maister-performance/SKILL.md",
-    "skill://.kiro/skills/maister-product-design/SKILL.md",
-    "skill://.kiro/skills/maister-quick-bugfix/SKILL.md",
-    "skill://.kiro/skills/maister-quick-dev/SKILL.md",
-    "skill://.kiro/skills/maister-quick-plan/SKILL.md",
-    "skill://.kiro/skills/maister-research/SKILL.md",
-    "skill://.kiro/skills/maister-reviews-code/SKILL.md",
-    "skill://.kiro/skills/maister-reviews-pragmatic/SKILL.md",
-    "skill://.kiro/skills/maister-reviews-production-readiness/SKILL.md",
-    "skill://.kiro/skills/maister-reviews-reality-check/SKILL.md",
-    "skill://.kiro/skills/maister-reviews-spec-audit/SKILL.md",
-    "skill://.kiro/skills/maister-standards-discover/SKILL.md",
-    "skill://.kiro/skills/maister-standards-update/SKILL.md",
-    "skill://.kiro/skills/maister-thermo-nuclear-code-quality-review/SKILL.md",
-    "skill://.kiro/skills/maister-thermo-nuclear-review/SKILL.md",
-    "skill://.kiro/skills/maister-thermos/SKILL.md",
-    "skill://.kiro/skills/maister-work/SKILL.md"
-  ],
   "toolsSettings": {
     "subagent": {
       "trustedAgents": [
@@ -51,31 +23,31 @@
     "preToolUse": [
       {
         "matcher": "shell",
-        "command": "../hooks/block-destructive-commands-kiro.sh",
+        "command": "~/.kiro-maister/hooks/block-destructive-commands-kiro.sh",
         "timeout": 5
       },
       {
         "matcher": "subagent",
-        "command": "../hooks/subagent-spawn-tracker.sh",
+        "command": "~/.kiro-maister/hooks/subagent-spawn-tracker.sh",
         "timeout": 5
       }
     ],
     "postToolUse": [
       {
         "matcher": "subagent",
-        "command": "../hooks/subagent-complete-cleanup.sh",
+        "command": "~/.kiro-maister/hooks/subagent-complete-cleanup.sh",
         "timeout": 5
       }
     ],
     "agentSpawn": [
       {
-        "command": "../hooks/skill-invocation-reminder.sh",
+        "command": "~/.kiro-maister/hooks/skill-invocation-reminder.sh",
         "timeout": 10
       }
     ],
     "userPromptSubmit": [
       {
-        "command": "../hooks/skill-invocation-reminder.sh",
+        "command": "~/.kiro-maister/hooks/skill-invocation-reminder.sh",
         "timeout": 10
       }
     ]

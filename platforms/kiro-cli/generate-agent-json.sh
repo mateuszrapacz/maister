@@ -41,7 +41,7 @@ skill_to_resource() {
   local stem="$skill"
   stem="${stem#maister:}"
   stem="${stem#maister-}"
-  echo "skill://.kiro/skills/maister-${stem}/SKILL.md"
+  echo "file://~/.kiro-maister/skills/maister-${stem}/SKILL.md"
 }
 
 build_resources_json() {

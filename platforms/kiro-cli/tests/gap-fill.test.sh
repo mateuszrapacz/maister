@@ -44,7 +44,7 @@ test_generator_skills_to_resources() {
   cp "$CORE_AGENTS/docs-operator.md" "$out/agents/docs-operator.md"
   bash "$GENERATOR" "$out" >/dev/null
   jq -e '
-    .resources | index("skill://.kiro/skills/maister-docs-manager/SKILL.md") != null
+    .resources | index("skill://skills/maister-docs-manager/SKILL.md") != null
   ' "$out/agents/maister-docs-operator.json" >/dev/null
   rm -rf "$out"
 }

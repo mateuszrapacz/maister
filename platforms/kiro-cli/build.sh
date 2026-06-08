@@ -344,7 +344,7 @@ This is the Kiro CLI variant. Key differences from Claude Code:
 - **Progress tracking**: `todo` tool mirrors phases in activity tray (`Ctrl+X`); subagents in crew monitor (`Ctrl+G`)
 - **Planning**: File-based plans in `.maister/plans/` with chat gates (no EnterPlanMode)
 - **Subagents**: Custom `maister-explore` agent; other agents referenced as `maister-*`
-- **Hooks**: Embedded in `agents/maister.json`; scripts at profile-root `hooks/` (`../hooks/*.sh` from agents/; `smoke-install.sh` patches to absolute `$KIRO_HOME/hooks/` if relative paths fail)
+- **Hooks**: Embedded in `agents/maister.json`; scripts at profile-root `hooks/` (`~/.kiro-maister/hooks/*.sh`; `smoke-install.sh` rewrites to `$DEST/hooks/` for non-default installs)
 - **preCompact gap**: Kiro has no `preCompact` hook — use `orchestrator-state.yml` + `@status` / `@resume`; `hooks/post-compact-reminder-stub.sh` is documented only (not wired)
 - **@prompts**: Nine shortcuts in `prompts/` — invoke as `@init`, `@dev`, `@research`, etc.
 - **MCP**: `settings/mcp.json` (enable Playwright for `--e2e` workflows). Empirical: `kiro-cli settings mcp.includeMcpJson true` (verify vs `useLegacyMcpJson` for your CLI version)
@@ -441,27 +441,18 @@ generate_agent_json() {
 }
 generate_agent_json
 
-# Hook command paths: relative from agents/; smoke-install patches to absolute $KIRO_HOME/hooks/ if needed
+# Hook command paths: absolute ~/.kiro-maister/hooks/ (smoke-install rewrites for non-default KIRO_HOME)
 hook_command() {
-  echo "../hooks/$1"
+  echo "~/.kiro-maister/hooks/$1"
 }
 
 # Step 18: Synthesize maister.json (orchestrator) + maister-explore.json
 synthesize_orchestrator_agents() {
-  local resources_json skill_dir name
-  local -a resources=()
   local hook_block hook_subagent_spawn hook_subagent_complete hook_skill_reminder
   hook_block=$(hook_command "block-destructive-commands-kiro.sh")
   hook_subagent_spawn=$(hook_command "subagent-spawn-tracker.sh")
   hook_subagent_complete=$(hook_command "subagent-complete-cleanup.sh")
   hook_skill_reminder=$(hook_command "skill-invocation-reminder.sh")
-
-  while IFS= read -r skill_dir; do
-    name=$(basename "$skill_dir")
-    resources+=("skill://.kiro/skills/${name}/SKILL.md")
-  done < <(find "$OUT/skills" -mindepth 1 -maxdepth 1 -type d | sort)
-
-  resources_json=$(printf '%s\n' "${resources[@]}" | jq -R . | jq -s .)
 
   mkdir -p "$OUT/agents/instructions"
 
@@ -503,7 +494,6 @@ EOF
     --arg description "Maister workflow orchestrator — invokes /maister-* skills and delegates to maister-* subagents" \
     --arg promptFile "instructions/maister.md" \
     --argjson tools '["read","grep","glob","list","write","subagent","todo"]' \
-    --argjson resources "$resources_json" \
     --argjson toolsSettings '{"subagent":{"trustedAgents":["maister-*"]}}' \
     --arg hook_block "$hook_block" \
     --arg hook_subagent_spawn "$hook_subagent_spawn" \
@@ -514,7 +504,6 @@ EOF
       description: $description,
       model: "inherit",
       tools: $tools,
-      resources: $resources,
       toolsSettings: $toolsSettings,
       promptFile: $promptFile,
       hooks: {
@@ -579,7 +568,7 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 - `agents/maister-*.json` — 26 subagents + `maister-explore`
 - `skills/maister-*/` — 26 slash skills
 - `steering/maister-workflows.md` — plugin workflows and Kiro platform notes
-- `hooks/` — hook scripts (`../hooks/*.sh` from agents/; absolute `$KIRO_HOME/hooks/` fallback via smoke-install)
+- `hooks/` — hook scripts (`~/.kiro-maister/hooks/*.sh`; `smoke-install.sh` rewrites for non-default installs)
 - `prompts/` — `@prompts` shortcuts (`@init`, `@dev`, `@grill-me`, `@thermos`, …)
 - `settings/mcp.json` — Playwright MCP for `--e2e` workflows
 

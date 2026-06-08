@@ -33,7 +33,7 @@ MCP config ships at `settings/mcp.json`. Empirical smoke: enable with `kiro-cli 
 
 ## Hook path resolution
 
-Build emits relative paths (`../hooks/*.sh` from `agents/`). `smoke-install.sh` patches to absolute `$KIRO_HOME/hooks/` if relative resolution fails.
+Build emits absolute paths (`~/.kiro-maister/hooks/*.sh`). `smoke-install.sh` rewrites to `$DEST/hooks/` for non-default installs.
 
 ## preCompact gap
 
