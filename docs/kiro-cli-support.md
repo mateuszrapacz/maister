@@ -84,61 +84,46 @@ maister-kiro chat --no-interactive --trust-all-tools --agent maister \
   '/maister-init'
 ```
 
-### Slash skills
+### `@prompts` — primary way to start workflows
 
-Invoke workflows with **`/maister-*`** (hyphenated, no colon):
+In Kiro TUI, **use `@prompts`** to discover and launch Maister workflows. Skill files under `skills/maister-*/` load into the `maister` agent context but **do not appear in the slash autocomplete** the way built-in Kiro commands do.
 
-| Skill | Purpose |
-|-------|---------|
-| `/maister-init` | Initialize `.maister/docs/`, standards, steering |
-| `/maister-development` | Full SDLC workflow |
-| `/maister-quick-plan` | Lightweight plan with standards |
-| `/maister-quick-bugfix` | TDD bug fix |
-| `/maister-research` | Research workflow |
-| `/maister-standards-update` | Update project standards |
-
-### `@prompts` shortcuts
-
-Nine prompt files ship in `plugins/maister-kiro/prompts/` (source: `platforms/kiro-cli/prompts/`). In an interactive session, type `@init`, `@dev`, etc. — Kiro loads the matching prompt file, which instructs the `maister` agent what to do next (usually invoke a `/maister-*` slash skill).
-
-`@prompts` are **UX shortcuts** over slash skills — they do not replace skills or subagents.
+Each `@prompt` file instructs the agent to invoke the matching `/maister-*` skill (internal orchestration). Prompt definitions: `platforms/kiro-cli/prompts/*.md`.
 
 | @prompt | Maps to | Workflow / behavior |
 |---------|---------|---------------------|
 | `@init` | `/maister-init` | Initialize `.maister/docs/`, standards, steering |
 | `@dev` | `/maister-development` | Full SDLC workflow (requirements → spec → plan → implement → verify) |
-| `@quick-plan` | `/maister-quick-plan` | Lightweight plan in `.maister/plans/` (no full development workflow). Avoid Kiro's built-in `/plan` — different agent. |
+| `@work` | `/maister-work` | Router — classify task and delegate to the right orchestrator |
+| `@quick-plan` | `/maister-quick-plan` | Lightweight plan in `.maister/plans/`. **Not** Kiro's `/plan`. |
+| `@quick-dev` | `/maister-quick-dev` | Implement with standards, no full workflow |
+| `@quick-bugfix` | `/maister-quick-bugfix` | TDD bug fix |
 | `@research` | `/maister-research` | Research with synthesis before implementation |
 | `@design` | `/maister-product-design` | Interactive product/feature design before development |
-| `@resume` | Appropriate `/maister-*` skill | Read `orchestrator-state.yml` under `.maister/tasks/` and continue from `current_phase` (or `--from=PHASE` when supported) |
-| `@status` | — | Report task path, `current_phase`, `completed_phases`, and blockers from `orchestrator-state.yml` |
-| `@next` | — | Suggest the single best next action from workflow state; if none active, suggest `@init` or `@dev` |
-| `@bye` | — | End session gracefully — persist state, summarize progress, note task path for `@resume` |
+| `@migration` | `/maister-migration` | Technology or architecture migration |
+| `@performance` | `/maister-performance` | Performance optimization workflow |
+| `@standards-discover` | `/maister-standards-discover` | Discover standards from codebase and config |
+| `@standards-update` | `/maister-standards-update` | Add or refine project standards |
+| `@grill-me` | `/maister-grill-me` | Stress-test a plan or design (one question at a time) |
+| `@thermos` | `/maister-thermos` | Parallel thermo-nuclear security + code-quality branch review |
+| `@thermo-review` | `/maister-thermo-nuclear-review` | Deep security/correctness diff audit only |
+| `@thermo-quality` | `/maister-thermo-nuclear-code-quality-review` | Strict maintainability diff audit only |
+| `@reviews-code` | `/maister-reviews-code` | Code quality, security, performance review |
+| `@reviews-pragmatic` | `/maister-reviews-pragmatic` | Over-engineering / scale review |
+| `@reviews-production-readiness` | `/maister-reviews-production-readiness` | Pre-deployment GO/NO-GO |
+| `@reviews-reality-check` | `/maister-reviews-reality-check` | Validate work solves the problem |
+| `@reviews-spec-audit` | `/maister-reviews-spec-audit` | Independent spec audit |
+| `@resume` | Appropriate `/maister-*` skill | Continue from `orchestrator-state.yml` (`--from=PHASE` when supported) |
+| `@status` | — | Report task path, phase, blockers from `orchestrator-state.yml` |
+| `@next` | — | Suggest best next action; if idle, suggest `@init` or `@dev` |
+| `@bye` | — | End session gracefully; note task path for `@resume` |
 
-Prompt definitions (source of truth for mapping): `platforms/kiro-cli/prompts/*.md`.
+**Notes:**
 
-**Note:** Kiro ships a built-in `/plan` command (Plan agent). Maister quick-plan uses `@quick-plan` or `/maister-quick-plan` — not `/plan`.
+- Kiro's built-in `/plan` is the Kiro Plan agent — use `@quick-plan` for Maister quick-plan.
+- Headless/CI: pass `/maister-*` in the initial prompt (see examples below); hooks remind the agent to invoke the skill.
 
-### Slash skills without `@prompt` shortcuts
-
-These workflows are invoked only via `/maister-*` (no `@prompt` file):
-
-| Skill | Purpose |
-|-------|---------|
-| `/maister-work` | Router — classifies task and delegates to the right orchestrator |
-| `/maister-quick-dev` | Implement with standards, no full workflow |
-| `/maister-quick-bugfix` | TDD bug fix |
-| `/maister-migration` | Technology or architecture migration |
-| `/maister-performance` | Performance optimization workflow |
-| `/maister-standards-discover` | Discover standards from codebase and config |
-| `/maister-standards-update` | Add or refine project standards |
-| `/maister-reviews-code` | Code review |
-| `/maister-reviews-pragmatic` | Pragmatic over-engineering review |
-| `/maister-reviews-production-readiness` | Production readiness check |
-| `/maister-reviews-reality-check` | Reality assessment |
-| `/maister-reviews-spec-audit` | Specification audit |
-
-Orchestrator skills (`/maister-development`, `/maister-research`, etc.) delegate internally to subagents (`maister-*` via the `subagent` tool) and other slash skills (`/maister-implementation-plan-executor`, `/maister-codebase-analyzer`, …). See `steering/maister-workflows.md` in the install profile.
+Orchestrator skills delegate internally to subagents (`maister-*` via the `subagent` tool) and other skills (`/maister-implementation-plan-executor`, `/maister-codebase-analyzer`, …). See `steering/maister-workflows.md` in the install profile.
 
 ### Resume interrupted work
 

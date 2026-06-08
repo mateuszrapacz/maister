@@ -259,7 +259,7 @@ make build-kiro
 maister-kiro chat --agent maister
 ```
 
-Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister-development`) or `@prompts` shortcuts (`@init`, `@dev`, `@quick-plan`, …). Do not use Kiro's `/plan` for Maister quick-plan — use `@quick-plan` or `/maister-quick-plan`.
+In Kiro TUI, start workflows with **`@prompts`** (`@init`, `@dev`, `@grill-me`, `@thermos`, `@quick-plan`, …). Each `@prompt` tells the agent to run the matching `/maister-*` skill. Skills are not shown in slash autocomplete — use `@`, not `/maister-*`, for interactive discovery. Do not use Kiro's `/plan` for Maister quick-plan — use `@quick-plan`.
 
 ### Local install
 

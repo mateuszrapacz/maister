@@ -152,7 +152,7 @@ Examples:
 
 ```
 Use subagent tool:
-  agent: maister-task-classifier"
+  subagent tool with agent: `maister-task-classifier`
   description: "Classify task type"
   prompt: "Classify this task into a workflow type: [task description].
            Return structured YAML classification result."

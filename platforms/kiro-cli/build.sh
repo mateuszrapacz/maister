@@ -221,8 +221,10 @@ apply_delegation_transforms() {
   sedi 's|Call the Task tool|Call the subagent tool|g' "$f"
   sedi 's|\*\*Execute\*\*: Task tool|\*\*Execute\*\*: subagent tool|g' "$f"
   sedi 's|Task tool|subagent tool|g' "$f"
+  sedi 's|subagent_type: "\(maister[^"]*\)"|subagent tool with agent: `\1`|g' "$f"
   sedi 's|subagent_type="|agent: "|g' "$f"
   sedi 's|subagent_type: "|agent: |g' "$f"
+  sedi 's|agent: \(maister-[^"]*\)"|subagent tool with agent: `\1`|g' "$f"
   sedi 's|Invoke via Task tool|Invoke via subagent tool|g' "$f"
   sedi 's|invoked via the Task tool|invoked via the subagent tool|g' "$f"
   sedi 's|invoked via Task tool|invoked via subagent tool|g' "$f"
@@ -578,7 +580,7 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 - `skills/maister-*/` — 26 slash skills
 - `steering/maister-workflows.md` — plugin workflows and Kiro platform notes
 - `hooks/` — hook scripts (`../hooks/*.sh` from agents/; absolute `$KIRO_HOME/hooks/` fallback via smoke-install)
-- `prompts/` — nine `@prompts` shortcuts (`@init`, `@dev`, …)
+- `prompts/` — `@prompts` shortcuts (`@init`, `@dev`, `@grill-me`, `@thermos`, …)
 - `settings/mcp.json` — Playwright MCP for `--e2e` workflows
 
 ## Terminal UI

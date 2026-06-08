@@ -30,7 +30,7 @@ You are performing comprehensive production readiness analysis covering configur
 
 ```
 Use subagent tool:
-  agent: maister-production-readiness-checker"
+  subagent tool with agent: `maister-production-readiness-checker`
   description: "Production readiness check"
   prompt: |
     Verify production readiness at: [path from user or from **CHAT GATE**]

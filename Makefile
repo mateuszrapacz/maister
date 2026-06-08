@@ -128,9 +128,9 @@ validate-kiro:
 	@for f in plugins/maister-kiro/hooks/*.sh; do \
 		test -x "$$f" || (echo "FAIL: hook not executable $$f (rule 22)" && exit 1); \
 	done
-	@echo "Rule 23: nine files in prompts/..."
+	@echo "Rule 23: 25 files in prompts/..."
 	@test -d plugins/maister-kiro/prompts || (echo "FAIL: prompts/ missing (rule 23)" && exit 1)
-	@test $$(find plugins/maister-kiro/prompts -maxdepth 1 -type f | wc -l | tr -d ' ') -eq 9 || (echo "FAIL: expected 9 files in prompts/ (rule 23)" && exit 1)
+	@test $$(find plugins/maister-kiro/prompts -maxdepth 1 -type f | wc -l | tr -d ' ') -eq 25 || (echo "FAIL: expected 25 files in prompts/ (rule 23)" && exit 1)
 	@echo "Rule 24: maister-kiro wrapper in platforms/kiro-cli/..."
 	@test -x platforms/kiro-cli/maister-kiro || (echo "FAIL: maister-kiro wrapper not executable (rule 24)" && exit 1)
 	@echo "Rule 25: no AskUserQuestion/AskQuestion in output tree (incl. hooks)..."

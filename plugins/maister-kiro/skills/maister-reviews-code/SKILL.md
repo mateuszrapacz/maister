@@ -31,7 +31,7 @@ You are performing automated code analysis to identify quality, security, and pe
 
 ```
 Use subagent tool:
-  agent: maister-code-reviewer"
+  subagent tool with agent: `maister-code-reviewer`
   description: "Code quality review"
   prompt: |
     Analyze code at: [path from user or from **CHAT GATE**]

@@ -28,11 +28,11 @@ run_build() {
   (cd "$ROOT" && make build-kiro)
 }
 
-# 1. Rule 23: nine prompt files in output
-test_nine_prompts() {
+# 1. Rule 23: 25 prompt files in output
+test_prompt_count() {
   run_build
   test -d "$OUT/prompts"
-  test "$(find "$OUT/prompts" -maxdepth 1 -type f | wc -l | tr -d ' ')" -eq 9
+  test "$(find "$OUT/prompts" -maxdepth 1 -type f | wc -l | tr -d ' ')" -eq 25
 }
 
 # 2. Rule 21: trustedAgents in maister.json
@@ -83,6 +83,21 @@ test_quick_plan_prompt() {
   grep -q '@quick-plan' "$OUT/prompts/quick-plan.md"
 }
 
+# 6c. grill-me and thermos prompts exist
+test_grill_thermos_prompts() {
+  run_build
+  grep -q '/maister-grill-me' "$OUT/prompts/grill-me.md"
+  grep -q '/maister-thermos' "$OUT/prompts/thermos.md"
+}
+
+# 6d. thermos skill subagent lines survive Kiro build transforms
+test_thermos_subagent_syntax() {
+  run_build
+  grep -q 'subagent tool with agent: `maister-thermo-nuclear-review-subagent`' \
+    "$OUT/skills/maister-thermos/SKILL.md"
+  ! grep -q 'review-subagent"' "$OUT/skills/maister-thermos/SKILL.md"
+}
+
 # 7. preCompact gap + hook path fallback documented in steering
 test_steering_hook_docs() {
   run_build
@@ -102,13 +117,15 @@ test_smoke_uninstall() {
 
 echo "=== Kiro CLI Phase 2 tests (Task Group 9) ==="
 
-assert "nine files in prompts/ (rule 23)" test_nine_prompts
+assert "25 files in prompts/ (rule 23)" test_prompt_count
 assert "trustedAgents in maister.json (rule 21)" test_trusted_agents
 assert "all hook scripts executable (rule 22)" test_hooks_executable
 assert "maister-kiro wrapper executable (rule 24)" test_wrapper_exists
 assert "skill-invocation-reminder on agentSpawn + userPromptSubmit" test_skill_reminder_hooks
 assert "@dev prompt maps to /maister-development" test_dev_prompt_maps_development
 assert "@quick-plan prompt maps to /maister-quick-plan; plan.md removed" test_quick_plan_prompt
+assert "@grill-me and @thermos prompts map to skills" test_grill_thermos_prompts
+assert "thermos skill has valid subagent syntax after build" test_thermos_subagent_syntax
 assert "steering documents preCompact gap and hook paths" test_steering_hook_docs
 assert "smoke-uninstall.sh removes KIRO_HOME" test_smoke_uninstall
 

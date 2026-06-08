@@ -106,7 +106,7 @@ After all maister-explore agents complete, delegate to `codebase-analysis-report
 
 ```
 subagent tool:
-  agent: maister-codebase-analysis-reporter"
+  subagent tool with agent: `maister-codebase-analysis-reporter`
   description: "Merge findings into analysis report"
   prompt: |
     You are the codebase-analysis-reporter. Merge these raw findings into a structured analysis report.

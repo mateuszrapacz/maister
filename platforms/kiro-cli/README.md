@@ -23,7 +23,7 @@ maister-kiro chat --agent maister
 ## Layout
 
 - `build.sh` — full transform pipeline (skills, agents JSON, hooks, prompts)
-- `prompts/` — nine `@prompts` shortcuts (`@init`, `@dev`, …)
+- `prompts/` — `@prompts` shortcuts (`@init`, `@dev`, `@grill-me`, `@thermos`, …)
 - `hooks/` — embedded in `agents/maister.json` (`agentSpawn`, `userPromptSubmit`, `preToolUse`, `postToolUse`)
 - `maister-kiro` — wrapper setting `KIRO_HOME=~/.kiro-maister`
 

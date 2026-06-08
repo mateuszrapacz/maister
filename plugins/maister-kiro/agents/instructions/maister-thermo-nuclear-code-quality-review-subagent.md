@@ -16,4 +16,4 @@ You are a **Task subagent**. The parent agent already collected git output and c
 
 ## Parent orchestration
 
-Typical flow: in **one** message, run two `Task` calls in parallel — `agent: shell"` and `agent: maister-explore` — to collect `git diff...HEAD` output and full contents of changed files (default base `main`). Then invoke this agent with `agent: maister-thermo-nuclear-code-quality-review-subagent"` and a user prompt containing `### Git / diff output` and `### Changed file contents`.
+Typical flow: in **one** message, run two `Task` calls in parallel — `agent: shell"` and `agent: maister-explore` — to collect `git diff...HEAD` output and full contents of changed files (default base `main`). Then invoke this agent with `subagent tool with agent: `maister-thermo-nuclear-code-quality-review-subagent`` and a user prompt containing `### Git / diff output` and `### Changed file contents`.
