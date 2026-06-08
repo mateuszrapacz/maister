@@ -30,7 +30,7 @@ Full framework rule: `../orchestrator-framework/references/orchestrator-patterns
 
 ### Step 2: Initialize Workflow
 
-1. **Create todo items**: Use `todo` for all phases (see Phase Configuration), then set dependencies with `todo ordering in todo list`
+1. **Create TUI tasks**: Use `todo` for all phases (see Phase Configuration), then set dependencies with `todo ordering in todo list`
 2. **Create Task Directory**: `.maister/tasks/research/YYYY-MM-DD-task-name/`
 3. **Initialize State**: Create `orchestrator-state.yml` with research context
 

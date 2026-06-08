@@ -30,10 +30,12 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 - `prompts/` — nine `@prompts` shortcuts (`@init`, `@dev`, …)
 - `settings/mcp.json` — Playwright MCP for `--e2e` workflows
 
-## Todo tool
+## Terminal UI
 
-Enable progress tracking:
+Maister targets the **Terminal UI** (default since Kiro CLI 2.0). Profile ships with `chat.ui` = `tui`.
 
-```bash
-kiro-cli settings chat.enableTodoList true
-```
+- **Activity tray** (`Ctrl+X`) — phase/task progress
+- **Crew monitor** (`Ctrl+G`) — subagent execution
+- **Resume** — `@status` / `@resume` or read `orchestrator-state.yml`
+
+Classic interface and `chat.enableTodoList` are not used.

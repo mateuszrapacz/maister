@@ -42,7 +42,7 @@ Full framework rule: `../orchestrator-framework/references/orchestrator-patterns
 
 ### Step 3: Initialize Workflow
 
-1. **Create todo items**: Use `todo` for all phases (see Phase Configuration), then set dependencies with `todo ordering in todo list`
+1. **Create TUI tasks**: Use `todo` for all phases (see Phase Configuration), then set dependencies with `todo ordering in todo list`
 2. **Create Task Directory**: `.maister/tasks/product-design/YYYY-MM-DD-task-name/`
    - Create `context/` folder with `README.md` instructing users to drop relevant files there (meeting transcripts, existing designs, spreadsheets, docs, PDFs, images)
    - Create `analysis/` and `outputs/` directories

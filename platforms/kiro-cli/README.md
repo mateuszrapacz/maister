@@ -55,7 +55,7 @@ bash platforms/kiro-cli/smoke-cli.sh   # requires kiro-cli in PATH; skips if abs
 | `generator.test.sh` | 2 | MD→JSON generator, golden `gap-analyzer` fixture, 24 agents | 8 |
 | `build-core.test.sh` | 3 | Command merge, skill dirs, MCP location, naming transforms | 8 |
 | `chat-gate.test.sh` | 4 | AskUserQuestion→CHAT GATE, multi-select, transform doc | 7 |
-| `delegation-todo.test.sh` | 5 | Task→subagent, Skill→slash, todo patterns, Explore ban | 8 |
+| `delegation-todo.test.sh` | 5 | Task→subagent, Skill→slash, TUI progress patterns, Explore ban | 9 |
 | `build-completion.test.sh` | 6 | Steering, hooks in `maister.json`, 26 agents, init refs | 8 |
 | `validation.test.sh` | 7 | `validate-kiro` rules 1–28, negative injection cases | 8 |
 | `smoke.test.sh` | 8 | `smoke-install.sh`, wrapper, `fix_agent_prompts`, headless smoke-cli | 8 |

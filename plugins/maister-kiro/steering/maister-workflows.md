@@ -631,7 +631,7 @@ Subagents are specialized AI agents invoked by skills and orchestrators. All age
 
 **For detailed workflow documentation, see**: individual skill `SKILL.md` files
 
-## Progress Tracking with todo tool
+## Progress Tracking (TUI)
 
 All orchestrators use `todo`/`todo` for real-time progress visibility at two levels:
 
@@ -641,7 +641,7 @@ All orchestrators use `todo`/`todo` for real-time progress visibility at two lev
 - At each phase: `todo` to `in_progress` (shows spinner with `activity description in content`) → execute → `todo` to `completed`
 - Optionally set `owner` when delegating to skills/agents, and `metadata` for timing/artifacts
 - State file (`orchestrator-state.yml`) is source of truth for resume logic
-- Todo list mirrors state for UX and provides dependency visualization
+- TUI task list mirrors state for UX and provides dependency visualization
 
 ### Implementation Task Group Tracking
 
@@ -649,7 +649,7 @@ All orchestrators use `todo`/`todo` for real-time progress visibility at two lev
 - During execution: executor computes parallel waves from dependencies + file overlap, then dispatches all groups in a wave concurrently via parallel `Task` tool calls. The `--sequential` flag (read from `orchestrator-state.yml` as `orchestrator.options.sequential`) forces the legacy one-at-a-time loop
 - `todo` to `in_progress` on wave dispatch → execute → `todo` to `completed` on each group's return
 - Markdown checkboxes in `implementation-plan.md` remain the step-level source of truth
-- Todo list provides group-level visibility with dependencies, timing, ownership, and wave membership
+- TUI task list provides group-level visibility with dependencies, timing, ownership, and wave membership
 
 See individual orchestrator `skill.md` files for phase-specific task tables.
 
@@ -726,7 +726,8 @@ This is the Kiro CLI variant. Key differences from Claude Code:
 - **Command names**: Prefix `maister-foo` (e.g. `/maister-development`); install to `KIRO_HOME` (~/.kiro-maister)
 - **Project instructions file**: Use `AGENTS.md` instead of `AGENTS.md`, plus `.kiro/steering/maister-docs.md` after init
 - **User questions**: Chat-native **CHAT GATE** — present options in chat and wait for reply (no AskQuestion tool)
-- **Progress tracking**: Use `todo` tool (`kiro-cli settings chat.enableTodoList true`)
+- **UI**: Terminal UI only (`chat.ui` = `tui`); classic interface unsupported
+- **Progress tracking**: `todo` tool mirrors phases in activity tray (`Ctrl+X`); subagents in crew monitor (`Ctrl+G`)
 - **Planning**: File-based plans in `.maister/plans/` with chat gates (no EnterPlanMode)
 - **Subagents**: Custom `maister-explore` agent; other agents referenced as `maister-*`
 - **Hooks**: Embedded in `agents/maister.json`; scripts at profile-root `hooks/` (`../hooks/*.sh` from agents/; `smoke-install.sh` patches to absolute `$KIRO_HOME/hooks/` if relative paths fail)

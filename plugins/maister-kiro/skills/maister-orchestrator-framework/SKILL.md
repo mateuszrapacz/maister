@@ -43,7 +43,7 @@ All orchestrators follow these principles:
 2. **Resume Capability**: Any orchestrator can be paused and resumed
 3. **Interactive**: Pause after each phase for user review
 4. **User-Confirmed Rollback**: Never auto-rollback without user approval
-5. **Todo Progress**: Always track progress with todo/todo tools
+5. **TUI Task Progress**: Always track progress with todo tool
 6. **Standards Discovery**: Reference `.maister/docs/INDEX.md` throughout
 
 ## Orchestrators Using This Framework

@@ -207,7 +207,7 @@ orchestrator:
   updated: [ISO 8601 timestamp]
   task_path: .maister/tasks/[type]/YYYY-MM-DD-task-name
 
-  # Todo tracking IDs (maps phase names to todo IDs)
+  # TUI task tracking IDs (maps phase names to todo IDs)
   task_ids:
     phase-1: null
     phase-2: null
@@ -279,7 +279,7 @@ verification_context:
 2. **Determine starting phase**: New task starts Phase 1; resume reads state for first incomplete phase
 3. **Create task directory**: Standard structure with analysis/, implementation/, verification/, documentation/ *(skip on resume)*
 4. **Create state file**: `orchestrator-state.yml` *(skip on resume)*
-5. **Create todo items**: `todo` for all phases, then `todo ordering in todo list` for dependencies. On resume, also restore completed phase statuses.
+5. **Create TUI tasks**: `todo` for all phases, then `todo ordering in todo list` for dependencies. On resume, also restore completed phase statuses.
 6. **Output summary**: Show task info, phases, starting message
 
 ### Task Name Generation
@@ -292,7 +292,7 @@ Examples: "Fix login timeout bug" → `2025-12-17-fix-login-timeout`
 
 ### Task Restoration on Resume
 
-Todo list IDs are ephemeral to a session. On resume:
+TUI task list IDs are ephemeral to a session. On resume:
 
 1. Create all phase tasks (same `todo` loop, all start pending)
 2. Set dependencies (same `todo ordering in todo list`)
@@ -305,7 +305,7 @@ Todo list IDs are ephemeral to a session. On resume:
 2. **Validate artifacts** — Check expected files for `completed_phases`. If missing, remove from list.
 3. **Find resume point** — First phase not in `completed_phases`
 4. **Check prerequisites** — Verify required artifacts exist
-5. **Restore todo items** — Re-create phase tasks and mark completed ones
+5. **Restore TUI tasks** — Re-create phase tasks and mark completed ones
 
 | Starting From | Required Prerequisites |
 |---------------|----------------------|
@@ -349,13 +349,24 @@ If prerequisites missing, → **CHAT GATE** — Present the question in chat: "S
 | Max iterations (3) reached | Ask user how to proceed |
 | Critical issues remain unresolved | **MUST NOT proceed** — require user approval first |
 
-## Kiro: todo Patterns
+## Kiro TUI: Progress Tracking
 
-On Kiro CLI, use the experimental `todo` tool for progress tracking (replaces Claude Code's task tracking tools). Enable with `kiro-cli settings chat.enableTodoList true`.
+Maister targets the **Terminal UI** (default since Kiro CLI 2.0). Classic interface, `/experiment`, and `/todo` slash commands are not used.
+
+### User visibility
+
+- **Activity tray** (`Ctrl+X`) — task progress and queued messages without scrolling chat history
+- **Crew monitor** (`Ctrl+G`) — live subagent status (parallel waves capped at 4)
+
+TUI tasks are always on. Do **not** set `chat.enableTodoList` (classic only).
+
+### Agent behavior
+
+Use the `todo` tool to mirror workflow phases in the TUI task list.
 
 ### Phase initialization
 
-Create a todo list with all phases as pending items, ordered by dependency:
+Create tasks for all phases as pending, ordered by dependency:
 
 ```
 Phase 1: Initialize — pending
@@ -374,7 +385,7 @@ Mark skipped phases as cancelled with a note (e.g. "Phase 4: skipped (scope=quic
 ### Resume from orchestrator-state.yml
 
 1. Read `completed_phases` from state file
-2. Recreate todo items for all phases, then mark completed ones
+2. Recreate tasks for all phases, then mark completed ones
 3. Set next phase `in_progress` before executing
 
-State file remains source of truth; todo list mirrors for UX only.
+`orchestrator-state.yml` remains source of truth; the TUI task list mirrors for UX only.

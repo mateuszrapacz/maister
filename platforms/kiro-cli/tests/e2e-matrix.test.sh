@@ -52,10 +52,11 @@ test_scenario_1_init_artifacts() {
     test -f "$OUT/steering/maister-docs.md"
 }
 
-# 4. Scenario 2 — development todo mirror documented and transformed
-test_scenario_2_todo_mirror() {
-  grep -qi 'todo' "$DOC" && \
-    grep -q 'Use `todo`' "$OUT/skills/maister-development/SKILL.md"
+# 4. Scenario 2 — TUI task progress documented and transformed
+test_scenario_2_tui_progress() {
+  grep -qi 'activity tray\|TUI\|Ctrl+X' "$DOC" && \
+    grep -q 'Use `todo`' "$OUT/skills/maister-development/SKILL.md" && \
+    ! grep -q 'enableTodoList' "$OUT/skills/maister-development/SKILL.md"
 }
 
 # 5. Scenario 3 — resume reads orchestrator-state.yml
@@ -85,13 +86,13 @@ test_manual_parallel_gaps_documented() {
   grep -qi 'manual' "$DOC" && grep -q '2a' "$DOC" && \
     grep -qi 'max 4' "$DOC" && \
     grep -qi 'preCompact' "$DOC" && \
-    grep -qi 'todo' "$DOC"
+    grep -qi 'activity tray\|TUI\|Ctrl+G' "$DOC"
 }
 
 assert "kiro-cli-support.md has E2E Verification Matrix section" test_e2e_doc_exists
 assert "matrix table covers scenarios 1–8 and 2a" test_matrix_covers_all_scenarios
 assert "scenario 1 — init artifacts documented and build outputs exist" test_scenario_1_init_artifacts
-assert "scenario 2 — todo mirror documented and in maister-development skill" test_scenario_2_todo_mirror
+assert "scenario 2 — TUI task progress documented and in maister-development skill" test_scenario_2_tui_progress
 assert "scenario 3 — resume/orchestrator-state.yml documented" test_scenario_3_resume
 assert "scenarios 5–6 — smoke-cli.sh headless paths referenced" test_scenario_5_6_smoke_paths
 assert "scenario 8 — exactly 26 agent JSON files after build" test_scenario_8_agent_inventory

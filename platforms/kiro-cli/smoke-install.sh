@@ -203,6 +203,16 @@ apply_default_agent() {
   fi
 }
 
+apply_tui_profile() {
+  local dest="$1"
+  if ! command -v kiro-cli >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "Ensuring chat.ui=tui (Maister targets Terminal UI)"
+  KIRO_HOME="$dest" kiro-cli settings chat.ui tui 2>/dev/null || true
+  KIRO_HOME="$dest" kiro-cli settings --delete chat.enableTodoList 2>/dev/null || true
+}
+
 main() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -251,6 +261,7 @@ main() {
   fi
 
   install_to "$DEST"
+  apply_tui_profile "$DEST"
   apply_default_agent "$DEST"
 
   if [ "$SET_ALIAS" = "1" ]; then

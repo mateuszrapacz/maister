@@ -237,8 +237,8 @@ apply_delegation_transforms() {
   sedi 's|execute it via the Skill tool|execute it via the `/maister-*` slash skill|g' "$f"
 }
 
-# Step 14: TaskCreate/TaskUpdate → todo (T7)
-apply_todo_transforms() {
+# Step 14: TaskCreate/TaskUpdate → TUI task list (T7)
+apply_progress_transforms() {
   local f="$1"
   [ -f "$f" ] || return 0
   sedi 's/TaskCreate/todo/g' "$f"
@@ -247,15 +247,17 @@ apply_todo_transforms() {
   sedi 's/addBlockedBy/ordering in todo list/g' "$f"
   sedi 's/activeForm/activity description in content/g' "$f"
   sedi 's/metadata: {skipped: true}/cancelled status/g' "$f"
-  sedi 's/Task system/Todo list/g' "$f"
-  sedi 's/Task tracking/Todo tracking/g' "$f"
-  sedi 's/Create Task Items/Create todo items/g' "$f"
-  sedi 's/task items/todo items/g' "$f"
-  sedi 's/Create task items/Create todo items via todo tool/g' "$f"
-  sedi 's/Restore task items/Restore todo items via todo tool/g' "$f"
-  sedi 's/Task Progress/Todo Progress/g' "$f"
+  sedi 's/Task system/TUI task list/g' "$f"
+  sedi 's/Task tracking/TUI task tracking/g' "$f"
+  sedi 's/Create Task Items/Create TUI tasks/g' "$f"
+  sedi 's/task items/TUI tasks/g' "$f"
+  sedi 's/Create task items/Create tasks via todo tool (TUI activity tray)/g' "$f"
+  sedi 's/Restore task items/Restore tasks via todo tool from orchestrator-state.yml/g' "$f"
+  sedi 's/Task Progress/TUI Task Progress/g' "$f"
   sedi 's/TaskCreate\/TaskUpdate/todo tool/g' "$f"
-  sedi 's/Progress Tracking with Task System/Progress Tracking with todo tool/g' "$f"
+  sedi 's/Progress Tracking with Task System/Progress Tracking (TUI)/g' "$f"
+  sedi 's/TaskCreate\/TaskUpdate tools/todo tool (TUI activity tray)/g' "$f"
+  sedi 's/todo\/todo tools/todo tool/g' "$f"
 }
 
 # Step 15: strip user-invocable: false (T16)
@@ -336,7 +338,8 @@ This is the Kiro CLI variant. Key differences from Claude Code:
 - **Command names**: Prefix `maister-foo` (e.g. `/maister-development`); install to `KIRO_HOME` (~/.kiro-maister)
 - **Project instructions file**: Use `AGENTS.md` instead of `CLAUDE.md`, plus `.kiro/steering/maister-docs.md` after init
 - **User questions**: Chat-native **CHAT GATE** — present options in chat and wait for reply (no AskQuestion tool)
-- **Progress tracking**: Use `todo` tool (`kiro-cli settings chat.enableTodoList true`)
+- **UI**: Terminal UI only (`chat.ui` = `tui`); classic interface unsupported
+- **Progress tracking**: `todo` tool mirrors phases in activity tray (`Ctrl+X`); subagents in crew monitor (`Ctrl+G`)
 - **Planning**: File-based plans in `.maister/plans/` with chat gates (no EnterPlanMode)
 - **Subagents**: Custom `maister-explore` agent; other agents referenced as `maister-*`
 - **Hooks**: Embedded in `agents/maister.json`; scripts at profile-root `hooks/` (`../hooks/*.sh` from agents/; `smoke-install.sh` patches to absolute `$KIRO_HOME/hooks/` if relative paths fail)
@@ -384,17 +387,17 @@ TODO_GLOB=(
 
 for dir in "${TODO_GLOB[@]}"; do
   if [ -f "$dir" ]; then
-    apply_todo_transforms "$dir"
+    apply_progress_transforms "$dir"
   elif [ -d "$dir" ]; then
-    foreach_md "$dir" apply_todo_transforms
+    foreach_md "$dir" apply_progress_transforms
   fi
 done
 
 sedi 's/metadata: {restored: true}/(restored from state — mark completed)/g' \
   "$OUT/skills/maister-orchestrator-framework/references/orchestrator-patterns.md"
 
-if [ -f "$PLATFORM/patches/orchestrator-patterns-todo.md" ]; then
-  cat "$PLATFORM/patches/orchestrator-patterns-todo.md" >> \
+if [ -f "$PLATFORM/patches/orchestrator-patterns-tui.md" ]; then
+  cat "$PLATFORM/patches/orchestrator-patterns-tui.md" >> \
     "$OUT/skills/maister-orchestrator-framework/references/orchestrator-patterns.md"
 fi
 
@@ -417,10 +420,17 @@ cp "$PLATFORM/templates/steering-maister-docs.md" "$OUT/steering/maister-docs.md
 sedi 's/CLAUDE.md/AGENTS.md/g' "$OUT/skills/maister-standards-discover/references/docs-extractor-prompt.md"
 sedi 's/\.claude\/CLAUDE.md/.kiro\/steering/g' "$OUT/skills/maister-standards-discover/references/docs-extractor-prompt.md"
 
-# Step 11: MCP config — .mcp.json → settings/mcp.json
+# Step 11: MCP config — .mcp.json → settings/mcp.json; default TUI profile settings
+mkdir -p "$OUT/settings"
 if [ -f "$OUT/.mcp.json" ]; then
-  mkdir -p "$OUT/settings"
   mv "$OUT/.mcp.json" "$OUT/settings/mcp.json"
+fi
+if [ -f "$OUT/settings/cli.json" ]; then
+  tmp="${OUT}/settings/cli.json.tmp.$$"
+  jq '.["chat.ui"] = "tui" | del(.["chat.enableTodoList"])' "$OUT/settings/cli.json" >"$tmp"
+  mv "$tmp" "$OUT/settings/cli.json"
+else
+  echo '{"chat.ui":"tui"}' >"$OUT/settings/cli.json"
 fi
 
 # Step 17: MD→JSON agent generation (post-transform only — semantic transforms must complete first)
@@ -466,8 +476,10 @@ You are the Maister workflow orchestrator for Kiro CLI.
 
 - Invoke `/maister-*` slash skills for orchestrated workflows — do not skip workflows for "straightforward" tasks
 - Delegate to subagents via the subagent tool with `agent: maister-<name>`
-- Use the todo tool for progress tracking (`kiro-cli settings chat.enableTodoList true`)
+- Track phase progress with the `todo` tool (visible in TUI activity tray via Ctrl+X)
+- Monitor subagent waves in crew monitor (Ctrl+G); max 4 parallel subagents
 - Read `orchestrator-state.yml` in the active task directory for resume and phase state
+- Maister targets Terminal UI (`chat.ui` = `tui`); classic interface is unsupported
 - Read `.maister/docs/INDEX.md` before coding tasks
 EOF
 
@@ -569,13 +581,15 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 - `prompts/` — nine `@prompts` shortcuts (`@init`, `@dev`, …)
 - `settings/mcp.json` — Playwright MCP for `--e2e` workflows
 
-## Todo tool
+## Terminal UI
 
-Enable progress tracking:
+Maister targets the **Terminal UI** (default since Kiro CLI 2.0). Profile ships with `chat.ui` = `tui`.
 
-```bash
-kiro-cli settings chat.enableTodoList true
-```
+- **Activity tray** (`Ctrl+X`) — phase/task progress
+- **Crew monitor** (`Ctrl+G`) — subagent execution
+- **Resume** — `@status` / `@resume` or read `orchestrator-state.yml`
+
+Classic interface and `chat.enableTodoList` are not used.
 EOF
 
 echo "Built $OUT (Kiro CLI)"

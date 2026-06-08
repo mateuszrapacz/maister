@@ -62,6 +62,13 @@ Use `maister-kiro` from the repo (or add to PATH) so `KIRO_HOME` defaults to `~/
 
 ## Daily use
 
+Maister targets the **Terminal UI** (default since Kiro CLI 2.0). The install profile ships with `chat.ui` = `tui`. Classic interface and `chat.enableTodoList` are not used.
+
+| Shortcut | Purpose |
+|----------|---------|
+| `Ctrl+X` | Activity tray — phase/task progress and queued messages |
+| `Ctrl+G` | Crew monitor — live subagent status (max 4 parallel) |
+
 ### Start a session
 
 From your **project directory** (workspace with code to change):
@@ -170,7 +177,8 @@ Key transforms (see `platforms/kiro-cli/` and `.maister/docs/standards/global/bu
 | Agents | MD → `agents/*.json` + `agents/instructions/*.md` |
 | Gates | `AskUserQuestion` / `AskQuestion` → **CHAT GATE** (interactive) |
 | Delegation | `Task` → `subagent`; `Skill tool` → slash + `skill://` |
-| Todo | `TaskCreate`/`TaskUpdate` → Kiro `todo` tool (best-effort) |
+| Progress (TUI) | `TaskCreate`/`TaskUpdate` → `todo` tool; visible in activity tray (`Ctrl+X`) |
+| UI default | `settings/cli.json` ships `chat.ui` = `tui` |
 | MCP | `.mcp.json` → `settings/mcp.json` |
 | Init | `.kiro/steering/maister-docs.md` + `AGENTS.md` template |
 
@@ -225,7 +233,7 @@ Adapted from [`docs/cursor-e2e-checklist.md`](cursor-e2e-checklist.md). Status r
 |---|----------|--------------|---------------|--------|
 | 1 | `/maister-init` full flow | Creates `AGENTS.md`, `.maister/docs/INDEX.md`, `.kiro/steering/maister-docs.md` | `smoke-cli.sh --test 1` (skill detection); full init: see [Scenario 1 command](#scenario-1-init) | ☐ draft |
 | 1a | Init artifacts | `AGENTS.md` Maister section; `.kiro/steering/maister-docs.md` exists | Inspect workspace after scenario 1 | ☐ draft |
-| 2 | `/maister-development` + todo progress | Kiro `todo` tool mirrors phase progress (best-effort) | See [Scenario 2 command](#scenario-2-development) | ☐ draft |
+| 2 | `/maister-development` + TUI task progress | `todo` tool mirrors phases in activity tray (`Ctrl+X`); `orchestrator-state.yml` is SOT | See [Scenario 2 command](#scenario-2-development) | ☐ draft |
 | 2a | Interactive phase gates | Orchestrator pauses at **CHAT GATE** until user replies in chat | **Manual only** — not automatable with `--no-interactive` | ☐ manual |
 | 3 | Resume `[task-path] [--from=PHASE]` | Reads `orchestrator-state.yml` as source of truth | `@resume` prompt or [Scenario 3 command](#scenario-3-resume) | ☐ draft |
 | 4 | Parallel subagent waves | Executor dispatches parallel waves; Kiro **max 4 concurrent** `subagent` calls | Development without `--sequential`; verify wave size ≤ 4 | ☐ draft |
@@ -240,8 +248,9 @@ In an **interactive** `maister-kiro chat` session (no `--no-interactive`):
 
 1. Start `/maister-development "small feature"` with `--sequential` for easier observation.
 2. Proceed through Phase 1–2 until the first **CHAT GATE** after gap analysis.
-3. **Verify**: orchestrator presents the question and options in chat and **does not** advance `completed_phases` or `todo` until you reply.
+3. **Verify**: orchestrator presents the question and options in chat and **does not** advance `completed_phases` or TUI tasks until you reply.
 4. Reply in chat; confirm the workflow continues to the next phase.
+5. Optional: open activity tray (`Ctrl+X`) to confirm phase tasks update during the workflow.
 
 Headless smoke uses defaults from [`platforms/kiro-cli/transforms/askuser-to-chat-gate.md`](../platforms/kiro-cli/transforms/askuser-to-chat-gate.md) (3B table) — gates auto-proceed without user input.
 
@@ -282,7 +291,7 @@ maister-kiro chat --no-interactive --trust-all-tools --agent maister \
 ```bash
 maister-kiro chat --no-interactive --trust-all-tools --agent maister \
   '/maister-development "Add docstring to greet()" --sequential'
-# Observe todo items for phase progress (best-effort; orchestrator-state.yml is SOT)
+# Observe TUI task progress in activity tray (Ctrl+X); orchestrator-state.yml is SOT
 ```
 
 #### Scenario 3 — resume
@@ -312,7 +321,7 @@ maister-kiro chat --no-interactive --trust-all-tools --agent maister \
 | Gap | Impact | Mitigation |
 |-----|--------|------------|
 | **preCompact** hook | Kiro has no `preCompact`; compaction may lose in-context state | `orchestrator-state.yml` SOT; `@status` / `@resume`; `post-compact-reminder-stub.sh` (documented, not wired) |
-| **todo API** | Experimental; sync is best-effort | `orchestrator-state.yml` remains authoritative for resume |
+| **TUI task sync** | Agent `todo` tool vs activity tray may drift | `orchestrator-state.yml` remains authoritative for resume; use `@status` / `@resume` |
 | **Max 4 subagents** | Parallel waves capped at 4 concurrent `subagent` calls | Executor should batch waves; use `--sequential` to disable parallelism |
 | **Scenario 7 MCP** | Playwright E2E optional | Enable `settings/mcp.json`; not required for release |
 | **Interactive multi-select** | Init Phase 3 multi-select not headless | Headless defaults use `global` standards only |

@@ -30,7 +30,7 @@ Full framework rule: `../orchestrator-framework/references/orchestrator-patterns
 
 ### Step 2: Initialize Workflow
 
-1. **Create todo items**: Use `todo` for all phases (see Phase Configuration), then set dependencies with `todo ordering in todo list`
+1. **Create TUI tasks**: Use `todo` for all phases (see Phase Configuration), then set dependencies with `todo ordering in todo list`
 2. **Create Task Directory**: `.maister/tasks/migrations/YYYY-MM-DD-task-name/`
 3. **Initialize State**: Create `orchestrator-state.yml` with migration context
 4. **Discover project documentation**: Read `.maister/docs/INDEX.md` (if exists), extract ALL file paths from the "Project Documentation" section — includes predefined docs AND any user-added project docs. Store as `project_context.project_doc_paths` in state.
