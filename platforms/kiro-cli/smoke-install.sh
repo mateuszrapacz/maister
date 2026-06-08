@@ -24,6 +24,7 @@ ALIAS_END_MARKER='# <<< maister-kiro aliases <<<'
 
 SET_DEFAULT=""
 SET_ALIAS=""
+RTK_ENABLED=1
 DEST=""
 
 usage() {
@@ -37,6 +38,7 @@ Usage: smoke-install.sh [OPTIONS] [DEST]
   --no-default      Do not set chat.defaultAgent (default in CI/non-TTY)
   --set-alias       Add maister-kiro and mk aliases to shell rc
   --no-alias        Do not add shell aliases (default in CI/non-TTY)
+  --no-rtk          Do not install RTK token optimization hook
   --help            Show this help
 
 Never modifies personal ~/.kiro/ — only the target KIRO_HOME directory.
@@ -229,6 +231,10 @@ main() {
         SET_ALIAS=0
         shift
         ;;
+      --no-rtk)
+        RTK_ENABLED=0
+        shift
+        ;;
       -*)
         echo "Unknown option: $1" >&2
         usage >&2
@@ -254,6 +260,17 @@ main() {
   fi
 
   install_to "$DEST"
+
+  if [ "$RTK_ENABLED" = "0" ]; then
+    rm -f "$DEST/hooks/rtk-rewrite.sh"
+    local mj="$DEST/agents/maister.json"
+    if [ -f "$mj" ]; then
+      local tmp="${mj}.tmp.$$"
+      jq '.hooks.preToolUse |= map(select(.command | contains("rtk-rewrite") | not))' "$mj" >"$tmp"
+      mv "$tmp" "$mj"
+    fi
+  fi
+
   apply_tui_profile "$DEST"
   apply_default_agent "$DEST"
 
