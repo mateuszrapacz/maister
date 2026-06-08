@@ -74,6 +74,15 @@ test_dev_prompt_maps_development() {
   grep -q '/maister-development' "$OUT/prompts/dev.md"
 }
 
+# 6b. @quick-plan prompt maps to /maister-quick-plan (not Kiro /plan)
+test_quick_plan_prompt() {
+  run_build
+  test -f "$OUT/prompts/quick-plan.md"
+  test ! -f "$OUT/prompts/plan.md"
+  grep -q '/maister-quick-plan' "$OUT/prompts/quick-plan.md"
+  grep -q '@quick-plan' "$OUT/prompts/quick-plan.md"
+}
+
 # 7. preCompact gap + hook path fallback documented in steering
 test_steering_hook_docs() {
   run_build
@@ -99,6 +108,7 @@ assert "all hook scripts executable (rule 22)" test_hooks_executable
 assert "maister-kiro wrapper executable (rule 24)" test_wrapper_exists
 assert "skill-invocation-reminder on agentSpawn + userPromptSubmit" test_skill_reminder_hooks
 assert "@dev prompt maps to /maister-development" test_dev_prompt_maps_development
+assert "@quick-plan prompt maps to /maister-quick-plan; plan.md removed" test_quick_plan_prompt
 assert "steering documents preCompact gap and hook paths" test_steering_hook_docs
 assert "smoke-uninstall.sh removes KIRO_HOME" test_smoke_uninstall
 

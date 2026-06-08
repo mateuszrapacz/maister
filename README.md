@@ -259,7 +259,7 @@ make build-kiro
 maister-kiro chat --agent maister
 ```
 
-Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister-development`) or `@prompts` shortcuts (`@init`, `@dev`, `@plan`, …).
+Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister-development`) or `@prompts` shortcuts (`@init`, `@dev`, `@quick-plan`, …). Do not use Kiro's `/plan` for Maister quick-plan — use `@quick-plan` or `/maister-quick-plan`.
 
 ### Local install
 

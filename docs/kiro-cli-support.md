@@ -107,7 +107,7 @@ Nine prompt files ship in `plugins/maister-kiro/prompts/` (source: `platforms/ki
 |---------|---------|---------------------|
 | `@init` | `/maister-init` | Initialize `.maister/docs/`, standards, steering |
 | `@dev` | `/maister-development` | Full SDLC workflow (requirements → spec → plan → implement → verify) |
-| `@plan` | `/maister-quick-plan` | Lightweight plan in `.maister/plans/` (no full development workflow) |
+| `@quick-plan` | `/maister-quick-plan` | Lightweight plan in `.maister/plans/` (no full development workflow). Avoid Kiro's built-in `/plan` — different agent. |
 | `@research` | `/maister-research` | Research with synthesis before implementation |
 | `@design` | `/maister-product-design` | Interactive product/feature design before development |
 | `@resume` | Appropriate `/maister-*` skill | Read `orchestrator-state.yml` under `.maister/tasks/` and continue from `current_phase` (or `--from=PHASE` when supported) |
@@ -116,6 +116,8 @@ Nine prompt files ship in `plugins/maister-kiro/prompts/` (source: `platforms/ki
 | `@bye` | — | End session gracefully — persist state, summarize progress, note task path for `@resume` |
 
 Prompt definitions (source of truth for mapping): `platforms/kiro-cli/prompts/*.md`.
+
+**Note:** Kiro ships a built-in `/plan` command (Plan agent). Maister quick-plan uses `@quick-plan` or `/maister-quick-plan` — not `/plan`.
 
 ### Slash skills without `@prompt` shortcuts
 
