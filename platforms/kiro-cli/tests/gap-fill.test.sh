@@ -146,11 +146,11 @@ test_development_headless_defaults_cited() {
     grep -q '\-\-no-interactive' "$OUT/skills/maister-development/SKILL.md"
 }
 
-# 9. Resume: @resume prompt and development skill document --from=PHASE
+# 9. Resume: /resume skill and development skill document --from=PHASE
 test_resume_from_phase_documented() {
   run_build
-  grep -q '\-\-from=' "$OUT/prompts/resume.md" && \
-    grep -q 'orchestrator-state\.yml' "$OUT/prompts/resume.md" && \
+  grep -q '\-\-from=' "$OUT/skills/resume/SKILL.md" && \
+    grep -q 'orchestrator-state\.yml' "$OUT/skills/resume/SKILL.md" && \
     grep -q '\-\-from=PHASE' "$OUT/skills/maister-development/SKILL.md"
 }
 

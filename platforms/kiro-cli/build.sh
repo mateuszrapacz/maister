@@ -383,7 +383,7 @@ This is the Kiro CLI variant. Key differences from Claude Code:
 - **Subagents**: Custom `maister-explore` agent; other agents referenced as `maister-*`
 - **Hooks**: Embedded in `agents/maister.json`; scripts at profile-root `hooks/` (`~/.kiro-maister/hooks/*.sh`; `smoke-install.sh` rewrites to `$DEST/hooks/` for non-default installs)
 - **preCompact gap**: Kiro has no `preCompact` hook — use `orchestrator-state.yml` + `@status` / `@resume`; `hooks/post-compact-reminder-stub.sh` is documented only (not wired)
-- **@prompts**: Nine shortcuts in `prompts/` — invoke as `@init`, `@dev`, `@research`, etc.
+- **Slash shortcuts**: `/dev`, `/work`, `/research`, `/quick-dev`, etc. — shortcut skills in `skills/` that delegate to full `/maister-*` skills
 - **MCP**: `settings/mcp.json` (enable Playwright for `--e2e` workflows). Empirical: `kiro-cli settings mcp.includeMcpJson true` (verify vs `useLegacyMcpJson` for your CLI version)
 - **Orchestrator**: `maister-kiro chat --agent maister` or `kiro-cli chat --agent maister`
 
@@ -577,9 +577,7 @@ chmod +x "$OUT/hooks/"*.sh
 mkdir -p "$OUT/.hook-state"
 printf '*\n!.gitignore\n' > "$OUT/.hook-state/.gitignore"
 
-# Step 20: Copy @prompts templates to OUT/prompts/
-rm -rf "$OUT/prompts"
-cp -R "$PLATFORM/prompts" "$OUT/prompts"
+# Step 20: Shortcut skills (dev, work, etc.) live in skills/ — no separate prompts/ dir needed
 
 cat > "$OUT/README.md" << 'EOF'
 # Maister (Kiro CLI)
@@ -611,7 +609,6 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 - `skills/maister-*/` — 26 slash skills
 - `steering/maister-workflows.md` — plugin workflows and Kiro platform notes
 - `hooks/` — hook scripts (`~/.kiro-maister/hooks/*.sh`; `smoke-install.sh` rewrites for non-default installs)
-- `prompts/` — `@prompts` shortcuts (`@init`, `@dev`, `@grill-me`, `@thermos`, …)
 - `settings/mcp.json` — Playwright MCP for `--e2e` workflows
 
 ## Terminal UI

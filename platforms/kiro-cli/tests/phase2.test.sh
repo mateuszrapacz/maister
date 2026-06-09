@@ -28,11 +28,13 @@ run_build() {
   (cd "$ROOT" && make build-kiro)
 }
 
-# 1. Rule 23: 25 prompt files in output
-test_prompt_count() {
+# 1. Rule 23: shortcut skills exist in output (replaced @prompts)
+test_shortcut_skills() {
   run_build
-  test -d "$OUT/prompts"
-  test "$(find "$OUT/prompts" -maxdepth 1 -type f | wc -l | tr -d ' ')" -eq 25
+  test -d "$OUT/skills/dev"
+  test -d "$OUT/skills/work"
+  test -d "$OUT/skills/resume"
+  test -d "$OUT/skills/status"
 }
 
 # 2. Rule 21: trustedAgents in maister.json
@@ -71,23 +73,22 @@ test_skill_reminder_hooks() {
 # 6. @dev prompt maps to /maister-development
 test_dev_prompt_maps_development() {
   run_build
-  grep -q '/maister-development' "$OUT/prompts/dev.md"
+  grep -q '/maister-development' "$OUT/skills/dev/SKILL.md"
 }
 
-# 6b. @quick-plan prompt maps to /maister-quick-plan (not Kiro /plan)
+# 6b. /quick-plan skill maps to /maister-quick-plan (not Kiro /plan)
 test_quick_plan_prompt() {
   run_build
-  test -f "$OUT/prompts/quick-plan.md"
-  test ! -f "$OUT/prompts/plan.md"
-  grep -q '/maister-quick-plan' "$OUT/prompts/quick-plan.md"
-  grep -q '@quick-plan' "$OUT/prompts/quick-plan.md"
+  test -f "$OUT/skills/quick-plan/SKILL.md"
+  test ! -d "$OUT/skills/plan"
+  grep -q '/maister-quick-plan' "$OUT/skills/quick-plan/SKILL.md"
 }
 
-# 6c. grill-me and thermos prompts exist
+# 6c. grill-me and thermos shortcut skills exist
 test_grill_thermos_prompts() {
   run_build
-  grep -q '/maister-grill-me' "$OUT/prompts/grill-me.md"
-  grep -q '/maister-thermos' "$OUT/prompts/thermos.md"
+  grep -q '/maister-grill-me' "$OUT/skills/grill-me/SKILL.md"
+  grep -q '/maister-thermos' "$OUT/skills/thermos/SKILL.md"
 }
 
 # 6d. thermos skill subagent lines survive Kiro build transforms
@@ -117,14 +118,14 @@ test_smoke_uninstall() {
 
 echo "=== Kiro CLI Phase 2 tests (Task Group 9) ==="
 
-assert "25 files in prompts/ (rule 23)" test_prompt_count
+assert "shortcut skills exist (dev, work, resume, status)" test_shortcut_skills
 assert "trustedAgents in maister.json (rule 21)" test_trusted_agents
 assert "all hook scripts executable (rule 22)" test_hooks_executable
 assert "maister-kiro wrapper executable (rule 24)" test_wrapper_exists
 assert "skill-invocation-reminder on agentSpawn + userPromptSubmit" test_skill_reminder_hooks
-assert "@dev prompt maps to /maister-development" test_dev_prompt_maps_development
-assert "@quick-plan prompt maps to /maister-quick-plan; plan.md removed" test_quick_plan_prompt
-assert "@grill-me and @thermos prompts map to skills" test_grill_thermos_prompts
+assert "/dev skill maps to /maister-development" test_dev_prompt_maps_development
+assert "/quick-plan skill maps to /maister-quick-plan" test_quick_plan_prompt
+assert "/grill-me and /thermos skills map to maister skills" test_grill_thermos_prompts
 assert "thermos skill has valid subagent syntax after build" test_thermos_subagent_syntax
 assert "steering documents preCompact gap and hook paths" test_steering_hook_docs
 assert "smoke-uninstall.sh removes KIRO_HOME" test_smoke_uninstall

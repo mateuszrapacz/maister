@@ -62,7 +62,7 @@ test_scenario_2_tui_progress() {
 # 5. Scenario 3 — resume reads orchestrator-state.yml
 test_scenario_3_resume() {
   grep -q 'orchestrator-state\.yml' "$DOC" && \
-    grep -q 'orchestrator-state\.yml' "$OUT/prompts/resume.md" && \
+    grep -q 'orchestrator-state\.yml' "$OUT/skills/resume/SKILL.md" && \
     grep -qE '\-\-from=' "$DOC"
 }
 
