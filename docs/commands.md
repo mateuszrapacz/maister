@@ -200,15 +200,13 @@ Lightweight commands for small tasks that don't need a full orchestrator workflo
 
 ### `/maister:quick-dev [task description]`
 
-Implement a task directly with standards awareness. Reads INDEX.md, loads applicable standards, then implements without planning mode.
+Implement a task directly — exactly as the main agent normally would, no planning mode — with standards enforcement. Reads INDEX.md and the specific matched standard files relevant to what you touch, applies them while implementing, and verifies compliance (pass/fail checklist) afterward.
 
 **When to use**: Task is clear, no architectural decisions needed, you know what needs doing.
 
 ### `/maister:quick-plan [task description]`
 
-Enter Claude Code's planning mode with standards awareness. Discovers and reads applicable standards *before* entering plan mode, so your plan is informed by project conventions.
-
-Standards compliance checklist is required in the plan file before exiting plan mode.
+Works exactly like Claude Code's built-in plan mode, with standards enforcement folded in. While planning, it reads INDEX.md and the specific matched standard files (INDEX.md alone is not enough), and the plan must reference the applicable standards and include a Standards Compliance Checklist (verified after implementation) before exiting plan mode.
 
 ### `/maister:quick-bugfix [bug description]`
 

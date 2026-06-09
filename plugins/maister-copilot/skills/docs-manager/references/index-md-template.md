@@ -54,7 +54,7 @@ Located in `.maister/docs/standards/[category]/`
 
 1. **Start Here**: Always read this INDEX.md first to understand what documentation exists
 2. **Project Context**: Read relevant project documentation before starting work
-3. **Standards**: Reference appropriate standards when writing code
+3. **Standards**: This index only points to the standards — open and follow the specific standard files relevant to your task; don't rely on the index alone
 4. **Keep Updated**: Update documentation when making significant changes
 5. **Customize**: Adapt all documentation to your project's specific needs
 

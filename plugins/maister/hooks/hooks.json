@@ -1,5 +1,5 @@
 {
-  "description": "AI SDLC plugin hooks for workflow enforcement and state preservation",
+  "description": "Maister plugin hooks for workflow enforcement and state preservation",
   "hooks": {
     "SessionStart": [
       {
