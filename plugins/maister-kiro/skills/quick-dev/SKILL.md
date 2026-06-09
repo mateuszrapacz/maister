@@ -7,3 +7,4 @@ user-invocable: true
 **User input**: `$ARGUMENTS`
 
 Invoke `/maister-quick-dev` with the above user input. Pass `$ARGUMENTS` verbatim.
+

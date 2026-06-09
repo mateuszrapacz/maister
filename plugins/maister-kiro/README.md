@@ -27,7 +27,6 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 - `skills/maister-*/` — 26 slash skills
 - `steering/maister-workflows.md` — plugin workflows and Kiro platform notes
 - `hooks/` — hook scripts (`~/.kiro-maister/hooks/*.sh`; `smoke-install.sh` rewrites for non-default installs)
-- `prompts/` — `@prompts` shortcuts (`@init`, `@dev`, `@grill-me`, `@thermos`, …)
 - `settings/mcp.json` — Playwright MCP for `--e2e` workflows
 
 ## Terminal UI

@@ -6,6 +6,5 @@ user-invocable: true
 
 **User input**: `$ARGUMENTS`
 
-Invoke `/maister-init` to initialize the Maister SDLC framework in this project.
+Invoke `/maister-init` with the above user input. Pass `$ARGUMENTS` verbatim.
 
-Read `.maister/docs/INDEX.md` after init completes.

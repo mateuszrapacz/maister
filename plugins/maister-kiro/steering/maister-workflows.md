@@ -732,7 +732,7 @@ This is the Kiro CLI variant. Key differences from Claude Code:
 - **Subagents**: Custom `maister-explore` agent; other agents referenced as `maister-*`
 - **Hooks**: Embedded in `agents/maister.json`; scripts at profile-root `hooks/` (`~/.kiro-maister/hooks/*.sh`; `smoke-install.sh` rewrites to `$DEST/hooks/` for non-default installs)
 - **preCompact gap**: Kiro has no `preCompact` hook — use `orchestrator-state.yml` + `@status` / `@resume`; `hooks/post-compact-reminder-stub.sh` is documented only (not wired)
-- **@prompts**: Nine shortcuts in `prompts/` — invoke as `@init`, `@dev`, `@research`, etc.
+- **Slash shortcuts**: `/dev`, `/work`, `/research`, `/quick-dev`, etc. — shortcut skills in `skills/` that delegate to full `/maister-*` skills
 - **MCP**: `settings/mcp.json` (enable Playwright for `--e2e` workflows). Empirical: `kiro-cli settings mcp.includeMcpJson true` (verify vs `useLegacyMcpJson` for your CLI version)
 - **Orchestrator**: `maister-kiro chat --agent maister` or `kiro-cli chat --agent maister`
 

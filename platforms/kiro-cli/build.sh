@@ -577,7 +577,121 @@ chmod +x "$OUT/hooks/"*.sh
 mkdir -p "$OUT/.hook-state"
 printf '*\n!.gitignore\n' > "$OUT/.hook-state/.gitignore"
 
-# Step 20: Shortcut skills (dev, work, etc.) live in skills/ — no separate prompts/ dir needed
+# Step 20: Generate shortcut skills (replace @prompts — these properly resolve $ARGUMENTS)
+generate_shortcut_skill() {
+  local name="$1" desc="$2" target="$3" extra="${4:-}"
+  mkdir -p "$OUT/skills/$name"
+  cat > "$OUT/skills/$name/SKILL.md" <<SKILL
+---
+name: $name
+description: "$desc"
+user-invocable: true
+---
+
+**User input**: \`\$ARGUMENTS\`
+
+Invoke \`/$target\` with the above user input. Pass \`\$ARGUMENTS\` verbatim.
+${extra}
+SKILL
+}
+
+# Orchestrator shortcuts
+generate_shortcut_skill "dev" "Shortcut for /maister-development. Use for any development task: features, bug fixes, enhancements." "maister-development" \
+  "Do not skip the workflow for \"straightforward\" tasks — complexity assessment is the workflow's job."
+generate_shortcut_skill "work" "Shortcut for /maister-work. Auto-classifies tasks and routes to appropriate workflow." "maister-work" \
+  "Classify the task and route to the appropriate Maister orchestrator. Do not skip workflow selection."
+generate_shortcut_skill "quick-dev" "Shortcut for /maister-quick-dev. Implement directly with standards awareness — no full workflow." "maister-quick-dev"
+generate_shortcut_skill "quick-plan" "Shortcut for /maister-quick-plan. Lightweight plan under .maister/plans/ — not Kiro built-in /plan." "maister-quick-plan" \
+  "Do not use Kiro's built-in \`/plan\` — that switches to the Kiro Plan agent."
+generate_shortcut_skill "quick-bugfix" "Shortcut for /maister-quick-bugfix. TDD-driven quick fix with complexity escalation." "maister-quick-bugfix"
+generate_shortcut_skill "research" "Shortcut for /maister-research. Technical, requirements, or mixed research before implementation." "maister-research"
+generate_shortcut_skill "design" "Shortcut for /maister-product-design. Interactive product/feature design before development." "maister-product-design"
+generate_shortcut_skill "migration" "Shortcut for /maister-migration. Full migration workflow with rollback planning." "maister-migration"
+generate_shortcut_skill "performance" "Shortcut for /maister-performance. Static bottleneck analysis and optimization." "maister-performance"
+generate_shortcut_skill "init" "Shortcut for /maister-init. Initialize Maister SDLC framework in this project." "maister-init"
+generate_shortcut_skill "grill-me" "Shortcut for /maister-grill-me. Stress-test a plan or design with relentless questions." "maister-grill-me"
+generate_shortcut_skill "thermos" "Shortcut for /maister-thermos. Combined thermo-nuclear branch review (security + code quality)." "maister-thermos" \
+  "Gather the scoped diff and changed-file contents first, then run both review subagents."
+generate_shortcut_skill "thermo-review" "Shortcut for /maister-thermo-nuclear-review. Deep security and correctness branch diff audit." "maister-thermo-nuclear-review" \
+  "Gather diff and changed-file contents first. Scope to added/modified code only."
+generate_shortcut_skill "thermo-quality" "Shortcut for /maister-thermo-nuclear-code-quality-review. Strict maintainability branch diff audit." "maister-thermo-nuclear-code-quality-review" \
+  "Gather diff and changed-file contents first. Apply the full thermo-nuclear code quality rubric."
+generate_shortcut_skill "reviews-code" "Shortcut for /maister-reviews-code. Automated code quality, security, and performance review." "maister-reviews-code"
+generate_shortcut_skill "reviews-pragmatic" "Shortcut for /maister-reviews-pragmatic. Detects over-engineering and scale mismatch." "maister-reviews-pragmatic"
+generate_shortcut_skill "reviews-production-readiness" "Shortcut for /maister-reviews-production-readiness. Pre-deployment GO/NO-GO verification." "maister-reviews-production-readiness"
+generate_shortcut_skill "reviews-reality-check" "Shortcut for /maister-reviews-reality-check. Validates work actually solves the problem." "maister-reviews-reality-check"
+generate_shortcut_skill "reviews-spec-audit" "Shortcut for /maister-reviews-spec-audit. Independent spec audit for completeness and clarity." "maister-reviews-spec-audit"
+generate_shortcut_skill "standards-discover" "Shortcut for /maister-standards-discover. Discover coding standards from project config and patterns." "maister-standards-discover"
+generate_shortcut_skill "standards-update" "Shortcut for /maister-standards-update. Update or create standards under .maister/docs/standards/." "maister-standards-update"
+
+# Utility shortcuts (inline logic, no /maister-* delegation)
+mkdir -p "$OUT/skills/resume"
+cat > "$OUT/skills/resume/SKILL.md" <<'SKILL'
+---
+name: resume
+description: "Resume interrupted Maister workflow from orchestrator-state.yml."
+user-invocable: true
+---
+
+**User input**: `$ARGUMENTS`
+
+Resume the Maister workflow from saved state.
+
+1. Find the latest `orchestrator-state.yml` under `.maister/tasks/`
+2. Read task path, `current_phase`, and `completed_phases`
+3. Invoke the appropriate `/maister-*` skill with `--from=<phase>` if supported, or continue from `current_phase`
+
+Do not restart from scratch unless the user asks.
+SKILL
+
+mkdir -p "$OUT/skills/status"
+cat > "$OUT/skills/status/SKILL.md" <<'SKILL'
+---
+name: status
+description: "Report current Maister workflow state, phase, and blockers."
+user-invocable: true
+---
+
+Read the active `orchestrator-state.yml` under `.maister/tasks/` and report:
+
+- Current task path and workflow type
+- `current_phase` and `completed_phases`
+- Any blockers or pending gates
+
+If no active workflow exists, say so clearly.
+SKILL
+
+mkdir -p "$OUT/skills/next"
+cat > "$OUT/skills/next/SKILL.md" <<'SKILL'
+---
+name: next
+description: "Suggest the best next action based on current workflow state."
+user-invocable: true
+---
+
+Read `orchestrator-state.yml` in the active task directory under `.maister/tasks/`.
+
+Suggest the single best next action (phase, skill, or subagent) based on current state.
+
+If no workflow is active, suggest `/init` or `/dev` as appropriate.
+SKILL
+
+mkdir -p "$OUT/skills/bye"
+cat > "$OUT/skills/bye/SKILL.md" <<'SKILL'
+---
+name: bye
+description: "End Maister session gracefully, preserving workflow state for /resume."
+user-invocable: true
+---
+
+End the Maister session gracefully.
+
+1. Ensure `orchestrator-state.yml` reflects the latest phase progress
+2. Summarize what was completed and what remains
+3. Note the task path for `/resume` on the next session
+
+Do not discard in-progress workflow state.
+SKILL
 
 cat > "$OUT/README.md" << 'EOF'
 # Maister (Kiro CLI)
