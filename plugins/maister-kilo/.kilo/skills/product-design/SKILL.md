@@ -1,5 +1,5 @@
 ---
-name: maister:product-design
+name: product-design
 description: Interactive product/feature design orchestrator. Transforms fuzzy ideas into structured product briefs through collaborative exploration, iterative refinement, and visual prototyping. Adaptive phases detect design complexity and adjust depth.
 user-invocable: true
 ---
@@ -16,7 +16,7 @@ Interactive workflow for product and feature design -- from fuzzy idea to develo
 
 Before doing anything else, settle this policy now and do not re-litigate it at any gate:
 
-**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from invoking `AskUserQuestion` at a gate. They apply only to your discretionary clarifications.
+**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from invoking `→ **CHAT GATE** — Present the question in chat and wait for user response` at a gate. They apply only to your discretionary clarifications.
 
 If you find yourself reasoning "the user has been approving everything, so I can skip this gate" or "auto-mode is on, so I should minimize questions" — that reasoning IS the failure mode. STOP and fire the gate.
 
@@ -64,7 +64,7 @@ Starting Phase 0: Initialize & Gather Context...
 
 Use for **product and feature design**: defining what to build before building it. Greenfield products, new features, enhancements, API designs, workflow designs.
 
-**DO NOT use for**: Implementation tasks (use `/maister:development`), pure research (use `/maister:research`), bug fixes, performance optimization, migrations.
+**DO NOT use for**: Implementation tasks (use `/maister-development`), pure research (use `/maister-research`), bug fixes, performance optimization, migrations.
 
 **When to use this vs development orchestrator**: If you need to explore the problem space, evaluate alternatives, and define requirements interactively before any code is written, use this. If you already know what to build and need to plan and execute, use development.
 
@@ -75,7 +75,7 @@ Use for **product and feature design**: defining what to build before building i
 | File | When to Read | Purpose |
 |------|-------------|---------|
 | `references/characteristic-detection.md` | Phase 0 (before detecting characteristics) | Detection signals, phase activation matrix, adaptive depth scaling |
-| `references/interaction-patterns.md` | Phase 2 (before first interactive phase) | Cognitive modes, refinement loop pattern, AskUserQuestion option design |
+| `references/interaction-patterns.md` | Phase 2 (before first interactive phase) | Cognitive modes, refinement loop pattern, → **CHAT GATE** — Present the question in chat and wait for user response option design |
 | `references/visual-companion.md` | Phase 7 (before visual prototyping) | Server architecture, communication protocol, graceful degradation |
 
 ---
@@ -193,7 +193,7 @@ digraph product_design_orchestrator {
 3. Analyze user's description to detect the 6 design characteristics: `is_greenfield`, `is_enhancement`, `is_ui_focused`, `is_backend`, `is_complex`, `is_simple`
 4. Derive `complexity_level` from characteristics: "simple" (if `is_simple`), "complex" (if `is_complex` or `is_greenfield`), "standard" (otherwise)
 
-5. AskUserQuestion — "Do you have additional context to provide?" with options:
+5. → **CHAT GATE** — Present the question in chat and wait for user response — "Do you have additional context to provide?" with options:
    - "I have files to add (I'll drop them in the context/ folder)"
    - "I have external links/URLs to reference"
    - "I need specific topics researched from the web"
@@ -202,12 +202,12 @@ digraph product_design_orchestrator {
 
 6. Based on response:
    - **Files**: Instruct user to drop files in `[task-path]/context/`. Wait for confirmation. Read and catalog files.
-   - **URLs**: Collect URLs via AskUserQuestion (one question, user provides list). Store in `design_context.collected_urls`.
-   - **Mini-research**: Collect research topics via AskUserQuestion. Store in `design_context.research_topics`.
+   - **URLs**: Collect URLs via → **CHAT GATE** — Present the question in chat and wait for user response (one question, user provides list). Store in `design_context.collected_urls`.
+   - **Mini-research**: Collect research topics via → **CHAT GATE** — Present the question in chat and wait for user response. Store in `design_context.research_topics`.
 
 7. Present detected characteristics with rationale for user confirmation:
 
-AskUserQuestion — "I detected these design characteristics. Please confirm or correct:" with options:
+→ **CHAT GATE** — Present the question in chat and wait for user response — "I detected these design characteristics. Please confirm or correct:" with options:
    - "Correct, proceed with these"
    - "Override: [list characteristic corrections]"
    - "Let me explain my thinking"
@@ -217,13 +217,13 @@ AskUserQuestion — "I detected these design characteristics. Please confirm or 
 **Output**: `orchestrator-state.yml` (characteristics, collected URLs, research topics, user files list)
 **State**: Set `design_context.design_characteristics`, `design_context.complexity_level`, `design_context.collected_urls`, `design_context.research_topics`, `design_context.user_files_list`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `→ **CHAT GATE** — Present the question in chat and wait for user response` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 ---
 
 ### Phase 1: Context Synthesis
 
-> **Phase gate**: Confirm Phase 0 completion in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase gate**: Confirm Phase 0 completion in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `→ **CHAT GATE** — Present the question in chat and wait for user response` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Synthesize ALL context sources into a unified design context document that informs all downstream phases
 **Execute**: Skill/Agent + Direct (adapts based on characteristics)
@@ -236,9 +236,9 @@ AskUserQuestion — "I detected these design characteristics. Please confirm or 
 - "I'll look through the project..." -- STOP. Delegate to codebase-analyzer.
 
 **INVOKE NOW** -- Skill tool call:
-1. Skill tool - `maister:codebase-analyzer` (to understand existing product context, tech stack, UI patterns)
+1. Skill tool - `maister-codebase-analyzer` (to understand existing product context, tech stack, UI patterns)
 
-**SELF-CHECK**: Did you invoke the Skill tool with `maister:codebase-analyzer`? Or did you start reading project files yourself? If the latter, STOP and invoke the Skill tool.
+**SELF-CHECK**: Did you invoke the Skill tool with `maister-codebase-analyzer`? Or did you start reading project files yourself? If the latter, STOP and invoke the Skill tool.
 
 **POST-SKILL CONTINUATION**: After codebase-analyzer returns control:
 1. Read `orchestrator-state.yml` to confirm you are the orchestrator
@@ -255,7 +255,7 @@ AskUserQuestion — "I detected these design characteristics. Please confirm or 
    - "I'll look that up..." -- STOP. Delegate to information-gatherer.
 
    **INVOKE NOW** -- Task tool call (parallel, one per topic):
-   Task tool - `maister:information-gatherer` subagent per research topic
+   Task tool - `maister-information-gatherer` subagent per research topic
 
    **Context to pass**: research topic, scope constraints, task_path
 
@@ -269,18 +269,18 @@ AskUserQuestion — "I detected these design characteristics. Please confirm or 
    - Cross-reference insights: connections between sources
    - Implications for design: what the context means for the design task
 
-6. AskUserQuestion — "Context synthesis complete. Key findings: [2-3 bullet summary]. Any corrections or additions before we explore the problem space?"
+6. → **CHAT GATE** — Present the question in chat and wait for user response — "Context synthesis complete. Key findings: [2-3 bullet summary]. Any corrections or additions before we explore the problem space?"
 
 **Output**: `analysis/design-context.md`
 **State**: Update `phase_summaries.context_synthesis`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `→ **CHAT GATE** — Present the question in chat and wait for user response` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 ---
 
 ### Phase 2: Problem Exploration
 
-> **Phase gate**: Confirm Phase 1 completion in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase gate**: Confirm Phase 1 completion in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `→ **CHAT GATE** — Present the question in chat and wait for user response` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Explore the problem space through structured questioning to produce a refined problem statement, constraints, and success criteria
 **Execute**: Direct, inline, interactive
@@ -311,7 +311,7 @@ Present: problem statement, key constraints, success criteria
 
 4. Enter **iterative refinement loop** (see `references/interaction-patterns.md`):
 
-AskUserQuestion — with options:
+→ **CHAT GATE** — Present the question in chat and wait for user response — with options:
    - "Approve and continue"
    - "Change the problem scope"
    - "Change the constraints"
@@ -326,13 +326,13 @@ AskUserQuestion — with options:
 **Output**: `analysis/problem-statement.md`
 **State**: Update `phase_summaries.problem_exploration` with `problem_statement`, `constraints`, `success_criteria`
 
-AskUserQuestion — "Problem space explored." Read `next_phase` from `orchestrator-state.yml`. If next phase is Phase 4, prepend "Skipping persona exploration (enhancement scope). " Ask "Continue to [next_phase value]?"
+→ **CHAT GATE** — Present the question in chat and wait for user response — "Problem space explored." Read `next_phase` from `orchestrator-state.yml`. If next phase is Phase 4, prepend "Skipping persona exploration (enhancement scope). " Ask "Continue to [next_phase value]?"
 
 ---
 
 ### Phase 3: User & Persona Exploration
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from Phase 2 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Before executing this phase, locate the `→ **CHAT GATE** — Present the question in chat and wait for user response` tool call from Phase 2 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `→ **CHAT GATE** — Present the question in chat and wait for user response` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Develop persona cards and user journeys for the design
 **Execute**: Direct, inline, interactive
@@ -344,7 +344,7 @@ AskUserQuestion — "Problem space explored." Read `next_phase` from `orchestrat
 
 1. **Exploration**: Ask about user types, their goals, pain points, discovery paths. Reference design context from Phase 1.
 
-AskUserQuestion — one question at a time about user types and their needs
+→ **CHAT GATE** — Present the question in chat and wait for user response — one question at a time about user types and their needs
 
 2. After sufficient exploration, **transition to convergence**:
 
@@ -354,7 +354,7 @@ AskUserQuestion — one question at a time about user types and their needs
 
 4. Enter **iterative refinement loop**:
 
-AskUserQuestion — with options:
+→ **CHAT GATE** — Present the question in chat and wait for user response — with options:
    - "Approve personas and continue"
    - "Change [persona name]"
    - "Add another persona"
@@ -368,15 +368,15 @@ AskUserQuestion — with options:
 **Output**: `analysis/personas.md`
 **State**: Update `phase_summaries.persona_exploration` with `personas`, `user_journeys`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `→ **CHAT GATE** — Present the question in chat and wait for user response` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-AskUserQuestion — "Personas defined. Continue to Idea Generation?"
+→ **CHAT GATE** — Present the question in chat and wait for user response — "Personas defined. Continue to Idea Generation?"
 
 ---
 
 ### Phase 4: Idea Generation
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from the preceding phase (Phase 3 if ran, or Phase 2) in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Before executing this phase, locate the `→ **CHAT GATE** — Present the question in chat and wait for user response` tool call from the preceding phase (Phase 3 if ran, or Phase 2) in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `→ **CHAT GATE** — Present the question in chat and wait for user response` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Generate unbiased design alternatives using the solution-brainstormer agent
 **Execute**: Agent via Task tool (deliberately non-interactive to avoid anchoring bias)
@@ -389,7 +389,7 @@ AskUserQuestion — "Personas defined. Continue to Idea Generation?"
 
 **INVOKE NOW** -- Task tool call:
 
-Task tool - `maister:solution-brainstormer` subagent
+Task tool - `maister-solution-brainstormer` subagent
 
 **Context to pass** (Pattern 7):
 - `task_path`
@@ -406,7 +406,7 @@ Task tool - `maister:solution-brainstormer` subagent
 - `analysis/problem-statement.md` (refined problem + constraints)
 - `analysis/personas.md` (if exists — persona cards + journeys)
 
-**SELF-CHECK**: After Task tool returns, verify `analysis/alternatives.md` exists and contains alternatives with trade-off analysis. If missing: re-invoke brainstormer with corrected context. If second attempt fails, AskUserQuestion to report failure and ask whether to retry or proceed with inline alternatives.
+**SELF-CHECK**: After Task tool returns, verify `analysis/alternatives.md` exists and contains alternatives with trade-off analysis. If missing: re-invoke brainstormer with corrected context. If second attempt fails, → **CHAT GATE** — Present the question in chat and wait for user response to report failure and ask whether to retry or proceed with inline alternatives.
 
 **Output**: `analysis/alternatives.md`
 **State**: Update `phase_summaries.idea_generation` with summary of alternatives generated
@@ -428,7 +428,7 @@ Task tool - `maister:solution-brainstormer` subagent
 > "The brainstormer generated several alternative approaches. Let me walk through each decision area so you can evaluate them..."
 
 **ANTI-PATTERN -- DO NOT DO THIS:**
-- Do NOT present all decision areas in a single summary table and ask one combined question. Each area MUST get its own detailed presentation and AskUserQuestion.
+- Do NOT present all decision areas in a single summary table and ask one combined question. Each area MUST get its own detailed presentation and → **CHAT GATE** — Present the question in chat and wait for user response.
 - Do NOT shortcut remaining areas after showing full detail for the first one. EVERY area gets the SAME level of detail.
 
 1. Read `analysis/alternatives.md`
@@ -436,16 +436,16 @@ Task tool - `maister:solution-brainstormer` subagent
    a. **Area header**: name and why this decision matters (1-2 sentences)
    b. **Alternatives detail**: For EVERY alternative, show name, description, pros, cons
    c. **Recommendation**: which alternative is recommended and why
-   d. AskUserQuestion — alternatives as options (mark recommended with "(Recommended)") + "Need more info" + "Let me explain my thinking"
+   d. → **CHAT GATE** — Present the question in chat and wait for user response — alternatives as options (mark recommended with "(Recommended)") + "Need more info" + "Let me explain my thinking"
    e. Record choice, move to next area
 
-> **SELF-CHECK before each AskUserQuestion**: Did you output the full alternatives with pros/cons for THIS area? If you only showed a recommendation line, STOP and output the full detail.
+> **SELF-CHECK before each → **CHAT GATE** — Present the question in chat and wait for user response**: Did you output the full alternatives with pros/cons for THIS area? If you only showed a recommendation line, STOP and output the full detail.
 
 3. After all areas resolved, present a brief summary of the chosen direction
 
 4. Enter **iterative refinement loop** on the overall direction:
 
-AskUserQuestion — with options:
+→ **CHAT GATE** — Present the question in chat and wait for user response — with options:
    - "Approve direction and continue to specification"
    - "Refine the direction (adjust choices)"
    - "Explore more (re-generate alternatives)" -> returns to Phase 4
@@ -458,15 +458,15 @@ AskUserQuestion — with options:
 **Output**: `analysis/design-decisions.md`
 **State**: Update `phase_summaries.idea_convergence` with `selected_approach`, `trade_offs_accepted`, `key_decisions`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `→ **CHAT GATE** — Present the question in chat and wait for user response` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-AskUserQuestion — "Design direction approved. Continue to Feature Specification?"
+→ **CHAT GATE** — Present the question in chat and wait for user response — "Design direction approved. Continue to Feature Specification?"
 
 ---
 
 ### Phase 6: Feature Specification
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from Phase 5 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Before executing this phase, locate the `→ **CHAT GATE** — Present the question in chat and wait for user response` tool call from Phase 5 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `→ **CHAT GATE** — Present the question in chat and wait for user response` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Build a complete feature specification section-by-section using propose-and-refine
 **Execute**: Direct, inline, interactive
@@ -500,7 +500,7 @@ For each section:
 
 3. Enter **iterative refinement loop** per section:
 
-AskUserQuestion — with options:
+→ **CHAT GATE** — Present the question in chat and wait for user response — with options:
    - "Approve this section (implementation-ready)"
    - "Add more detail (needs specifics for implementation)"
    - "Change the scope"
@@ -531,13 +531,13 @@ If no gaps: proceed to Phase 7/8.
 **Output**: `analysis/feature-spec.md`
 **State**: Update `phase_summaries.feature_specification` with `spec_sections` (individually approved), `sections_count`
 
-AskUserQuestion — "Specification complete." Read `next_phase` from `orchestrator-state.yml`. If next phase is Phase 8, prepend "No UI prototyping needed (backend-focused design). " Ask "Continue to [next_phase value]?"
+→ **CHAT GATE** — Present the question in chat and wait for user response — "Specification complete." Read `next_phase` from `orchestrator-state.yml`. If next phase is Phase 8, prepend "No UI prototyping needed (backend-focused design). " Ask "Continue to [next_phase value]?"
 
 ---
 
 ### Phase 7: Visual Prototyping
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from Phase 6 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Before executing this phase, locate the `→ **CHAT GATE** — Present the question in chat and wait for user response` tool call from Phase 6 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `→ **CHAT GATE** — Present the question in chat and wait for user response` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Generate visual mockups (HTML/CSS via visual companion or ASCII fallback) for UI-focused designs
 **Execute**: Visual companion + Direct, with ui-mockup-generator fallback
@@ -595,7 +595,7 @@ The visual companion is the **default and preferred** rendering method. Always a
 > You should only reach this section if Step 1 failed (server could not start on any port) or the user explicitly passed `--no-visual`. If the visual companion is running, do NOT use this fallback.
 
 **INVOKE NOW** -- Task tool call:
-Task tool - `maister:ui-mockup-generator` subagent
+Task tool - `maister-ui-mockup-generator` subagent
 
 **Context to pass**: task_path, spec sections from Phase 6, design context from Phase 1, selected approach from Phase 5
 
@@ -605,7 +605,7 @@ Task tool - `maister:ui-mockup-generator` subagent
 
 Enter **iterative refinement loop**:
 
-AskUserQuestion — with options:
+→ **CHAT GATE** — Present the question in chat and wait for user response — with options:
    - "Approve all screens and continue"
    - "Change the layout of [screen name]"
    - "Change the content of [screen name]"
@@ -622,15 +622,15 @@ Mockups are saved to `analysis/mockups/` automatically on each POST to the visua
 **Output**: `analysis/mockups/` (mockup files)
 **State**: Update `phase_summaries.visual_prototyping` with `mockup_references`, `design_context.visual_companion` status
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `→ **CHAT GATE** — Present the question in chat and wait for user response` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-AskUserQuestion — "Visual prototyping complete. Continue to Review & Handoff?"
+→ **CHAT GATE** — Present the question in chat and wait for user response — "Visual prototyping complete. Continue to Review & Handoff?"
 
 ---
 
 ### Phase 8: Review & Handoff
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Before executing this phase, locate the `→ **CHAT GATE** — Present the question in chat and wait for user response` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `→ **CHAT GATE** — Present the question in chat and wait for user response` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Assemble the layered product brief, present for final approval, suggest development handoff
 **Execute**: Direct, inline, interactive
@@ -673,7 +673,7 @@ Before assembling the product brief, re-read `analysis/feature-spec.md` and veri
 
 4. Enter **iterative refinement loop** (final approval gate):
 
-AskUserQuestion — with options:
+→ **CHAT GATE** — Present the question in chat and wait for user response — with options:
    - "Approve product brief"
    - "Revise a section"
    - "Add missing information"
@@ -683,13 +683,13 @@ AskUserQuestion — with options:
 
 6. On approval, update task status and suggest next steps.
 
-   Output this message EXACTLY — do NOT invent alternative commands (e.g. `/maister:feature:new` does not exist):
+   Output this message EXACTLY — do NOT invent alternative commands (e.g. `/maister-feature:new` does not exist):
 
 ```
 Product brief approved and saved to: [task-path]/outputs/product-brief.md
 
 To start development based on this design, clear context first or start a new session, then run:
-/maister:development [task-path]
+/maister-development [task-path]
 ```
 
 **Output**: `outputs/product-brief.md`
@@ -789,8 +789,8 @@ options:
 ## Command Integration
 
 Invoked via:
-- `/maister:product-design [description] [--no-visual] [--research=PATH]` (new)
-- `/maister:product-design [task-path] [--from=PHASE]` (resume)
+- `/maister-product-design [description] [--no-visual] [--research=PATH]` (new)
+- `/maister-product-design [task-path] [--from=PHASE]` (resume)
 
 **Flags**:
 | Flag | Effect |
@@ -812,7 +812,7 @@ Task directory: `.maister/tasks/product-design/YYYY-MM-DD-task-name/`
 The product brief and mockups are consumed by the development orchestrator. Pass the product-design task path directly:
 
 ```
-/maister:development .maister/tasks/product-design/YYYY-MM-DD-task-name/
+/maister-development .maister/tasks/product-design/YYYY-MM-DD-task-name/
 ```
 
 The development orchestrator auto-detects the product-design task path during initialization (Step 4: Ingest Design Context) and copies:
@@ -828,7 +828,7 @@ It then generates `analysis/design-context/INDEX.md` (screen/component inventory
 A completed research workflow can feed into product design:
 
 ```
-/maister:product-design "Design feature X" --research=.maister/tasks/research/YYYY-MM-DD-research/
+/maister-product-design "Design feature X" --research=.maister/tasks/research/YYYY-MM-DD-research/
 ```
 
 Research findings are imported into `context/research-context/` and synthesized alongside other context sources in Phase 1.

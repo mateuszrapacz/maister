@@ -1,5 +1,5 @@
 ---
-name: maister:research
+name: research
 description: Orchestrates comprehensive research workflows from question definition through findings documentation. Handles technical, requirements, literature, and mixed research types with adaptive methodology, multi-source gathering, pattern synthesis, and evidence-based reporting. Supports standalone research tasks and embedded research phase in other workflows.
 user-invocable: true
 ---
@@ -16,7 +16,7 @@ Systematic research workflow from question definition to evidence-based document
 
 Before doing anything else, settle this policy now and do not re-litigate it at any gate:
 
-**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from invoking `AskUserQuestion` at a gate. They apply only to your discretionary clarifications.
+**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from invoking `→ **CHAT GATE** — Present the question in chat and wait for user response` at a gate. They apply only to your discretionary clarifications.
 
 If you find yourself reasoning "the user has been approving everything, so I can skip this gate" or "auto-mode is on, so I should minimize questions" — that reasoning IS the failure mode. STOP and fire the gate.
 
@@ -134,7 +134,7 @@ This phase executes 4 sequential steps. On resume, check existing artifacts to s
 
 **Read `references/research-methodologies.md` NOW using the Read tool** — research type classification, methodology selection, gathering strategies
 
-**INVOKE NOW**: Use Task tool with `subagent_type: maister:research-planner`
+**INVOKE NOW**: Use Task tool with `subagent_type: maister-research-planner`
 
 **Context to pass**: task_path, research_brief_path, research_type, research_question, scope, project_doc_paths (from state)
 
@@ -165,7 +165,7 @@ For each category in strategy:
 **Artifacts**: `analysis/synthesis.md`, `outputs/research-report.md`
 **Resume check**: If `analysis/synthesis.md` AND `outputs/research-report.md` exist, skip (Phase 1 complete)
 
-**INVOKE NOW**: Use Task tool with `subagent_type: maister:research-synthesizer`
+**INVOKE NOW**: Use Task tool with `subagent_type: maister-research-synthesizer`
 
 **Context to pass**: task_path, findings_directory_path, research_question, research_type, methodology
 
@@ -179,15 +179,15 @@ Update state: `research_context.confidence_level`
 
 ---
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `→ **CHAT GATE** — Present the question in chat and wait for user response` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-AskUserQuestion - "Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?"
+→ **CHAT GATE** — Present the question in chat and wait for user response - "Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?"
 
 ---
 
 ### Phase 2: Optional Phases Decision
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from Phase 1 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Before executing this phase, locate the `→ **CHAT GATE** — Present the question in chat and wait for user response` tool call from Phase 1 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `→ **CHAT GATE** — Present the question in chat and wait for user response` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Evaluate whether brainstorming and/or design phases would be valuable (independently)
 **Execute**: Direct
@@ -206,10 +206,10 @@ AskUserQuestion - "Research foundation complete (initialized, planned, gathered,
    - Whether research suggests architectural decisions (yes → valuable)
    - Research type (requirements/mixed → likely valuable; technical → depends)
    - Whether design artifacts would feed into development workflow
-4. If `brainstorming_enabled` not already set by flag, AskUserQuestion:
+4. If `brainstorming_enabled` not already set by flag, → **CHAT GATE** — Present the question in chat and wait for user response:
    - "[Brainstorming recommendation]. Would you like to explore solution alternatives?"
    - Options: "Yes, explore alternatives" / "No, skip brainstorming"
-5. If `design_enabled` not already set by flag, AskUserQuestion:
+5. If `design_enabled` not already set by flag, → **CHAT GATE** — Present the question in chat and wait for user response:
    - "[Design recommendation]. Would you like to generate a high-level design?"
    - Options: "Yes, generate design" / "No, skip design"
 6. Update state: set `brainstorming_enabled` and `design_enabled`
@@ -233,7 +233,7 @@ AskUserQuestion - "Research foundation complete (initialized, planned, gathered,
 
 > **ANTI-PATTERN**: Do NOT generate solution alternatives inline. The solution-brainstormer agent has specialized multi-perspective analysis capabilities.
 
-**INVOKE NOW**: Use Task tool with `subagent_type: maister:solution-brainstormer`
+**INVOKE NOW**: Use Task tool with `subagent_type: maister-solution-brainstormer`
 
 **Context to pass** (Pattern 7):
 - `task_path`, `synthesis_path`, `research_report_path`
@@ -241,7 +241,7 @@ AskUserQuestion - "Research foundation complete (initialized, planned, gathered,
 - Accumulated context: `research_type`, `research_question`, `confidence_level`, `phase_summaries` (Phase 1)
 - `project_doc_paths` (from state)
 
-> **SELF-CHECK**: After Task tool returns, verify `outputs/solution-exploration.md` exists and contains alternatives. If missing: **STOP. Do NOT proceed to Phase 4 or Phase 5.** Re-invoke the brainstormer with corrected context (ensure `output_path` is `outputs/solution-exploration.md`). If second attempt also fails, use AskUserQuestion to report the failure and ask whether to retry or skip brainstorming.
+> **SELF-CHECK**: After Task tool returns, verify `outputs/solution-exploration.md` exists and contains alternatives. If missing: **STOP. Do NOT proceed to Phase 4 or Phase 5.** Re-invoke the brainstormer with corrected context (ensure `output_path` is `outputs/solution-exploration.md`). If second attempt also fails, use → **CHAT GATE** — Present the question in chat and wait for user response to report the failure and ask whether to retry or skip brainstorming.
 
 → **AUTO-CONTINUE**
 
@@ -257,38 +257,38 @@ AskUserQuestion - "Research foundation complete (initialized, planned, gathered,
 **Skip if**: `brainstorming_enabled = false`
 **Resume check**: If `phase_summaries.phase-4.decision_areas` has entries with `chosen_approach` set, skip already-resolved areas
 
-> **ANTI-PATTERN**: Do NOT present all decision areas in a single summary table and ask one combined "do you agree?" question. Each area MUST get its own detailed presentation and its own AskUserQuestion call.
+> **ANTI-PATTERN**: Do NOT present all decision areas in a single summary table and ask one combined "do you agree?" question. Each area MUST get its own detailed presentation and its own → **CHAT GATE** — Present the question in chat and wait for user response call.
 >
 > **ANTI-PATTERN**: Do NOT show full alternatives/pros/cons for the first area and then shortcut remaining areas to just a recommendation line + question. EVERY area gets the SAME level of detail — all alternatives with descriptions, pros, and cons. No exceptions.
 
 1. Read `outputs/solution-exploration.md`
-2. For each decision area sequentially, output ALL of the following (steps a-d) BEFORE calling AskUserQuestion:
+2. For each decision area sequentially, output ALL of the following (steps a-d) BEFORE calling → **CHAT GATE** — Present the question in chat and wait for user response:
    a. **Area header**: area name and why this decision matters (1-2 sentences of context)
    b. **Alternatives detail**: For EVERY alternative in this area, show:
       - Name and description (2-3 sentences)
       - Pros (bullet list)
       - Cons (bullet list)
    c. **Recommendation**: which alternative is recommended and why (1 sentence)
-   d. **AskUserQuestion**: this area's alternatives as options (mark recommended with "(Recommended)") + "Need more info" option
+   d. **→ **CHAT GATE** — Present the question in chat and wait for user response**: this area's alternatives as options (mark recommended with "(Recommended)") + "Need more info" option
    e. If user picks → record choice, move to next area
    f. If "Need more info" → present the detailed trade-off analysis for the requested alternative, then re-ask
 
-> **SELF-CHECK before each AskUserQuestion**: Did you output the alternatives with pros/cons for THIS area? If you only showed a recommendation line without listing all alternatives and their pros/cons, STOP and output the full detail before asking.
+> **SELF-CHECK before each → **CHAT GATE** — Present the question in chat and wait for user response**: Did you output the alternatives with pros/cons for THIS area? If you only showed a recommendation line without listing all alternatives and their pros/cons, STOP and output the full detail before asking.
 
 3. After all areas resolved, present a brief summary of the chosen combination
 4. Update state with chosen approaches per decision area
 
-> **GATE CHECK**: Verify that AskUserQuestion was called for EACH decision area. If any decision area was skipped for any reason (e.g., output file missing, read failure), STOP and resolve before continuing. Do NOT mark Phase 4 complete without user convergence on all decision areas.
+> **GATE CHECK**: Verify that → **CHAT GATE** — Present the question in chat and wait for user response was called for EACH decision area. If any decision area was skipped for any reason (e.g., output file missing, read failure), STOP and resolve before continuing. Do NOT mark Phase 4 complete without user convergence on all decision areas.
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `→ **CHAT GATE** — Present the question in chat and wait for user response` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-AskUserQuestion - "Brainstorming complete. Continue to high-level design?"
+→ **CHAT GATE** — Present the question in chat and wait for user response - "Brainstorming complete. Continue to high-level design?"
 
 ---
 
 ### Phase 5: High-Level Design
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Before executing this phase, locate the `→ **CHAT GATE** — Present the question in chat and wait for user response` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `→ **CHAT GATE** — Present the question in chat and wait for user response` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Create architecture design from selected solution approach
 **Execute**: Orchestrator-Direct Hybrid
@@ -302,13 +302,13 @@ AskUserQuestion - "Brainstorming complete. Continue to high-level design?"
 **Part A — Design Direction (Direct)**:
 1. If Phase 4 ran: confirm selected approaches from convergence
 2. If Phase 4 was skipped: use research report recommendations as design input
-3. AskUserQuestion for any design preferences or constraints (e.g., "Any architectural constraints or preferences?")
+3. → **CHAT GATE** — Present the question in chat and wait for user response for any design preferences or constraints (e.g., "Any architectural constraints or preferences?")
 
 **Part B — Design Generation (Subagent)**:
 
 > **ANTI-PATTERN**: Do NOT generate C4 architecture diagrams or ADRs inline. The solution-designer agent has specialized architecture and MADR documentation capabilities.
 
-**INVOKE NOW**: Use Task tool with `subagent_type: maister:solution-designer`
+**INVOKE NOW**: Use Task tool with `subagent_type: maister-solution-designer`
 
 **Context to pass** (Pattern 7):
 - `task_path`, `synthesis_path`, `research_report_path`
@@ -318,7 +318,7 @@ AskUserQuestion - "Brainstorming complete. Continue to high-level design?"
 - Accumulated context: `research_type`, `research_question`, `confidence_level`, `phase_summaries`
 - `project_doc_paths` (from state)
 
-> **SELF-CHECK**: After Task tool returns, verify both `outputs/high-level-design.md` and `outputs/decision-log.md` exist. If missing: **STOP. Do NOT proceed to Part C.** Re-invoke the designer with corrected context. If second attempt also fails, use AskUserQuestion to report the failure and ask whether to retry or skip design.
+> **SELF-CHECK**: After Task tool returns, verify both `outputs/high-level-design.md` and `outputs/decision-log.md` exist. If missing: **STOP. Do NOT proceed to Part C.** Re-invoke the designer with corrected context. If second attempt also fails, use → **CHAT GATE** — Present the question in chat and wait for user response to report the failure and ask whether to retry or skip design.
 
 **Part C — Summary (Direct)**:
 3. Read `outputs/high-level-design.md` and `outputs/decision-log.md`
@@ -328,15 +328,15 @@ AskUserQuestion - "Brainstorming complete. Continue to high-level design?"
    - Key decision highlights (1 line each)
    - Integration points with existing system (if applicable)
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `→ **CHAT GATE** — Present the question in chat and wait for user response` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-AskUserQuestion - "Design complete. Continue to output generation?"
+→ **CHAT GATE** — Present the question in chat and wait for user response - "Design complete. Continue to output generation?"
 
 ---
 
 ### Phase 6: Completion
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Before executing this phase, locate the `→ **CHAT GATE** — Present the question in chat and wait for user response` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `→ **CHAT GATE** — Present the question in chat and wait for user response` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Summarize research results and suggest next steps
 **Execute**: Direct
@@ -351,7 +351,7 @@ AskUserQuestion - "Design complete. Continue to output generation?"
 3. If design artifacts exist, suggest starting development in a fresh session:
    ```
    To start development based on this research, clear context first or start a new session, then run:
-   /maister:development [task-path]
+   /maister-development [task-path]
    ```
 
 → End of workflow
@@ -445,7 +445,7 @@ options:
 
 ### As Standalone Research
 
-**Command**: `/maister:research [research-question]`
+**Command**: `/maister-research [research-question]`
 **Flow**: Complete all phases, save outputs in task directory
 
 ### As Embedded Research Phase
@@ -473,8 +473,8 @@ research_outputs:
 ## Command Integration
 
 Invoked via:
-- `/maister:research [question] [--type=TYPE] [--brainstorm] [--no-brainstorm] [--design] [--no-design]` (new)
-- `/maister:research [task-path] [--from=PHASE]` (resume)
+- `/maister-research [question] [--type=TYPE] [--brainstorm] [--no-brainstorm] [--design] [--no-design]` (new)
+- `/maister-research [task-path] [--from=PHASE]` (resume)
 
 **Brainstorming flags**:
 - `--brainstorm`: Force brainstorming phase (auto-resolves Phase 2 brainstorming decision to "enable")
