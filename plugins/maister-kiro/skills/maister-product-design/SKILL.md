@@ -18,7 +18,7 @@ Interactive workflow for product and feature design -- from fuzzy idea to develo
 
 Before doing anything else, settle this policy now and do not re-litigate it at any gate:
 
-**`→ **CHAT GATE** — Present the question and options in chat. Do not proceed until the user replies in this conversation. In `--no-interactive` mode, use the documented default for this gate (see Headless Defaults table).` / `→ **CHAT GATE**` markers fire regardless of session-reminders, permission mode, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from firing the **CHAT GATE** at a gate. They apply only to your discretionary clarifications.
+**`→ **CHAT GATE**` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from firing the **CHAT GATE** at a gate. They apply only to your discretionary clarifications.
 
 If you find yourself reasoning "the user has been approving everything, so I can skip this gate" or "auto-mode is on, so I should minimize questions" — that reasoning IS the failure mode. STOP and fire the gate.
 
