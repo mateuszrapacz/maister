@@ -107,8 +107,8 @@ validate-kiro:
 		name=$$(grep -m1 '^name:' "$$d/SKILL.md" 2>/dev/null | sed 's/^name: *//'); \
 		test "$$name" = "$$dir" || (echo "FAIL: skill name mismatch $$dir vs $$name (rule 13)" && exit 1); \
 	done
-	@echo "Rule 14: exactly 26 skill directories..."
-	@test $$(find plugins/maister-kiro/skills -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') -eq 26 || (echo "FAIL: expected 26 skill directories" && exit 1)
+	@echo "Rule 14: exactly 57 skill directories..."
+	@test $$(find plugins/maister-kiro/skills -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') -eq 57 || (echo "FAIL: expected 57 skill directories" && exit 1)
 	@echo "Rule 15: no standalone hooks/hooks.json..."
 	@test ! -f plugins/maister-kiro/hooks/hooks.json || (echo "FAIL: hooks/hooks.json should not exist" && exit 1)
 	@echo "Rule 16: no commands/ directory..."
@@ -128,9 +128,8 @@ validate-kiro:
 	@for f in plugins/maister-kiro/hooks/*.sh; do \
 		test -x "$$f" || (echo "FAIL: hook not executable $$f (rule 22)" && exit 1); \
 	done
-	@echo "Rule 23: 25 files in prompts/..."
-	@test -d plugins/maister-kiro/prompts || (echo "FAIL: prompts/ missing (rule 23)" && exit 1)
-	@test $$(find plugins/maister-kiro/prompts -maxdepth 1 -type f | wc -l | tr -d ' ') -eq 25 || (echo "FAIL: expected 25 files in prompts/ (rule 23)" && exit 1)
+	@echo "Rule 23: exactly 25 unprefixed shortcut skill directories..."
+	@test $$(find plugins/maister-kiro/skills -mindepth 1 -maxdepth 1 -type d ! -name 'maister-*' | wc -l | tr -d ' ') -eq 25 || (echo "FAIL: expected 25 unprefixed shortcut skill directories (rule 23)" && exit 1)
 	@echo "Rule 24: maister-kiro wrapper in platforms/kiro-cli/..."
 	@test -x platforms/kiro-cli/maister-kiro || (echo "FAIL: maister-kiro wrapper not executable (rule 24)" && exit 1)
 	@echo "Rule 25: no AskUserQuestion/AskQuestion in output tree (incl. hooks)..."
@@ -141,8 +140,8 @@ validate-kiro:
 	@test $$(grep -r 'CHAT GATE' plugins/maister-kiro/skills/ --include="*.md" 2>/dev/null | wc -l | tr -d ' ') -ge 200 || (echo "FAIL: total CHAT GATE count below 200 (rule 26)" && exit 1)
 	@echo "Rule 27: transforms/askuser-to-chat-gate.md exists..."
 	@test -f platforms/kiro-cli/transforms/askuser-to-chat-gate.md || (echo "FAIL: askuser-to-chat-gate.md missing (rule 27)" && exit 1)
-	@echo "Rule 28: exactly 26 maister-* skill directories..."
-	@test $$(find plugins/maister-kiro/skills -mindepth 1 -maxdepth 1 -type d -name 'maister-*' | wc -l | tr -d ' ') -eq 26 || (echo "FAIL: expected 26 maister-* skill directories (rule 28)" && exit 1)
+	@echo "Rule 28: exactly 32 maister-* skill directories..."
+	@test $$(find plugins/maister-kiro/skills -mindepth 1 -maxdepth 1 -type d -name 'maister-*' | wc -l | tr -d ' ') -eq 32 || (echo "FAIL: expected 32 maister-* skill directories (rule 28)" && exit 1)
 	@echo "Kiro checks passed"
 
 clean: clean-copilot clean-cursor clean-kiro

@@ -2,7 +2,7 @@
   "name": "maister-cursor",
   "displayName": "Maister",
   "description": "Structured, standards-aware development workflows for Cursor Agent",
-  "version": "2.1.8",
+  "version": "2.2.0",
   "author": {
     "name": "Skillpanel",
     "email": "marek@skillpanel.com"

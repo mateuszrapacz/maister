@@ -25,27 +25,30 @@ run_build() {
   (cd "$ROOT" && make build-kiro)
 }
 
-# 1. Eight commands merged into skills/maister-*/SKILL.md; commands/ absent
+# 1. Eleven commands merged into skills/maister-*/SKILL.md; commands/ absent
 test_commands_merged() {
   run_build
   test ! -d "$OUT/commands" && \
     test -f "$OUT/skills/maister-quick-dev/SKILL.md" && \
     test -f "$OUT/skills/maister-work/SKILL.md" && \
-    test -f "$OUT/skills/maister-reviews-code/SKILL.md"
+    test -f "$OUT/skills/maister-reviews-code/SKILL.md" && \
+    test -f "$OUT/skills/maister-quick-requirements-critic/SKILL.md" && \
+    test -f "$OUT/skills/maister-quick-transcript-critic/SKILL.md" && \
+    test -f "$OUT/skills/maister-quick-problem-classifier/SKILL.md"
 }
 
-# 2. Exactly 22 skill directories
+# 2. Exactly 57 skill directories (32 maister-* + 25 shortcut dirs)
 test_skill_dir_count() {
   run_build
   local count
   count=$(find "$OUT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-  test "$count" -eq 22
+  test "$count" -eq 57
 }
 
-# 3. No unprefixed skill directories (14 source skills renamed)
+# 3. Exactly 25 unprefixed shortcut skill directories
 test_no_unprefixed_skill_dirs() {
   run_build
-  test "$(find "$OUT/skills" -mindepth 1 -maxdepth 1 -type d ! -name 'maister-*' | wc -l | tr -d ' ')" -eq 0
+  test "$(find "$OUT/skills" -mindepth 1 -maxdepth 1 -type d ! -name 'maister-*' | wc -l | tr -d ' ')" -eq 25
 }
 
 # 4. Each SKILL.md name: matches parent directory (rule 13)
@@ -90,9 +93,9 @@ test_quick_plan_skill_dir() {
 
 echo "=== Kiro CLI build core tests (Task Group 3) ==="
 
-assert "8 commands merged into skills/maister-*/; commands/ absent" test_commands_merged
-assert "exactly 22 skill directories after core build" test_skill_dir_count
-assert "no skills/<unprefixed>/ directories remain" test_no_unprefixed_skill_dirs
+assert "11 commands merged into skills/maister-*/; commands/ absent" test_commands_merged
+assert "exactly 57 skill directories after core build" test_skill_dir_count
+assert "exactly 25 unprefixed shortcut skill directories" test_no_unprefixed_skill_dirs
 assert "each SKILL.md name: matches parent directory" test_skill_name_matches_dir
 assert "no maister: in output tree" test_no_maister_colon
 assert "no colons in skill name: frontmatter" test_no_colons_in_skill_names

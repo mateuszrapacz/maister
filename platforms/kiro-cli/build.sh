@@ -61,6 +61,9 @@ merge_commands_to_skills() {
   merge_one reviews-reality-check maister-reviews-reality-check
   merge_one reviews-spec-audit maister-reviews-spec-audit
   merge_one work maister-work
+  merge_one quick-requirements-critic maister-quick-requirements-critic
+  merge_one quick-transcript-critic maister-quick-transcript-critic
+  merge_one quick-problem-classifier maister-quick-problem-classifier
 
   rm -rf "$commands_dir"
 }
@@ -197,6 +200,12 @@ apply_kiro_overrides() {
     maister-thermo-nuclear-review
     maister-thermo-nuclear-code-quality-review
     maister-thermos
+    maister-requirements-critic
+    maister-transcript-critic
+    maister-problem-classifier
+    maister-quick-requirements-critic
+    maister-quick-transcript-critic
+    maister-quick-problem-classifier
   )
   for skill in "${skills_needing_args[@]}"; do
     local sf="$OUT/skills/$skill/SKILL.md"
@@ -274,6 +283,17 @@ apply_delegation_transforms() {
   sedi 's|Never invoke a skill via Task tool|Never invoke a skill via subagent tool|g' "$f"
   sedi 's|must run in the main agent context via Skill tool|must run via `/maister-*` slash in main agent context|g' "$f"
   sedi 's|execute it via the Skill tool|execute it via the `/maister-*` slash skill|g' "$f"
+  # Wave 1 AJ skills: merged quick-* commands and chain sections reference plain kebab names;
+  # after rename_skill_directories, targets must be maister-* slash skills on Kiro.
+  sedi 's|skill `requirements-critic`|skill `maister-requirements-critic`|g' "$f"
+  sedi 's|skill `transcript-critic`|skill `maister-transcript-critic`|g' "$f"
+  sedi 's|skill `problem-classifier`|skill `maister-problem-classifier`|g' "$f"
+  sedi 's|Invoke the `requirements-critic` skill|Invoke the `maister-requirements-critic` skill|g' "$f"
+  sedi 's|Invoke the `transcript-critic` skill|Invoke the `maister-transcript-critic` skill|g' "$f"
+  sedi 's|Invoke the `problem-classifier` skill|Invoke the `maister-problem-classifier` skill|g' "$f"
+  sedi 's|skill: "requirements-critic"|skill: "maister-requirements-critic"|g' "$f"
+  sedi 's|skill: "transcript-critic"|skill: "maister-transcript-critic"|g' "$f"
+  sedi 's|skill: "problem-classifier"|skill: "maister-problem-classifier"|g' "$f"
 }
 
 # Step 14: TaskCreate/TaskUpdate → TUI task list (T7)
@@ -720,7 +740,7 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 
 - `agents/maister.json` — orchestrator with embedded hooks
 - `agents/maister-*.json` — 26 subagents + `maister-explore`
-- `skills/maister-*/` — 26 slash skills
+- `skills/maister-*/` — 32 slash skills
 - `steering/maister-workflows.md` — plugin workflows and Kiro platform notes
 - `hooks/` — hook scripts (`~/.kiro-maister/hooks/*.sh`; `smoke-install.sh` rewrites for non-default installs)
 - `settings/mcp.json` — Playwright MCP for `--e2e` workflows
