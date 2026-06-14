@@ -1,6 +1,6 @@
 ---
 name: maister-quick-plan
-description: Plan a task with AI SDLC standards awareness (Kiro)
+description: Plan a task with Maister standards awareness (Kiro)
 ---
 
 **User input**: `$ARGUMENTS`
@@ -55,7 +55,7 @@ Save the plan to `.maister/plans/YYYY-MM-DD-plan-name.md` (create `.maister/plan
 
 The plan file MUST include:
 
-1. **## Applicable Standards** — each standard file read with key guidelines. If none: "No AI SDLC standards found. Consider running `/maister-init`."
+1. **## Applicable Standards** — each standard file read with key guidelines. If none: "No Maister standards found. Consider running `/maister-init`."
 2. **## Standards Compliance Checklist** — checkboxes per applicable guideline
 3. **## Implementation Plan** — concrete steps informed by standards and codebase exploration
 

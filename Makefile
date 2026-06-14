@@ -35,6 +35,9 @@ validate-cursor:
 	@echo "Checking command names use maister- prefix (no colons)..."
 	@! grep -r '^name:.*:' plugins/maister-cursor/commands/ 2>/dev/null || (echo "FAIL: colons in command names" && exit 1)
 	@grep -q '^name: maister-' plugins/maister-cursor/commands/quick-plan.md || (echo "FAIL: expected maister- command prefix" && exit 1)
+	@grep -q '^name: maister-' plugins/maister-cursor/commands/quick-dev.md || (echo "FAIL: quick-dev command override missing or wrong prefix" && exit 1)
+	@echo "Checking quick-plan skill integrity..."
+	@! grep -q 'plan approval gate' plugins/maister-cursor/skills/quick-plan/SKILL.md 2>/dev/null || (echo "FAIL: corrupted quick-plan skill (plan approval gate fragment)" && exit 1)
 	@echo "Checking no EnterPlanMode/ExitPlanMode..."
 	@! grep -rE 'EnterPlanMode|ExitPlanMode' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: plan mode references found" && exit 1)
 	@echo "Checking no CLAUDE.md in skills..."

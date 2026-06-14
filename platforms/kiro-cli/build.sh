@@ -53,8 +53,6 @@ merge_commands_to_skills() {
     fi
   }
 
-  merge_one quick-dev maister-quick-dev
-  merge_one quick-plan maister-quick-plan
   merge_one reviews-code maister-reviews-code
   merge_one reviews-pragmatic maister-reviews-pragmatic
   merge_one reviews-production-readiness maister-reviews-production-readiness
