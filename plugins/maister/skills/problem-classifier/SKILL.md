@@ -1,10 +1,15 @@
 ---
 name: problem-classifier
 description: Classify business requirements into one of 4 modeling problem classes (CRUD, Transformation & Presentation, Integration, Resource Contention). Runs a signal scan, asks targeted clarifying questions, and recommends an implementation approach with rationale. NOT an archetype — invoke when the user asks about modeling problem classes, "jaka klasa problemu", "jak to sklasyfikować modelarsko", "problem class", or similar. For archetypes (accounting, pricing), use the *-archetype-mapper skills instead.
+disable-model-invocation: true
 argument-hint: "[business requirements or feature description]"
 ---
 
 # Modelling Problem Classifier
+
+**Invocation guard**: This skill activates ONLY when the user explicitly asks to classify a business requirement into a modeling problem class. Trigger phrases: "jaka klasa problemu", "jak to sklasyfikować modelarsko", "problem class", "which modeling class", "classify" / "classification" in a modeling context (CRUD vs T&P vs Integration vs Resource Contention).
+
+Do NOT invoke when the user is writing, drafting, or creating requirements or specs — use requirements drafting or spec creation workflows instead. Classification on explicit request only.
 
 **This is a problem class classifier, not an archetype.** Use it when the question is *"which modeling class does this belong to?"* — not when the question is *"map this to an archetype"*.
 
@@ -112,9 +117,24 @@ The 4 classes determine which building blocks *likely* belong in the solution. U
 
 ---
 
+## Language Preference
+
+At skill start, use `AskUserQuestion`: *"Which language should I use for questions and output?"*
+
+Options:
+- **English** — all questions, reports, and reformulations in English
+- **Polish** — all questions, reports, and reformulations in Polish
+- **Match input language** — detect language from user-provided requirements text; default to English if ambiguous
+
+Apply the selected language for the remainder of the session (all questions, option labels, and output). Run this gate once per invocation; do not re-ask unless the user explicitly requests a language change.
+
+---
+
 ## Skill Workflow
 
 ### Step 0: Input Acquisition
+
+Run the **Language Preference** gate first, then acquire input:
 
 - If argument provided: use it directly.
 - If no argument: scan the conversation for a business requirement, feature description, or domain scenario. If found, use it.
@@ -172,7 +192,7 @@ Determine: **primary candidate**, optionally a **secondary candidate**. Note the
 
 Based on the hypothesis, ask the most discriminating questions. Use `AskUserQuestion`. Maximum 4 questions per call; use a second call if more are needed.
 
-**Always match the user's language** (Polish or English) in question text and option labels.
+**Use the language chosen in the Language Preference gate** for question text and option labels.
 
 ---
 

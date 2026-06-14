@@ -109,6 +109,11 @@ For smaller tasks that don't need a full workflow:
 | `/maister:quick-plan` | You want a plan with standards awareness before coding |
 | `/maister:quick-dev` | You know what to do - just implement with standards applied |
 | `/maister:quick-bugfix` | Quick TDD-driven bug fix — write failing test, fix, verify |
+| `/maister:quick-transcript-critic` | Audit a meeting transcript for decision-process problems |
+| `/maister:quick-requirements-critic` | Interactive requirements quality critique (4-check rubric) |
+| `/maister:quick-problem-classifier` | Classify business requirements into DDD modeling problem classes |
+
+**Bundle A (requirements quality):** Run `/maister:quick-transcript-critic` → `/maister:quick-requirements-critic` → `/maister:quick-problem-classifier` when resource-contention signals appear — chain via each skill's Recommended Next Steps, not an orchestrator.
 
 ## Standards-Aware Development
 

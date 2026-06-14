@@ -13,6 +13,19 @@ Do NOT invoke when the user is writing, describing, elaborating, or asking quest
 
 ---
 
+## Language Preference
+
+At skill start, use `AskQuestion`: *"Which language should I use for questions and output?"*
+
+Options:
+- **English** — all questions, reports, and reformulations in English
+- **Polish** — all questions, reports, and reformulations in Polish
+- **Match input language** — detect language from user-provided requirements text; default to English if ambiguous
+
+Apply the selected language for the remainder of the session (all questions, option labels, and output). Run this gate once per invocation; do not re-ask unless the user explicitly requests a language change.
+
+---
+
 ## Input Acquisition
 
 - If argument provided: use it directly.
@@ -260,7 +273,7 @@ If no issues found for a requirement, state that explicitly: *"No issues found �
 - **Be specific.** Quote the exact phrase from the requirement that triggered the check. Vague feedback ("this requirement is unclear") is not actionable.
 - **Prioritize blockers.** CRUD-disguised-as-domain (Check 2) is the most dangerous — it produces code that works but doesn't solve the problem. Flag it prominently.
 - **Quantifier probe is a conversation, not a verdict.** Check 4 generates questions, not failures. The rule may be intentionally absolute — the goal is to surface the decision consciously.
-- **Match the user's language** (Polish or English) in all questions and output.
+- **Use the language chosen in the Language Preference gate** for all questions and output.
 
 ---
 
