@@ -1,10 +1,10 @@
-# AI SDLC Plugin
+# Maister Plugin
 
 This plugin provides AI-powered Software Development Lifecycle (SDLC) capabilities for Claude Code projects.
 
 ## Purpose
 
-The AI SDLC plugin helps teams streamline software development workflows by providing:
+The Maister plugin helps teams streamline software development workflows by providing:
 
 - **Workflow Commands**: Slash commands for common SDLC tasks like feature development, bug fixes, and code reviews
 - **Specialized Agents**: AI agents optimized for specific development tasks (spec writing, implementation, verification)
@@ -475,6 +475,8 @@ Skills are automatically invoked by Claude when appropriate. Details live in eac
 | `docs-manager` | Internal engine for doc file operations, INDEX.md generation, AGENTS.md integration. Not user-invocable — accessed via `docs-operator` agent (subagent tool) by init, standards-update, standards-discover | `skills/docs-manager/skill.md` |
 | `maister-init` | Initialize `.maister/docs/` with project analysis, documentation generation, and baseline standards | `skills/init/SKILL.md` |
 | `standards-update` | Update or create standards from conversation context or explicit input | `skills/standards-update/SKILL.md` |
+| `quick-plan` | Built-in plan mode + standards enforcement: discovers matched standards from INDEX.md during planning and folds a Standards Compliance Checklist into the plan | `skills/quick-plan/SKILL.md` |
+| `quick-dev` | Direct main-agent development (no plan mode) + standards enforcement: applies matched standards while implementing and verifies compliance after | `skills/quick-dev/SKILL.md` |
 | `quick-bugfix` | Quick TDD-driven bug fix with complexity escalation to full development workflow | `skills/quick-bugfix/SKILL.md` |
 
 ### Orchestrator Framework

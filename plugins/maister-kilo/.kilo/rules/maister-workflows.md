@@ -1,10 +1,10 @@
-# AI SDLC Plugin
+# Maister Plugin
 
 This plugin provides AI-powered Software Development Lifecycle (SDLC) capabilities for Claude Code projects.
 
 ## Purpose
 
-The AI SDLC plugin helps teams streamline software development workflows by providing:
+The Maister plugin helps teams streamline software development workflows by providing:
 
 - **Workflow Commands**: Slash commands for common SDLC tasks like feature development, bug fixes, and code reviews
 - **Specialized Agents**: AI agents optimized for specific development tasks (spec writing, implementation, verification)
@@ -475,6 +475,8 @@ Skills are automatically invoked by Claude when appropriate. Details live in eac
 | `docs-manager` | Internal engine for doc file operations, INDEX.md generation, AGENTS.md integration. Not user-invocable — accessed via `docs-operator` agent (Task tool) by init, standards-update, standards-discover | `skills/docs-manager/skill.md` |
 | `maister-init` | Initialize `.maister/docs/` with project analysis, documentation generation, and baseline standards | `skills/init/SKILL.md` |
 | `standards-update` | Update or create standards from conversation context or explicit input | `skills/standards-update/SKILL.md` |
+| `quick-plan` | Built-in plan mode + standards enforcement: discovers matched standards from INDEX.md during planning and folds a Standards Compliance Checklist into the plan | `skills/quick-plan/SKILL.md` |
+| `quick-dev` | Direct main-agent development (no plan mode) + standards enforcement: applies matched standards while implementing and verifies compliance after | `skills/quick-dev/SKILL.md` |
 | `quick-bugfix` | Quick TDD-driven bug fix with complexity escalation to full development workflow | `skills/quick-bugfix/SKILL.md` |
 
 ### Orchestrator Framework
@@ -499,6 +501,27 @@ Orchestrators manage complete workflows with state management, auto-recovery, an
 | `migration` | Code/data/architecture migrations with rollback plans | `skills/migration/SKILL.md` |
 | `research` | Multi-source research with synthesis, solution brainstorming, high-level design, and citations | `skills/research/SKILL.md` |
 | `product-design` | **Interactive product/feature design** (9 phases: 0-8) with adaptive scope (feature-level default, product-level when detected), mixed interaction pattern (questioning for exploration, propose-and-refine for convergence), iterative refinement loops, browser-based visual companion, and layered product brief output. | `skills/product-design/SKILL.md` |
+
+### Requirements & Modeling Skills
+
+| Skill | Purpose | Details |
+|-------|---------|---------|
+| `transcript-critic` | Audits meeting transcripts for decision-process problems (false consensus, marginalized voices, scope drift). Produces structured non-interactive critique with severity, evidence quotes, and diagnostic questions. Explicit request only. | `skills/transcript-critic/SKILL.md` |
+| `requirements-critic` | Interactive requirements critique via 4 checks: problem vs solution framing, observable behavior, extensible signal map, rigid quantifier probing. Explicit request only. | `skills/requirements-critic/SKILL.md` |
+| `problem-classifier` | Classifies business requirements into 4 modeling problem classes (CRUD, Transformation & Presentation, Integration, Resource Contention). Signal scan, clarifying questions, implementation guidance — not an archetype mapper. | `skills/problem-classifier/SKILL.md` |
+
+**Bundle A — Requirements quality flow**: Run `transcript-critic` on the meeting transcript first. Use its diagnostic questions in follow-up clarification (meeting or async). Capture refined user stories or tickets, then run `requirements-critic` for interactive quality critique. When concurrency or resource-contention signals appear, run `problem-classifier` for modeling-class guidance.
+
+> **Naming distinction**: `task-classifier` **agent** routes task descriptions to orchestrators (5 workflow types: development, performance, migration, research, product-design). `problem-classifier` **skill** classifies business requirements into 4 DDD modeling problem classes. Different domains — do not conflate.
+
+### Review & Utility Skills
+
+| Skill | Purpose | Details |
+|-------|---------|---------|
+| `grill-me` | Relentless interactive interview to stress-test a plan or design until shared understanding; walks the decision tree one question at a time with recommended answers | `skills/grill-me/SKILL.md` |
+| `thermo-nuclear-review` | Comprehensive branch/PR audit for bugs, breaking changes, security vulnerabilities, devex regressions, and feature-flag leaks. Explicit request only. | `skills/thermo-nuclear-review/SKILL.md` |
+| `thermo-nuclear-code-quality-review` | Strict maintainability audit: abstraction quality, file-size growth, spaghetti detection, structural simplification ("code judo"). Explicit request only. | `skills/thermo-nuclear-code-quality-review/SKILL.md` |
+| `thermos` | Launches both thermo-nuclear review subagents in parallel, then synthesizes deduplicated findings. Explicit request only. | `skills/thermos/SKILL.md` |
 
 ## Available Commands
 
@@ -554,6 +577,14 @@ Research context flows through ALL phases without skipping any. Research artifac
 | `/maister-quick-dev` | `[task description]` | Implement directly with standards awareness (no planning) |
 | `/maister-quick-bugfix` | `[bug description]` | Quick bug fix with TDD red/green gates and complexity escalation |
 
+### Requirements & Modeling Commands
+
+| Command | Usage | Purpose |
+|---------|-------|---------|
+| `/maister-quick-transcript-critic` | `[transcript or notes]` | Audit meeting transcript for decision-process problems; structured critique report |
+| `/maister-quick-requirements-critic` | `[requirements text]` | Interactive requirements quality critique (4-check rubric) |
+| `/maister-quick-problem-classifier` | `[business requirements]` | Classify requirements into modeling problem classes with clarifying questions |
+
 **See**: Individual `commands/` and `skills/*/skill.md` files for detailed documentation.
 
 ## Available Subagents
@@ -566,7 +597,7 @@ Subagents are specialized AI agents invoked by skills and orchestrators. All age
 |-------|---------|------------|---------|
 | `project-analyzer` | Deep codebase analysis for tech stack, architecture, conventions | `/maister-init` | `agents/project-analyzer.md` |
 | `docs-operator` | Internal service agent: executes docs-manager operations mid-workflow via Task tool. Has docs-manager skill preloaded. **Special case**: companion agent pattern only works here because docs-manager does NOT spawn subagents (only file operations). Do not use this pattern for skills that spawn subagents. | init, standards-update, standards-discover | `agents/docs-operator.md` |
-| `task-classifier` | Classifies task descriptions into workflow types with confidence scoring | `/work` command | `agents/task-classifier.md` |
+| `task-classifier` | Classifies task descriptions into **5 workflow types** (development, performance, migration, research, product-design) with confidence scoring. Not to be confused with `problem-classifier` skill (4 DDD modeling problem classes). | `/work` command | `agents/task-classifier.md` |
 | `gap-analyzer` | Compares current vs desired state with characteristic-detection-based analysis modules | development orchestrator | `agents/gap-analyzer.md` |
 | `specification-creator` | Creates specs from gathered requirements with reusability search and self-verification | development, migration orchestrators | `agents/specification-creator.md` |
 | `implementation-planner` | Breaks specs into task groups with test-driven steps and dependency chains | development, migration orchestrators | `agents/implementation-planner.md` |

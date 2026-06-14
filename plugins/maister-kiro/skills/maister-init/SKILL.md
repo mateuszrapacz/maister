@@ -1,10 +1,10 @@
 ---
 name: maister-init
-description: Initialize AI SDLC framework with intelligent project analysis and documentation generation
+description: Initialize Maister framework with intelligent project analysis and documentation generation
 argument-hint: [--standards-from=PATH]
 ---
 
-# Initialize AI SDLC Framework
+# Initialize Maister Framework
 
 Initialize `.maister/docs/` with intelligent project analysis and meaningful documentation generation based on actual codebase inspection.
 

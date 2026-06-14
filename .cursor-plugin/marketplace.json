@@ -1,6 +1,6 @@
 {
   "name": "maister-plugins",
-  "version": "2.1.8",
+  "version": "2.1.8-fork.1",
   "description": "Structured, standards-aware development workflows for Cursor Agent",
   "owner": {
     "name": "Skillpanel",

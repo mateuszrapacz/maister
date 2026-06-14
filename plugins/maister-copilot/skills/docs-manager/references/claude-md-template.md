@@ -3,13 +3,13 @@
 Add this section to the project's `.github/copilot-instructions.md` file. Place it prominently near the top. Verify the INDEX.md path is correct and the file exists before adding.
 
 ```markdown
-## Coding Standards & Conventions
+## Project Documentation & Standards
 
-Read @.maister/docs/INDEX.md before starting any task. It indexes the project's coding standards and conventions:
-- Coding standards organized by domain (frontend, backend, testing, etc.)
-- Project vision, tech stack, and architecture decisions
+Before writing or changing any code — even for quick, direct requests that don't go through a `/maister-*` workflow — ground yourself in the project's documentation:
 
-Follow standards in `.maister/docs/standards/` when writing code — they represent team decisions. If standards conflict with the task, ask the user.
+1. Read @.maister/docs/INDEX.md to see what's documented. It is the map to everything the team maintains — coding standards by domain, project vision/tech-stack/architecture, and any other project knowledge (business domain, glossaries, decisions, etc.).
+2. Then open and read the specific files it points to that are relevant to your task — standards AND any project/domain docs. The index alone is not enough.
+3. Follow the standards as you work (they represent team decisions; if one conflicts with the task, ask the user) and use the project docs as context.
 
 ### Standards Evolution
 

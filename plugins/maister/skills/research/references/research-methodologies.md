@@ -1,6 +1,6 @@
 # Research Methodologies Reference
 
-This reference provides conceptual patterns and decision frameworks for research methodology selection and execution in the AI SDLC Research Orchestrator.
+This reference provides conceptual patterns and decision frameworks for research methodology selection and execution in the Maister Research Orchestrator.
 
 ## Purpose
 
@@ -193,7 +193,7 @@ Research type classification determines which methodology to apply. Use question
 ### Documentation Sources
 
 **Project Documentation**:
-- `.maister/docs/**/*.md` - AI SDLC framework documentation
+- `.maister/docs/**/*.md` - Maister framework documentation
 - `docs/**/*.md` - Project documentation
 - `README.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md` - Root docs
 

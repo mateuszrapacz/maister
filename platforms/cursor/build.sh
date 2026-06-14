@@ -173,8 +173,9 @@ for f in "$OUT/agents"/*.md; do
   fi
 done
 
-# 12. Overrides (quick-plan, quick-bugfix)
+# 12. Overrides (quick-plan, quick-dev, quick-bugfix)
 cp "$PLATFORM/overrides/commands/quick-plan.md" "$OUT/commands/quick-plan.md"
+cp "$PLATFORM/overrides/commands/quick-dev.md" "$OUT/commands/quick-dev.md"
 cp "$PLATFORM/overrides/skills/quick-bugfix/SKILL.md" "$OUT/skills/quick-bugfix/SKILL.md"
 
 # 13. AGENTS.md template for docs-manager

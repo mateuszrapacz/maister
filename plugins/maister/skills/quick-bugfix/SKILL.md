@@ -47,37 +47,13 @@ For complex bugs that grow beyond a quick fix, suggests escalating to the full d
 
 ### Step 2: Discover Standards
 
-**CRITICAL: This step MUST complete before entering plan mode.**
+Discover the project's standards as part of analysis and planning (Steps 3–4), relevant to the bug area — not as a bulk upfront read.
 
-**Check if `.maister/docs/INDEX.md` exists:**
+- Read `.maister/docs/INDEX.md` to find which standards exist.
+- **Then read the specific standard files it points to that match the bug area** (e.g. API bug → api + error-handling standards; form bug → validation + frontend standards; query bug → database + backend standards). Reading INDEX.md alone is NOT sufficient — this is mandatory.
+- Apply the matched standards in the fix plan (Step 4) and during implementation (Step 6).
 
-**If exists:**
-1. Read INDEX.md to discover available documentation and standards
-2. Identify which standards are relevant based on:
-   - The categories and files listed in INDEX.md
-   - The area of the bug (e.g., API, frontend, database)
-   - Keywords in the bug description
-3. **READ the applicable standard files** (see Standards Reading Enforcement below)
-
-**If not exists:**
-- Note that no standards are available
-- Suggest running `/maister:init` in completion message
-
-### Standards Reading Enforcement (MANDATORY)
-
-**BLOCKING**: Reading INDEX.md alone is NOT sufficient. You MUST read actual standard files.
-
-**Enforcement Process**:
-1. Read INDEX.md to discover available standards
-2. Identify which standards apply based on the bug area
-3. **READ each applicable standard file** using Read tool (not just note it exists)
-4. Apply standards during fix implementation
-5. List applied standards in completion summary
-
-**Examples of standard discovery**:
-- Bug in API handler → Read API and error-handling standards
-- Bug in form validation → Read validation and frontend standards
-- Bug in database query → Read database and backend standards
+If `.maister/docs/INDEX.md` does not exist, note it and suggest `/maister:init` in the completion summary.
 
 ### Step 3: Analyze & Assess Complexity
 
@@ -135,7 +111,7 @@ Standards context from Step 2 and analysis from Step 3 MUST inform the plan.
 ## Applicable Standards
 
 [List each standard file read, with key guidelines extracted from each.
-If no standards exist: "No AI SDLC standards found. Consider running `/maister:init`."]
+If no standards exist: "No Maister standards found. Consider running `/maister:init`."]
 
 ## Standards Compliance Checklist
 
@@ -203,20 +179,9 @@ If any section is missing, add it before calling ExitPlanMode.
 - **Tests**: Which tests were run and their results (including the TDD red→green transition)
 - **Commit suggestion**: Propose a commit message
 
-**Post-implementation: verify standards compliance using the checklist from the plan file.**
+**Post-implementation standards check (mandatory):** after the test is green, go through the `## Standards Compliance Checklist` from the plan file and verify each item — mark pass/fail and report it in the summary. Address any failure before marking the task complete.
 
 ---
-
-## What This Does
-
-1. **Parses** bug description from user input
-2. **Discovers** applicable standards from `.maister/docs/INDEX.md`
-3. **Analyzes** codebase to find root cause and assess complexity
-4. **Escalates** to full development workflow if bug is too complex
-5. **Plans** the fix and presents for user approval via planning mode
-6. **Reproduces** bug with a failing test (TDD Red)
-7. **Fixes** the bug and verifies test passes (TDD Green)
-8. **Summarizes** root cause, fix, standards applied, and test results
 
 ## Graceful Fallback
 
@@ -225,6 +190,6 @@ If any section is missing, add it before calling ExitPlanMode.
 Proceed with the bug fix normally, then note:
 
 ```
-"No AI SDLC standards found. Consider running `/maister:init` to initialize
+"No Maister standards found. Consider running `/maister:init` to initialize
 project documentation and coding standards for better consistency."
 ```
