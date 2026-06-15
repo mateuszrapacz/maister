@@ -7,14 +7,16 @@
     "grep",
     "glob",
     "write",
-    "shell"
+    "shell",
+    "use_aws"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell"
+    "shell",
+    "use_aws"
   ],
   "resources": [
     "skill://~/.kiro-maister/skills/maister-docs-manager/SKILL.md"
