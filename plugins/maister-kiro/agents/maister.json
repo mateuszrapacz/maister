@@ -10,7 +10,6 @@
   ],
   "includeMcpJson": true,
   "resources": [
-    "skill://~/.kiro-maister/skills/**/SKILL.md",
     "skill://.kiro/skills/**/SKILL.md"
   ],
   "toolsSettings": {

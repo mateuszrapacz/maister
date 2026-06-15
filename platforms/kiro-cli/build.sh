@@ -548,7 +548,7 @@ EOF
     --arg promptFile "instructions/maister.md" \
     --argjson tools '["*"]' \
     --argjson allowedTools '["*"]' \
-    --argjson resources '["skill://~/.kiro-maister/skills/**/SKILL.md","skill://.kiro/skills/**/SKILL.md"]' \
+    --argjson resources '["skill://.kiro/skills/**/SKILL.md"]' \
     --argjson toolsSettings '{"subagent":{"availableAgents":["maister-*"],"trustedAgents":["maister-*"]}}' \
     --arg hook_block "$hook_block" \
     --arg hook_subagent_spawn "$hook_subagent_spawn" \
