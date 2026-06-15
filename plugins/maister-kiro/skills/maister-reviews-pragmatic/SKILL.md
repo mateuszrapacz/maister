@@ -27,7 +27,7 @@ You are performing pragmatic analysis to identify over-engineering, unnecessary 
 
 ```
 Task Tool:
-- subagent_type: code-quality-pragmatist
+- subagent_type: maister-code-quality-pragmatist
 - description: Pragmatic code review
 - prompt: |
     You are the code-quality-pragmatist agent. Review the code at: [path]
