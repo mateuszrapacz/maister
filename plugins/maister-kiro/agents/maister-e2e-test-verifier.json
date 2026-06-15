@@ -7,14 +7,16 @@
     "grep",
     "glob",
     "write",
-    "shell"
+    "shell",
+    "use_aws"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell"
+    "shell",
+    "use_aws"
   ],
   "promptFile": "instructions/maister-e2e-test-verifier.md"
 }

@@ -6,13 +6,15 @@
     "read",
     "grep",
     "glob",
-    "write"
+    "write",
+    "use_aws"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "write"
+    "write",
+    "use_aws"
   ],
   "promptFile": "instructions/maister-solution-brainstormer.md"
 }

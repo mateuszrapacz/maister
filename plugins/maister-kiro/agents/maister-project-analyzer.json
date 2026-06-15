@@ -1,16 +1,18 @@
 {
   "name": "maister-project-analyzer",
   "description": "Analyzes project codebase to detect tech stack, architecture, and conventions for documentation generation. Use for existing/legacy projects to auto-generate meaningful documentation.",
-  "model": "haiku",
+  "model": "inherit",
   "tools": [
     "read",
     "grep",
-    "glob"
+    "glob",
+    "use_aws"
   ],
   "allowedTools": [
     "read",
     "grep",
-    "glob"
+    "glob",
+    "use_aws"
   ],
   "promptFile": "instructions/maister-project-analyzer.md"
 }

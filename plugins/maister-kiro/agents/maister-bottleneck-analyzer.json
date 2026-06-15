@@ -5,12 +5,14 @@
   "tools": [
     "read",
     "grep",
-    "glob"
+    "glob",
+    "use_aws"
   ],
   "allowedTools": [
     "read",
     "grep",
-    "glob"
+    "glob",
+    "use_aws"
   ],
   "promptFile": "instructions/maister-bottleneck-analyzer.md"
 }

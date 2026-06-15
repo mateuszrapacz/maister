@@ -1,85 +1,85 @@
 {
   "defaults": {
-    "tools": ["read", "grep", "glob"]
+    "tools": ["read", "grep", "glob", "use_aws"]
   },
   "agents": {
     "bottleneck-analyzer": {
-      "tools": ["read", "grep", "glob"]
+      "tools": ["read", "grep", "glob", "use_aws"]
     },
     "codebase-analysis-reporter": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "code-quality-pragmatist": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "code-reviewer": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "docs-operator": {
-      "tools": ["read", "grep", "glob", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell", "use_aws"]
     },
     "e2e-test-verifier": {
-      "tools": ["read", "grep", "glob", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell", "use_aws"]
     },
     "gap-analyzer": {
-      "tools": ["read", "grep", "glob"]
+      "tools": ["read", "grep", "glob", "use_aws"]
     },
     "implementation-completeness-checker": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "implementation-planner": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "information-gatherer": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "production-readiness-checker": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "project-analyzer": {
-      "tools": ["read", "grep", "glob"]
+      "tools": ["read", "grep", "glob", "use_aws"]
     },
     "reality-assessor": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "research-planner": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "research-synthesizer": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "solution-brainstormer": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "solution-designer": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "spec-auditor": {
-      "tools": ["read", "grep", "glob", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell", "use_aws"]
     },
     "specification-creator": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "task-classifier": {
-      "tools": ["read", "grep", "glob"]
+      "tools": ["read", "grep", "glob", "use_aws"]
     },
     "task-group-implementer": {
-      "tools": ["read", "grep", "glob", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell", "use_aws"]
     },
     "thermo-nuclear-code-quality-review-subagent": {
-      "tools": ["read", "grep", "glob"]
+      "tools": ["read", "grep", "glob", "use_aws"]
     },
     "thermo-nuclear-review-subagent": {
-      "tools": ["read", "grep", "glob", "shell"]
+      "tools": ["read", "grep", "glob", "shell", "use_aws"]
     },
     "test-suite-runner": {
-      "tools": ["read", "grep", "glob", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell", "use_aws"]
     },
     "ui-mockup-generator": {
-      "tools": ["read", "grep", "glob", "write"]
+      "tools": ["read", "grep", "glob", "write", "use_aws"]
     },
     "user-docs-generator": {
-      "tools": ["read", "grep", "glob", "write", "shell"]
+      "tools": ["read", "grep", "glob", "write", "shell", "use_aws"]
     }
   },
   "synthetic": {
@@ -89,7 +89,7 @@
       "trustedAgents": ["maister-*"]
     },
     "maister-explore": {
-      "tools": ["read", "grep", "glob"]
+      "tools": ["read", "grep", "glob", "use_aws"]
     }
   }
 }
