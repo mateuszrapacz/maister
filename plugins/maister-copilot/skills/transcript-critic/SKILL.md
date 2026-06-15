@@ -7,6 +7,12 @@ argument-hint: "[meeting transcript or notes]"
 
 # Transcript Critic
 
+**Invocation guard**: This skill activates ONLY when the user explicitly asks for critique, review, or analysis of a meeting transcript or decision process. Trigger phrases: "criticize this transcript", "review this meeting", "audit this decision", "what's wrong with this meeting", "check this transcript", "transcript critic".
+
+Do NOT invoke when the user is drafting requirements, summarizing meetings without asking for critique, or during orchestrator requirements phases. Critique on request only.
+
+---
+
 Analyze meeting transcripts to surface hidden decision-making problems that a naive summary would miss: false consensus, marginalized voices, opinions disguised as facts, hidden dependencies between "separate" topics, and scope drift.
 
 **Output goal**: A structured report of detected problems with severity, evidence (quotes), and diagnostic questions to take to the next meeting. This is NOT a summary — it's a critique of the decision-making process visible in the text.
