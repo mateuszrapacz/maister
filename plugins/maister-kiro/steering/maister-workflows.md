@@ -510,7 +510,7 @@ Orchestrators manage complete workflows with state management, auto-recovery, an
 | `requirements-critic` | Interactive requirements critique via 4 checks: problem vs solution framing, observable behavior, extensible signal map, rigid quantifier probing. Explicit request only. | `skills/requirements-critic/SKILL.md` |
 | `problem-classifier` | Classifies business requirements into 4 modeling problem classes (CRUD, Transformation & Presentation, Integration, Resource Contention). Signal scan, clarifying questions, implementation guidance — not an archetype mapper. | `skills/problem-classifier/SKILL.md` |
 
-**Bundle A — Requirements quality flow**: Run `transcript-critic` on the meeting transcript first. Use its diagnostic questions in follow-up clarification (meeting or async). Capture refined user stories or tickets, then run `requirements-critic` for interactive quality critique. When concurrency or resource-contention signals appear, run `problem-classifier` for modeling-class guidance.
+**Bundle A — Requirements quality flow**: Run `transcript-critic` on the meeting transcript first. Use its diagnostic questions in follow-up clarification (meeting or async). Capture refined user stories or tickets, then run `requirements-critic` for interactive quality critique. When concurrency or resource-contention signals appear, run `maister-problem-classifier` for modeling-class guidance.
 
 > **Naming distinction**: `task-classifier` **agent** routes task descriptions to orchestrators (5 workflow types: development, performance, migration, research, product-design). `problem-classifier` **skill** classifies business requirements into 4 DDD modeling problem classes. Different domains — do not conflate.
 
@@ -522,6 +522,15 @@ Orchestrators manage complete workflows with state management, auto-recovery, an
 | `thermo-nuclear-review` | Comprehensive branch/PR audit for bugs, breaking changes, security vulnerabilities, devex regressions, and feature-flag leaks. Explicit request only. | `skills/thermo-nuclear-review/SKILL.md` |
 | `thermo-nuclear-code-quality-review` | Strict maintainability audit: abstraction quality, file-size growth, spaghetti detection, structural simplification ("code judo"). Explicit request only. | `skills/thermo-nuclear-code-quality-review/SKILL.md` |
 | `thermos` | Launches both thermo-nuclear review subagents in parallel, then synthesizes deduplicated findings. Explicit request only. | `skills/thermos/SKILL.md` |
+| `test-strategy-reviewer` | Read-only review: classifies production code by problem class and compares test strategy (output/state/interaction-based) against recommendations. Explicit request only. | `skills/test-strategy-reviewer/SKILL.md` |
+| `linguistic-boundary-verifier` | Read-only bounded-context language leakage audit via `language.md` files; graceful degradation when convention not adopted. Explicit request only. | `skills/linguistic-boundary-verifier/SKILL.md` |
+| `metaprogram-classifier` | Diagnoses NLP metaprogram patterns in communication and suggests context-specific strategies. Interactive classifier. | `skills/metaprogram-classifier/SKILL.md` |
+
+**Bundle C — Architecture review flow**: Run `linguistic-boundary-verifier` when modules have `language.md` files (see `.maister/docs/standards/global/language-md-convention.md`). Then run `maister-test-strategy-reviewer` on tests for the same scope. Optional: pair with `thermos` on the same PR for code risk + boundaries + test strategy.
+
+**Bundle D — Stakeholder communication flow**: Run `metaprogram-classifier` on the stakeholder's message or described behavior, then `grill-me` to stress-test your proposal before the conversation. Documented pairing only — no orchestrator wire-up.
+
+> **reviews-* delegation note**: Existing `reviews-code`, `reviews-spec-audit`, etc. delegate to **subagents** via subagent tool. Wave 2 `reviews-test-strategy` and `reviews-linguistic-boundaries` delegate to **skills** via `/maister-*` slash skill (architecture-review rubrics).
 
 ## Available Commands
 
@@ -568,6 +577,8 @@ Research context flows through ALL phases without skipping any. Research artifac
 | `/maister-reviews-spec-audit` | `[spec-path]` | Independent spec audit for completeness and clarity |
 | `/maister-reviews-reality-check` | `[task-path]` | Validate work actually solves the problem |
 | `/maister-reviews-production-readiness` | `[path] [--target=ENV]` | Pre-deployment verification with GO/NO-GO recommendation |
+| `/maister-reviews-test-strategy` | `[test path or directory]` | Review whether test strategy matches production code problem class |
+| `/maister-reviews-linguistic-boundaries` | `[modules or all or module --pr]` | Verify linguistic boundaries between bounded contexts via language.md |
 
 ### Quick Commands
 
@@ -584,6 +595,7 @@ Research context flows through ALL phases without skipping any. Research artifac
 | `/maister-quick-transcript-critic` | `[transcript or notes]` | Audit meeting transcript for decision-process problems; structured critique report |
 | `/maister-quick-requirements-critic` | `[requirements text]` | Interactive requirements quality critique (4-check rubric) |
 | `/maister-quick-problem-classifier` | `[business requirements]` | Classify requirements into modeling problem classes with clarifying questions |
+| `/maister-quick-metaprogram-classifier` | `[utterance or email]` | Classify NLP metaprograms and suggest communication strategies |
 
 **See**: Individual `commands/` and `skills/*/skill.md` files for detailed documentation.
 

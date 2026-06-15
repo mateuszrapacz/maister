@@ -75,13 +75,13 @@ test_all_agent_json_valid() {
   done
 }
 
-# 6. Rules 14/28: exactly 57 total / 32 maister-* skill directories
-test_exactly_57_skill_dirs() {
+# 6. Rules 14/28: exactly 63 total / 38 maister-* skill directories
+test_exactly_63_skill_dirs() {
   run_build
   local total prefixed
   total=$(find "$OUT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
   prefixed=$(find "$OUT/skills" -mindepth 1 -maxdepth 1 -type d -name 'maister-*' | wc -l | tr -d ' ')
-  test "$total" -eq 57 && test "$prefixed" -eq 32
+  test "$total" -eq 63 && test "$prefixed" -eq 38
 }
 
 # 7. Rule 26: CHAT GATE count meets documented threshold (chat-gate-audit.md)
@@ -112,7 +112,7 @@ assert "make validate-kiro passes after full build" test_validate_passes_after_b
 assert "injected AskUserQuestion causes validate failure (rules 11/25)" test_inject_ask_user_question_fails
 assert "injected maister: causes validate failure (rule 2)" test_inject_maister_colon_fails
 assert "all agents/*.json parse with jq empty (rule 7)" test_all_agent_json_valid
-assert "exactly 57 total / 32 maister-* skill directories (rules 14/28)" test_exactly_57_skill_dirs
+assert "exactly 63 total / 38 maister-* skill directories (rules 14/28)" test_exactly_63_skill_dirs
 assert "CHAT GATE count meets documented threshold (rule 26)" test_chat_gate_count_threshold
 assert "trustedAgents + executable hooks + transform doc (rules 21–22, 27)" test_phase2_rules
 

@@ -47,6 +47,9 @@ Input validation at system boundaries, sanitization patterns, validation error m
 #### Conventions (`standards/global/conventions.md`)
 Naming conventions (files, variables, functions, classes), file organization patterns, import ordering, code structure guidelines.
 
+#### language.md Convention (`standards/global/language-md-convention.md`)
+Per-module ubiquitous language documentation for bounded contexts. Defines `language.md` location, template sections, DDD relationship types, and optional adoption. Used by `linguistic-boundary-verifier` for cross-context language leakage detection.
+
 #### Coding Style (`standards/global/coding-style.md`)
 Indentation and formatting rules, spacing conventions, line length limits, bracket style, consistent code readability patterns.
 

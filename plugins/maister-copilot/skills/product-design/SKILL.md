@@ -247,6 +247,9 @@ ask_user — "I detected these design characteristics. Please confirm or correct
 **For all tasks** (both greenfield and enhancement):
 
 2. Read all files in `context/` folder (PDFs, images, docs — whatever the user provided)
+
+   **Optional (ADR-008 — soft suggestion, no auto-invocation):** When meeting transcripts are present in `context/`, you may suggest `/maister-quick-transcript-critic` for decision-process audit before synthesis. Do not invoke the skill automatically.
+
 3. Fetch external links collected in Phase 0 using WebFetch tool for each URL in `design_context.collected_urls`
 4. If `design_context.research_topics` is non-empty: launch information-gatherer agents for each topic
 

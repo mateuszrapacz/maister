@@ -112,8 +112,15 @@ For smaller tasks that don't need a full workflow:
 | `/maister:quick-transcript-critic` | Audit a meeting transcript for decision-process problems |
 | `/maister:quick-requirements-critic` | Interactive requirements quality critique (4-check rubric) |
 | `/maister:quick-problem-classifier` | Classify business requirements into DDD modeling problem classes |
+| `/maister:quick-metaprogram-classifier` | Diagnose NLP metaprograms and suggest communication strategies |
+| `/maister:reviews-linguistic-boundaries` | Verify linguistic boundaries between bounded contexts |
+| `/maister:reviews-test-strategy` | Review whether test strategy matches production code problem class |
 
 **Bundle A (requirements quality):** Run `/maister:quick-transcript-critic` → `/maister:quick-requirements-critic` → `/maister:quick-problem-classifier` when resource-contention signals appear — chain via each skill's Recommended Next Steps, not an orchestrator.
+
+**Bundle C (architecture review):** Run `/maister:reviews-linguistic-boundaries` on modules with `language.md` files (see `.maister/docs/standards/global/language-md-convention.md`), then `/maister:reviews-test-strategy` on tests for the same scope. Optional: pair with `/maister:thermos` on the same PR for code risk + linguistic boundaries + test strategy alignment.
+
+**Bundle D (stakeholder communication):** Run `/maister:quick-metaprogram-classifier` on the stakeholder's message or described behavior, then `/maister:grill-me` to stress-test your proposal before the difficult conversation — chain via Recommended Next Steps, not an orchestrator.
 
 ## Standards-Aware Development
 

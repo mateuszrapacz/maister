@@ -62,6 +62,9 @@ merge_commands_to_skills() {
   merge_one quick-requirements-critic maister-quick-requirements-critic
   merge_one quick-transcript-critic maister-quick-transcript-critic
   merge_one quick-problem-classifier maister-quick-problem-classifier
+  merge_one reviews-test-strategy maister-reviews-test-strategy
+  merge_one reviews-linguistic-boundaries maister-reviews-linguistic-boundaries
+  merge_one quick-metaprogram-classifier maister-quick-metaprogram-classifier
 
   rm -rf "$commands_dir"
 }
@@ -204,6 +207,12 @@ apply_kiro_overrides() {
     maister-quick-requirements-critic
     maister-quick-transcript-critic
     maister-quick-problem-classifier
+    maister-test-strategy-reviewer
+    maister-linguistic-boundary-verifier
+    maister-metaprogram-classifier
+    maister-reviews-test-strategy
+    maister-reviews-linguistic-boundaries
+    maister-quick-metaprogram-classifier
   )
   for skill in "${skills_needing_args[@]}"; do
     local sf="$OUT/skills/$skill/SKILL.md"
@@ -292,6 +301,23 @@ apply_delegation_transforms() {
   sedi 's|skill: "requirements-critic"|skill: "maister-requirements-critic"|g' "$f"
   sedi 's|skill: "transcript-critic"|skill: "maister-transcript-critic"|g' "$f"
   sedi 's|skill: "problem-classifier"|skill: "maister-problem-classifier"|g' "$f"
+  # Wave 2 AJ skills: merged command dirs and chain sections reference plain kebab names
+  sedi 's|skill `test-strategy-reviewer`|skill `maister-test-strategy-reviewer`|g' "$f"
+  sedi 's|skill `linguistic-boundary-verifier`|skill `maister-linguistic-boundary-verifier`|g' "$f"
+  sedi 's|skill `metaprogram-classifier`|skill `maister-metaprogram-classifier`|g' "$f"
+  sedi 's|Invoke the `test-strategy-reviewer` skill|Invoke the `maister-test-strategy-reviewer` skill|g' "$f"
+  sedi 's|Invoke the `linguistic-boundary-verifier` skill|Invoke the `maister-linguistic-boundary-verifier` skill|g' "$f"
+  sedi 's|Invoke the `metaprogram-classifier` skill|Invoke the `maister-metaprogram-classifier` skill|g' "$f"
+  sedi 's|skill: "test-strategy-reviewer"|skill: "maister-test-strategy-reviewer"|g' "$f"
+  sedi 's|skill: "linguistic-boundary-verifier"|skill: "maister-linguistic-boundary-verifier"|g' "$f"
+  sedi 's|skill: "metaprogram-classifier"|skill: "maister-metaprogram-classifier"|g' "$f"
+  sedi 's|run `test-strategy-reviewer`|run `maister-test-strategy-reviewer`|g' "$f"
+  sedi 's|run `linguistic-boundary-verifier`|run `maister-linguistic-boundary-verifier`|g' "$f"
+  sedi 's|run `metaprogram-classifier`|run `maister-metaprogram-classifier`|g' "$f"
+  sedi 's|run `grill-me`|run `maister-grill-me`|g' "$f"
+  sedi 's|run `problem-classifier`|run `maister-problem-classifier`|g' "$f"
+  sedi 's|run `context-distiller`|run `maister-context-distiller`|g' "$f"
+  sedi 's|run `thermos`|run `maister-thermos`|g' "$f"
 }
 
 # Step 14: TaskCreate/TaskUpdate → TUI task list (T7)
@@ -738,7 +764,7 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 
 - `agents/maister.json` — orchestrator with embedded hooks
 - `agents/maister-*.json` — 26 subagents + `maister-explore`
-- `skills/maister-*/` — 32 slash skills
+- `skills/maister-*/` — 38 slash skills
 - `steering/maister-workflows.md` — plugin workflows and Kiro platform notes
 - `hooks/` — hook scripts (`~/.kiro-maister/hooks/*.sh`; `smoke-install.sh` rewrites for non-default installs)
 - `settings/mcp.json` — Playwright MCP for `--e2e` workflows

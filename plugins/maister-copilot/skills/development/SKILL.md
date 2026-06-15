@@ -248,6 +248,8 @@ ask_user - "UI mockups complete. Continue to Phase 5?"
    - If not found and non-UI task: skip visual asset processing
 5. Save gathered requirements to `analysis/requirements.md` with: initial description, Q&A from all rounds, similar features identified, visual assets and insights, functional requirements summary, reusability opportunities, scope boundaries, technical considerations
 
+**Optional (ADR-008 — soft suggestion, no auto-invocation):** After requirements are drafted, you may suggest the user run `requirements-critic` via `/maister-quick-requirements-critic` for interactive quality critique. Do not invoke the skill automatically.
+
 **Part C — Specification Creation (subagent)**:
 
 **ANTI-PATTERN — DO NOT DO THIS:**

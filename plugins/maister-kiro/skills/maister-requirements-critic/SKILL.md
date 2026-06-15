@@ -287,7 +287,7 @@ If requirements originated from a meeting without a prior decision-process audit
 
 **When Resource Contention signals appear:**
 
-When Check 2 (observable behavior) or Check 3 (signal map) reveals counters, availability pools, concurrent access, or idempotency concerns, run `problem-classifier` on the requirement to classify the modeling problem class (CRUD, Transformation & Presentation, Integration, or Resource Contention) and get implementation guidance aligned with the class.
+When Check 2 (observable behavior) or Check 3 (signal map) reveals counters, availability pools, concurrent access, or idempotency concerns, run `maister-problem-classifier` on the requirement to classify the modeling problem class (CRUD, Transformation & Presentation, Integration, or Resource Contention) and get implementation guidance aligned with the class.
 
 **After interactive reformulation:**
 
