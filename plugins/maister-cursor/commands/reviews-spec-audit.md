@@ -29,7 +29,7 @@ You are performing senior auditor review of specifications to verify completenes
 
 ```
 Task Tool:
-- subagent_type: spec-auditor
+- subagent_type: maister-spec-auditor
 - description: Specification audit
 - prompt: |
     You are the spec-auditor agent. Audit the specification at: [spec-path]

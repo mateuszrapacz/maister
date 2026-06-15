@@ -2,7 +2,7 @@
 name: maister-project-analyzer
 description: Analyzes project codebase to detect tech stack, architecture, and conventions for documentation generation. Use for existing/legacy projects to auto-generate meaningful documentation.
 color: blue
-model: haiku
+model: inherit
 ---
 
 # Project Analyzer
