@@ -6,15 +6,13 @@
     "read",
     "grep",
     "glob",
-    "shell",
-    "use_aws"
+    "shell"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "shell",
-    "use_aws"
+    "shell"
   ],
   "resources": [
     "skill://~/.kiro-maister/skills/maister-thermo-nuclear-review/SKILL.md"

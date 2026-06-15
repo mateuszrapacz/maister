@@ -5,14 +5,12 @@
   "tools": [
     "read",
     "grep",
-    "glob",
-    "use_aws"
+    "glob"
   ],
   "allowedTools": [
     "read",
     "grep",
-    "glob",
-    "use_aws"
+    "glob"
   ],
   "resources": [
     "skill://~/.kiro-maister/skills/maister-thermo-nuclear-code-quality-review/SKILL.md"

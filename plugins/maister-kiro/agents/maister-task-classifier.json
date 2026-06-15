@@ -5,14 +5,12 @@
   "tools": [
     "read",
     "grep",
-    "glob",
-    "use_aws"
+    "glob"
   ],
   "allowedTools": [
     "read",
     "grep",
-    "glob",
-    "use_aws"
+    "glob"
   ],
   "promptFile": "instructions/maister-task-classifier.md"
 }
