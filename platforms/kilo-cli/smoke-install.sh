@@ -90,8 +90,8 @@ EOF
   echo ""
   echo "🚀 Next steps:"
   echo "1. Restart Kilo CLI to load global skills and agents."
-  echo "2. In any project, run: /maister:init"
-  echo "3. Try a workflow, e.g.: /maister:development \"add a new feature\""
+  echo "2. In any project, run: /maister-init"
+  echo "3. Try a workflow, e.g.: /maister-development \"add a new feature\""
   echo ""
   echo "💡 Tip: Global subagents can be invoked in any project using @maister-<agent-name>"
 
@@ -147,8 +147,8 @@ else
   echo ""
   echo "🚀 Next steps:"
   echo "1. Start Kilo CLI in your project: kilo"
-  echo "2. Initialize the framework: /maister:init"
-  echo "3. Try a workflow, e.g.: /maister:development \"add a new feature\""
+  echo "2. Initialize the framework: /maister-init"
+  echo "3. Try a workflow, e.g.: /maister-development \"add a new feature\""
   echo ""
   echo "💡 Tip: You can also invoke subagents directly using @maister-<agent-name>"
 fi

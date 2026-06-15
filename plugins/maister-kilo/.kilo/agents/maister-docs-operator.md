@@ -2,8 +2,8 @@
 description: "Internal documentation management service. Executes docs-manager operations and returns results to the calling workflow."
 mode: subagent
 permission:
-  edit: deny
-  bash: deny
+  edit: allow
+  bash: ask
 ---
 
 

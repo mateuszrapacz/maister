@@ -1,6 +1,6 @@
-.PHONY: build build-copilot build-cursor build-kiro validate validate-copilot validate-cursor validate-kiro clean clean-copilot clean-cursor clean-kiro watch
+.PHONY: build build-copilot build-cursor build-kiro build-kilo validate validate-copilot validate-cursor validate-kiro validate-kilo clean clean-copilot clean-cursor clean-kiro clean-kilo watch
 
-build: build-copilot build-cursor build-kiro
+build: build-copilot build-cursor build-kiro build-kilo
 
 build-copilot:
 	bash platforms/copilot-cli/build.sh
@@ -11,7 +11,10 @@ build-cursor:
 build-kiro:
 	bash platforms/kiro-cli/build.sh
 
-validate: validate-copilot validate-cursor validate-kiro
+build-kilo:
+	bash platforms/kilo-cli/build.sh
+
+validate: validate-copilot validate-cursor validate-kiro validate-kilo
 
 validate-copilot:
 	@echo "=== Copilot validation ==="
@@ -147,7 +150,27 @@ validate-kiro:
 	@test $$(find plugins/maister-kiro/skills -mindepth 1 -maxdepth 1 -type d -name 'maister-*' | wc -l | tr -d ' ') -eq 32 || (echo "FAIL: expected 32 maister-* skill directories (rule 28)" && exit 1)
 	@echo "Kiro checks passed"
 
-clean: clean-copilot clean-cursor clean-kiro
+validate-kilo:
+	@echo "=== Kilo validation ==="
+	@echo "Checking plugins/maister-kilo exists..."
+	@test -d plugins/maister-kilo || (echo "FAIL: plugins/maister-kilo not built — run make build-kilo" && exit 1)
+	@echo "Checking docs-operator has edit permission..."
+	@grep -A2 '^permission:' plugins/maister-kilo/.kilo/agents/maister-docs-operator.md | grep -q 'edit: allow' || (echo "FAIL: docs-operator missing edit permission" && exit 1)
+	@echo "Checking all agent references use maister- prefix..."
+	@! grep -rnE 'subagent_type:' plugins/maister-kilo/.kilo/skills/ | grep -vE 'maister-|general-purpose' || (echo "FAIL: unprefixed subagent_type found" && exit 1)
+	@echo "Checking all skill directories have SKILL.md..."
+	@test $$(find plugins/maister-kilo/.kilo/skills -mindepth 1 -maxdepth 1 -type d ! -exec test -f {}/SKILL.md \; -print | wc -l | tr -d ' ') -eq 0 || (echo "FAIL: skill directory missing SKILL.md" && exit 1)
+	@echo "Checking skill names match directory names..."
+	@for d in plugins/maister-kilo/.kilo/skills/*/; do \
+		dir=$$(basename "$$d"); \
+		name=$$(grep -m1 '^name:' "$$d/SKILL.md" 2>/dev/null | sed 's/^name: *//'); \
+		test "$$name" = "$$dir" || (echo "FAIL: skill name mismatch $$dir vs $$name" && exit 1); \
+	done
+	@echo "Checking no colon-prefixed commands in smoke-install.sh..."
+	@! grep -q '/maister:' platforms/kilo-cli/smoke-install.sh || (echo "FAIL: colon-prefixed /maister: command found in smoke-install.sh" && exit 1)
+	@echo "Kilo checks passed"
+
+clean: clean-copilot clean-cursor clean-kiro clean-kilo
 
 clean-copilot:
 	rm -rf plugins/maister-copilot/
@@ -157,6 +180,9 @@ clean-cursor:
 
 clean-kiro:
 	rm -rf plugins/maister-kiro/
+
+clean-kilo:
+	rm -rf plugins/maister-kilo/
 
 watch:
 	fswatch -o plugins/maister/ | xargs -n1 -I{} make build

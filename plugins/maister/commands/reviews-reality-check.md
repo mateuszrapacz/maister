@@ -25,7 +25,7 @@ You are performing no-nonsense reality assessment to determine if completed work
 
 ```
 Task Tool:
-- subagent_type: reality-assessor
+- subagent_type: maister:reality-assessor
 - description: Reality assessment
 - prompt: |
     You are the reality-assessor agent. Assess the reality of completion for: [task-path]

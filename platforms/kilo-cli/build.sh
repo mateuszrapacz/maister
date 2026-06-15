@@ -61,7 +61,11 @@ if [ -d "$OUT/agents" ]; then
     agent_name="${filename%.md}"
     
     # Determine permission based on agent name heuristics
-    if [[ "$agent_name" == *"analyzer"* ]] || [[ "$agent_name" == *"checker"* ]] || [[ "$agent_name" == *"auditor"* ]] || [[ "$agent_name" == *"reporter"* ]] || [[ "$agent_name" == "docs-operator" ]]; then
+    if [[ "$agent_name" == "docs-operator" ]]; then
+      # docs-operator performs file operations via the docs-manager skill
+      perms="  edit: allow
+  bash: ask"
+    elif [[ "$agent_name" == *"analyzer"* ]] || [[ "$agent_name" == *"checker"* ]] || [[ "$agent_name" == *"auditor"* ]] || [[ "$agent_name" == *"reporter"* ]]; then
       perms="  edit: deny
   bash: deny"
     else
