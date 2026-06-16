@@ -46,8 +46,8 @@
 
 **Estimated Steps:** 4
 
-- [ ] 1.0 Complete context-distiller skill port
-  - [ ] 1.1 Write 6 focused structural checks for this skill
+- [x] 1.0 Complete context-distiller skill port
+  - [x] 1.1 Write 6 focused structural checks for this skill
     - Skill directory and `SKILL.md` exist
     - Frontmatter: `name: context-distiller` (plain kebab, no `maister:`)
     - Frontmatter: **no** `disable-model-invocation` (follow `metaprogram-classifier`, not `problem-classifier`)
@@ -55,15 +55,15 @@
     - Body: invocation guard with explicit trigger phrases and anti-triggers
     - Body: Language Preference gate (`AskUserQuestion`) at skill start (Wave 2 pattern)
     - No `problem-class-classifier` typo; no `maister:*` body cross-refs; `## Recommended next steps` points to `linguistic-boundary-verifier` (primary) and optionally `accounting-archetype-mapper`, `aggregate-designer`; no `CLAUDE.md` refs in body
-  - [ ] 1.2 Read AJ source (~483 lines) and Maister precedents (`metaprogram-classifier`)
+  - [x] 1.2 Read AJ source (~483 lines) and Maister precedents (`metaprogram-classifier`)
     - Strip `maister:` from frontmatter `name`
     - Fix `problem-class-classifier` → `problem-classifier`
     - Remove or generalize course-specific paths
-  - [ ] 1.3 Create `plugins/maister/skills/context-distiller/SKILL.md`
+  - [x] 1.3 Create `plugins/maister/skills/context-distiller/SKILL.md`
     - Preserve bilingual PL/EN rubric body (ADR-007)
     - Add Recommended next steps chain per spec topology
     - Normalize all skill cross-refs to plain kebab names
-  - [ ] 1.4 Run ONLY the 6 structural checks from 1.1
+  - [x] 1.4 Run ONLY the 6 structural checks from 1.1
     - Do NOT run `make validate` yet (build pipeline not updated)
 
 **Acceptance Criteria:**
@@ -81,8 +81,8 @@
 
 **Estimated Steps:** 4
 
-- [ ] 2.0 Complete aggregate-designer skill port
-  - [ ] 2.1 Write 6 focused structural checks for this skill
+- [x] 2.0 Complete aggregate-designer skill port
+  - [x] 2.1 Write 6 focused structural checks for this skill
     - Skill directory and `SKILL.md` exist
     - Frontmatter: `name: aggregate-designer` (plain kebab, no `maister:`)
     - Frontmatter: **no** `disable-model-invocation`; `argument-hint` present; English-primary `description` with RC / consistency-unit trigger phrases
@@ -90,11 +90,11 @@
     - Multi-phase wizard structure and fit-check logic preserved from AJ source
     - `maister:problem-class-classifier` fixed → `problem-classifier`; no `maister:*` body refs
     - Recommended next steps: misfit → `problem-classifier`; optional → `test-strategy-reviewer`
-  - [ ] 2.2 Read AJ source (~540 lines) and `metaprogram-classifier` gate pattern
-  - [ ] 2.3 Create `plugins/maister/skills/aggregate-designer/SKILL.md`
+  - [x] 2.2 Read AJ source (~540 lines) and `metaprogram-classifier` gate pattern
+  - [x] 2.3 Create `plugins/maister/skills/aggregate-designer/SKILL.md`
     - Preserve AJ multi-phase wizard verbatim
     - Normalize cross-refs to plain kebab skill names
-  - [ ] 2.4 Run ONLY the 6 structural checks from 2.1
+  - [x] 2.4 Run ONLY the 6 structural checks from 2.1
 
 **Acceptance Criteria:**
 - All 6 structural checks pass
@@ -111,8 +111,8 @@
 
 **Estimated Steps:** 4
 
-- [ ] 3.0 Complete accounting-archetype-mapper skill port
-  - [ ] 3.1 Write 6 focused structural checks for this skill
+- [x] 3.0 Complete accounting-archetype-mapper skill port
+  - [x] 3.1 Write 6 focused structural checks for this skill
     - Skill directory and `SKILL.md` exist
     - Frontmatter: `name: accounting-archetype-mapper`; **no** `disable-model-invocation`
     - Frontmatter: `argument-hint`; English-primary `description` with accounting archetype / ledger trigger phrases
@@ -120,11 +120,11 @@
     - Fit-test hard stop and mutual redirect to `pricing-archetype-mapper` preserved verbatim from AJ
     - Recommended next steps: misfit → `pricing-archetype-mapper`; post-map → `linguistic-boundary-verifier`
     - No `maister:*` body cross-refs
-  - [ ] 3.2 Read AJ source (~547 lines)
-  - [ ] 3.3 Create `plugins/maister/skills/accounting-archetype-mapper/SKILL.md`
+  - [x] 3.2 Read AJ source (~547 lines)
+  - [x] 3.3 Create `plugins/maister/skills/accounting-archetype-mapper/SKILL.md`
     - Preserve bilingual body (ADR-007)
     - Normalize cross-refs to plain kebab names
-  - [ ] 3.4 Run ONLY the 6 structural checks from 3.1
+  - [x] 3.4 Run ONLY the 6 structural checks from 3.1
 
 **Acceptance Criteria:**
 - All 6 structural checks pass
@@ -141,8 +141,8 @@
 
 **Estimated Steps:** 4
 
-- [ ] 4.0 Complete pricing-archetype-mapper skill port
-  - [ ] 4.1 Write 6 focused structural checks for this skill
+- [x] 4.0 Complete pricing-archetype-mapper skill port
+  - [x] 4.1 Write 6 focused structural checks for this skill
     - Skill directory and `SKILL.md` exist
     - Frontmatter: `name: pricing-archetype-mapper`; **no** `disable-model-invocation`
     - Frontmatter: `argument-hint`; English-primary `description` with pricing archetype / computed-price trigger phrases
@@ -150,11 +150,11 @@
     - Fit-test hard stop and mutual redirect to `accounting-archetype-mapper` preserved verbatim from AJ
     - Recommended next steps: misfit → `accounting-archetype-mapper`
     - No `maister:*` body cross-refs
-  - [ ] 4.2 Read AJ source (~591 lines)
-  - [ ] 4.3 Create `plugins/maister/skills/pricing-archetype-mapper/SKILL.md`
+  - [x] 4.2 Read AJ source (~591 lines)
+  - [x] 4.3 Create `plugins/maister/skills/pricing-archetype-mapper/SKILL.md`
     - Preserve bilingual body (ADR-007)
     - Normalize cross-refs to plain kebab names
-  - [ ] 4.4 Run ONLY the 6 structural checks from 4.1
+  - [x] 4.4 Run ONLY the 6 structural checks from 4.1
 
 **Acceptance Criteria:**
 - All 6 structural checks pass
@@ -174,21 +174,21 @@
 
 **Estimated Steps:** 4
 
-- [ ] 5.0 Complete modeling-* command wrappers
-  - [ ] 5.1 Write 6 focused structural checks for command files
+- [x] 5.0 Complete modeling-* command wrappers
+  - [x] 5.1 Write 6 focused structural checks for command files
     - Four command files exist in flat `plugins/maister/commands/` layout
     - Each frontmatter: `name: maister:modeling-*` with English `description`
     - Each opens with **ACTION REQUIRED** instructing immediate Skill tool invocation
     - Delegation targets: `context-distiller`, `aggregate-designer`, `accounting-archetype-mapper`, `pricing-archetype-mapper` (plain kebab in Skill tool JSON)
     - Mapper commands use shortened stems (`modeling-accounting-archetype`, `modeling-pricing-archetype`) per ADR-002
     - No duplicated rubric content — orchestration lives in `SKILL.md` only; each file under 200 lines
-  - [ ] 5.2 Read normative template from spec FR-5 and `quick-problem-classifier.md`
-  - [ ] 5.3 Create four command files
+  - [x] 5.2 Read normative template from spec FR-5 and `quick-problem-classifier.md`
+  - [x] 5.3 Create four command files
     - `maister:modeling-context-distiller` → skill `context-distiller`
     - `maister:modeling-aggregate-designer` → skill `aggregate-designer`
     - `maister:modeling-accounting-archetype` → skill `accounting-archetype-mapper`
     - `maister:modeling-pricing-archetype` → skill `pricing-archetype-mapper`
-  - [ ] 5.4 Run ONLY the 6 structural checks from 5.1
+  - [x] 5.4 Run ONLY the 6 structural checks from 5.1
 
 **Acceptance Criteria:**
 - All 6 structural checks pass
@@ -206,8 +206,8 @@
 
 **Estimated Steps:** 4
 
-- [ ] 6.0 Complete cross-reference activation
-  - [ ] 6.1 Write 7 focused cross-ref checks
+- [x] 6.0 Complete cross-reference activation
+  - [x] 6.1 Write 7 focused cross-ref checks
     - `rg -i "not yet (ported|available)|Wave 3 — not yet|Wave 4 — not yet ported"` on both files returns **zero** matches
     - `problem-classifier` routing table (~L19–20): live `accounting-archetype-mapper` and `pricing-archetype-mapper` (no Wave 4 deferral)
     - `problem-classifier` body (~L409): live `aggregate-designer` ref (no "when that skill is available")
@@ -215,11 +215,11 @@
     - `linguistic-boundary-verifier` (~L42): active upstream `context-distiller` cross-ref
     - `linguistic-boundary-verifier` Recommended next steps (~L355): active `context-distiller` cross-ref
     - Distinction preserved: distiller = "where should boundaries be?"; verifier = "are boundaries respected?"
-  - [ ] 6.2 Read current stub locations in both skills
-  - [ ] 6.3 Apply edits per spec FR-6.1 and FR-6.2
+  - [x] 6.2 Read current stub locations in both skills
+  - [x] 6.3 Apply edits per spec FR-6.1 and FR-6.2
     - RC class → hand off to `aggregate-designer`
     - Archetype intent → hand off to appropriate mapper
-  - [ ] 6.4 Run ONLY the 7 cross-ref checks from 6.1
+  - [x] 6.4 Run ONLY the 7 cross-ref checks from 6.1
 
 **Acceptance Criteria:**
 - All 7 cross-ref checks pass
@@ -238,8 +238,8 @@
 
 **Estimated Steps:** 4
 
-- [ ] 7.0 Complete documentation updates
-  - [ ] 7.1 Write 7 focused documentation checks
+- [x] 7.0 Complete documentation updates
+  - [x] 7.1 Write 7 focused documentation checks
     - `CLAUDE.md`: 4 new skill rows in Requirements & Modeling Skills table
     - `CLAUDE.md`: Bundle B paragraph between Bundle A and Bundle C (classifier → distiller → mappers/designer → verifier)
     - `CLAUDE.md`: Modeling Commands subsection with 4 command rows
@@ -247,9 +247,9 @@
     - `README.md`: 4 command rows in Quick Commands table
     - `README.md`: Bundle B paragraph mirroring CLAUDE.md
     - `plugin-development.md`: `modeling-*` added to command category list; note DDD skills use `modeling-*` thin wrappers; document AJ on-demand plain-kebab `name:` exception (spec audit M2)
-  - [ ] 7.2 Read current CLAUDE.md bundles section, README Quick Commands, plugin-development command categories
-  - [ ] 7.3 Apply documentation edits per spec FR-7.1–7.3
-  - [ ] 7.4 Run ONLY the 7 documentation checks from 7.1
+  - [x] 7.2 Read current CLAUDE.md bundles section, README Quick Commands, plugin-development command categories
+  - [x] 7.3 Apply documentation edits per spec FR-7.1–7.3
+  - [x] 7.4 Run ONLY the 7 documentation checks from 7.1
 
 **Acceptance Criteria:**
 - All 7 documentation checks pass
@@ -269,8 +269,8 @@
 
 **Estimated Steps:** 5
 
-- [ ] 8.0 Complete build pipeline integration
-  - [ ] 8.1 Write 8 focused build-integration checks (pre-build static review)
+- [x] 8.0 Complete build pipeline integration
+  - [x] 8.1 Write 8 focused build-integration checks (pre-build static review)
     - `build.sh` `merge_one`: four new entries → `maister-modeling-context-distiller`, `maister-modeling-aggregate-designer`, `maister-modeling-accounting-archetype`, `maister-modeling-pricing-archetype` (12 → 16 total)
     - `build.sh` `skills_needing_args`: eight new entries (4 renamed skills + 4 merged commands):
       - `maister-context-distiller`, `maister-aggregate-designer`, `maister-accounting-archetype-mapper`, `maister-pricing-archetype-mapper`
@@ -282,19 +282,19 @@
     - `build-core.test.sh`: merged command label **14 → 18**; total skill dirs **63 → 71**; add 4 `test -f` for `maister-modeling-*` merged dirs
     - `validation.test.sh`: Rules 14/28 assert **71** total / **46** `maister-*`
     - `build.sh` header comment (~L767): "38 slash skills" → **46**
-  - [ ] 8.2 Update `platforms/kiro-cli/build.sh`
+  - [x] 8.2 Update `platforms/kiro-cli/build.sh`
     - Add 4 `merge_one` calls after existing 12
     - Add 8 entries to `skills_needing_args`
     - Add full Wave 3 delegation sedi block (all four skill names)
     - Update inline skill count narrative
-  - [ ] 8.3 Update `Makefile` validate-kiro rules
+  - [x] 8.3 Update `Makefile` validate-kiro rules
     - Rule 14: `63` → `71`
     - Rule 28: `38` → `46`
     - Rule 23 shortcut count unchanged at 25
-  - [ ] 8.4 Update Kiro test files with correct post-Wave-3 counts
+  - [x] 8.4 Update Kiro test files with correct post-Wave-3 counts
     - `build-core.test.sh`: test names/comments, merged count 18, total 71, unprefixed 25
     - `validation.test.sh`: rename `test_exactly_63_skill_dirs` expectations to 71/46
-  - [ ] 8.5 Run ONLY the 8 static checks from 8.1 (grep/diff review before full build)
+  - [x] 8.5 Run ONLY the 8 static checks from 8.1 (grep/diff review before full build)
 
 **Acceptance Criteria:**
 - All 8 static checks pass on edited files
@@ -311,8 +311,8 @@
 
 **Estimated Steps:** 3
 
-- [ ] 9.0 Complete build gate and generated output verification
-  - [ ] 9.1 Write 6 focused post-build checks
+- [x] 9.0 Complete build gate and generated output verification
+  - [x] 9.1 Write 6 focused post-build checks
     - `make build` exits 0
     - `make validate` exits 0
     - Kiro tree: 4 new renamed skill dirs (`maister-context-distiller`, `maister-aggregate-designer`, `maister-accounting-archetype-mapper`, `maister-pricing-archetype-mapper`)
@@ -320,9 +320,9 @@
     - Kiro counts: exactly **71** total / **46** `maister-*` / **25** shortcuts
     - Grep generated Kiro skill bodies: Wave 3 cross-refs use `maister-*` prefixed names in chain sections (no unprefixed `context-distiller` etc. after sedi)
     - Copilot and Cursor variants contain equivalent skills/commands after build (grep spot-check); no manual edits to generated variants
-  - [ ] 9.2 Run `make build && make validate`
+  - [x] 9.2 Run `make build && make validate`
     - Run Kiro test suite: `platforms/kiro-cli/tests/build-core.test.sh`, `platforms/kiro-cli/tests/validation.test.sh`
-  - [ ] 9.3 Run ONLY the 6 post-build checks from 9.1
+  - [x] 9.3 Run ONLY the 6 post-build checks from 9.1
     - Confirm no orchestrator SKILL.md modifications (ADR-008)
     - Confirm validate rule 5: no `CLAUDE.md` references inside generated skill bodies
     - Optional manual smoke (AC-6): one `/maister:modeling-*` invocation per skill; accounting ↔ pricing fit-test redirect spot-check

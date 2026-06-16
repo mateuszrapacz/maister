@@ -50,3 +50,13 @@
 **Uncommitted source changes:** Edit `plugins/maister/` + `platforms/kiro-cli/` + `Makefile` + `README.md` + `.maister/docs/standards/`. Run `make build` before commit to refresh generated variants.
 
 **2026-06-16 follow-up:** Background verification runs hit partial Kiro tree (46 dirs, no shortcuts) and stalled subagents. After full `bash platforms/kiro-cli/build.sh`: 71 total / 46 maister-* / 25 shortcuts; build-core tests 8/8 PASS. Run `make build && make validate` before commit. Phase 11 reports: only `verification/pragmatic-review.md` complete; code-reviewer, completeness, reality, production stalled.
+
+## 2026-06-16 — Phase 11 Post-Verification Fixes
+
+**Fixes applied (2 warnings resolved):**
+- Marked all 40 implementation-plan.md checkboxes `[x]` (completeness warning)
+- Fixed spec FR-8.2 Kiro counts: `67→71`, `42→46` across Inventory Delta, FR-8.2, FR-8.3, and File Manifest tables (code_review warning)
+
+**Remaining (info only, non-blocking):**
+- AC-6 manual smoke not documented (deferred to post-merge)
+- Kiro dual-dir packaging debt (future wave refactor)

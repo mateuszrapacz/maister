@@ -41,8 +41,8 @@ Port four Architekt Jutra (AJ) DDD transformation skills into `plugins/maister/`
 |--------|----------------------|----------------------|
 | Source skills | 26 | 30 |
 | Source commands | 12 | 16 |
-| Kiro skill directories | 63 | 67 |
-| Kiro `maister-*` directories | 38 | 42 |
+| Kiro skill directories | 63 | 71 |
+| Kiro `maister-*` directories | 38 | 46 |
 | Kiro shortcut directories | 25 | 25 (unchanged) |
 | Documented bundles | A, C, D | A, **B**, C, D |
 
@@ -215,15 +215,15 @@ Note: `run \`context-distiller\`` sedi already exists (~L319); extend with full 
 
 | Rule | Current | Target |
 |------|---------|--------|
-| Rule 14 | 63 total skill dirs | 67 |
-| Rule 28 | 38 `maister-*` dirs | 42 |
+| Rule 14 | 63 total skill dirs | 71 |
+| Rule 28 | 38 `maister-*` dirs | 46 |
 
 #### FR-8.3: Kiro test scripts
 
 | File | Change |
 |------|--------|
-| `platforms/kiro-cli/tests/build-core.test.sh` | 63→67 skill dir count; 14→18 merged command assertions; add 4 `maister-modeling-*` file checks |
-| `platforms/kiro-cli/tests/validation.test.sh` | `test_exactly_63_skill_dirs` → 67 total / 42 `maister-*` |
+| `platforms/kiro-cli/tests/build-core.test.sh` | 63→71 skill dir count; 14→18 merged command assertions; add 4 `maister-modeling-*` file checks |
+| `platforms/kiro-cli/tests/validation.test.sh` | `test_exactly_63_skill_dirs` → 71 total / 46 `maister-*` |
 
 #### FR-8.4: Platform variants
 
@@ -328,7 +328,7 @@ User explicit request
 | `README.md` | +4 command rows, Bundle B paragraph |
 | `.maister/docs/standards/global/plugin-development.md` | Document `modeling-*` category |
 | `platforms/kiro-cli/build.sh` | merge_one ×4, skills_needing_args +8, Wave 3 sedi block |
-| `Makefile` | Rules 14/28: 63→67, 38→42 |
+| `Makefile` | Rules 14/28: 63→71, 38→46 |
 | `platforms/kiro-cli/tests/build-core.test.sh` | Count + merged command assertions |
 | `platforms/kiro-cli/tests/validation.test.sh` | Rule 14/28 count test |
 

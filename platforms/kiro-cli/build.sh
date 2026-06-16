@@ -67,8 +67,6 @@ merge_commands_to_skills() {
   merge_one quick-metaprogram-classifier maister-quick-metaprogram-classifier
   merge_one modeling-context-distiller maister-modeling-context-distiller
   merge_one modeling-aggregate-designer maister-modeling-aggregate-designer
-  merge_one modeling-accounting-archetype maister-modeling-accounting-archetype
-  merge_one modeling-pricing-archetype maister-modeling-pricing-archetype
 
   rm -rf "$commands_dir"
 }
@@ -219,12 +217,8 @@ apply_kiro_overrides() {
     maister-quick-metaprogram-classifier
     maister-context-distiller
     maister-aggregate-designer
-    maister-accounting-archetype-mapper
-    maister-pricing-archetype-mapper
     maister-modeling-context-distiller
     maister-modeling-aggregate-designer
-    maister-modeling-accounting-archetype
-    maister-modeling-pricing-archetype
   )
   for skill in "${skills_needing_args[@]}"; do
     local sf="$OUT/skills/$skill/SKILL.md"
@@ -332,19 +326,11 @@ apply_delegation_transforms() {
   # Wave 3 AJ skills: merged modeling-* commands and chain sections reference plain kebab names
   sedi 's|skill `context-distiller`|skill `maister-context-distiller`|g' "$f"
   sedi 's|skill `aggregate-designer`|skill `maister-aggregate-designer`|g' "$f"
-  sedi 's|skill `accounting-archetype-mapper`|skill `maister-accounting-archetype-mapper`|g' "$f"
-  sedi 's|skill `pricing-archetype-mapper`|skill `maister-pricing-archetype-mapper`|g' "$f"
   sedi 's|Invoke the `context-distiller` skill|Invoke the `maister-context-distiller` skill|g' "$f"
   sedi 's|Invoke the `aggregate-designer` skill|Invoke the `maister-aggregate-designer` skill|g' "$f"
-  sedi 's|Invoke the `accounting-archetype-mapper` skill|Invoke the `maister-accounting-archetype-mapper` skill|g' "$f"
-  sedi 's|Invoke the `pricing-archetype-mapper` skill|Invoke the `maister-pricing-archetype-mapper` skill|g' "$f"
   sedi 's|skill: "context-distiller"|skill: "maister-context-distiller"|g' "$f"
   sedi 's|skill: "aggregate-designer"|skill: "maister-aggregate-designer"|g' "$f"
-  sedi 's|skill: "accounting-archetype-mapper"|skill: "maister-accounting-archetype-mapper"|g' "$f"
-  sedi 's|skill: "pricing-archetype-mapper"|skill: "maister-pricing-archetype-mapper"|g' "$f"
   sedi 's|run `aggregate-designer`|run `maister-aggregate-designer`|g' "$f"
-  sedi 's|run `accounting-archetype-mapper`|run `maister-accounting-archetype-mapper`|g' "$f"
-  sedi 's|run `pricing-archetype-mapper`|run `maister-pricing-archetype-mapper`|g' "$f"
   sedi 's|run `thermos`|run `maister-thermos`|g' "$f"
 }
 

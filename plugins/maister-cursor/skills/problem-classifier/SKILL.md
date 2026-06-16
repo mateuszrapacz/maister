@@ -16,8 +16,6 @@ Do NOT invoke when the user is writing, drafting, or creating requirements or sp
 | User intent | Correct skill |
 |-------------|---------------|
 | "Jaka klasa problemu?", "Jak to sklasyfikować modelarsko?", "Which modeling class?" | **this skill** |
-| "Zamodeluj jako archetyp księgowy", "Map to accounting archetype" | `accounting-archetype-mapper` |
-| "Zamodeluj cennik jako archetyp", "Pricing archetype" | `pricing-archetype-mapper` |
 
 Given a business requirement, identify which of the 4 modeling problem classes best describes it, ask targeted clarifying questions to resolve ambiguity, and suggest an implementation approach aligned with the class.
 
@@ -505,8 +503,6 @@ When classification is **Resource Contention** (primary or any component), the n
 | Condition | Next skill | Notes |
 |-----------|-----------|-------|
 | RC class detected | `aggregate-designer` | Invoke with original domain description and this classification output as context |
-| Archetype / ledger intent | `accounting-archetype-mapper` | When user asks to map to accounting archetype |
-| Pricing / computed-price intent | `pricing-archetype-mapper` | When user asks to map to pricing archetype |
 | Strategic boundaries unclear | `context-distiller` | When same noun behaves differently across processes |
 
 When `aggregate-designer` completes, see its Recommended next steps for test strategy review.

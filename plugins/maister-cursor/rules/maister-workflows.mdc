@@ -516,12 +516,10 @@ Orchestrators manage complete workflows with state management, auto-recovery, an
 | `problem-classifier` | Classifies business requirements into 4 modeling problem classes (CRUD, Transformation & Presentation, Integration, Resource Contention). Signal scan, clarifying questions, implementation guidance — not an archetype mapper. | `skills/problem-classifier/SKILL.md` |
 | `context-distiller` | Distills bounded contexts via bidirectional linguistic analysis — finds generalization candidates and context-split signals. Strategic design artifact, not implementation. | `skills/context-distiller/SKILL.md` |
 | `aggregate-designer` | Multi-phase wizard for Resource Contention consistency units (aggregate boundaries, command locking, optimistic concurrency). | `skills/aggregate-designer/SKILL.md` |
-| `accounting-archetype-mapper` | Maps domains to the accounting archetype (value tracking, ledger, double-entry). Fit-test hard stop when pricing archetype is a better match. | `skills/accounting-archetype-mapper/SKILL.md` |
-| `pricing-archetype-mapper` | Maps domains to the pricing archetype (computed prices, component trees, validity). Fit-test hard stop when accounting archetype is a better match. | `skills/pricing-archetype-mapper/SKILL.md` |
 
 **Bundle A — Requirements quality flow**: Run `transcript-critic` on the meeting transcript first. Use its diagnostic questions in follow-up clarification (meeting or async). Capture refined user stories or tickets, then run `requirements-critic` for interactive quality critique. When concurrency or resource-contention signals appear, run `problem-classifier` for modeling-class guidance.
 
-**Bundle B — DDD modeling flow**: Run `problem-classifier` on requirements → `context-distiller` for strategic boundaries when generalization/ambiguity signals appear → `accounting-archetype-mapper` or `pricing-archetype-mapper` when archetype fit is the question → `aggregate-designer` when RC class is detected → `linguistic-boundary-verifier` when `language.md` files exist. Chain via each skill's Recommended next steps, not an orchestrator.
+**Bundle B — DDD modeling flow**: Run `problem-classifier` on requirements → `context-distiller` for strategic boundaries when generalization/ambiguity signals appear → `aggregate-designer` when RC class is detected → `linguistic-boundary-verifier` when `language.md` files exist. Chain via each skill's Recommended next steps, not an orchestrator.
 
 > **Naming distinction**: `task-classifier` **agent** routes task descriptions to orchestrators (5 workflow types: development, performance, migration, research, product-design). `problem-classifier` **skill** classifies business requirements into 4 DDD modeling problem classes. Different domains — do not conflate.
 
@@ -609,8 +607,6 @@ Research context flows through ALL phases without skipping any. Research artifac
 | `/maister-quick-metaprogram-classifier` | `[utterance or email]` | Classify NLP metaprograms and suggest communication strategies |
 | `/maister-modeling-context-distiller` | `[domain description or concepts]` | Distill bounded contexts via generalization analysis |
 | `/maister-modeling-aggregate-designer` | `[RC domain description]` | Design consistency units for resource-contention problems |
-| `/maister-modeling-accounting-archetype` | `[domain description]` | Map domain to accounting archetype (ledger, value tracking) |
-| `/maister-modeling-pricing-archetype` | `[domain description]` | Map domain to pricing archetype (computed prices) |
 
 **See**: Individual `commands/` and `skills/*/skill.md` files for detailed documentation.
 
