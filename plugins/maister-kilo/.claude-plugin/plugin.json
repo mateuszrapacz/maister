@@ -1,9 +1,0 @@
-{
-  "name": "maister",
-  "version": "2.1.8-fork.2",
-  "description": "Structured, standards-aware development workflows for Claude Code",
-  "author": {
-    "name": "Skillpanel",
-    "email": "marek@skillpanel.com"
-  }
-}

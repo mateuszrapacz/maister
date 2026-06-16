@@ -18,6 +18,9 @@ echo "Building Kilo CLI variant..."
 rm -rf "$OUT"
 cp -r "$CORE" "$OUT"
 
+# 0. Remove Claude Code artifacts that don't apply to Kilo
+rm -rf "$OUT/.claude-plugin"
+
 # 1. Global transform: maister: -> maister-
 find "$OUT" -name "*.md" | while read -r f; do
   sedi 's/maister:/maister-/g' "$f"
@@ -154,6 +157,22 @@ mkdir -p "$OUT/.kilo/rules"
 if [ -f "$OUT/CLAUDE.md" ]; then
   mv "$OUT/CLAUDE.md" "$OUT/.kilo/rules/maister-workflows.md"
   sedi 's/CLAUDE\.md/AGENTS.md/g' "$OUT/.kilo/rules/maister-workflows.md"
+fi
+
+# 11. Generate maister-docs.md rule (INDEX.md awareness)
+cat > "$OUT/.kilo/rules/maister-docs.md" << 'EOF'
+# Maister Documentation
+
+Before starting any task, read `.maister/docs/INDEX.md` first. It indexes coding standards, project vision, tech stack, and architecture decisions.
+
+Follow standards in `.maister/docs/standards/` when writing code. If standards conflict with the task, ask the user.
+EOF
+
+# 12. Fix platform identity in maister-workflows.md (Claude Code -> Kilo Code)
+if [ -f "$OUT/.kilo/rules/maister-workflows.md" ]; then
+  sedi 's/for Claude Code projects/for Kilo Code projects/g' "$OUT/.kilo/rules/maister-workflows.md"
+  sedi 's/Claude Code lifecycle events/lifecycle events/g' "$OUT/.kilo/rules/maister-workflows.md"
+  sedi 's/(auto-discovered by Claude Code)//g' "$OUT/.kilo/rules/maister-workflows.md"
 fi
 
 echo "Built Kilo CLI variant at $OUT"

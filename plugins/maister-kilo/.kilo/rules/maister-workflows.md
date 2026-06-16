@@ -1,6 +1,6 @@
 # Maister Plugin
 
-This plugin provides AI-powered Software Development Lifecycle (SDLC) capabilities for Claude Code projects.
+This plugin provides AI-powered Software Development Lifecycle (SDLC) capabilities for Kilo Code projects.
 
 ## Purpose
 
@@ -704,7 +704,7 @@ See individual orchestrator `skill.md` files for phase-specific task tables.
 
 ## Hooks
 
-The plugin includes hooks that fire at specific Claude Code lifecycle events.
+The plugin includes hooks that fire at specific lifecycle events.
 
 ### Post-Compaction State Reminder
 
@@ -715,7 +715,7 @@ This hook fires after context compaction and injects a reminder into Claude's co
 
 **Purpose**: Reminds Claude to check `orchestrator-state.yml` for completed phases and use → **CHAT GATE** — Present the question in chat and wait for user response at phase gates after compaction, regardless of any "continue without asking" instructions in the compacted context.
 
-**See**: `hooks/hooks.json` for hook configuration (auto-discovered by Claude Code).
+**See**: `hooks/hooks.json` for hook configuration .
 
 ### Destructive Command Protection
 
