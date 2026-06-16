@@ -1,0 +1,42 @@
+workflow_type: research
+current_phase: completed
+research_context:
+  research_type: mixed
+  research_question: "Extract and analyze skills from architekt-jutra-code; categorize and recommend adoption into Maister plugin"
+  scope:
+    included:
+      - All SKILL.md in /Users/mrapacz/Projects/architekt-jutra-code
+      - Maister plugins/maister/skills inventory
+      - Comparison with grill-me, thermos pattern
+    excluded:
+      - Implementation of adopted skills
+      - AJ application runtime code
+      - AJ-specific KG/MCP dependencies unless generalized
+    constraints:
+      - Edit only plugins/maister source
+      - Follow plugin-development standards
+  project_doc_paths:
+    - .maister/docs/INDEX.md
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/standards/global/plugin-development.md
+    - .maister/docs/standards/global/conventions.md
+  methodology:
+    primary: structured skill audit + comparative fit matrix
+    approach: catalog → classify → baseline → compare → score → recommend
+    analysis_framework: skill taxonomy, maister role matrix, adoption fit criteria (6 dimensions)
+  sources:
+    external: /Users/mrapacz/Projects/architekt-jutra-code (14 SKILL.md)
+    maister: plugins/maister/skills (18 skills)
+    standards: .maister/docs/standards/global/plugin-development.md
+  confidence_level: high
+  gathering_strategy:
+    instances: 4
+    categories:
+      - external-skills-repo
+      - maister-codebase
+      - plugin-standards
+      - comparative-analysis
+    execution_order: parallel 1-3, then comparative-analysis
+options:
+  brainstorming_enabled: true
+  design_enabled: true

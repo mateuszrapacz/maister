@@ -1,0 +1,169 @@
+orchestrator:
+  started_phase: phase-11
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-5
+    - phase-6
+    - phase-7
+    - phase-8
+    - phase-10
+    - phase-11
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-11: 0
+  options:
+    spec_audit_enabled: true
+    e2e_enabled: false
+    user_docs_enabled: false
+    skip_test_suite: true
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  created: "2026-06-16T12:00:00Z"
+  updated: "2026-06-16T18:00:00Z"
+  task_path: .maister/tasks/development/2026-06-16-aj-skills-wave3
+  task_ids:
+    phase-1: phase-1
+    phase-2: phase-2
+    phase-5: phase-5
+    phase-6: phase-6
+    phase-7: phase-7
+    phase-8: phase-8
+    phase-10: phase-10
+    phase-11: phase-11
+    phase-14: phase-14
+
+task:
+  title: "AJ Skills Wave 3 — DDD Core (Epic E4)"
+  description: >
+    Implement Epic E4 (Wave 3) from architekt-jutra skills research: port context-distiller,
+    aggregate-designer, accounting-archetype-mapper, and pricing-archetype-mapper into
+    plugins/maister/ as standalone on-demand skills with category-aligned modeling-* commands,
+    Recommended next steps chain sections, cross-ref fixes to problem-classifier, CLAUDE.md
+    documentation, modeling-* category in plugin-development standards, and make build/validate.
+  status: verification_complete_pending_finalization
+  tags:
+    - plugin
+    - skills
+    - wave-3
+    - architekt-jutra
+    - ddd
+  priority: high
+
+task_context:
+  risk_level: medium
+  clarifications_resolved: true
+  scope_expanded: false
+  architecture_decision: null
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: true
+    involves_data_operations: false
+    ui_heavy: false
+  research_reference:
+    path: .maister/tasks/research/2026-06-09-architekt-jutra-skills-analysis
+    research_question: "Extract and analyze skills from architekt-jutra-code; categorize and recommend adoption into Maister plugin"
+    research_type: mixed
+    confidence_level: high
+  design_reference:
+    source: null
+    product_design_path: null
+    mockup_count: 0
+    has_brief: false
+    index_path: null
+  project_context:
+    project_doc_paths:
+      - .maister/docs/INDEX.md
+      - .maister/docs/project/tech-stack.md
+      - .maister/docs/standards/global/plugin-development.md
+      - .maister/docs/standards/global/conventions.md
+      - .maister/docs/standards/global/build-pipeline.md
+      - .maister/docs/standards/global/language-md-convention.md
+  phase_summaries:
+    research:
+      summary: "11 of 14 AJ skills adoptable in waves 1-4. Waves 1-2 complete. Wave 3 ports 4 DDD transformation skills with modeling-* commands."
+      key_findings:
+        - "Wave 3: context-distiller, aggregate-designer, accounting-archetype-mapper, pricing-archetype-mapper"
+        - "4 modeling-* commands; chain refs to problem-classifier and linguistic-boundary-verifier"
+        - "Edit only plugins/maister/; make build && make validate"
+        - "Add modeling-* category to plugin-development.md standards"
+      recommended_approach: "Port 4 individual DDD skills + thin command wrappers + chain sections; no meta-orchestrator"
+      decisions_made:
+        - "ADR-001: Individual skills with chain sections (1D)"
+        - "ADR-002: Category-aligned commands — modeling-* for Wave 3"
+        - "ADR-003: Strict phased waves (3A)"
+        - "ADR-007: Bilingual bodies, EN frontmatter, language ask on interactive skills"
+    design:
+      summary: null
+      screen_count: 0
+      component_count: 0
+      index_path: null
+    codebase_analysis:
+      key_files:
+        - plugins/maister/skills/problem-classifier/SKILL.md
+        - plugins/maister/skills/linguistic-boundary-verifier/SKILL.md
+        - platforms/kiro-cli/build.sh
+        - Makefile
+      primary_language: Markdown
+      summary: "Wave 3 is copy-adapt-integrate; 4 AJ sources available; Waves 1-2 port template established; stubs in problem-classifier and linguistic-boundary-verifier need activation."
+    clarifications: []
+    gap_analysis:
+      integration_points:
+        - problem-classifier chain activation
+        - linguistic-boundary-verifier context-distiller refs
+        - Kiro build.sh merge_one and sedi
+        - Bundle B CLAUDE.md/README
+      summary: "8 artifacts missing (4 skills + 4 commands); 10 integration surfaces incomplete; medium risk."
+    scope_clarifications:
+      scope_expanded: false
+      summary: "Language gates yes; mappers Wave 3 live; archetype-scanner out of scope."
+    ui_mockups:
+      components_designed: []
+      summary: null
+    specification:
+      summary: "47 FRs, 28 ACs; Epic E4 Wave 3 — 4 DDD skills + 4 modeling-* commands; spec audit pass-with-concerns (Kiro counts corrected to 71/46 in plan)."
+    implementation:
+      summary: "Phase 8 complete: 4 skills, 4 commands, cross-refs, Bundle B docs, Kiro build 71/46; make build && make validate exit 0. Session paused before Phase 11 verification."
+    architecture_decision:
+      decision: null
+      summary: null
+
+verification_context:
+  last_status: passed_with_issues
+  issues_found:
+    - source: completeness
+      severity: warning
+      description: "Implementation plan checkboxes not marked complete (0/36 [x])"
+      location: implementation/implementation-plan.md
+      fixable: true
+      suggestion: "Mark completed steps [x] in plan file"
+    - source: code_review
+      severity: warning
+      description: "Spec FR-8.2 still lists incorrect Kiro counts (67/42 vs verified 71/46)"
+      location: implementation/spec.md
+      fixable: true
+      suggestion: "Update spec inventory table to match spec-audit correction"
+    - source: reality
+      severity: info
+      description: "AC-6 manual smoke not documented in work-log"
+      location: implementation/work-log.md
+      fixable: true
+      suggestion: "Add smoke test notes or defer to post-merge"
+    - source: pragmatic
+      severity: info
+      description: "Kiro dual-dir packaging debt (H1) — document canonical path before E5"
+      location: platforms/kiro-cli/build.sh
+      fixable: false
+      suggestion: "Future wave refactor"
+  fixes_applied: []
+  decisions_made:
+    - "Phase 10: all standard verifications enabled (code review, pragmatic, reality, production); E2E and user docs skipped"
+    - "Phase 11: verification completed via orchestrator fallback (subagents hit usage limits); make validate exit 0"
+  reverify_count: 0
+  resume_from: null
+  pending_artifacts: []

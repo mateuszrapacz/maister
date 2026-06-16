@@ -1,0 +1,36 @@
+task:
+  name: upstream-sync-consistency
+  type: research
+  directory: .maister/tasks/research/2026-06-14-upstream-sync-consistency
+  created: 2026-06-14
+  status: completed
+
+research_context:
+  research_type: mixed
+  research_question: "Are upstream SkillPanel/maister v2.1.8 changes consistent with fork-specific changes? Safe cherry-pick strategy and version 2.1.8-10."
+  scope:
+    included:
+      - upstream commits fb5a8f3 and 679958b
+      - fork platform variants Cursor/Kiro/Kilo
+      - Wave 1 AJ skills and thermos/grill-me
+      - versioning 2.1.8-10
+    excluded:
+      - actual implementation
+      - upstream beta branch
+    constraints:
+      - cherry-pick only
+      - edit source plugins/maister only
+      - preserve fork-only features
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy: null
+  project_doc_paths:
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/standards/global/conventions.md
+
+options:
+  brainstorming_enabled: false
+  design_enabled: false
+
+completed_phases: []

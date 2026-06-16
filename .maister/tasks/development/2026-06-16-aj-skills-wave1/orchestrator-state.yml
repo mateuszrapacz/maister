@@ -1,0 +1,161 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-5
+    - phase-6
+    - phase-7
+    - phase-8
+    - phase-11
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: null
+    user_docs_enabled: null
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+    e2e_enabled: false
+    user_docs_enabled: false
+    skip_test_suite: true
+    sequential: null
+  created: "2026-06-16T00:00:00Z"
+  updated: "2026-06-16T00:00:00Z"
+  task_path: .maister/tasks/development/2026-06-16-aj-skills-wave1
+  task_ids:
+    phase-1: phase-1
+    phase-2: phase-2
+    phase-3: phase-3
+    phase-4: phase-4
+    phase-5: phase-5
+    phase-6: phase-6
+    phase-7: phase-7
+    phase-8: phase-8
+    phase-9: phase-9
+    phase-10: phase-10
+    phase-11: phase-11
+    phase-12: phase-12
+    phase-13: phase-13
+    phase-14: phase-14
+
+task:
+  title: "AJ Skills Wave 1 — requirements-critic, transcript-critic, problem-classifier"
+  description: >
+    Implement Epic E1 (Wave 1) from architekt-jutra skills research: port requirements-critic,
+    transcript-critic, and problem-classifier from Architekt Jutra into plugins/maister/ as
+    standalone on-demand skills with category-aligned quick-* commands, disable-model-invocation
+    on critique skills, Recommended next steps chain sections, CLAUDE.md documentation, and
+    make build/validate. Source reference: /Users/mrapacz/Projects/architekt-jutra-code.
+  status: completed
+  tags:
+    - plugin
+    - skills
+    - wave-1
+    - architekt-jutra
+  priority: high
+
+task_context:
+  risk_level: low
+  clarifications_resolved: true
+  scope_expanded: false
+  architecture_decision: null
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: false
+    involves_data_operations: false
+    ui_heavy: false
+  research_reference:
+    path: .maister/tasks/research/2026-06-09-architekt-jutra-skills-analysis
+    research_question: "Extract and analyze skills from architekt-jutra-code; categorize and recommend adoption into Maister plugin"
+    research_type: mixed
+    confidence_level: high
+  design_reference:
+    source: null
+    product_design_path: null
+    mockup_count: 0
+    has_brief: false
+    index_path: null
+  project_context:
+    project_doc_paths:
+      - .maister/docs/INDEX.md
+      - .maister/docs/project/tech-stack.md
+      - .maister/docs/project/vision.md
+      - .maister/docs/project/roadmap.md
+      - .maister/docs/project/architecture.md
+      - .maister/docs/standards/global/plugin-development.md
+      - .maister/docs/standards/global/conventions.md
+      - .maister/docs/standards/global/build-pipeline.md
+      - .maister/docs/standards/global/language-md-convention.md
+  phase_summaries:
+    research:
+      summary: "11 of 14 AJ skills adoptable; Wave 1 ports 3 high-priority skills with quick-* commands, hybrid chain sections (ADR-001), category-aligned commands (ADR-002), strict waves (ADR-003), standalone Wave 1 (ADR-008)."
+      key_findings:
+        - "Wave 1: requirements-critic, transcript-critic, problem-classifier"
+        - "3 quick-* commands; disable-model-invocation on critics"
+        - "Edit only plugins/maister/; make build && make validate"
+        - "grill-me/thermos CLAUDE.md backfill included in E1"
+      recommended_approach: "Port 3 individual skills + thin command wrappers + chain sections; no meta-orchestrator"
+      decisions_made:
+        - "ADR-001: Individual skills with chain sections (1D)"
+        - "ADR-002: Category-aligned commands (2B)"
+        - "ADR-003: Strict phased waves (3A)"
+        - "ADR-008: Standalone Wave 1; soft orchestrator suggestions deferred to Wave 2+"
+    design:
+      summary: null
+      screen_count: 0
+      component_count: 0
+      index_path: null
+    codebase_analysis:
+      key_files:
+        - plugins/maister/skills/requirements-critic/SKILL.md
+        - plugins/maister/skills/transcript-critic/SKILL.md
+        - plugins/maister/skills/problem-classifier/SKILL.md
+        - plugins/maister/commands/quick-requirements-critic.md
+        - plugins/maister/commands/quick-transcript-critic.md
+        - plugins/maister/commands/quick-problem-classifier.md
+      primary_language: Markdown
+      summary: "Epic E1 largely already implemented in plugins/maister/; task shifts to verification, AJ rubric diff, and ADR-008 scope reconciliation."
+    clarifications: []
+    gap_analysis:
+      integration_points:
+        - Bundle A skill chain
+        - development/product-design ADR-008 soft suggestions
+        - make build/validate multi-platform pipeline
+      summary: "Implementation substantially complete; gaps are AJ rubric fidelity diff, E2E smoke, and ADR-008 scope decision."
+    scope_clarifications:
+      scope_expanded: false
+      summary: "Verification-first close; keep ADR-008 suggestions; full AJ rubric diff; no E2E smoke."
+    ui_mockups:
+      components_designed: []
+      summary: null
+    implementation:
+      summary: "6 task groups complete; zero code remediation; 4 verification artifacts; make validate exit 0; E1 ready to close."
+    architecture_decision:
+      decision: null
+      summary: null
+
+verification_context:
+  last_status: passed
+  issues_found: 3
+  fixes_applied:
+    - "W-1: Added body-level Invocation guard to plugins/maister/skills/transcript-critic/SKILL.md"
+    - "W-2: Marked Groups 1-4 implementation-plan checkboxes complete"
+    - "W-3: Backfilled work-log Groups 1-4 entries and Standards Reading Log"
+  decisions_made:
+    - "Epic E1 verification close complete"
+    - "User chose fix-all for post-verification warnings"
+  reverify_count: 1
+  artifacts:
+    - verification/ac-static-audit.md
+    - verification/aj-rubric-diff.md
+    - verification/build-validate-evidence.md
+    - verification/adr-008-reconciliation.md
+  make_validate_exit: 0
+  remediation_diff_lines: 0

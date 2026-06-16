@@ -1,0 +1,206 @@
+orchestrator:
+  started_phase: phase-8
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: false
+    user_docs_enabled: true
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+    sequential: null
+  created: "2026-06-07T12:00:00Z"
+  updated: "2026-06-07T20:00:00Z"
+  completed_phases: [1, 2, 5, 6, 7, 8, 10, 11, 13, 14]
+  task_groups:
+    - id: G1
+      name: "Phase 0 — Scaffold & Makefile Integration"
+      status: completed
+    - id: G2
+      name: "MD→JSON Generator & Tool Whitelists"
+      status: completed
+    - id: G3
+      name: "Build Pipeline Core"
+      status: completed
+    - id: G4
+      name: "Chat-Native Gate Transforms"
+      status: completed
+    - id: G5
+      name: "Delegation & Todo Transforms"
+      status: completed
+    - id: G6
+      name: "Build Completion & Orchestrator Synthesis"
+      status: completed
+    - id: G7
+      name: "validate-kiro Structural Checks"
+      status: completed
+    - id: G8
+      name: "Smoke/CI & Distribution"
+      status: completed
+    - id: G9
+      name: "Phase 2 UX (@prompts, hooks)"
+      status: completed
+    - id: G10
+      name: "E2E Verification Matrix"
+      status: completed
+    - id: G11
+      name: "Documentation & Release"
+      status: completed
+    - id: G12
+      name: "Test Review & Gap Fill"
+      status: completed
+  task_path: .maister/tasks/development/2026-06-07-kiro-cli-support
+  task_ids:
+    phase-1: phase-1
+    phase-2: phase-2
+    phase-3: phase-3
+    phase-4: phase-4
+    phase-5: phase-5
+    phase-6: phase-6
+    phase-7: phase-7
+    phase-8: phase-8
+    phase-9: phase-9
+    phase-10: phase-10
+    phase-11: phase-11
+    phase-12: phase-12
+    phase-13: phase-13
+    phase-14: phase-14
+
+task:
+  title: "Kiro CLI support for Maister"
+  description: "Implement Kiro CLI platform support based on research — multi-platform build pipeline (plugins/maister → platforms/kiro-cli/build.sh → plugins/maister-kiro), Kiro CLI API mapping (skills, agents JSON, hooks, steering, MCP, subagents), Makefile/validate/smoke/CI, tool/name transforms, init workflow integration (AGENTS.md, steering)."
+  status: completed
+  tags:
+    - kiro-cli
+    - build-pipeline
+    - multi-platform
+  priority: high
+
+task_context:
+  risk_level: high
+  clarifications_resolved: true
+  scope_expanded: null
+  architecture_decision: null
+  tech_clarified: true
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: true
+    involves_data_operations: false
+    ui_heavy: false
+  research_reference:
+    path: .maister/tasks/research/2026-06-07-kiro-cli-support
+    research_question: "Jak przygotować implementację wsparcia kiro-cli analogicznie do Cursor, Copilot i Claude Code?"
+    research_type: mixed
+    confidence_level: medium
+  design_reference:
+    source: null
+    product_design_path: null
+    mockup_count: 0
+    has_brief: false
+    index_path: null
+  project_context:
+    project_doc_paths:
+      - .maister/docs/project/tech-stack.md
+      - .maister/docs/standards/global/build-pipeline.md
+      - .maister/docs/standards/global/plugin-development.md
+      - .maister/docs/standards/global/conventions.md
+      - .maister/docs/standards/global/error-handling.md
+      - .maister/docs/standards/global/validation.md
+      - .maister/docs/standards/global/coding-style.md
+      - .maister/docs/standards/global/commenting.md
+      - .maister/docs/standards/global/minimal-implementation.md
+      - .maister/docs/standards/testing/test-writing.md
+      - docs/cursor-agent-support.md
+  phase_summaries:
+    research:
+      summary: "Research complete — Cursor-based build pipeline, MD→JSON agents, KIRO_HOME profile, hybrid distribution, chat-native gates, 5 implementation phases (0-4)."
+      key_findings:
+        - "No platforms/kiro-cli/ or plugins/maister-kiro/ yet — greenfield following Cursor pattern"
+        - "24 agents MD→JSON via generate-agent-json.sh; maister.json orchestrator with embedded hooks"
+        - "KIRO_HOME=~/.kiro-maister isolated profile; hybrid global+workspace install"
+        - "API gaps: no AskQuestion, no explore subagent, todo experimental"
+      recommended_approach: "Extend Cursor build pattern with JSON agent generator, @prompts layer, smoke-install + smoke-cli"
+      decisions_made:
+        - "1C Hybrid distribution"
+        - "2B state SOT + todo Phase 1.5"
+        - "3A+3B+3C chat-native gates"
+        - "4A maister.json orchestrator (renamed from maister-orchestrator)"
+        - "5B+5A selective skill:// on maister agent"
+        - "6A bash+jq MD→JSON"
+    design:
+      summary: null
+      screen_count: 0
+      component_count: 0
+      index_path: null
+    codebase_analysis:
+      key_files:
+        - platforms/cursor/build.sh
+        - platforms/copilot-cli/build.sh
+        - plugins/maister/
+        - Makefile
+        - docs/cursor-agent-support.md
+      primary_language: Bash
+      summary: "Greenfield Kiro platform — no kiro files exist. Cursor build.sh (247 lines) is primary template. Net-new: MD→JSON agents, commands→skills merge, embedded hooks in maister.json, KIRO_HOME install tree."
+    clarifications:
+      - "Full Phases 0-4 scope"
+      - "Include todo transforms in this task"
+      - "agent-tools.json lookup for per-agent tools"
+      - "Manual commit for maister-kiro"
+      - "Isolated KIRO_HOME=~/.kiro-maister profile"
+    gap_analysis:
+      integration_points:
+        - Makefile
+        - platforms/cursor/
+        - .github/workflows/release.yml
+        - README.md
+        - build-pipeline.md standards
+      summary: "Greenfield Kiro platform — entire platforms/kiro-cli/ absent. Highest risk: MD→JSON generator and chat-native gates (~230 AskUserQuestion refs). Full Phases 0-4 with todo transforms included."
+    scope_clarifications:
+      scope_expanded: false
+      summary: "Full Phases 0-4; maister.json orchestrator; agents/instructions/; empirical hook paths; all important ADR defaults confirmed."
+    ui_mockups:
+      components_designed: []
+      summary: null
+    specification:
+      summary: "13 FRs across Phases 0-4: build pipeline, MD→JSON (26 agents), commands→skills merge, chat gates, todo transforms, KIRO_HOME profile, @prompts, validate-kiro, E2E, docs. Highest risk: generator + ~230 gate rewrites."
+    implementation_plan:
+      summary: "12 task groups, ~78 steps across Phases 0-4. Critical path: G1→G3→G4→G6→G7→G8→G9→G10→G11. Highest risk: G4 (chat gates), G2 (MD→JSON), G6 (orchestrator synthesis). Parallel waves after G1 (G2+G3) and G3 (G4+G5)."
+      task_group_count: 12
+      total_steps: 78
+      estimated_complexity: high
+    implementation:
+      summary: "All 12 task groups complete. Kiro CLI platform: build pipeline, MD→JSON (24 agents), chat gates, todo transforms, maister.json orchestrator, validate-kiro (28 rules), smoke/CI, @prompts, docs, E2E matrix, gap-fill tests (10)."
+      task_groups_completed: 12
+      files_changed:
+        - platforms/kiro-cli/
+        - plugins/maister-kiro/
+        - Makefile
+        - docs/kiro-cli-support.md
+        - README.md
+        - CLAUDE.md
+        - AGENTS.md
+      tests_passed: "~94 feature tests across 12 test files; validate-kiro 28/28"
+      known_issues: []
+    architecture_decision:
+      decision: null
+      summary: null
+
+verification_context:
+  last_status: passed
+  issues_found:
+    - source: completeness
+      severity: critical
+      description: "plugins/maister-kiro/ and platforms/kiro-cli/ untracked (FR-13)"
+      fixable: true
+  fixes_applied:
+    - "build.sh: pipefail, mkdir lock, find -print0 loops"
+    - "smoke-cli.sh: fix_hook_paths on workspace .kiro/"
+    - "block-destructive-commands-kiro.sh: subagent context guard"
+  decisions_made: []
+  reverify_count: 0
