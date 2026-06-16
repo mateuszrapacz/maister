@@ -21,7 +21,7 @@ Repozytorium ma sprawdzony wzorzec multi-platformy: **`plugins/maister`** to źr
 | 9 | Planowanie | **Własny flow** (plan w pliku + `AskQuestion`); **bez** `EnterPlanMode` / `SwitchMode('plan')` |
 | 10 | Hooks Faza 1 | **`block-destructive-commands`** + **`post-compact-reminder`**; `skill-invocation-reminder` → Faza 2 |
 | 11 | Branding | Zachować **`maister`** / **`maister-cursor`** na razie |
-| 12 | Explore | `subagent_type="Explore"` → **`explore`** w build.sh |
+| 12 | Explore | `subagent_type="Explore"` → **`maister-explore`** (custom agent, `model: inherit`) — nie wbudowany `explore` |
 | 13 | Custom agenci | Prefiks **`maister-*`** w referencjach Task (`maister-gap-analyzer`); pliki `agents/` z `name: gap-analyzer` — zweryfikować match w teście |
 | 14 | Branchy | Teraz branch **`cursor`**; po E2E Cursor → **merge do `master` forka** |
 | 15 | Przyszłość | **`kiro-cli`** ten sam wzorzec; docelowo **wszystko na `master` forka** |
@@ -135,7 +135,7 @@ flowchart LR
 | Referencje | `maister:` → `maister-` |
 | Pytania | `AskUserQuestion` → `AskQuestion` |
 | Plik projektu | `CLAUDE.md` → **`AGENTS.md`** |
-| Explore | `"Explore"` → **`explore`** |
+| Explore | `"Explore"` / `explore` → **`maister-explore`**; agent z `platforms/cursor/agents/explore.md` |
 | MCP | `.mcp.json` → **`mcp.json`** |
 | Plugin doc | `CLAUDE.md` → `rules/maister-workflows.mdc` + README |
 | Hooks | Przepisać na format Cursor (nie usuwać) |
@@ -186,12 +186,37 @@ flowchart LR
 | `EnterPlanMode` / `ExitPlanMode` | Własny flow: plan w pliku + `AskQuestion` | Faza 1 (quick-plan, quick-bugfix) |
 | `Skill tool` | `Skill tool` | Bez zmian |
 | `Task tool` | `Task tool` | Prefiksy `maister-*`; zweryfikować w CLI |
-| `subagent_type="Explore"` | `explore` | Faza 1 (build.sh) |
+| `subagent_type="Explore"` | `maister-explore` | Zaimplementowane — custom agent zamiast wbudowanego `explore` |
 | Custom agents | `maister-gap-analyzer` itd. | Faza 1; test match z `name:` w frontmatter |
 
 **Task tool w CLI:** oficjalnie wspierany (IDE + CLI + Cloud). Przed E2E zweryfikować na swojej wersji Cursor — wcześniej były bugi z brakiem Task tool w CLI.
 
-**Built-in subagenty Cursor:** `explore`, `bash`, `browser` — [dokumentacja](https://cursor.com/docs/subagents).
+**Built-in subagenty Cursor:** `explore`, `bash`, `browser` — [dokumentacja](https://cursor.com/docs/subagents). Maister **nie używa** wbudowanego `explore` — patrz sekcja poniżej.
+
+### `maister-explore` (custom explore z dziedziczeniem modelu)
+
+Wbudowany subagent Cursor `explore` domyślnie działa na szybszym modelu z rodziny Composer (`composer-*-fast`), niezależnie od modelu wybranego w głównej sesji CLI/IDE. W CLI nie ma oficjalnego ustawienia w `cli-config.json`, które wymusza regular Composer dla wbudowanego `explore`.
+
+**Decyzja Maister:** własny agent `maister-explore` z `model: inherit` i `readonly: true`, bundlowany tylko w wariancie Cursor.
+
+| Aspekt | Wbudowany `explore` | `maister-explore` |
+|--------|---------------------|-------------------|
+| Model | Faster Composer (domyślnie) | Dziedziczy model parenta |
+| Konfiguracja CLI | Brak w `cli-config.json` | Frontmatter w `agents/explore.md` |
+| Scope | Globalny Cursor | Plugin `maister-cursor` |
+
+**Źródło:** `platforms/cursor/agents/explore.md` → po `make build-cursor` → `plugins/maister-cursor/agents/explore.md` (`name: maister-explore`).
+
+**Transformacja w build.sh:** wszystkie `subagent_type` z `Explore` / `explore` zamieniane na `maister-explore` w wygenerowanym `maister-cursor`. Core `plugins/maister` zostaje na `"Explore"` (Claude Code).
+
+**Gdzie używane:**
+- `skills/codebase-analyzer` — równoległe agenty eksploracji
+- `skills/quick-plan`, `skills/quick-bugfix` — overrides Cursor
+- `agents/thermo-nuclear-*` — zbieranie kontekstu diffu
+
+**Walidacja:** `make validate-cursor` wymaga `maister-explore`, `model: inherit` i braku referencji do wbudowanego `explore`.
+
+**Znane ograniczenie:** Cursor ma otwarty bug z routingiem subagentów na fast mode w CLI mimo `inherit`. Jeśli dashboard nadal pokazuje `composer-*-fast`, zgłoś Request ID (`/copy-request-id`) do Cursor support.
 
 ### 6. Hooks
 
@@ -234,7 +259,7 @@ Zachować oba (`commands/` + user-invocable skills), z transformacją nazw `mais
 | Element | Decyzja |
 |---------|---------|
 | Playwright MCP | W bundle (`mcp.json`); README: włącz MCP jeśli używasz `--e2e` |
-| 24 custom agents | Pliki w `agents/`; referencje `maister-*` |
+| 25 custom agents | Pliki w `agents/` (+ `maister-explore`); referencje `maister-*` |
 | `docs-operator` + `skills:` frontmatter | Wspierane |
 | Product-design server | Bez zmian |
 | `.maister/` artifacts | Wspólne między platformami |
@@ -288,7 +313,7 @@ Zachować oba (`commands/` + user-invocable skills), z transformacją nazw `mais
 
 1. **`Skill tool`** z nazwą `maister-development`
 2. **Custom agents** — `subagent_type: "maister-gap-analyzer"` vs match z `name:` w frontmatter
-3. **`explore`** — built-in w Cursor; mapowanie z `"Explore"` potwierdzone w docs
+3. **`maister-explore`** — custom agent z `model: inherit`; build zamienia `Explore`/`explore` → `maister-explore`; zweryfikować w CLI, że nie pada na `composer-*-fast`
 4. **Task tool w CLI** — dostępność na Twojej wersji Cursor (krytyczne dla całego Maister)
 5. **Parallel Task waves** — development executor, równoległe wywołania
 6. **Symlink local install** — na Windows może wymagać `cp -r`
@@ -299,7 +324,7 @@ Zachować oba (`commands/` + user-invocable skills), z transformacją nazw `mais
 
 Core pozostaje nietknięty. Adaptacje idą do:
 - `platforms/cursor/build.sh`
-- `platforms/cursor/` — szablony (hooks, rules, agents-md-template)
+- `platforms/cursor/` — szablony (hooks, rules, agents-md-template, **`agents/explore.md`**)
 
 Upstream SkillPanel: opcjonalny PR z `platforms/cursor/` po stabilizacji — nie blokuje pracy na forku.
 
@@ -307,4 +332,4 @@ Upstream SkillPanel: opcjonalny PR z `platforms/cursor/` po stabilizacji — nie
 
 ## Rekomendacja implementacyjna
 
-Najkrótsza ścieżka: **skopiować i rozszerzyć `platforms/copilot-cli/build.sh`** → `platforms/cursor/build.sh`. Copilot rozwiązał ~60% (kopia, prefiksy, plik instrukcji). Cursor wymaga dodatkowo: hooks, TodoWrite, własny plan flow, rules, `explore` — ~40% unikalnej pracy.
+Najkrótsza ścieżka: **skopiować i rozszerzyć `platforms/copilot-cli/build.sh`** → `platforms/cursor/build.sh`. Copilot rozwiązał ~60% (kopia, prefiksy, plik instrukcji). Cursor wymaga dodatkowo: hooks, TodoWrite, własny plan flow, rules, **`maister-explore`** — ~40% unikalnej pracy.

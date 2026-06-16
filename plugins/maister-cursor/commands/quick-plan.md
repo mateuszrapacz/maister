@@ -44,7 +44,7 @@ Plan a task with automatic discovery of project standards from `.maister/docs/`.
 
 ### Step 3: Explore Codebase
 
-Use Task tool with `subagent_type: "explore"` (or explore directly) to understand relevant code paths. Include standards context in the explore prompt.
+Use Task tool with `subagent_type: "maister-explore"` to understand relevant code paths. Include standards context in the explore prompt.
 
 ### Step 4: Write Plan File (mandatory artifact)
 

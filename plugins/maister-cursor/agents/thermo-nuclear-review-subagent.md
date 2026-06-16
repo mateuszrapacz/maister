@@ -27,4 +27,4 @@ Do **not** spawn nested subagents unless the user or parent explicitly asks.
 
 ## Parent orchestration
 
-Typical flow: in **one** message, run two `Task` calls in parallel — `subagent_type: "shell"` and `subagent_type: "explore"` — to collect `git diff...HEAD` output and full contents of changed files (default base `main`). Then invoke this agent with `subagent_type: "maister-thermo-nuclear-review-subagent"` and a user prompt containing `### Git / diff output` and `### Changed file contents`.
+Typical flow: in **one** message, run two `Task` calls in parallel — `subagent_type: "shell"` and `subagent_type: "maister-explore"` — to collect `git diff...HEAD` output and full contents of changed files (default base `main`). Then invoke this agent with `subagent_type: "maister-thermo-nuclear-review-subagent"` and a user prompt containing `### Git / diff output` and `### Changed file contents`.

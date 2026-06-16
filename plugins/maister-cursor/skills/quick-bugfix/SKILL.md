@@ -34,7 +34,7 @@ If `.maister/docs/INDEX.md` exists: read INDEX.md, identify applicable standards
 
 ### Step 3: Analyze & Assess Complexity
 
-1. Explore codebase (Glob, Grep, Read, Task + explore)
+1. Explore codebase (Glob, Grep, Read, Task + maister-explore)
 2. Form root cause hypothesis
 3. Escalation check — if **2+** signals (5+ files, schema changes, architectural trade-offs, security-sensitive, unclear root cause), AskQuestion: continue quick fix or switch to `/maister-development`
 

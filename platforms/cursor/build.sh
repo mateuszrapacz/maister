@@ -54,10 +54,13 @@ find "$OUT" -name "*.md" | while read -r f; do
   sedi 's/maister:/maister-/g' "$f"
 done
 
-# 5. Explore subagent
+# 5. Explore subagent → maister-explore (inherits parent model; avoids built-in fast Composer)
+cp "$PLATFORM/agents/explore.md" "$OUT/agents/explore.md"
 find "$OUT" -name "*.md" | while read -r f; do
-  sedi 's/subagent_type="Explore"/subagent_type="explore"/g' "$f"
-  sedi 's/subagent_type: "Explore"/subagent_type: "explore"/g' "$f"
+  sedi 's/subagent_type="Explore"/subagent_type="maister-explore"/g' "$f"
+  sedi 's/subagent_type: "Explore"/subagent_type: "maister-explore"/g' "$f"
+  sedi 's/subagent_type="explore"/subagent_type="maister-explore"/g' "$f"
+  sedi 's/subagent_type: "explore"/subagent_type: "maister-explore"/g' "$f"
 done
 
 # 6. AskUserQuestion → AskQuestion
@@ -104,7 +107,7 @@ This is the Cursor Agent variant. Key differences from Claude Code:
 - **User questions**: Use `AskQuestion` tool (supports `allow_multiple`)
 - **Progress tracking**: Use `TodoWrite` instead of `TaskCreate`/`TaskUpdate`
 - **Planning**: File-based plans in `.maister/plans/` with `AskQuestion` gates (no EnterPlanMode)
-- **Subagents**: Built-in `explore` (lowercase); custom agents referenced as `maister-*`
+- **Subagents**: Use `maister-explore` for codebase search (inherits parent model); other custom agents as `maister-*`
 - **Hooks**: `beforeShellExecution`, `preCompact`, `sessionStart` (see `hooks/hooks.json`)
 - **MCP**: `mcp.json` in plugin root (enable Playwright for `--e2e` workflows)
 

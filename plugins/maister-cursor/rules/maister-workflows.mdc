@@ -776,7 +776,7 @@ This is the Cursor Agent variant. Key differences from Claude Code:
 - **User questions**: Use `AskQuestion` tool (supports `allow_multiple`)
 - **Progress tracking**: Use `TodoWrite` instead of `TodoWrite`/`TodoWrite`
 - **Planning**: File-based plans in `.maister/plans/` with `AskQuestion` gates (no EnterPlanMode)
-- **Subagents**: Built-in `explore` (lowercase); custom agents referenced as `maister-*`
+- **Subagents**: Use `maister-explore` for codebase search (inherits parent model); other custom agents as `maister-*`
 - **Hooks**: `beforeShellExecution`, `preCompact`, `sessionStart` (see `hooks/hooks.json`)
 - **MCP**: `mcp.json` in plugin root (enable Playwright for `--e2e` workflows)
 

@@ -14,7 +14,7 @@ Plan a task with automatic discovery of project standards from `.maister/docs/`.
 
 2. **Discover and read standards (before planning)** — If `.maister/docs/INDEX.md` exists: read INDEX.md, identify applicable standards, **READ each standard file** (INDEX alone is not sufficient). If not: note no standards and continue.
 
-3. **Explore codebase** — Use Task tool with `subagent_type: "explore"` (or explore directly). Include standards context in the explore prompt.
+3. **Explore codebase** — Use Task tool with `subagent_type: "maister-explore"`. Include standards context in the explore prompt.
 
 4. **Write plan file (mandatory)** — Save to `.maister/plans/YYYY-MM-DD-plan-name.md`. The plan MUST include:
    - **## Applicable Standards** — each standard file read with key guidelines. If none: "No Maister standards found. Consider running `/maister-init`."
