@@ -113,10 +113,16 @@ For smaller tasks that don't need a full workflow:
 | `/maister:quick-requirements-critic` | Interactive requirements quality critique (4-check rubric) |
 | `/maister:quick-problem-classifier` | Classify business requirements into DDD modeling problem classes |
 | `/maister:quick-metaprogram-classifier` | Diagnose NLP metaprograms and suggest communication strategies |
+| `/maister:modeling-context-distiller` | Distill bounded contexts via generalization analysis |
+| `/maister:modeling-aggregate-designer` | Design RC consistency units (aggregate wizard) |
+| `/maister:modeling-accounting-archetype` | Map domain to accounting archetype |
+| `/maister:modeling-pricing-archetype` | Map domain to pricing archetype |
 | `/maister:reviews-linguistic-boundaries` | Verify linguistic boundaries between bounded contexts |
 | `/maister:reviews-test-strategy` | Review whether test strategy matches production code problem class |
 
 **Bundle A (requirements quality):** Run `/maister:quick-transcript-critic` → `/maister:quick-requirements-critic` → `/maister:quick-problem-classifier` when resource-contention signals appear — chain via each skill's Recommended Next Steps, not an orchestrator.
+
+**Bundle B (DDD modeling):** Run `/maister:quick-problem-classifier` → `/maister:modeling-context-distiller` when generalization/ambiguity signals appear → `/maister:modeling-accounting-archetype` or `/maister:modeling-pricing-archetype` for archetype fit → `/maister:modeling-aggregate-designer` when RC class is detected → `/maister:reviews-linguistic-boundaries` when `language.md` exists — chain via Recommended Next Steps.
 
 **Bundle C (architecture review):** Run `/maister:reviews-linguistic-boundaries` on modules with `language.md` files (see `.maister/docs/standards/global/language-md-convention.md`), then `/maister:reviews-test-strategy` on tests for the same scope. Optional: pair with `/maister:thermos` on the same PR for code risk + linguistic boundaries + test strategy alignment.
 

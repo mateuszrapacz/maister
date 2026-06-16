@@ -16,8 +16,8 @@ Do NOT invoke when the user is writing, drafting, or creating requirements or sp
 | User intent | Correct skill |
 |-------------|---------------|
 | "Jaka klasa problemu?", "Jak to sklasyfikować modelarsko?", "Which modeling class?" | **this skill** |
-| "Zamodeluj jako archetyp księgowy", "Map to accounting archetype" | `accounting-archetype-mapper` (Wave 4 — not yet ported) |
-| "Zamodeluj cennik jako archetyp", "Pricing archetype" | `pricing-archetype-mapper` (Wave 4 — not yet ported) |
+| "Zamodeluj jako archetyp księgowy", "Map to accounting archetype" | `accounting-archetype-mapper` |
+| "Zamodeluj cennik jako archetyp", "Pricing archetype" | `pricing-archetype-mapper` |
 
 Given a business requirement, identify which of the 4 modeling problem classes best describes it, ask targeted clarifying questions to resolve ambiguity, and suggest an implementation approach aligned with the class.
 
@@ -406,7 +406,7 @@ Do not model them together in one class — it will force domain logic into the 
 
 > This is a Resource Contention problem — the system must protect shared mutable state under concurrent access. The next step is designing the consistency unit (aggregate): which commands must lock together, which can run in parallel, and where the boundary sits.
 >
-> See **Recommended next steps** below for the Wave 3 `aggregate-designer` handoff when that skill is available.
+> See **Recommended next steps** below for the `aggregate-designer` handoff.
 
 **When to draw the diagram**: always when decomposition has 2+ components. The diagram shows:
 - Which component owns the source of truth (→ arrow = "reads from" or "sends command to")
@@ -502,8 +502,11 @@ Calendar view + room booking (T&P + RC + Integration):
 
 When classification is **Resource Contention** (primary or any component), the natural follow-on is designing the consistency unit — aggregate boundary, command locking, and optimistic concurrency.
 
-| Condition | Next skill | Status |
-|-----------|-----------|--------|
-| RC class detected | `aggregate-designer` | Wave 3 — not yet ported to Maister |
+| Condition | Next skill | Notes |
+|-----------|-----------|-------|
+| RC class detected | `aggregate-designer` | Invoke with original domain description and this classification output as context |
+| Archetype / ledger intent | `accounting-archetype-mapper` | When user asks to map to accounting archetype |
+| Pricing / computed-price intent | `pricing-archetype-mapper` | When user asks to map to pricing archetype |
+| Strategic boundaries unclear | `context-distiller` | When same noun behaves differently across processes |
 
-When `aggregate-designer` ships (Wave 3), invoke it with the original domain description and this classification output as context. Do not invoke `aggregate-designer` in Wave 1 — the skill does not exist yet.
+When `aggregate-designer` completes, see its Recommended next steps for test strategy review.
