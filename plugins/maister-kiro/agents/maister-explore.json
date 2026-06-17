@@ -6,13 +6,17 @@
     "read",
     "grep",
     "glob",
-    "use_aws"
+    "use_aws",
+    "shell",
+    "write"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "use_aws"
+    "use_aws",
+    "shell",
+    "write"
   ],
   "promptFile": "instructions/maister-explore.md"
 }
