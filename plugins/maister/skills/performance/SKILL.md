@@ -30,11 +30,13 @@ Full framework rule: `../orchestrator-framework/references/orchestrator-patterns
 
 ### Step 2: Initialize Workflow
 
-1. **Create Task Items**: Use `TaskCreate` for all phases (see Phase Configuration), then set dependencies with `TaskUpdate addBlockedBy`
-2. **Create Task Directory**: `.maister/tasks/performance/YYYY-MM-DD-task-name/`
-3. **Create Subdirectories**: `analysis/`, `analysis/user-profiling-data/`, `implementation/`, `verification/`
-4. **Initialize State**: Create `orchestrator-state.yml` with performance context
-5. **Discover project documentation**: Read `.maister/docs/INDEX.md` (if exists), extract ALL file paths from the "Project Documentation" section — includes predefined docs AND any user-added project docs. Store as `project_context.project_doc_paths` in state.
+1. **Capture the clock**: run `date -u +"%Y-%m-%dT%H:%M:%SZ"` via Bash NOW — you do NOT know the time from context. Every timestamp written this turn (`created`, `updated`, `generated`, `phases[].started`) uses this value. Date-only or `T00:00:00Z` values are the documented failure mode (orchestrator-patterns.md § 4 Timestamp Rule). Re-run `date` in later turns before writing timestamps.
+2. **Create Task Items**: Use `TaskCreate` for all phases (see Phase Configuration), then set dependencies with `TaskUpdate addBlockedBy`
+3. **Create Task Directory**: `.maister/tasks/performance/YYYY-MM-DD-task-name/`
+4. **Create Subdirectories**: `analysis/`, `analysis/user-profiling-data/`, `implementation/`, `verification/`
+5. **Initialize State**: Create `orchestrator-state.yml` with performance context
+6. **Set up Operator Dashboard** (orchestrator-patterns.md § 8) — first read `.maister/config.yml` and set `orchestrator.options.html_output` (default true if the file/key is absent). **When `html_output` is false, SKIP this entire step** — no `dashboard.html`, no `dashboard-data.js`, no browser auto-open — and proceed. Otherwise: copy `../orchestrator-framework/assets/dashboard.html` to the task root as `dashboard.html`, write the initial `dashboard-data.js` (all phases pending, `task.type: "performance"`), then **auto-open it in the user's browser** (`open` / `xdg-open` / `start` per platform, passing the plain absolute filesystem path — NEVER a hand-built `file://` URL; on failure just print the path — never block). On resume: re-copy `dashboard.html` only if missing; regenerate `dashboard-data.js` from state; then auto-open it in the browser again (same opener as a new task — the OS focuses an already-open tab rather than duplicating).
+7. **Discover project documentation**: Read `.maister/docs/INDEX.md` (if exists), extract ALL file paths from the "Project Documentation" section — includes predefined docs AND any user-added project docs. Store as `project_context.project_doc_paths` in state.
 
 **Output**:
 ```
@@ -42,9 +44,23 @@ Performance Orchestrator Started
 
 Task: [performance issue description]
 Directory: [task-path]
+Dashboard: open [task-path]/dashboard.html in a browser to monitor progress
 
 Starting Phase 1: Codebase Analysis...
 ```
+
+---
+
+## Operator Visibility (applies to every phase)
+
+> **Config gate**: these rules assume `options.html_output` is true (read from `.maister/config.yml` at init, default true). When **false**: skip the Dashboard-upkeep rule entirely (no dashboard files, no browser open, no rewrites) and the HTML-companions rule (do NOT pass `html_style_guide_path`; subagents write md only). The Artifact Summary Contract (§ 7 TL;DR blocks) and `phase_summaries` in state stay active either way.
+
+Cross-cutting rules from `orchestrator-patterns.md` (same as the development orchestrator):
+
+1. **Artifact Summary Contract (§ 7)**: every artifact-writing subagent prompt MUST include the contract instruction (artifacts open with TL;DR / Key Decisions / Open Questions & Risks). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` — verbatim, never re-summarized.
+2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark `in_progress` before delegating), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks — the operator reviews them on the dashboard while answering; status stays `in_progress` until the gate passes), after every phase completion (including skipped phases, with reason), every gate decision, every verification cycle, and at finalization. Every rewrite starts with `date -u` (one call per turn). It is a terse projection of state — never duplicate artifact content into it.
+3. **HTML companions (§ 9)**: pass `html_style_guide_path` (absolute path to `../orchestrator-framework/references/html-report-style.md`) to specification-creator, implementation-planner, and implementation-verifier. Register returned `html_path` values in `phase_summaries.[phase].artifacts[].html` so the dashboard hero cards link HTML first.
+4. **icon_hint values** per phase: 1 `analysis`, 2 `analysis`, 3 `spec`, 4 `verify`, 5 `plan`, 6 `code`, 7 `verify`, 8 `verify`, 9 `done`.
 
 ---
 
@@ -168,7 +184,7 @@ AskUserQuestion - "Performance analysis complete. [N] bottlenecks identified ([P
 
 4. Task tool - `maister:specification-creator` subagent
 
-**Context to pass**: task_path, task_type="performance", task_description, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), phase_summaries (codebase_analysis, bottleneck_analysis)
+**Context to pass**: task_path, task_type="performance", task_description, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), phase_summaries (codebase_analysis, bottleneck_analysis), html_style_guide_path (for the spec.html companion)
 
 **SELF-CHECK**: Did you just invoke the Task tool with `maister:specification-creator`? Or did you start writing spec.md yourself? If the latter, STOP and invoke the Task tool.
 
@@ -216,7 +232,7 @@ AskUserQuestion - Display executive summary before asking. Read `verification/sp
 **Output**: `implementation/implementation-plan.md`
 **State**: Update task groups and dependencies
 
-**Context to pass**: task_path, task_type="performance", task_description, phase_summaries (specification, bottleneck_analysis, codebase_analysis)
+**Context to pass**: task_path, task_type="performance", task_description, phase_summaries (specification, bottleneck_analysis, codebase_analysis), html_style_guide_path (for the implementation-plan.html companion)
 
 **SELF-CHECK**: Did you just invoke the Task tool with `maister:implementation-planner`? Or did you start writing the plan yourself? If the latter, STOP and invoke the Task tool.
 
@@ -247,9 +263,10 @@ AskUserQuestion - Display executive summary before asking. Read `implementation/
 **SELF-CHECK**: Did you just invoke the Skill tool with `maister:implementation-plan-executor`? Or did you start writing code yourself? If the latter, STOP immediately and invoke the Skill tool instead.
 
 **⚠️ POST-IMPLEMENTATION CONTINUATION** — After the skill completes and returns control:
-1. Read `orchestrator-state.yml` to confirm you are the orchestrator
-2. Update state: add Phase 6 to `completed_phases`
-3. Proceed to Phase 7
+1. **HTML plan reconciliation** (backstop for syncs missed during waves): if `implementation/implementation-plan.html` exists, for every group whose md checkboxes are all `[x]`, run the executor's idempotent marker-flip command (`sed` flipping `data-step="N\.[0-9]*" class="step todo"` and `data-group="N" class="group todo"` to `done`). VERIFY: when all md steps are checked, `grep -c 'class="step todo"' implementation/implementation-plan.html` must return 0.
+2. Read `orchestrator-state.yml` to confirm you are the orchestrator
+3. Update state: add Phase 6 to `completed_phases`
+4. Proceed to Phase 7
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -348,6 +365,8 @@ performance_context:
     p2: 0
     p3: 0
   phase_summaries:
+    # Every entry also carries the shared base shape (orchestrator-patterns.md § 4):
+    #   decisions: []   risks: []   artifacts: [{path, label, html}]
     codebase_analysis: {key_files: [], summary: null}
     bottleneck_analysis: {bottlenecks: [], summary: null, user_data_incorporated: false}
     specification: {summary: null}
@@ -360,6 +379,7 @@ verification_context:
   reverify_count: 0
 
 options:
+  html_output: true  # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions.
   spec_audit_enabled: null
   skip_test_suite: true
   code_review_enabled: true
@@ -375,6 +395,8 @@ options:
 ```
 .maister/tasks/performance/YYYY-MM-DD-task-name/
 ├── orchestrator-state.yml
+├── dashboard.html                     # Operator dashboard (copied plugin asset — never model-generated)
+├── dashboard-data.js                  # Dashboard data projection (rewritten per phase/gate)
 ├── analysis/
 │   ├── codebase-analysis.md           # Phase 1
 │   ├── performance-analysis.md        # Phase 2
@@ -382,11 +404,14 @@ options:
 │   └── requirements.md                # Phase 3
 ├── implementation/
 │   ├── spec.md                        # Phase 3
+│   ├── spec.html                      # Phase 3 (HTML companion)
 │   ├── implementation-plan.md         # Phase 5
+│   ├── implementation-plan.html       # Phase 5 (HTML companion)
 │   └── work-log.md                    # Phase 6
 └── verification/
     ├── spec-audit.md                  # Phase 4 (conditional)
-    └── implementation-verification.md # Phase 8
+    ├── implementation-verification.md # Phase 8
+    └── implementation-verification.html # Phase 8 (HTML companion)
 ```
 
 ---

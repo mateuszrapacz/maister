@@ -199,6 +199,7 @@ The maister plugin uses this structure:
 
 ```
 .maister/
+├── config.yml                    # Project configuration (optional; scaffolded by /maister:init)
 ├── docs/                         # Reference documentation (stable)
 │   ├── INDEX.md                 # Master index - READ THIS FIRST
 │   ├── project/                 # Project-level documentation
@@ -223,6 +224,18 @@ The maister plugin uses this structure:
 - Reference documentation in `.maister/docs/` is the source of truth for understanding the project
 - Always read `docs/INDEX.md` first to understand available documentation and standards
 - Development tasks live separately in `.maister/tasks/` for better organization and scalability
+
+### Project Configuration (`.maister/config.yml`)
+
+An optional project-level config file holds defaults that apply to every workflow. `/maister:init` scaffolds it with documented defaults; orchestrators read it at initialization and fall back to defaults when it is absent (so existing projects are unaffected).
+
+```yaml
+html_output: true   # Generate the operator dashboard + HTML companion reports. false = markdown-only.
+```
+
+- **`html_output`** (default `true`): when `false`, workflows skip the operator dashboard (`dashboard.html`/`dashboard-data.js`, no browser auto-open) AND the HTML companion reports (`.html` twins). Markdown artifacts, their `## TL;DR` summary blocks, `orchestrator-state.yml`, and product-design's visual mockups are produced regardless. The value is read once at init and seeded into `orchestrator.options.html_output` in state.
+
+**See**: `skills/orchestrator-framework/references/orchestrator-patterns.md` § 4 "Project Configuration" for the read/seed/gate mechanism.
 
 ### Development Task Organization
 
@@ -254,6 +267,8 @@ Each development task follows a common structure with core directories:
 ```
 YYYY-MM-DD-task-name/
 ├── orchestrator-state.yml        # Execution state and task metadata
+├── dashboard.html                # Operator dashboard (copied plugin asset — never model-generated)
+├── dashboard-data.js             # Dashboard data projection (rewritten after each phase/gate)
 ├── analysis/                     # Analysis and planning artifacts
 │   ├── research-context/        # From research (if --research provided)
 │   │   └── research-report.md   # Full research findings
@@ -266,7 +281,9 @@ YYYY-MM-DD-task-name/
 │   └── requirements.md          # Gathered requirements
 ├── implementation/               # Implementation work
 │   ├── spec.md                  # Main specification (WHAT to build)
+│   ├── spec.html                # Operator-facing HTML companion
 │   ├── implementation-plan.md   # Implementation steps breakdown (HOW to build)
+│   ├── implementation-plan.html # Operator-facing HTML companion
 │   ├── visual-coverage.md       # Coverage matrix (when design-context exists)
 │   └── work-log.md              # Chronological activity log
 ├── verification/                 # Verification results
@@ -274,6 +291,16 @@ YYYY-MM-DD-task-name/
 │   └── visual-fidelity.md       # Mockup-vs-rendered comparison (when design-context exists, report-only)
 └── documentation/                # User-facing docs (if applicable)
 ```
+
+### Operator Visibility Layer
+
+Workflow artifacts accumulate deep detail for subagent context — the operator monitoring layer distills them:
+
+1. **Artifact Summary Contract**: every markdown artifact opens with `## TL;DR` (max 5 lines) + `## Key Decisions` + `## Open Questions / Risks` (sections omitted when empty). Operators read the first 20 lines of any artifact; full detail follows unchanged.
+2. **Operator Dashboard**: each task root carries `dashboard.html` (static plugin asset from `skills/orchestrator-framework/assets/`, never model-generated) + `dashboard-data.js` (terse projection of state, rewritten after each phase/gate). Open the HTML in a browser — phase timeline, decisions/risks, verification status, artifact deep-links; auto-refreshes every 5s, works from `file://` with no server.
+3. **HTML Companion Reports**: high-value artifacts (spec, implementation plan, verification reports) get a rich HTML twin written by the same subagent that writes the md, following the shared style guide (`skills/orchestrator-framework/references/html-report-style.md`). The md stays the source of truth for subagents; HTML is for humans. Companions never block the workflow.
+
+**See**: `skills/orchestrator-framework/references/orchestrator-patterns.md` § 7-9 for the full contracts and the `dashboard-data.js` schema.
 
 **Design context** (`analysis/design-context/`) is auto-populated by the development orchestrator's Step 4 when:
 - The argument is a product-design task path (mockups + brief copied in)
@@ -485,8 +512,10 @@ All orchestrators share patterns documented in a single reference file:
 
 | File | Purpose |
 |------|---------|
-| `orchestrator-patterns.md` | Delegation rules, interactive mode, state schema, context passing, initialization, resume, issue resolution |
+| `orchestrator-patterns.md` | Delegation rules, interactive mode, state schema, context passing, initialization, resume, issue resolution, artifact summary contract (§ 7), operator dashboard (§ 8), HTML companion reports (§ 9) |
 | `orchestrator-creation-checklist.md` | Authoring checklist for new orchestrators (not loaded at runtime) |
+| `html-report-style.md` | Shared style guide for HTML companion reports (standard CSS, severity badges, per-artifact layouts) |
+| `assets/dashboard.html` | Static operator dashboard viewer, copied into each task directory at workflow init (never model-generated) |
 
 Each orchestrator reads `orchestrator-patterns.md` at initialization and implements domain-specific phases. Key principles: state-driven execution, resume capability, interactive phase gates, user-confirmed rollback, context passing between phases via `phase_summaries`, delegation enforcement (Skill tool for skills, Task tool for agents).
 
@@ -584,6 +613,7 @@ Subagents are specialized AI agents invoked by skills and orchestrators. All age
 | `ui-mockup-generator` | ASCII mockups showing UI integration with existing layouts | development orchestrator (feature/enhancement), product-design orchestrator (Phase 7 ASCII fallback) | `agents/ui-mockup-generator.md` |
 | `e2e-test-verifier` | Runtime browser verification via Playwright MCP tools (not test file generation) | development orchestrator (optional) | `agents/e2e-test-verifier.md` |
 | `user-docs-generator` | User documentation with Playwright screenshots | development orchestrator (optional) | `agents/user-docs-generator.md` |
+| `html-companion-writer` | Generates an HTML companion report from one finalized markdown artifact (style-guide compliant). For orchestrators that write artifacts inline and have no producing subagent to attach a companion to. | product-design orchestrator (Phases 5/6/8) | `agents/html-companion-writer.md` |
 
 ### Performance Agents
 

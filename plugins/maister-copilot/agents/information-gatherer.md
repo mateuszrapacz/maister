@@ -178,6 +178,8 @@ Follow the research plan phases systematically. Typical progression:
      - Evidence: [code snippet]
    ```
 
+**Artifact Summary Contract**: every findings file MUST open with `## TL;DR` (3-5 lines max: what was found and what it means — conclusions, not process) and `## Open Questions / Risks` (gaps or low-confidence areas; omit when none), before the detailed findings.
+
 **Organization**: Create separate finding files by source:
 - `analysis/findings/codebase-auth-service.md`
 - `analysis/findings/codebase-auth-middleware.md`

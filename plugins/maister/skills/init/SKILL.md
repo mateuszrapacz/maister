@@ -115,6 +115,18 @@ Store selection for Phase 5.
 
 Wait for docs-operator to complete, then immediately proceed to Phase 6.
 
+**Step 2 — Scaffold project config** (Write tool, directly — not via docs-operator): if `.maister/config.yml` does not already exist, create it with the documented default so users have a discoverable place to toggle output. Do not overwrite an existing config.
+
+```yaml
+# Maister project configuration.
+# html_output — generate the operator dashboard (dashboard.html + dashboard-data.js,
+# auto-opened in your browser) and the HTML companion reports (.html twins of spec,
+# implementation plan, verification, and research/design outputs). Set to false for
+# markdown-only runs. Markdown artifacts, their TL;DR summary blocks, and
+# orchestrator-state.yml are produced regardless. Default: true.
+html_output: true
+```
+
 ---
 
 ## PHASE 6: Generate Project Documentation

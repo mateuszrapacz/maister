@@ -42,10 +42,12 @@ Full framework rule: `../orchestrator-framework/references/orchestrator-patterns
 
 ### Step 3: Initialize Workflow
 
-1. **Create Task Items**: Use `TaskCreate` for all phases (see Phase Configuration), then set dependencies with `TaskUpdate addBlockedBy`
-2. **Create Task Directory**: `.maister/tasks/development/YYYY-MM-DD-task-name/`
-3. **Initialize State**: Create `orchestrator-state.yml` with task info and research reference
-4. **Discover project documentation**: Read `.maister/docs/INDEX.md` (if exists), extract ALL file paths from the "Project Documentation" section. This includes predefined docs (vision, roadmap, tech-stack, architecture) AND any user-added project docs (e.g., deployment.md, api-strategy.md). Store complete list as `project_context.project_doc_paths` in state.
+1. **Capture the clock**: run `date -u +"%Y-%m-%dT%H:%M:%SZ"` via Bash NOW — you do NOT know the time from context. Every timestamp written this turn (`created`, `updated`, `generated`, `phases[].started`) uses this value. Date-only or `T00:00:00Z` values are the documented failure mode (orchestrator-patterns.md § 4 Timestamp Rule). Re-run `date` in later turns before writing timestamps.
+2. **Create Task Items**: Use `TaskCreate` for all phases (see Phase Configuration), then set dependencies with `TaskUpdate addBlockedBy`
+3. **Create Task Directory**: `.maister/tasks/development/YYYY-MM-DD-task-name/`
+4. **Initialize State**: Create `orchestrator-state.yml` with task info and research reference
+5. **Set up Operator Dashboard** (orchestrator-patterns.md § 8) — first read `.maister/config.yml` and set `orchestrator.options.html_output` (default true if the file/key is absent). **When `html_output` is false, SKIP this entire step** — no `dashboard.html`, no `dashboard-data.js`, no browser auto-open — and proceed. Otherwise: copy `../orchestrator-framework/assets/dashboard.html` to the task root as `dashboard.html`, write the initial `dashboard-data.js` (all phases pending), then **auto-open it in the user's browser** (`open` / `xdg-open` / `start` per platform, passing the plain absolute filesystem path — NEVER a hand-built `file://` URL; on failure just print the path — never block). On resume: re-copy `dashboard.html` only if missing; regenerate `dashboard-data.js` from state; then auto-open it in the browser again (same opener as a new task — the OS focuses an already-open tab rather than duplicating).
+6. **Discover project documentation**: Read `.maister/docs/INDEX.md` (if exists), extract ALL file paths from the "Project Documentation" section. This includes predefined docs (vision, roadmap, tech-stack, architecture) AND any user-added project docs (e.g., deployment.md, api-strategy.md). Store complete list as `project_context.project_doc_paths` in state.
 
 ### Step 4: Ingest Design Context
 
@@ -73,9 +75,22 @@ Mockups and design artifacts become **binding inputs** to implementation when pr
 
 Task: [description]
 Directory: [task-path]
+Dashboard: open [task-path]/dashboard.html in a browser to monitor progress
 
 Starting Phase 1: Codebase Analysis...
 ```
+
+---
+
+## Operator Visibility (applies to every phase)
+
+> **Config gate**: these rules assume `options.html_output` is true (read from `.maister/config.yml` at init, default true). When **false**: skip rule 2 entirely (no dashboard — no `dashboard.html`/`dashboard-data.js`, no browser open, no rewrites) and rule 3's companions (do NOT pass `html_style_guide_path`; subagents write md only). Rule 1 (§ 7 TL;DR blocks) and `phase_summaries` in state stay active either way.
+
+Cross-cutting rules from `orchestrator-patterns.md` apply throughout this workflow:
+
+1. **Artifact Summary Contract (§ 7)**: every artifact-writing subagent prompt MUST include the contract instruction (artifacts open with TL;DR / Key Decisions / Open Questions & Risks). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` (shared entry shape, § 4).
+2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark it `in_progress` before delegating), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks so the operator reviews them on the dashboard while answering — status stays `in_progress` until the gate passes), after every phase completion (including skips, with reason), every gate decision, every verification cycle, and at finalization. It is a terse projection of state — never duplicate artifact content into it.
+3. **HTML companions (§ 9)**: pass `html_style_guide_path` (absolute path to `../orchestrator-framework/references/html-report-style.md`) to specification-creator, implementation-planner, and e2e-test-verifier. Register returned `html_path` values in `phase_summaries.[phase].artifacts[].html`.
 
 ---
 
@@ -140,7 +155,7 @@ Use for **all development tasks**: bug fixes, enhancements, new features, and an
 **⛔ DECISION GATE** (mandatory — do NOT skip):
 - Parse `decisions_needed` from gap-analyzer output
 - If `decisions_needed.critical` OR `decisions_needed.important` is non-empty:
-  - MUST use `AskUserQuestion` — one question per critical decision, batch important decisions into a single multi-select question
+  - MUST use `AskUserQuestion` — every decision is its own single-select question with its own option set (never flattened into a single question's option list). Critical decisions: one call each with full context. Important decisions: may be grouped as up to 4 separate questions within one call (orchestrator-patterns.md § 3 Decision Gate Pattern)
 - If both are empty: Note "No scope decisions needed" in state
 
 **SELF-CHECK** before continuing: "Did the gap-analyzer return `decisions_needed` items? If yes, did I invoke `AskUserQuestion`? If I skipped this, STOP and go back."
@@ -259,7 +274,7 @@ AskUserQuestion - "UI mockups complete. Continue to Phase 5?"
 
 6. Task tool - `maister:specification-creator` subagent
 
-**Context to pass to subagent**: task_path, task_description, task_characteristics, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), risk_level, phase_summaries (codebase_analysis, gap_analysis, clarifications, scope_clarifications, ui_mockups, design), research_context (if any), design_reference (if any — points spec-creator to `analysis/design-context/` for mockups and brief)
+**Context to pass to subagent**: task_path, task_description, task_characteristics, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), risk_level, phase_summaries (codebase_analysis, gap_analysis, clarifications, scope_clarifications, ui_mockups, design), research_context (if any), design_reference (if any — points spec-creator to `analysis/design-context/` for mockups and brief), html_style_guide_path (for the spec.html companion)
 
 **SELF-CHECK**: Did you just invoke the Task tool with `maister:specification-creator`? Or did you start writing spec.md yourself? If the latter, STOP immediately and invoke the Task tool instead.
 
@@ -308,7 +323,7 @@ AskUserQuestion - Display executive summary before asking. Read `verification/sp
 **Output**: `implementation/implementation-plan.md`
 **State**: Update task groups and dependencies
 
-**Context to pass to subagent**: task_path, task_description, task_characteristics, phase_summaries (specification, gap_analysis, codebase_analysis, design), research_context (if any), design_reference (if any — when `analysis/design-context/INDEX.md` exists, planner MUST enumerate every screen/component, map task groups to them via the required `Visual References` field, and produce `implementation/visual-coverage.md` proving every screen is covered by ≥1 group)
+**Context to pass to subagent**: task_path, task_description, task_characteristics, phase_summaries (specification, gap_analysis, codebase_analysis, design), research_context (if any), design_reference (if any — when `analysis/design-context/INDEX.md` exists, planner MUST enumerate every screen/component, map task groups to them via the required `Visual References` field, and produce `implementation/visual-coverage.md` proving every screen is covered by ≥1 group), html_style_guide_path (for the implementation-plan.html companion)
 
 **SELF-CHECK**: Did you just invoke the Task tool with `maister:implementation-planner`? Or did you start writing implementation-plan.md yourself? If the latter, STOP immediately and invoke the Task tool instead.
 
@@ -337,9 +352,10 @@ AskUserQuestion - Display executive summary before asking. Read `implementation/
 **SELF-CHECK**: Did you just invoke the Skill tool with `maister:implementation-plan-executor`? Or did you start writing code yourself? If the latter, STOP immediately and invoke the Skill tool instead.
 
 **⚠️ POST-IMPLEMENTATION CONTINUATION** — After the skill completes and returns control:
-1. Read `orchestrator-state.yml` to confirm you are the orchestrator
-2. Update state: add Phase 8 to `completed_phases`
-3. Evaluate conditional: if `task_characteristics.has_reproducible_defect` AND Phase 3 in `completed_phases` → Phase 9, else → Phase 10
+1. **HTML plan reconciliation** (backstop for syncs missed during waves): if `implementation/implementation-plan.html` exists, for every group whose md checkboxes are all `[x]`, run the executor's idempotent marker-flip command (`sed` flipping `data-step="N\.[0-9]*" class="step todo"` and `data-group="N" class="group todo"` to `done`). VERIFY: when all md steps are checked, `grep -c 'class="step todo"' implementation/implementation-plan.html` must return 0 — a non-zero count means unflipped markers remain; flip them before continuing.
+2. Read `orchestrator-state.yml` to confirm you are the orchestrator
+3. Update state: add Phase 8 to `completed_phases`
+4. Evaluate conditional: if `task_characteristics.has_reproducible_defect` AND Phase 3 in `completed_phases` → Phase 9, else → Phase 10
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -456,9 +472,10 @@ Verification Results:
 - **MUST NOT proceed with unresolved critical issues unless user explicitly approves**
 
 **⚠️ POST-VERIFICATION CONTINUATION** — After issue resolution completes:
-1. Read `orchestrator-state.yml` to confirm you are the orchestrator
-2. Update state: add Phase 11 to `completed_phases`
-3. Proceed to Phase 12
+1. **Canonical report check**: `verification/implementation-verification.md` + `.html` MUST reflect the FINAL post-fix verdict before leaving this phase. If fixes were applied and the canonical report still shows the pre-fix state (regardless of whether re-checks were run via the full verifier skill or individual subagents writing `*-reverify.md` side files), re-invoke `maister:implementation-verifier` (or have it recompile Phase 3) so the report and companion are rewritten with a "Fix & Re-Verification History" section. A stale pre-fix report is a phase-exit violation.
+2. Read `orchestrator-state.yml` to confirm you are the orchestrator
+3. Update state: add Phase 11 to `completed_phases`
+4. Proceed to Phase 12
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -474,8 +491,8 @@ AskUserQuestion - Display executive summary: total issues found, issues fixed, i
 
 **Purpose**: Runtime browser verification with screenshots (via Playwright MCP tools, not test file generation)
 **Execute**: Task tool - `maister:e2e-test-verifier` subagent
-**Prompt must include**: task_path (absolute), spec_path, base_url. If `analysis/design-context/mockups/` exists, also include `design_context_path` so the verifier performs an LLM-judged structural visual-fidelity comparison and writes `verification/visual-fidelity.md`. Report saves to `{task_path}/verification/e2e-verification-report.md`.
-**Output**: `verification/e2e-verification-report.md`, screenshots, `verification/visual-fidelity.md` (when mockups present — report-only, never gates completion)
+**Prompt must include**: task_path (absolute), spec_path, base_url, html_style_guide_path (for the HTML companion reports). If `analysis/design-context/mockups/` exists, also include `design_context_path` so the verifier performs an LLM-judged structural visual-fidelity comparison and writes `verification/visual-fidelity.md`. Report saves to `{task_path}/verification/e2e-verification-report.md`.
+**Output**: `verification/e2e-verification-report.md` (+ `.html` companion), screenshots, `verification/visual-fidelity.md` (+ `.html` companion) (when mockups present — report-only, never gates completion)
 **State**: Update E2E results; on success mark Phase 12 in `completed_phases` (Phase 13 reads this as a precondition).
 
 **Skip if**: `options.e2e_enabled = false`
@@ -534,6 +551,7 @@ Development-specific fields in `orchestrator-state.yml`:
 ```yaml
 orchestrator:
   options:
+    html_output: true  # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions.
     spec_audit_enabled: true
     skip_test_suite: true
     e2e_enabled: null
@@ -565,6 +583,8 @@ orchestrator:
       has_brief: false
       index_path: null  # path to analysis/design-context/INDEX.md
     phase_summaries:
+      # Every entry also carries the shared base shape (orchestrator-patterns.md § 4):
+      #   decisions: []   risks: []   artifacts: [{path, label, html}]
       research: {summary: null, key_findings: [], recommended_approach: null}
       design: {summary: null, screen_count: 0, component_count: 0, index_path: null}
       codebase_analysis: {key_files: [], primary_language: null, summary: null}
@@ -583,6 +603,8 @@ orchestrator:
 ```
 .maister/tasks/development/YYYY-MM-DD-task-name/
 ├── orchestrator-state.yml
+├── dashboard.html                 # Operator dashboard (copied plugin asset — never model-generated)
+├── dashboard-data.js              # Dashboard data projection (rewritten after each phase/gate)
 ├── analysis/
 │   ├── research-context/          # If --research provided
 │   ├── design-context/            # If mockups detected (Step 4 ingestion or Phase 4 generation)
@@ -598,8 +620,10 @@ orchestrator:
 │   └── technical-clarifications.md # Phase 5 (conditional)
 ├── implementation/
 │   ├── spec.md                    # Phase 5
+│   ├── spec.html                  # Phase 5 (HTML companion)
 │   ├── requirements.md            # Phase 5
 │   ├── implementation-plan.md     # Phase 7
+│   ├── implementation-plan.html   # Phase 7 (HTML companion)
 │   ├── visual-coverage.md         # Phase 7 (when design-context exists)
 │   ├── work-log.md                # Phase 8
 │   ├── tdd-red-gate.md            # Phase 3 (conditional)
@@ -607,8 +631,11 @@ orchestrator:
 ├── verification/
 │   ├── spec-audit.md              # Phase 6 (recommended)
 │   ├── implementation-verification.md  # Phase 11
+│   ├── implementation-verification.html # Phase 11 (HTML companion)
 │   ├── e2e-verification-report.md      # Phase 12 (optional)
-│   └── visual-fidelity.md              # Phase 12 (when design-context exists, report-only)
+│   ├── e2e-verification-report.html    # Phase 12 (HTML companion)
+│   ├── visual-fidelity.md              # Phase 12 (when design-context exists, report-only)
+│   └── visual-fidelity.html            # Phase 12 (HTML companion)
 └── documentation/
     └── user-guide.md              # Phase 13 (optional)
 ```
