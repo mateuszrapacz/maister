@@ -23,18 +23,7 @@ mv "$OUT/.claude-plugin" "$OUT/.cursor-plugin"
 PLUGIN_VERSION=$(grep '"version"' "$OUT/.cursor-plugin/plugin.json" | sed 's/.*: "\([^"]*\)".*/\1/')
 
 # Optional manifest fields: repository, license, homepage
-normalize_git_remote_url() {
-  echo "$1" | sed -E 's|^git@github\.com:|https://github.com/|; s|\.git$||'
-}
-PLUGIN_REPOSITORY=""
-for remote in upstream origin; do
-  raw_url=$(git -C "$ROOT" remote get-url "$remote" 2>/dev/null || true)
-  if [ -n "$raw_url" ]; then
-    PLUGIN_REPOSITORY=$(normalize_git_remote_url "$raw_url")
-    break
-  fi
-done
-PLUGIN_REPOSITORY="${PLUGIN_REPOSITORY:-https://github.com/SkillPanel/maister}"
+PLUGIN_REPOSITORY="https://github.com/mateuszrapacz/maister"
 PLUGIN_LICENSE=$(head -1 "$ROOT/LICENSE" | awk '{print $1}')
 PLUGIN_HOMEPAGE="$PLUGIN_REPOSITORY"
 
