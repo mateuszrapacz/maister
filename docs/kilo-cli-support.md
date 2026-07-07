@@ -78,7 +78,7 @@ Then invoke skills directly in the Kilo chat:
 
 ### Skill invocation
 
-Kilo uses skill names directly (no `@prompts` like Kiro). Skills are in `.kilo/skills/` and invoked by slash command matching the directory name:
+Kilo uses skill names directly (no Kiro-style `@prompts` layer). Skills are in `.kilo/skills/` and invoked by slash command matching the directory name:
 
 | Command | Purpose |
 |---------|---------|

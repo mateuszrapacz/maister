@@ -275,7 +275,7 @@ make build-kiro
 maister-kiro chat --agent maister
 ```
 
-In Kiro TUI, start workflows with **`@prompts`** (`@init`, `@dev`, `@grill-me`, `@thermos`, `@quick-plan`, …). Each `@prompt` tells the agent to run the matching `/maister-*` skill. Skills are not shown in slash autocomplete — use `@`, not `/maister-*`, for interactive discovery. Do not use Kiro's `/plan` for Maister quick-plan — use `@quick-plan`.
+In Kiro TUI, start workflows with **slash shortcut skills** (`/dev`, `/init`, `/grill-me`, `/thermos`, `/quick-plan`, …). Each shortcut delegates to the matching `/maister-*` orchestrator skill. You can also invoke `/maister-*` directly. Do not use Kiro's built-in `/plan` for Maister quick-plan — use `/quick-plan`.
 
 ### Local install
 
@@ -304,7 +304,7 @@ bash platforms/kiro-cli/smoke-cli.sh
 
 ### Hooks note
 
-Kiro has no `preCompact` hook equivalent. After context compaction, use `@status` / `@resume` or read `orchestrator-state.yml` manually. See `steering/maister-workflows.md` in the install profile.
+Kiro has no `preCompact` hook equivalent. After context compaction, use `/status` / `/resume` or read `orchestrator-state.yml` manually. See `steering/maister-workflows.md` in the install profile.
 
 Full guide: [Kiro CLI Support](docs/kiro-cli-support.md) (install, daily use, E2E matrix, manual commit checkpoint).
 

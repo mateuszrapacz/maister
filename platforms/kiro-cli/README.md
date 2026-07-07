@@ -22,7 +22,7 @@ maister-kiro chat --agent maister
 
 ## Layout
 
-- `build.sh` — full transform pipeline (skills, agents JSON, hooks, prompts)
+- `build.sh` — full transform pipeline (skills, agents JSON, hooks, shortcut skills)
 - `generate-agent-json.sh` — MD→JSON agent generator (invoked by build.sh step 17)
 - `agent-tools.json` — tool declarations per subagent
 - `hooks/` — scripts embedded in `agents/maister.json` (`agentSpawn`, `userPromptSubmit`, `preToolUse`, `postToolUse`)
@@ -41,7 +41,7 @@ Build emits absolute paths (`~/.kiro-maister/hooks/*.sh`). `smoke-install.sh` re
 
 ## preCompact gap
 
-Kiro has no `preCompact` hook. `hooks/post-compact-reminder-stub.sh` documents the gap and is **not** wired in `maister.json`. Use `orchestrator-state.yml` + `@status` / `@resume` after compaction.
+Kiro has no `preCompact` hook. `hooks/post-compact-reminder-stub.sh` documents the gap and is **not** wired in `maister.json`. Use `orchestrator-state.yml` + `/status` / `/resume` after compaction.
 
 ## Test inventory
 
