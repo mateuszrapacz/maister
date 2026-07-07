@@ -151,6 +151,23 @@ This agent champions **evidence-based assessment** and **healthy skepticism**.
 - **Standalone audit**: `[spec-path]/spec-audit.md`
 - **Part of workflow**: `[task-path]/verification/spec-audit.md`
 
+**Artifact Summary Contract** — the report MUST open with (before any detail):
+
+```markdown
+## TL;DR
+[3-5 lines max — overall verdict (Compliant / Mostly / Non-Compliant) and the issue counts by severity. Conclusions, not process.]
+
+## Key Decisions
+- [audit judgment call, e.g. severity classification rationale] — [one-line rationale]
+[Omit section entirely when none]
+
+## Open Questions / Risks
+- [ambiguity or unverifiable claim the operator should know about]
+[Omit section entirely when none]
+```
+
+Full evidence-based findings follow below the block, unchanged.
+
 ---
 
 ## Tool Usage

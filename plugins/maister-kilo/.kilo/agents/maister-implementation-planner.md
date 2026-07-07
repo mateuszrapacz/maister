@@ -32,6 +32,7 @@ The Task prompt MUST include:
 | `task_path` | Orchestrator | Absolute path to task directory |
 | `task_characteristics` | Orchestrator state | Detected characteristics from gap-analyzer |
 | `task_description` | User input | What's being built |
+| `html_style_guide_path` | Orchestrator | Absolute path to `html-report-style.md` (for the implementation-plan.html companion) |
 
 **Accumulated Context** (Pattern 7):
 - `phase_summaries`: Prior phase summaries (specification, gap analysis, codebase analysis, design)
@@ -191,6 +192,17 @@ Create `implementation/implementation-plan.md`:
 ```markdown
 # Implementation Plan: [Task Name]
 
+## TL;DR
+[3-5 lines max — how the work is organized: group count, execution order, parallelism. Conclusions, not process.]
+
+## Key Decisions
+- [planning decision, e.g. grouping/sequencing choice] — [one-line rationale]
+[Omit section entirely when none]
+
+## Open Questions / Risks
+- [risk the operator should know about, e.g. shared-file contention, uncovered screens]
+[Omit section entirely when none]
+
 ## Overview
 Total Steps: [count]
 Task Groups: [count]
@@ -271,6 +283,20 @@ Source: `analysis/design-context/INDEX.md`
 
 ---
 
+### Phase 4.7: HTML Companion Report
+
+After the plan (and coverage matrix, when applicable) is written, write `implementation/implementation-plan.html` — the operator-facing companion:
+
+**Companion is optional — gated by the orchestrator.** If `html_style_guide_path` is NOT provided in your prompt, SKIP this companion entirely: write only `implementation-plan.md`, set `html_path: null` in your result, and continue. The steps below run only when `html_style_guide_path` is provided.
+
+1. **Read the style guide** at `html_style_guide_path` (provided in your prompt) and follow it: self-contained single file, standard CSS block, no external resources, relative links only.
+2. **Lead with** the TL;DR block and group/step counts; then task-group cards showing dependencies (arrow glyphs or inline SVG), per-group step checklists, files-to-modify as `<code>` chips, visual-references when present, and the coverage matrix as a table when `visual-coverage.md` exists. Link to `implementation-plan.md` in the header.
+3. **Progress markers (REQUIRED)**: render every task group and step with the style guide's Progress-Sync Convention — `<section data-group="N" class="group todo">` / `<li data-step="N.M" class="step todo">`, glyphs via CSS only. The implementation-plan-executor flips `todo`→`done` on these markers as groups complete; without them the companion goes stale during execution.
+4. **Same content as the md** — restructure and visualize, never add groups or steps absent from the plan.
+5. **Never block on it** — if generation fails, keep the md, set `html_path: null` in your result with a warning, and continue.
+
+---
+
 ## Test Limits (Strict)
 
 | Scope | Tests |
@@ -315,6 +341,7 @@ Before completing, verify:
 | File | Content |
 |------|---------|
 | `implementation/implementation-plan.md` | Complete implementation plan |
+| `implementation/implementation-plan.html` | Operator-facing HTML companion (style guide compliant) |
 | `implementation/visual-coverage.md` | Coverage matrix (only when `analysis/design-context/INDEX.md` exists) |
 
 ### Task Items Created
@@ -327,6 +354,7 @@ Before completing, verify:
 ```yaml
 status: "success" | "failed"
 plan_path: "implementation/implementation-plan.md"
+html_path: "implementation/implementation-plan.html"  # null if companion generation failed
 
 summary:
   task_groups: [count]
@@ -334,6 +362,8 @@ summary:
   expected_tests: [range, e.g., "16-34"]
   has_testing_group: true | false
   has_visual_coverage: true | false  # true when design-context/INDEX.md was present
+  key_decisions: [{decision, rationale}, ...]   # from the plan's Key Decisions block
+  risks: ["...", ...]                            # from the plan's Open Questions / Risks block
 
 groups:
   - name: "[Layer Name]"

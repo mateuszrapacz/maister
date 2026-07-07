@@ -221,11 +221,35 @@ Chosen option: [Option N], because [justification, 1-2 sentences]
 |------|---------|
 | `outputs/high-level-design.md` | Complete architecture design document |
 | `outputs/decision-log.md` | MADR-format architecture decision records |
+| `outputs/high-level-design.html` | Operator-facing HTML companion (style guide compliant) |
+| `outputs/decision-log.html` | Operator-facing HTML companion (style guide compliant) |
+
+### HTML Companion Reports
+
+After both md files are written, write their companions:
+
+**Companions are optional — gated by the orchestrator.** If `html_style_guide_path` is NOT provided in your prompt, SKIP these companions entirely: write only `high-level-design.md` and `decision-log.md`, note the skip in your summary, and continue. The steps below run only when `html_style_guide_path` is provided.
+
+1. **Read the style guide** at `html_style_guide_path` (provided in your prompt): self-contained single files, standard CSS block, breadcrumb bar (research suite), no external resources.
+2. **`high-level-design.html`**: stat tiles (components / decisions / architecture style); keep C4 ASCII diagrams as `<pre>` blocks (they're already diagrams — don't redraw); component table; design-decision summary table deep-linking ADR anchors in `decision-log.html#adr-NNN`.
+3. **`decision-log.html`**: stat tiles (ADR count by status); one card per ADR with status badge and anchor id (`#adr-001`) so other reports can deep-link.
+4. **Same content as the md twins**; **never block on them** — on failure keep the md, note the miss, continue.
 
 ### Design Document Structure
 
 ```markdown
 # High-Level Design: [Solution Name]
+
+## TL;DR
+[3-5 lines max — the chosen architecture and its defining decisions. Conclusions, not process.]
+
+## Key Decisions
+- [architecture decision] — [one-line rationale; reference ADR-NNN where applicable]
+[Omit section entirely when none]
+
+## Open Questions / Risks
+- [unresolved design question or risk]
+[Omit section entirely when none]
 
 ## Design Overview
 [2-3 sentences: Business context - what problem, why now, who benefits]
@@ -271,6 +295,9 @@ Chosen option: [Option N], because [justification, 1-2 sentences]
 
 ```markdown
 # Decision Log
+
+## TL;DR
+[3-5 lines max — how many decisions, the most consequential ones. Conclusions, not process.]
 
 ## ADR-001: [Title]
 [MADR format]

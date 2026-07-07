@@ -1,0 +1,82 @@
+orchestrator:
+  name: development
+  status: in_progress
+  created_at: "2026-07-07T22:36:00+02:00"
+  task_directory: .maister/tasks/development/2026-07-07-upstream-merge-sync
+  completed_phases: [1, 2]
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: false
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  task_context:
+    description: "Sprawdź co nowego pojawiło się w głównym repo (upstream SkillPanel/maister), zaplanuj merge zachowując ciągłość git, oceń wpływ na fork"
+    risk_level: medium-high
+    clarifications_resolved: true
+    scope_expanded: null
+    architecture_decision: null
+    task_characteristics:
+      has_reproducible_defect: false
+      modifies_existing_code: true
+      creates_new_entities: true
+      involves_data_operations: false
+      ui_heavy: false
+    research_reference:
+      path: null
+      research_question: null
+      research_type: null
+      confidence_level: null
+    design_reference:
+      source: null
+      product_design_path: null
+      mockup_count: 0
+      has_brief: false
+      index_path: null
+  project_context:
+    project_doc_paths:
+      - .maister/docs/project/vision.md
+      - .maister/docs/project/roadmap.md
+      - .maister/docs/project/tech-stack.md
+      - .maister/docs/project/architecture.md
+  phase_summaries:
+    research:
+      summary: null
+      key_findings: []
+      recommended_approach: null
+    design:
+      summary: null
+      screen_count: 0
+      component_count: 0
+      index_path: null
+    codebase_analysis:
+      key_files:
+        - plugins/maister/skills/orchestrator-framework/assets/dashboard.html
+        - plugins/maister/agents/html-companion-writer.md
+        - platforms/kiro-cli/build.sh
+        - platforms/cursor/build.sh
+        - Makefile
+      primary_language: Markdown/Bash
+      summary: "Fork 53 commits behind upstream v2.2.1 (4 commits). Main delta: operator visibility layer. 3 hard merge conflicts (versions), 14 auto-merge overlaps. Fork-only: Kiro/Kilo/Cursor platforms + 12 AJ skills."
+    clarifications: []
+    gap_analysis:
+      integration_points:
+        - plugins/maister/ (source of truth merge)
+        - platforms/kiro-cli/tests/ (agent count 26→27)
+        - Makefile validate rules
+        - 6 version manifests
+      summary: "Low mechanical conflict (3 files), high validation effort. Recommended: git merge upstream/master, version 2.2.1-fork.1, make build + Kiro test fixes."
+    scope_clarifications:
+      scope_expanded: null
+      summary: null
+    ui_mockups:
+      components_designed: []
+      summary: null
+    specification:
+      summary: null
+    architecture_decision:
+      decision: null
+      summary: null

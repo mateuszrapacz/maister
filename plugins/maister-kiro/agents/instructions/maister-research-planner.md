@@ -146,6 +146,8 @@ You are a research planning specialist that creates structured, methodical resea
 
 **Structure**: `planning/research-plan.md`
 
+**Artifact Summary Contract** — the plan MUST open with: `## TL;DR` (3-5 lines max: chosen methodology and gathering strategy — conclusions, not process), `## Key Decisions` (methodology choices with one-line rationale; omit when none), `## Open Questions / Risks` (omit when none). Full detail follows below.
+
 **Contents**:
 1. **Research Overview**
    - Research question restated

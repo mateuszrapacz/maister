@@ -30,9 +30,11 @@ Full framework rule: `../orchestrator-framework/references/orchestrator-patterns
 
 ### Step 2: Initialize Workflow
 
-1. **Create Task Items**: Use `TaskCreate` for all phases (see Phase Configuration), then set dependencies with `TaskUpdate addBlockedBy`
-2. **Create Task Directory**: `.maister/tasks/research/YYYY-MM-DD-task-name/`
-3. **Initialize State**: Create `orchestrator-state.yml` with research context
+1. **Capture the clock**: run `date -u +"%Y-%m-%dT%H:%M:%SZ"` via Bash NOW — you do NOT know the time from context. Every timestamp written this turn (`created`, `updated`, `generated`, `phases[].started`) uses this value. Date-only or `T00:00:00Z` values are the documented failure mode (orchestrator-patterns.md § 4 Timestamp Rule). Re-run `date` in later turns before writing timestamps.
+2. **Create Task Items**: Use `TaskCreate` for all phases (see Phase Configuration), then set dependencies with `TaskUpdate addBlockedBy`
+3. **Create Task Directory**: `.maister/tasks/research/YYYY-MM-DD-task-name/`
+4. **Initialize State**: Create `orchestrator-state.yml` with research context
+5. **Set up Operator Dashboard** (orchestrator-patterns.md § 8) — first read `.maister/config.yml` and set `orchestrator.options.html_output` (default true if the file/key is absent). **When `html_output` is false, SKIP this entire step** — no `dashboard.html`, no `dashboard-data.js`, no browser auto-open — and proceed. Otherwise: copy `../orchestrator-framework/assets/dashboard.html` to the task root as `dashboard.html`, write the initial `dashboard-data.js` (all phases pending, `task.type: "research"`), then **auto-open it in the user's browser** (`open` / `xdg-open` / `start` per platform, passing the plain absolute filesystem path — NEVER a hand-built `file://` URL; on failure just print the path — never block). On resume: re-copy `dashboard.html` only if missing; regenerate `dashboard-data.js` from state; then auto-open it in the browser again (same opener as a new task — the OS focuses an already-open tab rather than duplicating).
 
 **Output**:
 ```
@@ -40,9 +42,23 @@ Full framework rule: `../orchestrator-framework/references/orchestrator-patterns
 
 Task: [research question]
 Directory: [task-path]
+Dashboard: open [task-path]/dashboard.html in a browser to monitor progress
 
 Starting Phase 1: Initialize research...
 ```
+
+---
+
+## Operator Visibility (applies to every phase)
+
+> **Config gate**: these rules assume `options.html_output` is true (read from `.maister/config.yml` at init, default true). When **false**: skip the Dashboard-upkeep rule entirely (no dashboard files, no browser open, no rewrites) and the HTML-companions rule (do NOT pass `html_style_guide_path`; subagents write md only). The Artifact Summary Contract (§ 7 TL;DR blocks) and `phase_summaries` in state stay active either way.
+
+Cross-cutting rules from `orchestrator-patterns.md` (same as the development orchestrator):
+
+1. **Artifact Summary Contract (§ 7)**: every artifact-writing subagent prompt MUST include the contract instruction (artifacts open with TL;DR / Key Decisions / Open Questions & Risks). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` — verbatim, never re-summarized.
+2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark `in_progress` before delegating), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks — the operator reviews them on the dashboard while answering; status stays `in_progress` until the gate passes), after every phase completion (including skipped phases 3-5, with reason), every gate decision, and at finalization. **Phase 1 addition**: also refresh after each of its 4 steps completes, registering that step's artifacts — Phase 1 is long and the operator should see brief → plan → findings → report appear incrementally. In particular, after Step 4 the report (`outputs/research-report.md` + `.html`) MUST be registered before the Phase 1 exit gate fires.
+3. **HTML companions (§ 9)**: pass `html_style_guide_path` (absolute path to `../orchestrator-framework/references/html-report-style.md`) to research-synthesizer, solution-brainstormer, and solution-designer. Register returned companion paths in `phase_summaries.[phase].artifacts[].html` so the dashboard hero cards link HTML first.
+4. **icon_hint values** per phase: 1 `analysis`, 2 `plan`, 3 `spec`, 4 `plan`, 5 `spec`, 6 `done`.
 
 ---
 
@@ -167,7 +183,7 @@ For each category in strategy:
 
 **INVOKE NOW**: Use Task tool with `subagent_type: maister-research-synthesizer`
 
-**Context to pass**: task_path, findings_directory_path, research_question, research_type, methodology
+**Context to pass**: task_path, findings_directory_path, research_question, research_type, methodology, html_style_guide_path (for the research-report.html companion)
 
 **Synthesizer produces**:
 - Pattern analysis and cross-references (`analysis/synthesis.md`)
@@ -238,6 +254,7 @@ ask_user - "Research foundation complete (initialized, planned, gathered, synthe
 **Context to pass** (Pattern 7):
 - `task_path`, `synthesis_path`, `research_report_path`
 - `output_path`: `outputs/solution-exploration.md` — brainstormer MUST write to this exact path
+- `html_style_guide_path` (for the solution-exploration.html companion)
 - Accumulated context: `research_type`, `research_question`, `confidence_level`, `phase_summaries` (Phase 1)
 - `project_doc_paths` (from state)
 
@@ -260,20 +277,22 @@ ask_user - "Research foundation complete (initialized, planned, gathered, synthe
 > **ANTI-PATTERN**: Do NOT present all decision areas in a single summary table and ask one combined "do you agree?" question. Each area MUST get its own detailed presentation and its own ask_user call.
 >
 > **ANTI-PATTERN**: Do NOT show full alternatives/pros/cons for the first area and then shortcut remaining areas to just a recommendation line + question. EVERY area gets the SAME level of detail — all alternatives with descriptions, pros, and cons. No exceptions.
+>
+> **ANTI-PATTERN**: Do NOT batch multiple decision areas into one ask_user call. The tool accepts up to 4 questions per call — using that capacity here IS the documented failure mode. One call = one question = one decision area. The § 3 "group important decisions" guidance applies to subagent `decisions_needed` triage, NOT to convergence — convergence is strictly sequential.
 
 1. Read `outputs/solution-exploration.md`
-2. For each decision area sequentially, output ALL of the following (steps a-d) BEFORE calling ask_user:
+2. For each decision area **sequentially** — later areas may depend on earlier answers (a choice in area 1 can change which alternatives are even relevant in area 3), so do NOT pre-render or pre-ask later areas before the current one is answered. Output ALL of the following (steps a-d) BEFORE calling ask_user:
    a. **Area header**: area name and why this decision matters (1-2 sentences of context)
    b. **Alternatives detail**: For EVERY alternative in this area, show:
       - Name and description (2-3 sentences)
       - Pros (bullet list)
       - Cons (bullet list)
    c. **Recommendation**: which alternative is recommended and why (1 sentence)
-   d. **ask_user**: this area's alternatives as options (mark recommended with "(Recommended)") + "Need more info" option
+   d. **ask_user (exactly ONE question in this call)**: this area's alternatives as options (mark recommended with "(Recommended)") + "Need more info" option
    e. If user picks → record choice, move to next area
    f. If "Need more info" → present the detailed trade-off analysis for the requested alternative, then re-ask
 
-> **SELF-CHECK before each ask_user**: Did you output the alternatives with pros/cons for THIS area? If you only showed a recommendation line without listing all alternatives and their pros/cons, STOP and output the full detail before asking.
+> **SELF-CHECK before each ask_user**: Did you output the alternatives with pros/cons for THIS area? If you only showed a recommendation line without listing all alternatives and their pros/cons, STOP and output the full detail before asking. Also: does this ask_user call contain exactly ONE question about exactly ONE area? If it has multiple questions, STOP and split.
 
 3. After all areas resolved, present a brief summary of the chosen combination
 4. Update state with chosen approaches per decision area
@@ -315,6 +334,7 @@ ask_user - "Brainstorming complete. Continue to high-level design?"
 - `solution_exploration_path` (only if Phase 3-4 ran)
 - `selected_approach` (from Phase 4 convergence if ran, or from research report recommendations)
 - `design_preferences` (from Part A)
+- `html_style_guide_path` (for the high-level-design.html + decision-log.html companions)
 - Accumulated context: `research_type`, `research_question`, `confidence_level`, `phase_summaries`
 - `project_doc_paths` (from state)
 
@@ -378,6 +398,8 @@ research_context:
     count: 4             # number of gatherer instances
     source: "planner" | "default"  # where strategy came from
   phase_summaries:
+    # Every entry also carries the shared base shape (orchestrator-patterns.md § 4):
+    #   decisions: []   risks: []   artifacts: [{path, label, html}]
     phase-1:
       summary: "..."
       steps_completed: []  # track which steps completed for resume
@@ -393,6 +415,7 @@ research_context:
       decisions_count: 0
 
 options:
+  html_output: true  # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions.
   brainstorming_enabled: null  # null=not yet decided, set by Phase 2 or --brainstorm/--no-brainstorm flag
   design_enabled: null          # independent, set by Phase 2 or --design/--no-design flag
 ```
@@ -404,6 +427,8 @@ options:
 ```
 .maister/tasks/research/YYYY-MM-DD-research-name/
 ├── orchestrator-state.yml
+├── dashboard.html                  # Operator dashboard (copied plugin asset — never model-generated)
+├── dashboard-data.js               # Dashboard data projection (rewritten after each phase/step/gate)
 ├── planning/
 │   ├── research-brief.md           # Phase 1, Step 1
 │   ├── research-plan.md            # Phase 1, Step 2
@@ -418,9 +443,13 @@ options:
 │   └── synthesis.md                # Phase 1, Step 4 (reasoning log)
 ├── outputs/
 │   ├── research-report.md          # Phase 1, Step 4 (main deliverable)
+│   ├── research-report.html        # Phase 1, Step 4 (HTML companion)
 │   ├── solution-exploration.md     # Phase 3 (conditional)
+│   ├── solution-exploration.html   # Phase 3 (HTML companion)
 │   ├── high-level-design.md        # Phase 5 (conditional)
-│   └── decision-log.md             # Phase 5 (conditional)
+│   ├── high-level-design.html      # Phase 5 (HTML companion)
+│   ├── decision-log.md             # Phase 5 (conditional)
+│   └── decision-log.html           # Phase 5 (HTML companion)
 ```
 
 ---

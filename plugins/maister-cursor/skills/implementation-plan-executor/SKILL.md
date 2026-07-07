@@ -101,6 +101,13 @@ For each wave:
 3. **Wait for all wave members to return**, then for each result:
    - Parse completed steps, standards applied, test results.
    - Mark all group checkboxes in `implementation-plan.md`.
+   - **Sync the HTML companion** (`implementation/implementation-plan.html`, if it exists): run ONE Bash command per completed group, substituting its number for `N` (idempotent — safe to re-run):
+     ```bash
+     sed -i '' -e 's/\(data-step="N\.[0-9][0-9]*" class="step \)todo/\1done/g' \
+               -e 's/\(data-group="N" class="group \)todo/\1done/g' \
+               implementation/implementation-plan.html
+     ```
+     (Linux: `sed -i` without `''`. The leading quote in `data-step="N\.` anchors the exact group — group 1 cannot match 11.) Then VERIFY: `grep -c 'data-group="N" class="group done"'` must return 1; if 0, append a warning to `work-log.md` (`HTML plan sync missed markers for Group N`) — a visible miss, never a silent one. File absent → skip silently; sync never blocks the wave.
    - Add a group entry to `work-log.md` with standards trail.
    - Verify test results are acceptable.
    - `TodoWrite` to `status: "completed"` with `metadata: {completed_at, tests_passed, files_modified, standards_applied, wave: N}`.
@@ -112,6 +119,8 @@ For each wave:
    - The next wave is NOT computed until every failed group's recovery decision is made.
 
 5. After the wave fully resolves (all members `completed` or recovered), recompute the ready set and proceed to the next wave.
+
+   **SELF-CHECK before dispatching the next wave**: for every group marked `completed` this wave, did you run the HTML marker-flip command (step 3)? If unsure, run it now — it is idempotent.
 
 ### `--sequential` Opt-Out
 

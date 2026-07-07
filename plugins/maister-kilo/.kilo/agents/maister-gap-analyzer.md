@@ -310,6 +310,17 @@ The orchestrator will present ALL items in `decisions_needed.critical` and `deci
 ```markdown
 # Gap Analysis: [Task Name]
 
+## TL;DR
+[3-5 lines max — what the gap is and what the analysis concluded. Conclusions, not process.]
+
+## Key Decisions
+- [analysis conclusion that shapes the workflow, e.g. characteristic detection rationale] — [one-line rationale]
+[Omit section entirely when none — decisions awaiting the user belong in "Issues Requiring Decisions" below, not here]
+
+## Open Questions / Risks
+- [risk the operator should know about]
+[Omit section entirely when none]
+
 ## Summary
 - **Risk Level**: [Low/Medium/High]
 - **Estimated Effort**: [Low/Medium/High]

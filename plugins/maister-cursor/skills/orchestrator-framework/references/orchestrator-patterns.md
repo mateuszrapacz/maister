@@ -140,6 +140,10 @@ prompt: |
 
   ## ARTIFACTS TO READ
   [List relevant files for full details]
+
+  ## ARTIFACT SUMMARY CONTRACT
+  Open every markdown artifact you write with the summary block from
+  orchestrator-patterns.md § 7 (TL;DR / Key Decisions / Open Questions & Risks).
 ```
 
 **Why**: Subagents run in isolated context. Without summaries, they must re-parse entire files and miss prior decisions.
@@ -150,7 +154,9 @@ After each phase, extract key findings into `[domain]_context.phase_summaries`:
 
 1. Parse subagent output for key fields
 2. Create 1-2 sentence summary
-3. Update state: `[domain]_context.phase_summaries.[phase_name]`
+3. Extract `decisions`, `risks`, and `artifacts` from the artifact's summary block (§ 7)
+4. Update state: `[domain]_context.phase_summaries.[phase_name]`
+5. Refresh the operator dashboard data file (§ 8)
 
 This enables context passing to downstream phases and supports resume.
 
@@ -172,14 +178,39 @@ When a subagent returns `decisions_needed` items, the orchestrator MUST present 
 **Decision Gate Pattern**:
 
 1. **Parse**: Extract all critical and important decisions from subagent output
-2. **Present**: Use `AskQuestion` for each critical decision; batch important decisions into multi-select
+2. **Present**: every decision is its own **single-select question with its own option set** — NEVER flatten several decisions' options into a single question's option list (the user could pick two conflicting options from one decision, or none from another). Critical decisions: one `AskQuestion` call each, with full context shown before the call. Important decisions: may be grouped as up to 4 **separate questions within one `AskQuestion` call**. A question may allow selecting multiple options ONLY when those options are genuinely non-exclusive (e.g. "which verifications to run?") — never as a way to bundle decisions.
 3. **SELF-CHECK**: "Did I present ALL decisions from `decisions_needed`? If not, STOP."
+
+**Scope note**: this grouping guidance applies to `decisions_needed` triage (pre-analyzed, independent decisions). Interactive convergence flows (e.g. research Phase 4) override it with strictly ONE question per call — later areas depend on earlier answers.
 
 ---
 
 ## 4. State Schema
 
 All orchestrators use `orchestrator-state.yml` at `.maister/tasks/[type]/YYYY-MM-DD-task-name/orchestrator-state.yml`.
+
+### Timestamp Rule (applies to ALL timestamps everywhere)
+
+Every timestamp — `created`, `updated`, `phases[].started/completed`, `generated` in `dashboard-data.js`, dates in work-log entries — MUST be a **full ISO 8601 date AND time in UTC** (`2026-06-11T14:32:07Z`).
+
+- **NEVER write a date-only value** (`2026-06-11`) and **NEVER zero-fill the time** (`T00:00:00Z`) — you do not know the clock time from context, so GET it from the system: `date -u +"%Y-%m-%dT%H:%M:%SZ"` (one Bash call can serve every timestamp written in the same turn).
+- Why it matters: phase durations, "elapsed" displays, and freshness indicators on the operator dashboard are computed from these values — a midnight placeholder renders as nonsense durations.
+- Task *directory names* keep their date-only `YYYY-MM-DD-` prefix — that is a name, not a timestamp.
+
+### Project Configuration (`.maister/config.yml`)
+
+An optional project-level config file at `.maister/config.yml` (sibling of `.maister/docs/` and `.maister/tasks/`) holds defaults that apply to every workflow. It is scaffolded by `/maister-init` but is not required — when absent, every key falls back to its default.
+
+```yaml
+# Maister project configuration.
+html_output: true   # Generate the operator dashboard + HTML companion reports. false = markdown-only.
+```
+
+| Key | Default | Effect |
+|-----|---------|--------|
+| `html_output` | `true` | When `false`, workflows skip the operator dashboard (§ 8) AND the HTML companion reports (§ 9): no `dashboard.html`/`dashboard-data.js`, no browser auto-open, no `.html` companions. Markdown artifacts, their § 7 TL;DR blocks, and `orchestrator-state.yml` are produced regardless. |
+
+**How it is read**: at initialization (§ 5) the orchestrator reads `.maister/config.yml` if present and seeds `orchestrator.options.html_output` into state (default `true` when the file or key is absent). All downstream gates read `options.html_output` from state, not the file — so resume is consistent and the file is read once.
 
 ### Common Fields
 
@@ -201,6 +232,7 @@ orchestrator:
     user_docs_enabled: true | false | null
     code_review_enabled: true | false | null
     sequential: true | false | null  # Set by --sequential. Read by implementation-plan-executor Phase 2 to disable parallel wave dispatch.
+    html_output: true | false        # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions — see "Project Configuration" below.
 
   # Timestamps
   created: [ISO 8601 timestamp]
@@ -269,6 +301,22 @@ verification_context:
   reverify_count: 0          # max 3
 ```
 
+### Shared: phase_summaries entry shape
+
+Every `phase_summaries.[phase_name]` entry uses this base shape (orchestrators may add phase-specific fields):
+
+```yaml
+phase_summaries:
+  [phase_name]:
+    summary: null        # 1-2 sentence prose summary
+    decisions: []        # [{decision, rationale}] — from artifact Key Decisions blocks + gate outcomes
+    risks: []            # strings — from artifact Open Questions / Risks blocks
+    artifacts: []        # [{path, label, html}] — paths relative to task root; html is the
+                         #   optional companion report (§ 9), null when absent
+```
+
+`decisions`, `risks`, and `artifacts` feed the operator dashboard (§ 8) and downstream context passing. Populate them at context extraction time (§ 3) — empty lists are fine when a phase produced none.
+
 ---
 
 ## 5. Initialization & Resume
@@ -277,10 +325,13 @@ verification_context:
 
 1. **Parse arguments**: Extract description, type, entry point (`--from`), optional flags
 2. **Determine starting phase**: New task starts Phase 1; resume reads state for first incomplete phase
-3. **Create task directory**: Standard structure with analysis/, implementation/, verification/, documentation/ *(skip on resume)*
-4. **Create state file**: `orchestrator-state.yml` *(skip on resume)*
-5. **Create todo items**: `TodoWrite` for all phases, then `TodoWrite ordering in todos array (merge: true)` for dependencies. On resume, also restore completed phase statuses.
-6. **Output summary**: Show task info, phases, starting message
+3. **Capture the clock**: run `date -u +"%Y-%m-%dT%H:%M:%SZ"` via Bash NOW — you do NOT know the time from context. Use the result for every timestamp written in this turn (`created`, `updated`, `generated`, `phases[].started`). This is a MANDATORY step, not optional: writing `created: 2026-06-12` or `T00:00:00Z` without having run `date` is the documented failure mode (§ 4 Timestamp Rule).
+4. **Read project config**: read `.maister/config.yml` if it exists; set `orchestrator.options.html_output` from its `html_output` key (default `true` when the file or key is absent — § 4 "Project Configuration"). This single read seeds the state; all dashboard/companion gates below read `options.html_output` from state.
+5. **Create task directory**: Standard structure with analysis/, implementation/, verification/, documentation/ *(skip on resume)*
+6. **Create state file**: `orchestrator-state.yml` *(skip on resume)*
+7. **Set up operator dashboard** (§ 8) — *skip this entire step when `options.html_output` is false*: copy `../assets/dashboard.html` (sibling `assets/` directory of this references/ file) to the task root as `dashboard.html`, write the initial `dashboard-data.js`, then **auto-open it in the user's browser** with the platform opener — `open "[abs-task-path]/dashboard.html"` (macOS), `xdg-open` (Linux), `start ""` (Windows). Pass the **plain absolute filesystem path — NEVER construct a `file://` URL** (hand-built URLs get mangled, e.g. `file///` missing the colon; the opener resolves plain paths itself). If the command fails, just print the path hint — never block initialization. On resume: re-copy `dashboard.html` only if missing; regenerate `dashboard-data.js` from state; then auto-open it in the browser again (same opener as a new task — if the tab is already open the OS focuses it rather than duplicating).
+8. **Create todo items**: `TodoWrite` for all phases, then `TodoWrite ordering in todos array (merge: true)` for dependencies. On resume, also restore completed phase statuses.
+9. **Output summary**: Show task info, phases, starting message — include the dashboard path hint `Dashboard: open [task-path]/dashboard.html in a browser to monitor progress` *only when `options.html_output` is true*.
 
 ### Task Name Generation
 
@@ -348,6 +399,129 @@ If prerequisites missing, use AskQuestion: "Start from Phase 1", "Specify differ
 | User chooses "Proceed with known issues" | Proceed with warning logged |
 | Max iterations (3) reached | Ask user how to proceed |
 | Critical issues remain unresolved | **MUST NOT proceed** — require user approval first |
+
+---
+
+## 7. Artifact Summary Contract
+
+Workflow artifacts accumulate deep detail for subagent context — but the human operator needs the signal, not the dump. Every markdown artifact written into the task directory MUST open with this block, before any other content (after the H1 title if one exists):
+
+```markdown
+## TL;DR
+[3-5 lines max: what this artifact concludes / recommends / delivers]
+
+## Key Decisions
+- [decision] — [one-line rationale]
+
+## Open Questions / Risks
+- [question or risk the operator should know about]
+```
+
+**Rules**:
+- TL;DR is hard-capped at 5 lines. It states conclusions, not process ("Auth via middleware on 3 routes; no schema changes" — not "This document analyzes...").
+- Omit `Key Decisions` / `Open Questions / Risks` sections entirely when empty — never write "None".
+- Full detail follows below the block, unchanged. The block is a lens, not a replacement.
+- Applies to every artifact-writing subagent and skill. Orchestrators MUST include the contract in every artifact-writing prompt (§ 3 context template).
+- At context extraction (§ 3), the orchestrator lifts the block's content into `phase_summaries.[phase_name].decisions` / `.risks` — this is what feeds the operator dashboard (§ 8).
+
+**Exempt**: `orchestrator-state.yml`, `dashboard-data.js`, raw mockup files, screenshots, and incremental logs (`work-log.md` — append-only, gets no retroactive TL;DR).
+
+---
+
+## 8. Operator Dashboard
+
+> **Config gate**: when `options.html_output` is false (§ 4 Project Configuration), the dashboard is DISABLED — do not copy `dashboard.html`, do not write or rewrite `dashboard-data.js`, do not auto-open a browser, and skip every rewrite trigger below. The rest of this section applies only when `html_output` is true. (`phase_summaries` in state are still maintained either way — they feed context passing, not just the dashboard.)
+
+Each task directory carries a self-contained HTML dashboard so the operator can monitor workflow progress at a glance and deep-dive only when needed.
+
+**Files** (both at task root):
+- `dashboard.html` — static viewer, copied verbatim from `[plugin]/skills/orchestrator-framework/assets/dashboard.html` at initialization (§ 5). NEVER generated or modified by the model — it is a maintained plugin asset.
+- `dashboard-data.js` — data projection written by the orchestrator. The viewer reads it via `<script>` (`window.MAISTER_DATA = {...}`), so it works from `file://` with no server.
+
+**Every rewrite starts with the clock**: run `date -u +"%Y-%m-%dT%H:%M:%SZ"` via Bash before writing (one call covers all timestamps in the same turn) — `generated`, `started`, `completed`, and state `updated` all take that value. Never guess the time, never reuse a value from an earlier turn (§ 4 Timestamp Rule).
+
+**When to rewrite `dashboard-data.js`** (full rewrite each time — it is a projection of `orchestrator-state.yml` plus `phase_summaries`, never an incremental patch):
+1. At initialization (all phases pending)
+2. **When a phase starts** (set its status to `in_progress` — BEFORE delegating to the skill/subagent, so the operator sees the running phase, not just the last completed one)
+3. **BEFORE firing every phase exit gate** — the phase's work is finished while the workflow waits (possibly long) for the user's answer. Register the phase's artifacts, summary, decisions, and risks NOW; the status stays `in_progress` until the gate passes (per § 2 state ordering). The operator reviews the finished work on the dashboard while deciding at the gate — a gate fired against a stale dashboard defeats its purpose.
+4. After every phase completes (including skipped phases — mark them `skipped` with a reason)
+5. After every gate decision (record the user's choice)
+6. After verification cycles (issues/fixes update)
+7. At finalization
+
+**Schema**:
+
+```js
+window.MAISTER_DATA = {
+  generated: "[ISO 8601]",      // actual write-time date AND time from the system clock —
+                                // § 4 Timestamp Rule; never date-only, never T00:00:00Z.
+                                // (display only — the viewer detects updates by content comparison)
+  task: {
+    title: "", type: "development|performance|migration|research|product-design",
+    status: "pending|in_progress|completed|failed|blocked",
+    description: "", path: "",
+    current_activity: null        // short present-continuous line for the running phase
+                                  // (the phase's activity description in content) — shown as "Now: ..." in the header
+  },
+  characteristics: {},            // task_characteristics / design_characteristics when present
+  phases: [{
+    id: "phase-1", name: "", icon_hint: "analysis|spec|plan|code|verify|docs|done",
+    status: "pending|in_progress|completed|skipped|failed",
+    started: null,                // full ISO 8601 date+time from system clock (§ 4 Timestamp Rule);
+                                  // set when the phase starts — drives elapsed/duration display
+    completed: null,              // full ISO 8601 date+time, set when the phase completes
+    skip_reason: null,            // when skipped
+    summary: null,                // from phase_summaries
+    decisions: [],                // [{decision, rationale}]
+    risks: [],                    // [string]
+    artifacts: [],                // [{path, label, html}] — paths relative to task root
+    gate: null                    // {question, answer} after the exit gate fires
+  }],
+  verification: {                 // mirror of verification_context, when it exists
+    status: null,
+    issues: [],                   // [{severity, category, description, fixable, fixed}]
+                                  // severity is ALWAYS one of critical|warning|info — never invent
+                                  // other values. When an issue gets fixed, KEEP its original
+                                  // severity and set fixed: true (the viewer dims it and shows ✓ fixed)
+    fixes: [], reverify_count: 0
+  }
+}
+```
+
+**Cost discipline**: the data file repeats what the orchestrator already writes to state — keep summaries terse (1-2 sentences, no markdown). Do not duplicate artifact content into the data file; the dashboard links to artifacts instead.
+
+**Verbatim rule for decisions and risks**: `decisions` and `risks` entries are copied **verbatim** from the artifact's Key Decisions / Open Questions & Risks blocks (§ 7) — never re-summarized or shortened. The contract already caps their length at the source; compressing them again strips the meaning the operator needs.
+
+**Resolved risks**: when a previously recorded risk gets resolved in a later phase, keep the entry and prefix it with `resolved:` (e.g. `"resolved: transient warning — query lookup chosen"`). The viewer dims and strikes resolved entries, separating live risks from settled ones.
+
+The viewer decides presentation (hero artifacts per workflow type, collapsed drawers, severity colors) — orchestrators only supply data.
+
+---
+
+## 9. HTML Companion Reports
+
+> **Config gate**: when `options.html_output` is false (§ 4 Project Configuration), HTML companions are DISABLED. Orchestrators MUST then **omit `html_style_guide_path`** from every companion-writing subagent prompt and skip any explicit `html-companion-writer` invocations. Companion-writing agents skip the `.html` when no `html_style_guide_path` is provided (writing only the `.md`). The markdown artifacts and their § 7 TL;DR blocks are produced regardless. **Not gated**: product-design Phase 7 visual mockups (`analysis/mockups/*.html`) are design deliverables, not report companions. The rest of this section applies only when `html_output` is true.
+
+Selected high-value artifacts get a rich HTML companion written by the **same subagent** that writes the markdown, at the same time (one context read, md and HTML never drift):
+
+| Artifact (md) | Companion (html) | Written by |
+|---------------|------------------|------------|
+| `implementation/spec.md` | `implementation/spec.html` | specification-creator |
+| `implementation/implementation-plan.md` | `implementation/implementation-plan.html` | implementation-planner |
+| `verification/implementation-verification.md` | `verification/implementation-verification.html` | implementation-verifier |
+| `verification/e2e-verification-report.md` | `verification/e2e-verification-report.html` | e2e-test-verifier |
+| `verification/visual-fidelity.md` | `verification/visual-fidelity.html` | e2e-test-verifier |
+| `outputs/research-report.md` | `outputs/research-report.html` | research-synthesizer |
+| `outputs/solution-exploration.md` | `outputs/solution-exploration.html` | solution-brainstormer |
+| `outputs/high-level-design.md` | `outputs/high-level-design.html` | solution-designer |
+| `outputs/decision-log.md` | `outputs/decision-log.html` | solution-designer |
+
+**Rules**:
+- The markdown remains the source of truth for subagent context passing — subagents read md, humans read HTML. The companion adds visual structure (severity badges, matrices, embedded screenshots), never unique content.
+- Companions follow the shared style guide: `references/html-report-style.md` (sibling of this file). Self-contained single file, no external resources, relative links/images only.
+- When `options.html_output` is true, orchestrators MUST pass the absolute path of that style guide to every companion-writing subagent as `html_style_guide_path` (you know it — it sits next to the patterns file you read at initialization). When false, omit it (the config gate above).
+- Register companions in `phase_summaries.[phase].artifacts[].html` so the dashboard (§ 8) links HTML first with md fallback (`html: null` when companions are disabled).
+- Companion generation must never block the workflow: if it fails, keep the md, log the miss, continue.
 
 ## Cursor: TodoWrite Patterns
 

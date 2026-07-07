@@ -52,6 +52,7 @@ The Task prompt MUST include:
 | `task_description` | User input | What needs to be built |
 | `requirements_path` | Orchestrator | Path to `analysis/requirements.md` |
 | `project_context_paths` | Orchestrator | Paths to INDEX.md and all project docs discovered from INDEX.md |
+| `html_style_guide_path` | Orchestrator | Absolute path to `html-report-style.md` (for the spec.html companion) |
 
 **Accumulated Context** (Pattern 7):
 - `risk_level`: low/medium/high
@@ -112,6 +113,17 @@ Create `implementation/spec.md` using this template:
 ```markdown
 # Specification: [Task Name]
 
+## TL;DR
+[3-5 lines max — what's being built and the chosen approach. Conclusions, not process.]
+
+## Key Decisions
+- [decision] — [one-line rationale]
+[Omit section entirely when none]
+
+## Open Questions / Risks
+- [risk or open question the operator should know about]
+[Omit section entirely when none]
+
 ## Goal
 [1-2 sentences — core objective]
 
@@ -158,6 +170,18 @@ Create `implementation/spec.md` using this template:
 - Document WHY new code is needed when not reusing existing code
 - Always mention 2-8 tests per step group in Implementation Guidance
 - Reference specific file paths for reusable components
+- TL;DR is hard-capped at 5 lines; it states conclusions, not process
+
+### Phase 3.5: HTML Companion Report
+
+After writing spec.md, write `implementation/spec.html` — the operator-facing companion (same content, visual structure):
+
+**Companion is optional — gated by the orchestrator.** If `html_style_guide_path` is NOT provided in your prompt, SKIP this companion entirely: write only `spec.md`, set `html_path: null` in your result, and continue. The steps below run only when `html_style_guide_path` is provided.
+
+1. **Read the style guide** at `html_style_guide_path` (provided in your prompt) and follow it: self-contained single file, standard CSS block, no external resources, relative links only.
+2. **Lead with** the TL;DR block and scope in/out side-by-side; then requirements table (id, requirement, priority), user-story cards, reusable-vs-new components table, visual-design references (link mockup files relatively when design-context exists), collapsed `<details>` for technical depth. Link to `spec.md` in the header.
+3. **Same content as the md** — restructure and visualize, never add findings or requirements absent from spec.md.
+4. **Never block on it** — if generation fails, keep spec.md, set `html_path: null` in your result with a warning, and continue.
 
 ### Phase 4: Self-Verification
 
@@ -242,12 +266,14 @@ Adapt specification depth and focus based on `task_characteristics` from the gap
 | File | Content |
 |------|---------|
 | `implementation/spec.md` | Complete specification document |
+| `implementation/spec.html` | Operator-facing HTML companion (style guide compliant) |
 
 ### Structured Result (returned to orchestrator)
 
 ```yaml
 status: "success" | "partial" | "failed"
 spec_path: "implementation/spec.md"
+html_path: "implementation/spec.html"  # null if companion generation failed
 
 summary:
   goal: "[1-sentence goal]"
@@ -256,6 +282,8 @@ summary:
   new_components_needed: [number]
   visual_assets_referenced: [number]
   test_groups_estimated: [number]
+  key_decisions: [{decision, rationale}, ...]   # from the spec's Key Decisions block
+  risks: ["...", ...]                            # from the spec's Open Questions / Risks block
 
 verification:
   requirements_accuracy: "pass" | "issues_fixed"

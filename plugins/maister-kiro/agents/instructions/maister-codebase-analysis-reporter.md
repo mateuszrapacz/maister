@@ -85,6 +85,18 @@ Create the report at `{task_path}/analysis/{artifact_name}`.
 **Analyzer**: codebase-analyzer skill ([N] maister-explore agents: [role1, role2, ...])
 
 
+## TL;DR
+[3-5 lines max — what was found and what it means for the task. Conclusions, not process.]
+
+## Key Decisions
+- [analysis conclusion that shapes the approach, e.g. "extend existing service X rather than new module"] — [one-line rationale]
+[Omit section entirely when none]
+
+## Open Questions / Risks
+- [gap, low-coverage area, or risk the operator should know about]
+[Omit section entirely when none]
+
+
 ## Summary
 
 [2-3 sentence overview of what was found and key insights for the task.]

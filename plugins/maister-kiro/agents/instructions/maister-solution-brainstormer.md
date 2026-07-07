@@ -143,11 +143,33 @@ Evaluate all alternatives across 5 perspectives:
 | File | Content |
 |------|---------|
 | `outputs/solution-exploration.md` | Complete solution exploration document |
+| `outputs/solution-exploration.html` | Operator-facing HTML companion (style guide compliant) |
+
+### HTML Companion Report
+
+After writing solution-exploration.md, write `outputs/solution-exploration.html`:
+
+**Companion is optional — gated by the orchestrator.** If `html_style_guide_path` is NOT provided in your prompt, SKIP this companion entirely: write only `solution-exploration.md`, note the skip in your summary, and continue. The steps below run only when `html_style_guide_path` is provided.
+
+1. **Read the style guide** at `html_style_guide_path` (provided in your prompt): self-contained single file, standard CSS block, breadcrumb bar (research suite), stat-tile row (alternatives / recommended approach), no external resources.
+2. **Lead with** the TL;DR block; then alternative cards side-by-side with the recommended one highlighted (accent border), trade-off matrix as a table, "why not others" and deferred ideas collapsed in `<details>`. Link the md twin in the header (`target="_blank"`).
+3. **Same content as the md**; **never block on it** — on failure keep the md, note the miss, continue.
 
 ### Output Document Structure
 
 ```markdown
 # Solution Exploration: [Research Topic]
+
+## TL;DR
+[3-5 lines max — alternatives explored and the convergence recommendation. Conclusions, not process.]
+
+## Key Decisions
+- [recommendation / trade-off accepted] — [one-line rationale]
+[Omit section entirely when none]
+
+## Open Questions / Risks
+- [open trade-off or risk the operator should weigh]
+[Omit section entirely when none]
 
 ## Problem Reframing
 ### Research Question

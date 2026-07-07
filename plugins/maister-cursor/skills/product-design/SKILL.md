@@ -42,11 +42,13 @@ Full framework rule: `../orchestrator-framework/references/orchestrator-patterns
 
 ### Step 3: Initialize Workflow
 
-1. **Create Todo Items**: Use `TodoWrite` for all phases (see Phase Configuration), then set dependencies with `TodoWrite ordering in todos array (merge: true)`
-2. **Create Task Directory**: `.maister/tasks/product-design/YYYY-MM-DD-task-name/`
+1. **Capture the clock**: run `date -u +"%Y-%m-%dT%H:%M:%SZ"` via Bash NOW — you do NOT know the time from context. Every timestamp written this turn (`created`, `updated`, `generated`, `phases[].started`) uses this value. Date-only or `T00:00:00Z` values are the documented failure mode (orchestrator-patterns.md § 4 Timestamp Rule). Re-run `date` in later turns before writing timestamps.
+2. **Create Todo Items**: Use `TodoWrite` for all phases (see Phase Configuration), then set dependencies with `TodoWrite ordering in todos array (merge: true)`
+3. **Create Task Directory**: `.maister/tasks/product-design/YYYY-MM-DD-task-name/`
    - Create `context/` folder with `README.md` instructing users to drop relevant files there (meeting transcripts, existing designs, spreadsheets, docs, PDFs, images)
    - Create `analysis/` and `outputs/` directories
-3. **Initialize State**: Create `orchestrator-state.yml` with design context schema (see Domain Context section)
+4. **Initialize State**: Create `orchestrator-state.yml` with design context schema (see Domain Context section)
+5. **Set up Operator Dashboard** (orchestrator-patterns.md § 8) — first read `.maister/config.yml` and set `orchestrator.options.html_output` (default true if the file/key is absent). **When `html_output` is false, SKIP this entire step** — no `dashboard.html`, no `dashboard-data.js`, no browser auto-open — and proceed. Otherwise: copy `../orchestrator-framework/assets/dashboard.html` to the task root as `dashboard.html`, write the initial `dashboard-data.js` (all phases pending, `task.type: "product-design"`), then **auto-open it in the user's browser** (`open` / `xdg-open` / `start` per platform, passing the plain absolute filesystem path — NEVER a hand-built `file://` URL; on failure just print the path — never block). On resume: re-copy `dashboard.html` only if missing; regenerate `dashboard-data.js` from state; then auto-open it in the browser again (same opener as a new task — the OS focuses an already-open tab rather than duplicating).
 
 **Output**:
 ```
@@ -54,9 +56,23 @@ Product Design Orchestrator Started
 
 Task: [description]
 Directory: [task-path]
+Dashboard: open [task-path]/dashboard.html in a browser to monitor progress
 
 Starting Phase 0: Initialize & Gather Context...
 ```
+
+---
+
+## Operator Visibility (applies to every phase)
+
+> **Config gate**: these rules assume `options.html_output` is true (read from `.maister/config.yml` at init, default true). When **false**: skip the Dashboard-upkeep rule entirely (no dashboard files, no browser open, no rewrites) and the HTML-companions rule — do NOT invoke `html-companion-writer` at Phases 5/6/8 and do NOT pass `html_style_guide_path` anywhere; markdown artifacts are written as usual. The Artifact Summary Contract (§ 7 TL;DR blocks), `phase_summaries` in state, AND Phase 7 visual mockups (design deliverables, not report companions) all stay active either way.
+
+Cross-cutting rules from `orchestrator-patterns.md` (same as the development and research orchestrators):
+
+1. **Artifact Summary Contract (§ 7)**: every artifact opens with TL;DR / Key Decisions / Open Questions & Risks. This applies to subagent prompts (solution-brainstormer, information-gatherer already comply) AND to the artifacts this orchestrator writes directly (`problem-statement.md`, `personas.md`, `design-decisions.md`, `feature-spec.md`, `outputs/product-brief.md`). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` — verbatim, never re-summarized.
+2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark `in_progress` before executing), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks — the operator reviews them on the dashboard while answering; status stays `in_progress` until the gate passes), after every phase completion (including skipped phases 3/7, with reason), every gate decision, after each refinement-loop iteration that changes an artifact, and at finalization. Every rewrite starts with `date -u` (one call per turn). Register Phase 7 mockups as artifacts (`analysis/mockups/{slug}.html` — they ARE html; set both `path` and `html` to the mockup path).
+3. **HTML companions (§ 9) — delegated, because this orchestrator writes its hero artifacts INLINE** (no producing subagent to attach a companion to). Right after each hero md is finalized, invoke the `maister-html-companion-writer` subagent (Task tool) to write its sibling `.html`: `analysis/design-decisions.md` (Phase 5), `analysis/feature-spec.md` (Phase 6), `outputs/product-brief.md` (Phase 8, after final approval). Pass `md_path`, `html_style_guide_path` (absolute path to `../orchestrator-framework/references/html-report-style.md`), `artifact_label`, and `report_suite` (the sibling reports that exist, hrefs relative to the md's directory, for the breadcrumb). Register the returned `html_path` in `phase_summaries.[phase].artifacts[].html` so the dashboard hero cards link HTML first. Companion generation never blocks — on `status: failed` keep the md and continue. (`analysis/alternatives.md` already gets a companion from the solution-brainstormer subagent in Phase 4; `problem-statement.md`/`personas.md` are secondary — companion them too if cheap, but the three hero artifacts are the priority.)
+4. **icon_hint values** per phase: 0 `analysis`, 1 `analysis`, 2 `analysis`, 3 `analysis`, 4 `plan`, 5 `plan`, 6 `spec`, 7 `code`, 8 `done`.
 
 ---
 
@@ -458,7 +474,9 @@ AskQuestion — with options:
 
 6. **Write artifact**: Write the selected approach, rationale, alternatives considered (brief summary referencing `analysis/alternatives.md` for full detail), trade-offs accepted, and key design decisions per area to `analysis/design-decisions.md`.
 
-**Output**: `analysis/design-decisions.md`
+7. **HTML companion** *(skip when `options.html_output` is false)*: invoke `maister-html-companion-writer` (Task tool) for `analysis/design-decisions.md` (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.idea_convergence.artifacts`.
+
+**Output**: `analysis/design-decisions.md` (+ `.html` companion)
 **State**: Update `phase_summaries.idea_convergence` with `selected_approach`, `trade_offs_accepted`, `key_decisions`
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
@@ -531,7 +549,9 @@ If no gaps: proceed to Phase 7/8.
 
 > **ANTI-PATTERN**: Do NOT skip depth verification because "the user already approved." Approval confirms direction; depth verification ensures implementation-readiness.
 
-**Output**: `analysis/feature-spec.md`
+**HTML companion** *(skip when `options.html_output` is false)*: once `analysis/feature-spec.md` is complete (all sections written, depth verification passed), invoke `maister-html-companion-writer` (Task tool) for it (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.feature_specification.artifacts`.
+
+**Output**: `analysis/feature-spec.md` (+ `.html` companion)
 **State**: Update `phase_summaries.feature_specification` with `spec_sections` (individually approved), `sections_count`
 
 AskQuestion — "Specification complete." Read `next_phase` from `orchestrator-state.yml`. If next phase is Phase 8, prepend "No UI prototyping needed (backend-focused design). " Ask "Continue to [next_phase value]?"
@@ -684,6 +704,8 @@ AskQuestion — with options:
 
 5. **Shut down visual companion server** (if it was used): `curl -s -X POST http://localhost:[port]/shutdown`
 
+5b. **HTML companion** *(skip when `options.html_output` is false)* (after final approval, so it reflects the approved brief — do NOT regenerate on each refinement iteration): invoke `maister-html-companion-writer` (Task tool) for `outputs/product-brief.md` (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.review_handoff.artifacts` and rewrite `dashboard-data.js` so the Product Brief hero card links the HTML.
+
 6. On approval, update task status and suggest next steps.
 
    Output this message EXACTLY — do NOT invent alternative commands (e.g. `/maister-feature:new` does not exist):
@@ -734,6 +756,8 @@ design_context:
     path: null
     research_question: null
   phase_summaries:
+    # Every entry also carries the shared base shape (orchestrator-patterns.md § 4):
+    #   decisions: []   risks: []   artifacts: [{path, label, html}]
     context_synthesis: {summary: null, sources_count: 0}
     problem_exploration: {problem_statement: null, constraints: [], success_criteria: []}
     persona_exploration: {personas: [], user_journeys: []}
@@ -744,6 +768,7 @@ design_context:
     review_handoff: {brief_layers: [], summary: null}
 
 options:
+  html_output: true  # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions.
   visual_enabled: null  # null=auto-detect, false=--no-visual flag
 ```
 
@@ -754,6 +779,8 @@ options:
 ```
 .maister/tasks/product-design/YYYY-MM-DD-task-name/
   orchestrator-state.yml           # Phase tracking + design characteristics
+  dashboard.html                   # Operator dashboard (copied plugin asset — never model-generated)
+  dashboard-data.js                # Dashboard data projection (rewritten per phase/gate/iteration)
   context/                         # User-supplied context materials (Phase 0)
     README.md                      # Instructions: "Drop files here for the design process"
   analysis/
@@ -762,13 +789,17 @@ options:
     problem-statement.md           # Phase 2: refined problem, constraints, success criteria
     personas.md                    # Phase 3: persona cards + user journeys (conditional)
     alternatives.md                # Phase 4: brainstormer alternatives
+    alternatives.html              # Phase 4: HTML companion (from solution-brainstormer)
     design-decisions.md            # Phase 5: selected approach, rationale, trade-offs
+    design-decisions.html          # Phase 5: HTML companion (html-companion-writer)
     feature-spec.md                # Phase 6: detailed feature specification
+    feature-spec.html              # Phase 6: HTML companion (html-companion-writer)
     mockups/                       # Phase 7: visual prototypes
       mockup-*.html                # Visual companion rendered HTML
       ascii-mockups.md             # ASCII fallback
   outputs/
     product-brief.md               # Phase 8: final layered product brief
+    product-brief.html             # Phase 8: HTML companion (html-companion-writer)
 ```
 
 ---

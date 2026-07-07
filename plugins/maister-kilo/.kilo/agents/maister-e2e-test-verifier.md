@@ -39,6 +39,7 @@ This agent focuses on **evidence-based runtime verification**, not test file gen
 | `spec_path` | Orchestrator | Path to spec.md |
 | `base_url` | Orchestrator | Application base URL for Playwright |
 | `design_context_path` | Orchestrator (optional) | Path to `analysis/design-context/` when mockups are present. Triggers visual-fidelity comparison (Step 7) and writes `verification/visual-fidelity.md`. |
+| `html_style_guide_path` | Orchestrator | Absolute path to `html-report-style.md` (for the HTML companion reports, Step 8) |
 
 **CRITICAL**: Always use `task_path` as the root for ALL file writes. Save report to `{task_path}/verification/e2e-verification-report.md`, screenshots to `{task_path}/verification/screenshots/`, visual fidelity report to `{task_path}/verification/visual-fidelity.md` (when design_context_path provided). NEVER write to project-level directories.
 
@@ -162,7 +163,7 @@ This agent focuses on **evidence-based runtime verification**, not test file gen
 
 **Strict rules** (apply on every run, no exceptions):
 
-1. Include **all 12 sections** in the numbered order shown below. Do not omit, do not add, do not reorder.
+1. Include **all 12 sections** in the numbered order shown below. Do not omit, do not add, do not reorder. The only content allowed before `## 1. Identifier` is the unnumbered TL;DR preamble shown in the template (Artifact Summary Contract).
 2. Use the **exact heading text** shown (including the `## N. Title` numbering).
 3. If a section has no content, write `_None observed._` (or `_None._` where the template indicates) — do **NOT** delete the heading.
 4. Severity is exactly one of: **Critical · Major · Minor · Cosmetic** (matches §4 severity ladder). No "warning", "blocker", or other synonyms.
@@ -175,6 +176,12 @@ This agent focuses on **evidence-based runtime verification**, not test file gen
 
 ````markdown
 # E2E Verification Report
+
+## TL;DR
+[3-5 lines max — verdict, pass/fail counts, headline finding. Conclusions, not process.]
+
+## Open Questions / Risks
+[Top critical/major findings the operator should know about — one bullet each. Omit section entirely when none.]
 
 ## 1. Identifier
 - **Task**: {task-name}
@@ -357,6 +364,12 @@ For each screen ID in INDEX.md:
 **Source**: analysis/design-context/INDEX.md
 **Captured**: verification/screenshots/
 
+## TL;DR
+[3-5 lines max — overall fidelity verdict and the count of matches / deviations / drift. Conclusions, not process.]
+
+## Open Questions / Risks
+[Substantive drift items the operator should decide on — one bullet each. Omit section entirely when none.]
+
 ## Summary
 - Total screens compared: [N]
 - Match (✓): [count]
@@ -391,6 +404,24 @@ For each screen ID in INDEX.md:
 ```
 
 **Critical**: this report does NOT block workflow completion. The development orchestrator surfaces deviations prominently in the verifier summary (per "report-only, surfaced prominently" decision). Users decide whether to act on findings.
+
+---
+
+### 8. HTML Companion Reports
+
+After the markdown reports and screenshots are finalized, write operator-facing HTML companions:
+
+- `verification/e2e-verification-report.html` (always)
+- `verification/visual-fidelity.html` (only when Step 7 produced `visual-fidelity.md`)
+
+**Rules**:
+**Companions are optional — gated by the orchestrator.** If `html_style_guide_path` is NOT provided in your prompt, SKIP this step entirely: write only the markdown reports, note the skip in your summary, and continue. The steps below run only when `html_style_guide_path` is provided.
+
+1. **Read the style guide** at `html_style_guide_path` (provided in your prompt) and follow it: self-contained single file, standard CSS block, no external resources.
+2. **E2E companion**: lead with the verdict banner and pass/fail counts; then scenario cards with embedded screenshots (`<img class="shot" src="screenshots/...">` — relative paths, same form as the md), step tables with ✅/❌ status, discrepancies sorted by severity with `.sev` badges. Link to the md twin in the header.
+3. **Visual-fidelity companion**: lead with the fidelity verdict; then side-by-side mockup-vs-screenshot pairs per screen (relative `<img>` paths into `../analysis/design-context/mockups/` and `screenshots/`), discrepancy notes per screen.
+4. **Same content as the md** — restructure and visualize, never add findings.
+5. **Never block on it** — if generation fails, keep the md reports, note the miss in your summary, continue.
 
 ---
 
@@ -532,6 +563,7 @@ Before completing verification, ensure:
 ✓ Report saved to verification/e2e-verification-report.md
 ✓ Deployment decision made (GO/NO-GO)
 ✓ When `design_context_path` was provided: `verification/visual-fidelity.md` written with per-screen comparison (✓/⚠/✗)
+✓ HTML companions written (Step 8): `e2e-verification-report.html` (+ `visual-fidelity.html` when applicable) — or the miss noted in summary (companions never block)
 
 ---
 

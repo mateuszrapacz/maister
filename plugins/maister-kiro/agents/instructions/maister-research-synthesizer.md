@@ -225,6 +225,21 @@ Combine relevant elements from above frameworks based on research objectives.
 
 **Structure**: `outputs/research-report.md`
 
+**Artifact Summary Contract** — the report MUST open with (right after the header, before the TOC):
+
+```markdown
+## TL;DR
+[3-5 lines max — what the research concluded and recommends. Conclusions, not process.]
+
+## Key Decisions
+- [conclusion/recommendation that shapes next steps] — [one-line rationale]
+[Omit section entirely when none]
+
+## Open Questions / Risks
+- [unresolved question or low-confidence area the operator should know about]
+[Omit section entirely when none]
+```
+
 **Core Sections**:
 
 1. **Header**: Research type, date, researcher
@@ -311,11 +326,24 @@ Combine relevant elements from above frameworks based on research objectives.
 - File paths and line numbers correct
 
 
+### Phase 7.5: HTML Companion Report
+
+After writing research-report.md, write `outputs/research-report.html` — the operator-facing companion:
+
+**Companion is optional — gated by the orchestrator.** If `html_style_guide_path` is NOT provided in your prompt, SKIP this companion entirely: write only `research-report.md`, note the skip in your summary, and continue. The steps below run only when `html_style_guide_path` is provided.
+
+1. **Read the style guide** at `html_style_guide_path` (provided in your prompt) and follow it: self-contained single file, standard CSS block, breadcrumb bar (research suite), stat-tile row (findings / sources / confidence), no external resources.
+2. **Lead with** the TL;DR block; then findings table (title, category, confidence badge, source count), insight cards, SWOT grid, collapsed `<details>` for evidence and citations. Link to `research-report.md` in the header (`target="_blank"`).
+3. **Same content as the md** — restructure and visualize, never add findings.
+4. **Never block on it** — if generation fails, keep the md, note the miss in your summary, continue.
+
+
 ### Phase 8: Output & Finalize
 
 **Outputs**:
 1. `analysis/synthesis.md` - Pattern analysis and insights
 2. `outputs/research-report.md` - Comprehensive research report
+3. `outputs/research-report.html` - Operator-facing HTML companion (style guide compliant)
 
 **Final Validation Checklist**:
 - Research question answered completely

@@ -7,6 +7,5 @@
 # Claude local settings
 .claude/settings.local.json
 
-# Maister task tracking (generated per-project, not part of plugin source)
-.maister/
+
 /.worktrees/

@@ -23,6 +23,7 @@ You are an implementation verifier that orchestrates comprehensive quality assur
 | Artifact | Condition |
 |----------|-----------|
 | `verification/implementation-verification.md` | Always |
+| `verification/implementation-verification.html` | Always (operator-facing companion — never blocks; see Phase 3) |
 | `verification/code-review-report.md` | If code_review_enabled |
 | `verification/pragmatic-review.md` | If pragmatic_review_enabled |
 | `verification/production-readiness-report.md` | If production_check_enabled |
@@ -177,9 +178,22 @@ Use `TaskUpdate` to set "Compile report" task to `status: "in_progress"`.
    **When tests skipped** (`skip_test_suite: true`): Test pass rate is inherited from implementation phase (assumed passing since implementation completed successfully). Note this in the report.
 
 3. **Write verification report** to `verification/implementation-verification.md`
-4. Use `TaskUpdate` to set "Compile report" task to `status: "completed"`
 
-   Structure:
+   **Re-verification rule**: `implementation-verification.md` and its `.html` companion are the CANONICAL verdict — they must always reflect the **latest** verification state. When this skill runs after fixes (`verification_context.fixes_applied` non-empty or `reverify_count` > 0):
+   - REWRITE both files with the post-fix verdict — never leave the pre-fix report standing
+   - Update the TL;DR block to the final verdict and remaining (not original) issue counts
+   - Add a **"Fix & Re-Verification History"** section: each issue → fix applied → re-check outcome (resolved / residual, with one-line evidence)
+   - Subagent re-check outputs may save as side files (e.g. `code-review-reverify.md`) — fine as evidence, but they never substitute for refreshing the canonical report
+4. **Write HTML companion** to `verification/implementation-verification.html` — *skip this step entirely when `orchestrator.options.html_output` is false in `orchestrator-state.yml` (markdown-only mode; leave `html_path: null`)*:
+   - Follow the shared style guide at `../orchestrator-framework/references/html-report-style.md` (relative to this SKILL.md): self-contained single file, standard CSS block, no external resources
+   - Lead with the verdict banner (✅ Passed / ⚠️ Passed with Issues / ❌ Failed) and issue counts; then findings table sorted critical→info with severity badges, per-check section status, fixes-applied list. Link to the md twin in the header
+   - Same content as the md — restructure and visualize, never add findings
+   - Never block on it: if generation fails, keep the md, note the miss, continue
+5. Use `TaskUpdate` to set "Compile report" task to `status: "completed"`
+
+   Structure (md report — MUST open with the Artifact Summary Contract block):
+   - **TL;DR** (3-5 lines max: verdict + issue counts + headline finding)
+   - **Open Questions / Risks** (unresolved critical/warning items the operator should know — omit section when none)
    - Executive summary (2-3 sentences)
    - Implementation plan verification (from completeness checker)
    - Test suite results (from test runner)
@@ -242,6 +256,7 @@ When invoked by an orchestrator, return structured result alongside the report:
 ```yaml
 status: "passed" | "passed_with_issues" | "failed"
 report_path: "verification/implementation-verification.md"
+html_path: "verification/implementation-verification.html"  # null if companion generation failed
 
 issues:
   - source: "completeness" | "test_suite" | "code_review" | "pragmatic" | "production" | "reality"
