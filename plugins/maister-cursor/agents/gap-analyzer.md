@@ -2,6 +2,7 @@
 name: maister-gap-analyzer
 description: Compares current vs desired state, identifies gaps with user journey and data lifecycle analysis. Reports findings for orchestrator to act on. Adapts analysis based on detected task characteristics.
 model: inherit
+readonly: true
 color: blue
 ---
 

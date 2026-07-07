@@ -1,0 +1,77 @@
+# Weekly Cursor Agent CLI parity check for maister-cursor.
+# Non-blocking: does not run on PRs/pushes — only schedule + manual dispatch.
+# Requires repository secret CURSOR_API_KEY (see https://cursor.com/docs/cli/github-actions).
+name: Cursor CLI Smoke
+
+on:
+  schedule:
+    # Monday 06:00 UTC — catches Cursor CLI regressions without blocking main CI
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: cursor-cli-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build maister-cursor variant
+        run: make build-cursor
+
+      - name: Install Cursor Agent CLI
+        id: install-cli
+        continue-on-error: true
+        run: |
+          set +e
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cursor/bin:$HOME/.local/bin:$PATH"
+
+          # Install script may expose cursor-agent only; smoke-cli.sh expects `agent`.
+          if ! command -v agent >/dev/null 2>&1 && command -v cursor-agent >/dev/null 2>&1; then
+            mkdir -p "$HOME/.local/bin"
+            ln -sf "$(command -v cursor-agent)" "$HOME/.local/bin/agent"
+          fi
+
+          if command -v agent >/dev/null 2>&1; then
+            echo "installed=true" >> "$GITHUB_OUTPUT"
+            agent --version 2>/dev/null || cursor-agent --version 2>/dev/null || true
+            exit 0
+          fi
+
+          echo "::warning::Cursor Agent CLI install failed or binary not on PATH"
+          echo "installed=false" >> "$GITHUB_OUTPUT"
+          exit 1
+
+      - name: Skip smoke — CLI unavailable
+        if: steps.install-cli.outputs.installed != 'true'
+        run: |
+          echo "::notice title=Smoke skipped::Cursor Agent CLI could not be installed on this runner."
+          echo "Install method: curl https://cursor.com/install -fsS | bash"
+          echo "Known CI limitations: occasional CDN 403 for latest CLI packages, network egress restrictions."
+          echo "Re-run manually via workflow_dispatch after CLI install is healthy."
+
+      - name: Skip smoke — missing CURSOR_API_KEY
+        if: steps.install-cli.outputs.installed == 'true' && secrets.CURSOR_API_KEY == ''
+        run: |
+          echo "::notice title=Smoke skipped::Repository secret CURSOR_API_KEY is not configured."
+          echo "Add a Cursor API key to enable weekly parity monitoring:"
+          echo "  gh secret set CURSOR_API_KEY --repo ${{ github.repository }}"
+          echo "Docs: https://cursor.com/docs/cli/github-actions"
+
+      - name: Run smoke-cli.sh
+        if: steps.install-cli.outputs.installed == 'true' && secrets.CURSOR_API_KEY != ''
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          export PATH="$HOME/.cursor/bin:$HOME/.local/bin:$PATH"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          bash platforms/cursor/smoke-cli.sh

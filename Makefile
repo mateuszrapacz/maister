@@ -32,6 +32,8 @@ validate-copilot:
 	@! grep -r 'maister:' plugins/maister-copilot/ --include="*.md" 2>/dev/null || (echo "FAIL: maister: prefix found" && exit 1)
 	@echo "Copilot checks passed"
 
+# Structural checks only (prefixes, manifest, hook wiring). Does not verify runtime
+# hook behavior — e.g. destructive-command deny requires a live Cursor session.
 validate-cursor:
 	@echo "=== Cursor validation ==="
 	@test -d plugins/maister-cursor || (echo "FAIL: plugins/maister-cursor not built — run make build-cursor" && exit 1)
@@ -39,6 +41,12 @@ validate-cursor:
 	@! grep -r '^name:.*:' plugins/maister-cursor/commands/ 2>/dev/null || (echo "FAIL: colons in command names" && exit 1)
 	@grep -q '^name: maister-' plugins/maister-cursor/commands/quick-plan.md || (echo "FAIL: expected maister- command prefix" && exit 1)
 	@grep -q '^name: maister-' plugins/maister-cursor/commands/quick-dev.md || (echo "FAIL: quick-dev command override missing or wrong prefix" && exit 1)
+	@echo "Checking thin command wrappers (quick-dev, quick-plan)..."
+	@for f in quick-dev quick-plan; do \
+		lines=$$(wc -l < plugins/maister-cursor/commands/$$f.md | tr -d ' '); \
+		test $$lines -lt 25 || (echo "FAIL: $$f.md must be <25 lines (thin wrapper), got $$lines" && exit 1); \
+		grep -q 'Invoke Skill tool' plugins/maister-cursor/commands/$$f.md || (echo "FAIL: $$f.md must delegate via Skill tool" && exit 1); \
+	done
 	@echo "Checking quick-plan skill integrity..."
 	@! grep -q 'plan approval gate' plugins/maister-cursor/skills/quick-plan/SKILL.md 2>/dev/null || (echo "FAIL: corrupted quick-plan skill (plan approval gate fragment)" && exit 1)
 	@echo "Checking no EnterPlanMode/ExitPlanMode..."
@@ -48,6 +56,9 @@ validate-cursor:
 	@echo "Checking hooks.json version and events..."
 	@grep -q '"version": 1' plugins/maister-cursor/hooks/hooks.json || (echo "FAIL: hooks.json missing version 1" && exit 1)
 	@grep -q 'beforeShellExecution' plugins/maister-cursor/hooks/hooks.json || (echo "FAIL: beforeShellExecution missing" && exit 1)
+	@grep -q 'preToolUse' plugins/maister-cursor/hooks/hooks.json || (echo "FAIL: preToolUse missing" && exit 1)
+	@grep -q 'block-risky-subagents.sh' plugins/maister-cursor/hooks/hooks.json || (echo "FAIL: block-risky-subagents hook missing" && exit 1)
+	@test -x plugins/maister-cursor/hooks/block-risky-subagents.sh || (echo "FAIL: block-risky-subagents.sh not executable" && exit 1)
 	@grep -q 'preCompact' plugins/maister-cursor/hooks/hooks.json || (echo "FAIL: preCompact missing" && exit 1)
 	@grep -q 'sessionStart' plugins/maister-cursor/hooks/hooks.json || (echo "FAIL: sessionStart missing" && exit 1)
 	@grep -q 'subagentStart' plugins/maister-cursor/hooks/hooks.json || (echo "FAIL: subagentStart missing" && exit 1)
@@ -64,6 +75,16 @@ validate-cursor:
 	@test -f plugins/maister-cursor/agents/explore.md || (echo "FAIL: maister-explore agent missing" && exit 1)
 	@grep -q '^name: maister-explore' plugins/maister-cursor/agents/explore.md || (echo "FAIL: explore agent name mismatch" && exit 1)
 	@grep -q '^model: inherit' plugins/maister-cursor/agents/explore.md || (echo "FAIL: explore agent must inherit parent model" && exit 1)
+	@grep -q '^readonly: true' plugins/maister-cursor/agents/explore.md || (echo "FAIL: explore agent must be readonly" && exit 1)
+	@echo "Checking read-only agents have readonly: true..."
+	@for agent in bottleneck-analyzer code-quality-pragmatist code-reviewer implementation-completeness-checker production-readiness-checker reality-assessor test-suite-runner spec-auditor gap-analyzer task-classifier research-synthesizer research-planner information-gatherer codebase-analysis-reporter thermo-nuclear-review-subagent thermo-nuclear-code-quality-review-subagent solution-brainstormer e2e-test-verifier; do \
+		grep -q '^readonly: true' "plugins/maister-cursor/agents/$$agent.md" || (echo "FAIL: $$agent missing readonly: true" && exit 1); \
+	done
+	@echo "Checking writer agents are not readonly..."
+	@for agent in docs-operator user-docs-generator ui-mockup-generator html-companion-writer task-group-implementer implementation-planner specification-creator solution-designer; do \
+		grep -q '^readonly: true' "plugins/maister-cursor/agents/$$agent.md" && (echo "FAIL: $$agent should not be readonly" && exit 1) || true; \
+	done
+	@test $$(grep -l '^readonly: true' plugins/maister-cursor/agents/*.md 2>/dev/null | wc -l | tr -d ' ') -ge 19 || (echo "FAIL: expected at least 19 readonly agents" && exit 1)
 	@echo "Checking .cursor-plugin manifest..."
 	@test -f plugins/maister-cursor/.cursor-plugin/plugin.json || (echo "FAIL: .cursor-plugin/plugin.json missing" && exit 1)
 	@grep -q '"skills":' plugins/maister-cursor/.cursor-plugin/plugin.json || (echo "FAIL: plugin.json missing skills path" && exit 1)
@@ -73,6 +94,10 @@ validate-cursor:
 	@! grep -r 'maister:' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: maister: prefix found" && exit 1)
 	@echo "Checking rules/maister-workflows.mdc..."
 	@test -f plugins/maister-cursor/rules/maister-workflows.mdc || (echo "FAIL: maister-workflows.mdc missing" && exit 1)
+	@echo "Checking rules/maister-no-fast-models.mdc..."
+	@test -f plugins/maister-cursor/rules/maister-no-fast-models.mdc || (echo "FAIL: maister-no-fast-models.mdc missing" && exit 1)
+	@grep -q 'alwaysApply: true' plugins/maister-cursor/rules/maister-no-fast-models.mdc || (echo "FAIL: maister-no-fast-models.mdc must be alwaysApply" && exit 1)
+	@grep -qi 'fast' plugins/maister-cursor/rules/maister-no-fast-models.mdc || (echo "FAIL: maister-no-fast-models.mdc missing fast-model policy" && exit 1)
 	@echo "Checking no TaskCreate/TaskUpdate in cursor variant..."
 	@! grep -rE 'TaskCreate|TaskUpdate' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: TaskCreate/TaskUpdate found" && exit 1)
 	@echo "Cursor checks passed"

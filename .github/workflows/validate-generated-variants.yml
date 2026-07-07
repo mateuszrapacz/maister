@@ -1,0 +1,48 @@
+name: Validate Generated Variants
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'plugins/maister/**'
+      - 'platforms/**'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'plugins/maister/**'
+      - 'platforms/**'
+
+jobs:
+  validate-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build all platform variants
+        run: make build
+
+      - name: Check committed variants match fresh build
+        run: |
+          VARIANTS=(
+            plugins/maister-cursor
+            plugins/maister-kiro
+            plugins/maister-kilo
+          )
+
+          if git diff --exit-code -- "${VARIANTS[@]}"; then
+            echo "Committed generated variants match source build."
+            exit 0
+          fi
+
+          echo "::error::Generated variant drift detected — committed output does not match a fresh 'make build'."
+          echo ""
+          echo "You changed plugins/maister/ or platforms/ but did not rebuild and commit the generated variants."
+          echo ""
+          echo "Fix locally:"
+          echo "  make build"
+          echo "  git add plugins/maister-cursor/ plugins/maister-kiro/ plugins/maister-kilo/"
+          echo "  git commit -m \"Rebuild platform variants\""
+          echo ""
+          echo "Diff summary:"
+          git diff --stat -- "${VARIANTS[@]}"
+          exit 1

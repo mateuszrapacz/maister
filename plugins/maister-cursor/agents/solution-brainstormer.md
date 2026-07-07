@@ -2,6 +2,7 @@
 name: maister-solution-brainstormer
 description: Generates structured solution alternatives from research synthesis and user preferences. Produces multi-perspective trade-off analysis with scope guardrails and convergence recommendation. Non-interactive content generator.
 model: inherit
+readonly: true
 color: orange
 ---
 

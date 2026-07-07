@@ -5,11 +5,22 @@
       {
         "command": "${CURSOR_PLUGIN_ROOT}/hooks/subagent-start-tracker.sh",
         "timeout": 5
+      },
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/hooks/block-risky-subagents.sh",
+        "timeout": 5
       }
     ],
     "subagentStop": [
       {
         "command": "${CURSOR_PLUGIN_ROOT}/hooks/subagent-stop-cleanup.sh",
+        "timeout": 5
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/hooks/block-destructive-commands.sh",
+        "matcher": "Shell",
         "timeout": 5
       }
     ],
@@ -29,6 +40,18 @@
       {
         "command": "${CURSOR_PLUGIN_ROOT}/hooks/skill-invocation-reminder.sh",
         "timeout": 10
+      }
+    ],
+    "stop": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/hooks/stop-state-reminder.sh",
+        "timeout": 10
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/hooks/session-end-hook-state-cleanup.sh",
+        "timeout": 5
       }
     ]
   }

@@ -41,6 +41,14 @@ OUT=$(run_agent "Task subagent_type maister-gap-analyzer, prompt: reply ONLY {\"
 echo "$OUT"
 echo "$OUT" | grep -q 'maister-gap-analyzer' || { echo "FAIL: custom agent"; exit 1; }
 
+echo "==> Test 2b: readonly frontmatter on built agents"
+for agent in explore code-reviewer gap-analyzer thermo-nuclear-review-subagent; do
+  grep -q '^readonly: true' "$PLUGIN/agents/${agent}.md" || { echo "FAIL: $agent missing readonly: true"; exit 1; }
+done
+for agent in docs-operator task-group-implementer specification-creator; do
+  grep -q '^readonly: true' "$PLUGIN/agents/${agent}.md" && { echo "FAIL: $agent should not be readonly"; exit 1; } || true
+done
+
 echo "==> Test 3: quick-plan artifact"
 rm -rf .maister
 OUT=$(run_agent "/maister-quick-plan Add ping endpoint. Stop after writing plan file; do not implement.")

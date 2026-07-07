@@ -21,6 +21,23 @@ cp -r "$CORE" "$OUT"
 # 1. Manifest: .claude-plugin → .cursor-plugin
 mv "$OUT/.claude-plugin" "$OUT/.cursor-plugin"
 PLUGIN_VERSION=$(grep '"version"' "$OUT/.cursor-plugin/plugin.json" | sed 's/.*: "\([^"]*\)".*/\1/')
+
+# Optional manifest fields: repository, license, homepage
+normalize_git_remote_url() {
+  echo "$1" | sed -E 's|^git@github\.com:|https://github.com/|; s|\.git$||'
+}
+PLUGIN_REPOSITORY=""
+for remote in upstream origin; do
+  raw_url=$(git -C "$ROOT" remote get-url "$remote" 2>/dev/null || true)
+  if [ -n "$raw_url" ]; then
+    PLUGIN_REPOSITORY=$(normalize_git_remote_url "$raw_url")
+    break
+  fi
+done
+PLUGIN_REPOSITORY="${PLUGIN_REPOSITORY:-https://github.com/SkillPanel/maister}"
+PLUGIN_LICENSE=$(head -1 "$ROOT/LICENSE" | awk '{print $1}')
+PLUGIN_HOMEPAGE="$PLUGIN_REPOSITORY"
+
 cat > "$OUT/.cursor-plugin/plugin.json" << EOF
 {
   "name": "maister-cursor",
@@ -31,6 +48,9 @@ cat > "$OUT/.cursor-plugin/plugin.json" << EOF
     "name": "Skillpanel",
     "email": "marek@skillpanel.com"
   },
+  "repository": "${PLUGIN_REPOSITORY}",
+  "license": "${PLUGIN_LICENSE}",
+  "homepage": "${PLUGIN_HOMEPAGE}",
   "keywords": ["development", "sdlc", "workflows", "skills"],
   "skills": "./skills/",
   "agents": "./agents/",
@@ -86,50 +106,9 @@ if [ -f "$OUT/.mcp.json" ]; then
   mv "$OUT/.mcp.json" "$OUT/mcp.json"
 fi
 
-# 10. Plugin doc → rules/maister-workflows.mdc
+# 10. Condensed workflow rule (not full CLAUDE.md — reduces alwaysApply token cost)
 mkdir -p "$OUT/rules"
-{
-  echo "---"
-  echo "description: Maister plugin workflows and principles"
-  echo "alwaysApply: true"
-  echo "---"
-  echo ""
-  if [ -f "$OUT/CLAUDE.md" ]; then
-    cat "$OUT/CLAUDE.md"
-  fi
-  cat << 'EOF'
-
-## Platform: Cursor Agent
-
-This is the Cursor Agent variant. Key differences from Claude Code:
-- **Command names**: Prefix `maister-foo` (e.g. `/maister-development`); plugin id is `maister-cursor`
-- **Project instructions file**: Use `AGENTS.md` instead of `CLAUDE.md`, plus `.cursor/rules/maister-docs.mdc` after init
-- **User questions**: Use `AskQuestion` tool (supports `allow_multiple`)
-- **Progress tracking**: Use `TodoWrite` instead of `TaskCreate`/`TaskUpdate`
-- **Planning**: File-based plans in `.maister/plans/` with `AskQuestion` gates (no EnterPlanMode)
-- **Subagents**: Use `maister-explore` for codebase search (inherits parent model); other custom agents as `maister-*`
-- **Hooks**: `beforeShellExecution`, `preCompact`, `sessionStart` (see `hooks/hooks.json`)
-- **MCP**: `mcp.json` in plugin root (enable Playwright for `--e2e` workflows)
-
-### Cursor Documentation
-
-- Plugins: https://cursor.com/docs/plugins
-- Hooks: https://cursor.com/docs/hooks
-- Subagents: https://cursor.com/docs/subagents
-EOF
-} > "$OUT/rules/maister-workflows.mdc"
-
-# Transform rules file (post-CLAUDE copy)
-sedi 's/AskUserQuestion/AskQuestion/g' "$OUT/rules/maister-workflows.mdc"
-sedi 's/maister:/maister-/g' "$OUT/rules/maister-workflows.mdc"
-sedi 's/TaskCreate/TodoWrite/g' "$OUT/rules/maister-workflows.mdc"
-sedi 's/TaskUpdate/TodoWrite/g' "$OUT/rules/maister-workflows.mdc"
-sedi 's/## Claude Code Documentation/## Cursor Agent Documentation/g' "$OUT/rules/maister-workflows.mdc"
-sedi 's|https://code.claude.com/docs/en/plugins|https://cursor.com/docs/plugins|g' "$OUT/rules/maister-workflows.mdc"
-sedi 's|https://code.claude.com/docs/en/skills|https://cursor.com/docs/skills|g' "$OUT/rules/maister-workflows.mdc"
-sedi 's|https://code.claude.com/docs/en/plugins-reference|https://cursor.com/docs/plugins|g' "$OUT/rules/maister-workflows.mdc"
-sedi 's|https://code.claude.com/docs/en/sub-agents|https://cursor.com/docs/subagents|g' "$OUT/rules/maister-workflows.mdc"
-sedi 's/CLAUDE\.md/AGENTS.md/g' "$OUT/rules/maister-workflows.mdc"
+cp "$PLATFORM/templates/maister-workflows-template.mdc" "$OUT/rules/maister-workflows.mdc"
 
 rm -f "$OUT/CLAUDE.md"
 
@@ -176,6 +155,91 @@ for f in "$OUT/agents"/*.md; do
   fi
 done
 
+# 11c. Agent frontmatter: inject readonly: true for read-only agents
+READONLY_WRITERS=(
+  docs-operator
+  user-docs-generator
+  ui-mockup-generator
+  html-companion-writer
+  task-group-implementer
+  implementation-planner
+  specification-creator
+  solution-designer
+)
+READONLY_ALLOWLIST=(
+  spec-auditor
+  gap-analyzer
+  task-classifier
+  research-synthesizer
+  research-planner
+  information-gatherer
+  codebase-analysis-reporter
+  thermo-nuclear-review-subagent
+  thermo-nuclear-code-quality-review-subagent
+  solution-brainstormer
+  e2e-test-verifier
+)
+
+is_readonly_writer() {
+  local base="$1"
+  local w
+  for w in "${READONLY_WRITERS[@]}"; do
+    [[ "$base" == "$w" ]] && return 0
+  done
+  return 1
+}
+
+is_readonly_allowlist() {
+  local base="$1"
+  local a
+  for a in "${READONLY_ALLOWLIST[@]}"; do
+    [[ "$base" == "$a" ]] && return 0
+  done
+  return 1
+}
+
+should_agent_be_readonly() {
+  local f="$1"
+  local base
+  base=$(basename "$f" .md)
+
+  is_readonly_writer "$base" && return 1
+  is_readonly_allowlist "$base" && return 0
+  if grep -m1 '^description:' "$f" | grep -qiE 'read-only|read only'; then
+    return 0
+  fi
+  return 1
+}
+
+inject_readonly_frontmatter() {
+  local f="$1"
+  grep -q '^readonly: true' "$f" && return 0
+  if grep -q '^model: inherit' "$f"; then
+    sedi '/^model: inherit$/a\
+readonly: true
+' "$f"
+  else
+    local tmp end_line
+    tmp=$(mktemp)
+    end_line=$(awk '/^---$/{c++; if (c==2){print NR; exit}}' "$f")
+    if [[ -n "$end_line" ]]; then
+      sedi "${end_line}i\\
+readonly: true
+" "$f"
+    else
+      awk 'BEGIN{inserted=0} /^---$/{c++} c==2 && !inserted{print "readonly: true"; inserted=1} {print}' "$f" > "$tmp"
+      mv "$tmp" "$f"
+    fi
+  fi
+}
+
+for f in "$OUT/agents"/*.md; do
+  [ -f "$f" ] || continue
+  if should_agent_be_readonly "$f"; then
+    inject_readonly_frontmatter "$f"
+  fi
+done
+
 # 12. Overrides (quick-plan, quick-dev, quick-bugfix)
 cp "$PLATFORM/overrides/commands/quick-plan.md" "$OUT/commands/quick-plan.md"
 cp "$PLATFORM/overrides/commands/quick-dev.md" "$OUT/commands/quick-dev.md"
@@ -191,6 +255,7 @@ sedi 's/Manage CLAUDE.md Integration/Manage AGENTS.md Integration/g' "$OUT/skill
 sedi 's/Verify AGENTS.md integration/Verify AGENTS.md integration\
 - Create `.cursor\/rules\/maister-docs.mdc` in project root if missing (copy from plugin `rules\/maister-docs.mdc` template — read `.maister\/docs\/INDEX.md` first)/' "$OUT/skills/init/SKILL.md"
 cp "$PLATFORM/rules/maister-docs.mdc" "$OUT/rules/maister-docs.mdc"
+cp "$PLATFORM/rules/maister-no-fast-models.mdc" "$OUT/rules/maister-no-fast-models.mdc"
 
 # standards-discover docs extractor
 sedi 's/CLAUDE.md/AGENTS.md/g' "$OUT/skills/standards-discover/references/docs-extractor-prompt.md"
@@ -227,7 +292,6 @@ TODO_GLOB=(
   "$OUT/skills/implementation-verifier"
   "$OUT/skills/implementation-plan-executor"
   "$OUT/agents"
-  "$OUT/rules/maister-workflows.mdc"
 )
 
 for dir in "${TODO_GLOB[@]}"; do
@@ -240,8 +304,6 @@ for dir in "${TODO_GLOB[@]}"; do
   fi
 done
 
-# Progress tracking section title in rules
-sedi 's/Progress Tracking with Task System/Progress Tracking with TodoWrite/g' "$OUT/rules/maister-workflows.mdc"
 sedi 's/metadata: {restored: true}/(restored from state — mark completed)/g' "$OUT/skills/orchestrator-framework/references/orchestrator-patterns.md"
 
 # Cursor-specific TodoWrite examples

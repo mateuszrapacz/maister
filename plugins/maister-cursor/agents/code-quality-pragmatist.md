@@ -2,6 +2,7 @@
 name: maister-code-quality-pragmatist
 description: Pragmatic code review specialist detecting over-engineering, unnecessary complexity, and developer experience issues. Evaluates pattern appropriateness for project scale, identifies intrusive automation, and recommends simplifications. Strictly read-only.
 model: inherit
+readonly: true
 color: purple
 ---
 

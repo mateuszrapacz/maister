@@ -8,6 +8,7 @@ PARENT_CONV=$(echo "$INPUT" | jq -r '.parent_conversation_id // .conversation_id
 
 if [ -n "$SUBAGENT_ID" ]; then
   rm -f "$STATE_DIR/subagent-${SUBAGENT_ID}.type"
+  rm -f "$STATE_DIR/subagent-${SUBAGENT_ID}.parent"
 fi
 
 if [ -n "$PARENT_CONV" ] && [ -f "$STATE_DIR/conv-${PARENT_CONV}.active" ]; then

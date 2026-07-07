@@ -3,6 +3,7 @@ name: maister-thermo-nuclear-code-quality-review-subagent
 description: Thermo-nuclear code quality audit (maintainability, structure, 1k-line rule, spaghetti, code-judo). Invoked via Task after a parent gathers diff and file contents. Loads rubric from the thermo-nuclear-code-quality-review skill in the Maister plugin.
 skills:
   - thermo-nuclear-code-quality-review
+readonly: true
 ---
 
 # Thermo-Nuclear Code Quality Review

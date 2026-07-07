@@ -1,0 +1,21 @@
+---
+description: Never use Cursor fast-tier models (composer-fast, *-fast) for agents or subagents
+alwaysApply: true
+---
+
+# No Fast Models (Maister Cursor)
+
+**Never use fast-tier models** when invoking the Task tool, spawning subagents, or choosing a model for delegated work. This includes every current and future slug whose name contains `fast` (case-insensitive), for example:
+
+- `composer-2.5-fast`, `composer-2-fast`, or any `composer-*-fast` variant
+- Any other `*-fast` model slug Cursor may add later
+
+## Required behavior
+
+1. **Default** — Do **not** pass a `model` parameter containing `fast` when invoking Task or choosing models for delegated work. Prefer omitting `model` so subagents inherit the parent session model.
+2. **User override** — If the user **explicitly** names a fast model (e.g. “use composer-2.5-fast”), follow their choice for that request or session scope they indicated.
+3. **Main agent** — Do not switch to a fast-tier model on your own initiative; only when the user asked for it.
+
+## Rationale
+
+Fast models are optimized for speed over depth. Maister workflows (orchestration, multi-phase development, parallel subagents) need reliable reasoning and consistent delegation — not ad-hoc fast-model dispatch.

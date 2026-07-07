@@ -2,6 +2,7 @@
 name: maister-information-gatherer
 description: Information gathering specialist executing systematic data collection across multiple sources including codebase, documentation, configuration files, and web resources. Maintains source citations and organizes findings with evidence.
 model: inherit
+readonly: true
 color: green
 ---
 

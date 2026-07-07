@@ -1,5 +1,6 @@
 #!/bin/bash
-# Track active subagents so beforeShellExecution can identify subagent context.
+# Track active subagents for best-effort shell correlation in preToolUse / beforeShellExecution.
+# subagentStart provides subagent_id, subagent_type, and parent_conversation_id reliably.
 
 INPUT=$(cat)
 STATE_DIR="${CURSOR_PLUGIN_ROOT}/.hook-state"
@@ -12,7 +13,10 @@ mkdir -p "$STATE_DIR"
 if [ -n "$SUBAGENT_ID" ] && [ -n "$SUBAGENT_TYPE" ]; then
   echo "$SUBAGENT_TYPE" > "$STATE_DIR/subagent-${SUBAGENT_ID}.type"
   if [ -n "$PARENT_CONV" ]; then
-    echo "$SUBAGENT_ID" >> "$STATE_DIR/conv-${PARENT_CONV}.active"
+    echo "$PARENT_CONV" > "$STATE_DIR/subagent-${SUBAGENT_ID}.parent"
+    if ! grep -qxF "$SUBAGENT_ID" "$STATE_DIR/conv-${PARENT_CONV}.active" 2>/dev/null; then
+      echo "$SUBAGENT_ID" >> "$STATE_DIR/conv-${PARENT_CONV}.active"
+    fi
   fi
 fi
 
