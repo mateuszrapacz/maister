@@ -212,17 +212,22 @@ Cursor community forum threads (as of ~2026) describe a recurring parity gap whe
 
 ## Summary checklist (in suggested order)
 
-- [ ] H1 — Verify real `beforeShellExecution` payload; fix or honestly scope down `block-destructive-commands.sh`
-- [ ] H2 — Add `readonly: true` auto-detection (+ curated allowlist) to `build.sh` for read-only agents; add validate-cursor regression check
-- [ ] M1 — Rewrite `overrides/commands/quick-plan.md` as a thin wrapper matching `quick-dev.md`
-- [ ] M2 — Decide Option A vs B for CI drift protection on `maister-cursor`/`maister-kiro`, implement chosen option
-- [ ] M3 — Decide (with maintainer input) whether/how to shrink `rules/maister-workflows.mdc`; implement
-- [ ] L1 — Evaluate adding `stop`/`afterFileEdit`/`sessionEnd` hooks (start with `stop` for state-consistency reminder)
-- [ ] L2 — Fill in optional manifest fields (`repository`, `license`, etc.)
-- [ ] L3 — Add scheduled smoke-test CI job for Cursor CLI parity monitoring
+- [x] H1 — Verify real `beforeShellExecution` payload; fix or honestly scope down `block-destructive-commands.sh`
+- [x] H2 — Add `readonly: true` auto-detection (+ curated allowlist) to `build.sh` for read-only agents; add validate-cursor regression check
+- [x] M1 — Rewrite `overrides/commands/quick-plan.md` as a thin wrapper matching `quick-dev.md`
+- [x] M2 — Decide Option A vs B for CI drift protection on `maister-cursor`/`maister-kiro`, implement chosen option
+- [x] M3 — Decide (with maintainer input) whether/how to shrink `rules/maister-workflows.mdc`; implement
+- [x] L1 — Evaluate adding `stop`/`afterFileEdit`/`sessionEnd` hooks (start with `stop` for state-consistency reminder)
+- [x] L2 — Fill in optional manifest fields (`repository`, `license`, etc.)
+- [x] L3 — Add scheduled smoke-test CI job for Cursor CLI parity monitoring
+
+**Status**: Completed 2026-07-08. See `.maister/tasks/development/2026-07-08-cursor-platform-review-fixes/implementation/work-log.md`.
 
 ## Open questions for the user/maintainer before implementing
 
-1. **H1**: If subagent identity truly isn't available in `beforeShellExecution`, are you OK with either (a) a blanket destructive-command block that also restricts the main agent, or (b) documenting the gap and removing the false sense of protection, or (c) gating at `subagentStart` by type instead of at shell-execution time?
-2. **M2**: Auto-commit (like Copilot) or fail-fast CI check for Cursor/Kiro variant drift?
-3. **M3**: Is the 823-line always-applied rule intentional compensation for unreliable skill auto-invocation (keep, maybe trim), or can it be safely shrunk?
+**Resolved:**
+
+1. **H1**: Option **(c)** — gating at `subagentStart` by type + `preToolUse` destructive block; `beforeShellExecution` limitation documented.
+2. **M2**: Option **B** — fail-fast CI drift check (`.github/workflows/validate-generated-variants.yml`).
+3. **M3**: Rule **shrunk** (823→71 lines); **`alwaysApply: true` retained** after condensing.
+4. **L2 URL**: Fork repo `https://github.com/mateuszrapacz/maister` pinned in `build.sh` for reproducible builds.
