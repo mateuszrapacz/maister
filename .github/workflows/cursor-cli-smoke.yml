@@ -58,19 +58,18 @@ jobs:
           echo "Known CI limitations: occasional CDN 403 for latest CLI packages, network egress restrictions."
           echo "Re-run manually via workflow_dispatch after CLI install is healthy."
 
-      - name: Skip smoke — missing CURSOR_API_KEY
-        if: steps.install-cli.outputs.installed == 'true' && secrets.CURSOR_API_KEY == ''
-        run: |
-          echo "::notice title=Smoke skipped::Repository secret CURSOR_API_KEY is not configured."
-          echo "Add a Cursor API key to enable weekly parity monitoring:"
-          echo "  gh secret set CURSOR_API_KEY --repo ${{ github.repository }}"
-          echo "Docs: https://cursor.com/docs/cli/github-actions"
-
       - name: Run smoke-cli.sh
-        if: steps.install-cli.outputs.installed == 'true' && secrets.CURSOR_API_KEY != ''
+        if: steps.install-cli.outputs.installed == 'true'
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: |
+          if [ -z "${CURSOR_API_KEY:-}" ]; then
+            echo "::notice title=Smoke skipped::Repository secret CURSOR_API_KEY is not configured."
+            echo "Add a Cursor API key to enable weekly parity monitoring:"
+            echo "  gh secret set CURSOR_API_KEY --repo ${{ github.repository }}"
+            echo "Docs: https://cursor.com/docs/cli/github-actions"
+            exit 0
+          fi
           export PATH="$HOME/.cursor/bin:$HOME/.local/bin:$PATH"
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
