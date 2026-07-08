@@ -5,13 +5,15 @@
     "read",
     "grep",
     "glob",
-    "write"
+    "write",
+    "aws"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "write"
+    "write",
+    "aws"
   ],
   "prompt": "file://./instructions/maister-reality-assessor.md"
 }

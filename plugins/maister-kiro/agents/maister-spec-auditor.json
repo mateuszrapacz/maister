@@ -6,14 +6,16 @@
     "grep",
     "glob",
     "write",
-    "shell"
+    "shell",
+    "aws"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell"
+    "shell",
+    "aws"
   ],
   "prompt": "file://./instructions/maister-spec-auditor.md"
 }

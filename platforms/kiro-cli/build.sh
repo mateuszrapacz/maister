@@ -572,8 +572,8 @@ EOF
     --arg name "maister-explore" \
     --arg description "Read-only codebase exploration (replaces built-in explore)" \
     --arg prompt "file://./instructions/maister-explore.md" \
-    --argjson tools '["read","grep","glob"]' \
-    --argjson allowedTools '["read","grep","glob"]' \
+    --argjson tools '["read","grep","glob","aws"]' \
+    --argjson allowedTools '["read","grep","glob","aws"]' \
     '{
       name: $name,
       description: $description,

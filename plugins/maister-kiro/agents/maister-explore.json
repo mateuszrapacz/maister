@@ -4,12 +4,14 @@
   "tools": [
     "read",
     "grep",
-    "glob"
+    "glob",
+    "aws"
   ],
   "allowedTools": [
     "read",
     "grep",
-    "glob"
+    "glob",
+    "aws"
   ],
   "prompt": "file://./instructions/maister-explore.md"
 }
