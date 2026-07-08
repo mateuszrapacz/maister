@@ -105,6 +105,62 @@ test_phase2_rules() {
   test "$ok" -eq 1
 }
 
+# 9. Rule 29: injected promptFile causes validate failure
+test_inject_prompt_file_fails() {
+  run_build
+  local f="$OUT/agents/maister-gap-analyzer.json"
+  cp "$f" "${f}.bak"
+  jq '. + {promptFile: "instructions/maister-gap-analyzer.md"}' "$f" >"${f}.tmp"
+  mv "${f}.tmp" "$f"
+  if (cd "$ROOT" && make validate-kiro 2>&1); then
+    mv "${f}.bak" "$f"
+    return 1
+  fi
+  mv "${f}.bak" "$f"
+}
+
+# 10. Rule 30: injected model inherit causes validate failure
+test_inject_model_inherit_fails() {
+  run_build
+  local f="$OUT/agents/maister-gap-analyzer.json"
+  cp "$f" "${f}.bak"
+  jq '. + {model: "inherit"}' "$f" >"${f}.tmp"
+  mv "${f}.tmp" "$f"
+  if (cd "$ROOT" && make validate-kiro 2>&1); then
+    mv "${f}.bak" "$f"
+    return 1
+  fi
+  mv "${f}.bak" "$f"
+}
+
+# 11. Rule 31: non-file:// prompt causes validate failure
+test_inject_invalid_prompt_fails() {
+  run_build
+  local f="$OUT/agents/maister-gap-analyzer.json"
+  cp "$f" "${f}.bak"
+  jq '.prompt = "inline prompt text"' "$f" >"${f}.tmp"
+  mv "${f}.tmp" "$f"
+  if (cd "$ROOT" && make validate-kiro 2>&1); then
+    mv "${f}.bak" "$f"
+    return 1
+  fi
+  mv "${f}.bak" "$f"
+}
+
+# 12. Rule 32: removing hooks.stop causes validate failure
+test_remove_stop_hook_fails() {
+  run_build
+  local f="$OUT/agents/maister.json"
+  cp "$f" "${f}.bak"
+  jq 'del(.hooks.stop)' "$f" >"${f}.tmp"
+  mv "${f}.tmp" "$f"
+  if (cd "$ROOT" && make validate-kiro 2>&1); then
+    mv "${f}.bak" "$f"
+    return 1
+  fi
+  mv "${f}.bak" "$f"
+}
+
 echo "=== Kiro CLI validate-kiro tests (Task Group 7) ==="
 
 assert "make validate-kiro fails when output missing (rule 1 negative)" test_validate_fails_without_output
@@ -115,6 +171,10 @@ assert "all agents/*.json parse with jq empty (rule 7)" test_all_agent_json_vali
 assert "exactly 67 total / 42 maister-* skill directories (rules 14/28)" test_exactly_67_skill_dirs
 assert "CHAT GATE count meets documented threshold (rule 26)" test_chat_gate_count_threshold
 assert "trustedAgents + executable hooks + transform doc (rules 21–22, 27)" test_phase2_rules
+assert "injected promptFile causes validate failure (rule 29)" test_inject_prompt_file_fails
+assert "injected model inherit causes validate failure (rule 30)" test_inject_model_inherit_fails
+assert "injected non-file:// prompt causes validate failure (rule 31)" test_inject_invalid_prompt_fails
+assert "removed hooks.stop causes validate failure (rule 32)" test_remove_stop_hook_fails
 
 echo ""
 echo "Results: $pass passed, $fail failed"

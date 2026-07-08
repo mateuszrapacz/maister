@@ -174,7 +174,7 @@ Key transforms (see `platforms/kiro-cli/` and `.maister/docs/standards/global/bu
 | MCP | `.mcp.json` → `settings/mcp.json` |
 | Init | `.kiro/steering/maister-docs.md` + `AGENTS.md` template |
 
-Makefile targets: `build-kiro`, `validate-kiro` (31 rules), `clean-kiro`. Aggregate `make build` and `make validate` include Kiro.
+Makefile targets: `build-kiro`, `validate-kiro` (32 rules), `clean-kiro`. Aggregate `make build` and `make validate` include Kiro.
 
 ---
 
@@ -330,7 +330,7 @@ maister-kiro chat --no-interactive --trust-all-tools --agent maister \
 
 ### Smoke (Phase 1)
 
-- ☑ `make validate-kiro` (31 rules)
+- ☑ `make validate-kiro` (32 rules)
 - ☑ `smoke-cli.sh` tests 1–4 (when `kiro-cli` installed)
 - ☑ `settings/mcp.json` in bundle
 - ☐ Interactive multi-select (init Phase 3) — headless uses `global` only default

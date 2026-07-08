@@ -97,7 +97,43 @@ test_install_shell_aliases() {
   rm -rf "$dest" "$rc"
 }
 
-# 6. Ephemeral KIRO_HOME + workspace .kiro/ copy pattern
+# 6. fix_prompt_paths rewrites relative file:// prompts to absolute KIRO_HOME paths
+test_fix_prompt_paths_absolute() {
+  local dest
+  dest=$(mktemp -d)
+  mkdir -p "$dest/agents/instructions"
+  echo '{"name":"maister-gap-analyzer","prompt":"file://./instructions/maister-gap-analyzer.md"}' \
+    >"$dest/agents/maister-gap-analyzer.json"
+  # shellcheck source=/dev/null
+  source "$SMOKE_INSTALL"
+  fix_prompt_paths "$dest"
+  jq -e --arg home "$dest" \
+    '.prompt == ("file://" + $home + "/agents/instructions/maister-gap-analyzer.md")' \
+    "$dest/agents/maister-gap-analyzer.json" >/dev/null
+  rm -rf "$dest"
+}
+
+# 7. Hook contracts: plain text for agentSpawn, JSON block for stop
+test_hook_output_contracts() {
+  local skill_out stop_out
+  skill_out=$("$ROOT/plugins/maister-kiro/hooks/skill-invocation-reminder.sh" </dev/null)
+  echo "$skill_out" | grep -q 'MAISTER PLUGIN RULE'
+  ! echo "$skill_out" | jq -e . >/dev/null 2>&1
+
+  local ws
+  ws=$(mktemp -d)
+  mkdir -p "$ws/.maister/tasks/demo-task"
+  cat >"$ws/.maister/tasks/demo-task/orchestrator-state.yml" <<'EOF'
+status: in_progress
+current_phase: implementation
+completed_phases: []
+EOF
+  stop_out=$(echo "{\"cwd\":\"$ws\"}" | "$ROOT/plugins/maister-kiro/hooks/stop-state-reminder-kiro.sh")
+  echo "$stop_out" | jq -e '.decision == "block" and (.reason | length > 0)' >/dev/null
+  rm -rf "$ws"
+}
+
+# 8. Ephemeral KIRO_HOME + workspace .kiro/ copy pattern
 test_workspace_kiro_copy() {
   local kiro_home ws
   kiro_home=$(mktemp -d)
@@ -145,6 +181,8 @@ assert "smoke-install.sh --help documents KIRO_HOME" test_smoke_install_help
 assert "smoke-install to temp KIRO_HOME does not touch ~/.kiro/" test_smoke_install_isolated
 assert "maister-kiro wrapper sets KIRO_HOME default" test_wrapper_default_kiro_home
 assert "build emits prompt file:// URI without promptFile or model:inherit" test_agent_json_prompt_shape
+assert "fix_prompt_paths rewrites relative prompts to absolute KIRO_HOME paths" test_fix_prompt_paths_absolute
+assert "hook scripts emit Kiro contracts (plain text + stop JSON block)" test_hook_output_contracts
 assert "--set-alias installs maister-kiro and mk in shell rc" test_install_shell_aliases
 assert "ephemeral KIRO_HOME + workspace .kiro/ copy works" test_workspace_kiro_copy
 assert "smoke-cli test 1 — maister-init skill detection" test_smoke_cli_init_detection

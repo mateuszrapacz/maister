@@ -102,7 +102,7 @@ validate-cursor:
 	@! grep -rE 'TaskCreate|TaskUpdate' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: TaskCreate/TaskUpdate found" && exit 1)
 	@echo "Cursor checks passed"
 
-# validate-kiro rules 1–31 (see .maister/tasks/.../implementation/spec.md)
+# validate-kiro rules 1–32 (see .maister/tasks/.../implementation/spec.md)
 validate-kiro:
 	@echo "=== Kiro validation ==="
 	@echo "Rule 1: plugins/maister-kiro/ exists..."
@@ -189,6 +189,10 @@ validate-kiro:
 	@for f in plugins/maister-kiro/agents/*.json; do \
 		jq -e '(.prompt | type) == "string" and (.prompt | startswith("file://"))' "$$f" >/dev/null || (echo "FAIL: prompt missing or not file:// URI in $$f (rule 31)" && exit 1); \
 	done
+	@echo "Rule 32: maister.json hooks.stop includes stop-state-reminder-kiro..."
+	@jq -e '(.hooks.stop // []) | map(.command) | any(test("stop-state-reminder-kiro"))' \
+		plugins/maister-kiro/agents/maister.json >/dev/null || \
+		(echo "FAIL: maister.json missing stop-state-reminder-kiro on hooks.stop (rule 32)" && exit 1)
 	@echo "Kiro checks passed"
 
 validate-kilo:
