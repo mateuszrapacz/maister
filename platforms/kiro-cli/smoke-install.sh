@@ -166,7 +166,7 @@ write_alias_block() {
 $ALIAS_BEGIN_MARKER
 # Maister Kiro CLI — isolated profile ($dest)
 alias maister-kiro='KIRO_HOME="$dest" $WRAPPER'
-alias mk='maister-kiro chat --v3 --trust-all-tools'
+alias mk='maister-kiro chat --trust-all-tools --agent maister'
 $ALIAS_END_MARKER
 EOF
 }
