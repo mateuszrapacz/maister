@@ -1,22 +1,19 @@
 {
   "name": "maister-e2e-test-verifier",
   "description": "Executes runtime browser verification using Playwright MCP tools to verify implementation behavior against specifications. Does NOT generate test files — performs live interactive verification with evidence collection.",
-  "model": "inherit",
   "tools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell",
-    "use_aws"
+    "shell"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell",
-    "use_aws"
+    "shell"
   ],
-  "promptFile": "instructions/maister-e2e-test-verifier.md"
+  "prompt": "file://./instructions/maister-e2e-test-verifier.md"
 }

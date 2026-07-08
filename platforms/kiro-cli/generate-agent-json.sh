@@ -84,12 +84,10 @@ generate_agent() {
     exit 1
   fi
 
-  local description model
+  local description model prompt
   description=$(frontmatter_field "$source" "description")
   model=$(frontmatter_field "$source" "model")
-  if [ -z "$model" ]; then
-    model="inherit"
-  fi
+  prompt="file://./instructions/${prefixed}.md"
 
   local tools_json orchestrator trusted_json resources_json
   tools_json=$(jq -c --arg name "$stem" '
@@ -117,79 +115,25 @@ generate_agent() {
     trusted_json='{"subagent":{"trustedAgents":["maister-*"]}}'
   fi
 
-  if [ "$resources_json" != "null" ] && [ "$trusted_json" != "null" ]; then
-    jq -n \
-      --arg name "$prefixed" \
-      --arg description "$description" \
-      --arg model "$model" \
-      --arg promptFile "instructions/${prefixed}.md" \
-      --argjson tools "$tools_json" \
-      --argjson allowedTools "$tools_json" \
-      --argjson resources "$resources_json" \
-      --argjson toolsSettings "$trusted_json" \
-      '{
-        name: $name,
-        description: $description,
-        model: $model,
-        tools: $tools,
-        allowedTools: $allowedTools,
-        resources: $resources,
-        toolsSettings: $toolsSettings,
-        promptFile: $promptFile
-      }' > "$json_out"
-  elif [ "$resources_json" != "null" ]; then
-    jq -n \
-      --arg name "$prefixed" \
-      --arg description "$description" \
-      --arg model "$model" \
-      --arg promptFile "instructions/${prefixed}.md" \
-      --argjson tools "$tools_json" \
-      --argjson allowedTools "$tools_json" \
-      --argjson resources "$resources_json" \
-      '{
-        name: $name,
-        description: $description,
-        model: $model,
-        tools: $tools,
-        allowedTools: $allowedTools,
-        resources: $resources,
-        promptFile: $promptFile
-      }' > "$json_out"
-  elif [ "$trusted_json" != "null" ]; then
-    jq -n \
-      --arg name "$prefixed" \
-      --arg description "$description" \
-      --arg model "$model" \
-      --arg promptFile "instructions/${prefixed}.md" \
-      --argjson tools "$tools_json" \
-      --argjson allowedTools "$tools_json" \
-      --argjson toolsSettings "$trusted_json" \
-      '{
-        name: $name,
-        description: $description,
-        model: $model,
-        tools: $tools,
-        allowedTools: $allowedTools,
-        toolsSettings: $toolsSettings,
-        promptFile: $promptFile
-      }' > "$json_out"
-  else
-    jq -n \
-      --arg name "$prefixed" \
-      --arg description "$description" \
-      --arg model "$model" \
-      --arg promptFile "instructions/${prefixed}.md" \
-      --argjson tools "$tools_json" \
-      --argjson allowedTools "$tools_json" \
-      '{
-        name: $name,
-        description: $description,
-        model: $model,
-        tools: $tools,
-        allowedTools: $allowedTools,
-        promptFile: $promptFile
-      }' > "$json_out"
-  fi
+  jq -n \
+    --arg name "$prefixed" \
+    --arg description "$description" \
+    --arg model "$model" \
+    --arg prompt "$prompt" \
+    --argjson tools "$tools_json" \
+    --argjson allowedTools "$tools_json" \
+    --argjson resources "$resources_json" \
+    --argjson toolsSettings "$trusted_json" \
+    '{
+      name: $name,
+      description: $description,
+      tools: $tools,
+      allowedTools: $allowedTools,
+      prompt: $prompt
+    }
+    + (if ($model | length) > 0 and $model != "inherit" then {model: $model} else {} end)
+    + (if $resources != null then {resources: $resources} else {} end)
+    + (if $toolsSettings != null then {toolsSettings: $toolsSettings} else {} end)' > "$json_out"
 
   jq empty "$json_out"
   echo "Generated $json_out and $instructions_out"

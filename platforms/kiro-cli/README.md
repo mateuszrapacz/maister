@@ -25,7 +25,7 @@ maister-kiro chat --agent maister
 - `build.sh` — full transform pipeline (skills, agents JSON, hooks, shortcut skills)
 - `generate-agent-json.sh` — MD→JSON agent generator (invoked by build.sh step 17)
 - `agent-tools.json` — tool declarations per subagent
-- `hooks/` — scripts embedded in `agents/maister.json` (`agentSpawn`, `userPromptSubmit`, `preToolUse`, `postToolUse`)
+- `hooks/` — scripts embedded in `agents/maister.json` (`agentSpawn`, `userPromptSubmit`, `preToolUse`, `postToolUse`, `stop`)
 - `overrides/` — hand-maintained Kiro-native replacements for skills where auto-transforms aren't sufficient
 - `templates/` — files copied into output for use by skills at runtime (`AGENTS.md` template, steering template)
 - `transforms/askuser-to-chat-gate.md` — normative spec for AskUserQuestion→CHAT GATE transforms + Headless Defaults table

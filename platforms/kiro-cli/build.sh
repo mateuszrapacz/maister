@@ -538,12 +538,13 @@ hook_command() {
 
 # Step 18: Synthesize maister.json (orchestrator) + maister-explore.json
 synthesize_orchestrator_agents() {
-  local hook_block hook_subagent_spawn hook_subagent_complete hook_skill_reminder hook_rtk
+  local hook_block hook_subagent_spawn hook_subagent_complete hook_skill_reminder hook_rtk hook_stop
   hook_block=$(hook_command "block-destructive-commands-kiro.sh")
   hook_subagent_spawn=$(hook_command "subagent-spawn-tracker.sh")
   hook_subagent_complete=$(hook_command "subagent-complete-cleanup.sh")
   hook_skill_reminder=$(hook_command "skill-invocation-reminder.sh")
   hook_rtk=$(hook_command "rtk-rewrite.sh")
+  hook_stop=$(hook_command "stop-state-reminder-kiro.sh")
 
   mkdir -p "$OUT/agents/instructions"
 
@@ -570,41 +571,38 @@ EOF
   jq -n \
     --arg name "maister-explore" \
     --arg description "Read-only codebase exploration (replaces built-in explore)" \
-    --arg promptFile "instructions/maister-explore.md" \
-    --argjson tools '["read","grep","glob","use_aws"]' \
-    --argjson allowedTools '["read","grep","glob","use_aws"]' \
+    --arg prompt "file://./instructions/maister-explore.md" \
+    --argjson tools '["read","grep","glob"]' \
+    --argjson allowedTools '["read","grep","glob"]' \
     '{
       name: $name,
       description: $description,
-      model: "inherit",
       tools: $tools,
       allowedTools: $allowedTools,
-      promptFile: $promptFile
+      prompt: $prompt
     }' > "$OUT/agents/maister-explore.json"
 
   jq -n \
     --arg name "maister" \
     --arg description "Maister workflow orchestrator — invokes /maister-* skills and delegates to maister-* subagents" \
-    --arg promptFile "instructions/maister.md" \
+    --arg prompt "file://./instructions/maister.md" \
     --argjson tools '["*"]' \
     --argjson allowedTools '["*"]' \
-    --argjson resources '["skill://.kiro/skills/**/SKILL.md"]' \
     --argjson toolsSettings '{"subagent":{"availableAgents":["maister-*"],"trustedAgents":["maister-*"]}}' \
     --arg hook_block "$hook_block" \
     --arg hook_subagent_spawn "$hook_subagent_spawn" \
     --arg hook_subagent_complete "$hook_subagent_complete" \
     --arg hook_skill_reminder "$hook_skill_reminder" \
     --arg hook_rtk "$hook_rtk" \
+    --arg hook_stop "$hook_stop" \
     '{
       name: $name,
       description: $description,
-      model: "inherit",
       tools: $tools,
       allowedTools: $allowedTools,
       includeMcpJson: true,
-      resources: $resources,
       toolsSettings: $toolsSettings,
-      promptFile: $promptFile,
+      prompt: $prompt,
       hooks: {
         preToolUse: [
           {matcher: "shell", command: $hook_block, timeout_ms: 5000},
@@ -619,6 +617,9 @@ EOF
         ],
         userPromptSubmit: [
           {command: $hook_skill_reminder, timeout_ms: 10000}
+        ],
+        stop: [
+          {command: $hook_stop, timeout_ms: 10000}
         ]
       }
     }' > "$OUT/agents/maister.json"

@@ -1,20 +1,17 @@
 {
   "name": "maister-code-reviewer",
   "description": "Automated code quality, security, and performance analysis. Analyzes code for complexity, duplication, security vulnerabilities, performance issues, and best practices compliance. Can run standalone (via command) or as part of implementation verification. Provides actionable findings categorized by severity. Read-only - reports issues without fixing. Does not interact with users.",
-  "model": "inherit",
   "tools": [
     "read",
     "grep",
     "glob",
-    "write",
-    "use_aws"
+    "write"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "write",
-    "use_aws"
+    "write"
   ],
-  "promptFile": "instructions/maister-code-reviewer.md"
+  "prompt": "file://./instructions/maister-code-reviewer.md"
 }

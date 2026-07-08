@@ -1,18 +1,15 @@
 {
   "name": "maister-task-classifier",
   "description": "Task classification specialist analyzing task descriptions and issue references to classify into 5 workflow types (development, performance, migration, research). Supports GitHub/Jira integration, codebase context analysis, and confidence scoring.",
-  "model": "inherit",
   "tools": [
     "read",
     "grep",
-    "glob",
-    "use_aws"
+    "glob"
   ],
   "allowedTools": [
     "read",
     "grep",
-    "glob",
-    "use_aws"
+    "glob"
   ],
-  "promptFile": "instructions/maister-task-classifier.md"
+  "prompt": "file://./instructions/maister-task-classifier.md"
 }

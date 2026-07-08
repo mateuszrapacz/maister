@@ -1,20 +1,17 @@
 {
   "name": "maister-research-planner",
   "description": "Research planning specialist creating structured research plans from research questions. Analyzes objectives, determines methodology, identifies data sources (codebase, documentation, web), and defines analysis frameworks.",
-  "model": "inherit",
   "tools": [
     "read",
     "grep",
     "glob",
-    "write",
-    "use_aws"
+    "write"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "write",
-    "use_aws"
+    "write"
   ],
-  "promptFile": "instructions/maister-research-planner.md"
+  "prompt": "file://./instructions/maister-research-planner.md"
 }

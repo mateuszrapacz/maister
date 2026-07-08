@@ -1,20 +1,17 @@
 {
   "name": "maister-specification-creator",
   "description": "Creates comprehensive specifications from gathered requirements. Searches for reusable code, writes spec.md with reusability analysis, and self-verifies quality. Receives pre-gathered requirements - does not interact with users.",
-  "model": "inherit",
   "tools": [
     "read",
     "grep",
     "glob",
-    "write",
-    "use_aws"
+    "write"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "write",
-    "use_aws"
+    "write"
   ],
-  "promptFile": "instructions/maister-specification-creator.md"
+  "prompt": "file://./instructions/maister-specification-creator.md"
 }

@@ -37,12 +37,14 @@ bash platforms/kiro-cli/smoke-install.sh
 
 Options: `--set-default` (set `chat.defaultAgent=maister`), `--set-alias` / `--no-alias` (add `maister-kiro` and `mk` to shell rc; prompts when omitted in a TTY).
 
-Manual equivalent:
+Manual equivalent (requires `smoke-install.sh` for working subagent prompts — see Known gaps):
 
 ```bash
 make build-kiro
-cp -r plugins/maister-kiro ~/.kiro-maister
+bash platforms/kiro-cli/smoke-install.sh   # rewrites prompt paths for subagents
 ```
+
+Raw `cp -r plugins/maister-kiro ~/.kiro-maister` copies relative `file://./instructions/` prompts that **fail silently for subagents** on kiro-cli 2.6.0; main-agent `--agent maister-*` still works.
 
 ### Uninstall
 
@@ -172,7 +174,7 @@ Key transforms (see `platforms/kiro-cli/` and `.maister/docs/standards/global/bu
 | MCP | `.mcp.json` → `settings/mcp.json` |
 | Init | `.kiro/steering/maister-docs.md` + `AGENTS.md` template |
 
-Makefile targets: `build-kiro`, `validate-kiro` (28 rules), `clean-kiro`. Aggregate `make build` and `make validate` include Kiro.
+Makefile targets: `build-kiro`, `validate-kiro` (31 rules), `clean-kiro`. Aggregate `make build` and `make validate` include Kiro.
 
 ---
 
@@ -310,6 +312,7 @@ maister-kiro chat --no-interactive --trust-all-tools --agent maister \
 
 | Gap | Impact | Mitigation |
 |-----|--------|------------|
+| **Subagent `file://` prompts** | Relative `file://./instructions/*.md` loads for main agents but **silently fails** for `subagent` delegation on kiro-cli 2.6.0 — subagents run without system instructions ([#5241](https://github.com/kirodotdev/Kiro/issues/5241), [#6100](https://github.com/kirodotdev/Kiro/issues/6100), [#7776](https://github.com/kirodotdev/Kiro/issues/7776)) | `smoke-install.sh` rewrites prompts to absolute `file://$KIRO_HOME/agents/instructions/...` via `fix_prompt_paths()`; verified 2026-07-08 on kiro-cli 2.6.0 |
 | **preCompact** hook | Kiro has no `preCompact`; compaction may lose in-context state | `orchestrator-state.yml` SOT; `/status` / `/resume`; `post-compact-reminder-stub.sh` (documented, not wired) |
 | **TUI task sync** | Agent `todo` tool vs activity tray may drift | `orchestrator-state.yml` remains authoritative for resume; use `/status` / `/resume` |
 | **Max 4 subagents** | Parallel waves capped at 4 concurrent `subagent` calls | Executor should batch waves; use `--sequential` to disable parallelism |
@@ -321,12 +324,13 @@ maister-kiro chat --no-interactive --trust-all-tools --agent maister \
 | Hook | Test | Status |
 |------|------|--------|
 | `userPromptSubmit` | Skill reminder on `/maister-*` | ☐ manual |
+| `stop` | Active workflow → block stop, remind to sync `orchestrator-state.yml` | ☐ manual |
 | post-compaction | Read `orchestrator-state.yml` after compact | ☐ manual (no preCompact) |
 | `preToolUse` | Subagent + `git reset --hard` → deny | ☐ manual |
 
 ### Smoke (Phase 1)
 
-- ☑ `make validate-kiro` (28 rules)
+- ☑ `make validate-kiro` (31 rules)
 - ☑ `smoke-cli.sh` tests 1–4 (when `kiro-cli` installed)
 - ☑ `settings/mcp.json` in bundle
 - ☐ Interactive multi-select (init Phase 3) — headless uses `global` only default

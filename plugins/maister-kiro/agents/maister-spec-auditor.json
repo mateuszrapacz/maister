@@ -1,22 +1,19 @@
 {
   "name": "maister-spec-auditor",
   "description": "Specification audit specialist with senior auditor perspective. Independently verifies completeness, detects ambiguities, validates implementability with evidence-based assessment. Never trusts claims - examines codebase and uses Azure/GitHub CLI for external verification.",
-  "model": "inherit",
   "tools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell",
-    "use_aws"
+    "shell"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell",
-    "use_aws"
+    "shell"
   ],
-  "promptFile": "instructions/maister-spec-auditor.md"
+  "prompt": "file://./instructions/maister-spec-auditor.md"
 }

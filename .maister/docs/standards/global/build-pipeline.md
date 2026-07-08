@@ -60,13 +60,13 @@ name: maister-development
 ```
 
 ### Kiro Agent Layout
-Kiro agents ship as JSON (`agents/maister-<stem>.json`) with instructions in `agents/instructions/maister-<stem>.md`. Orchestrator `agents/maister.json` references all skills via `skill://.kiro/skills/maister-*/SKILL.md`. Source `agents/*.md` is removed from output after JSON generation.
+Kiro agents ship as JSON (`agents/maister-<stem>.json`) with instructions in `agents/instructions/maister-<stem>.md`. Orchestrator `agents/maister.json` omits an explicit `resources` skill glob — Kiro custom agents inherit installed skills by default (`chat.disableInheritingDefaultResources` is not set). Subagents that need a specific skill get an absolute `skill://~/.kiro-maister/skills/maister-<stem>/SKILL.md` entry from `generate-agent-json.sh` (rewritten at install time for non-default `KIRO_HOME`). Source `agents/*.md` is removed from output after JSON generation.
 
 ### Kiro Instruction File Mapping
 Init creates `AGENTS.md` (project) and `.kiro/steering/maister-docs.md` (steering). No `CLAUDE.md` or `.cursor-plugin/` in output.
 
 ### Kiro Hooks Contract
-Hooks embedded in `agents/maister.json`: `userPromptSubmit`, `preToolUse`, `postToolUse`, `agentSpawn`. No `preCompact` equivalent — document compaction gap; use `orchestrator-state.yml` + `@resume`.
+Hooks embedded in `agents/maister.json`: `userPromptSubmit`, `preToolUse`, `postToolUse`, `agentSpawn`, `stop`. `stop` uses Kiro's `{"decision":"block","reason":"..."}` JSON on STDOUT to nudge the agent to verify `orchestrator-state.yml` before ending a turn when a workflow is still in progress. No `preCompact` equivalent — document compaction gap; use `orchestrator-state.yml` + `@resume`.
 
 ### Kiro-Specific API Bans
 Kiro variant must not reference AskUserQuestion, AskQuestion, EnterPlanMode/ExitPlanMode, capitalized Explore, TaskCreate/TaskUpdate, or Claude/Cursor-only tool names. Interactive gates use **CHAT GATE** markers; headless builds apply documented defaults from `transforms/askuser-to-chat-gate.md`.

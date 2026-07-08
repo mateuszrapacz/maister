@@ -59,7 +59,16 @@ test_wrapper_exists() {
   test -x "$PLATFORM/maister-kiro"
 }
 
-# 5. skill-invocation-reminder wired to agentSpawn + userPromptSubmit
+# 5. stop-state-reminder-kiro wired to stop hook
+test_stop_state_reminder_hook() {
+  run_build
+  jq -e '
+    (.hooks.stop // []) | map(.command) | any(test("stop-state-reminder-kiro"))
+  ' "$OUT/agents/maister.json" >/dev/null
+  test -x "$OUT/hooks/stop-state-reminder-kiro.sh"
+}
+
+# 6. skill-invocation-reminder wired to agentSpawn + userPromptSubmit
 test_skill_reminder_hooks() {
   run_build
   jq -e '
@@ -122,6 +131,7 @@ assert "shortcut skills exist (dev, work, resume, status)" test_shortcut_skills
 assert "trustedAgents in maister.json (rule 21)" test_trusted_agents
 assert "all hook scripts executable (rule 22)" test_hooks_executable
 assert "maister-kiro wrapper executable (rule 24)" test_wrapper_exists
+assert "stop-state-reminder-kiro on stop hook" test_stop_state_reminder_hook
 assert "skill-invocation-reminder on agentSpawn + userPromptSubmit" test_skill_reminder_hooks
 assert "/dev skill maps to /maister-development" test_dev_prompt_maps_development
 assert "/quick-plan skill maps to /maister-quick-plan" test_quick_plan_prompt

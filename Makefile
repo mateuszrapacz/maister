@@ -102,7 +102,7 @@ validate-cursor:
 	@! grep -rE 'TaskCreate|TaskUpdate' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: TaskCreate/TaskUpdate found" && exit 1)
 	@echo "Cursor checks passed"
 
-# validate-kiro rules 1–28 (see .maister/tasks/.../implementation/spec.md)
+# validate-kiro rules 1–31 (see .maister/tasks/.../implementation/spec.md)
 validate-kiro:
 	@echo "=== Kiro validation ==="
 	@echo "Rule 1: plugins/maister-kiro/ exists..."
@@ -177,6 +177,18 @@ validate-kiro:
 	@test -f platforms/kiro-cli/transforms/askuser-to-chat-gate.md || (echo "FAIL: askuser-to-chat-gate.md missing (rule 27)" && exit 1)
 	@echo "Rule 28: exactly 42 maister-* skill directories..."
 	@test $$(find plugins/maister-kiro/skills -mindepth 1 -maxdepth 1 -type d -name 'maister-*' | wc -l | tr -d ' ') -eq 42 || (echo "FAIL: expected 42 maister-* skill directories (rule 28)" && exit 1)
+	@echo "Rule 29: no agents/*.json promptFile key..."
+	@for f in plugins/maister-kiro/agents/*.json; do \
+		jq -e 'has("promptFile")' "$$f" >/dev/null 2>&1 && (echo "FAIL: promptFile key in $$f (rule 29)" && exit 1) || true; \
+	done
+	@echo "Rule 30: no agents/*.json model inherit..."
+	@for f in plugins/maister-kiro/agents/*.json; do \
+		jq -e '.model == "inherit"' "$$f" >/dev/null 2>&1 && (echo "FAIL: model inherit in $$f (rule 30)" && exit 1) || true; \
+	done
+	@echo "Rule 31: all agents/*.json prompt uses file:// URI..."
+	@for f in plugins/maister-kiro/agents/*.json; do \
+		jq -e '(.prompt | type) == "string" and (.prompt | startswith("file://"))' "$$f" >/dev/null || (echo "FAIL: prompt missing or not file:// URI in $$f (rule 31)" && exit 1); \
+	done
 	@echo "Kiro checks passed"
 
 validate-kilo:

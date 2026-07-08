@@ -1,22 +1,19 @@
 {
   "name": "maister-user-docs-generator",
   "description": "Generates end-user documentation with screenshots using Playwright. Creates easy-to-understand guides for non-technical users. Use after features are implemented to create user-facing documentation.",
-  "model": "inherit",
   "tools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell",
-    "use_aws"
+    "shell"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell",
-    "use_aws"
+    "shell"
   ],
-  "promptFile": "instructions/maister-user-docs-generator.md"
+  "prompt": "file://./instructions/maister-user-docs-generator.md"
 }

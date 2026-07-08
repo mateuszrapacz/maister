@@ -1,25 +1,22 @@
 {
   "name": "maister-docs-operator",
   "description": "Internal documentation management service. Executes docs-manager operations and returns results to the calling workflow.",
-  "model": "inherit",
   "tools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell",
-    "use_aws"
+    "shell"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
     "write",
-    "shell",
-    "use_aws"
+    "shell"
   ],
+  "prompt": "file://./instructions/maister-docs-operator.md",
   "resources": [
     "skill://~/.kiro-maister/skills/maister-docs-manager/SKILL.md"
-  ],
-  "promptFile": "instructions/maister-docs-operator.md"
+  ]
 }

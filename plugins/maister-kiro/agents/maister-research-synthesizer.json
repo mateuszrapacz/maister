@@ -1,20 +1,17 @@
 {
   "name": "maister-research-synthesizer",
   "description": "Research synthesis specialist transforming collected information into actionable insights. Cross-references findings, identifies patterns and relationships, applies analytical frameworks, and generates comprehensive research reports.",
-  "model": "inherit",
   "tools": [
     "read",
     "grep",
     "glob",
-    "write",
-    "use_aws"
+    "write"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "write",
-    "use_aws"
+    "write"
   ],
-  "promptFile": "instructions/maister-research-synthesizer.md"
+  "prompt": "file://./instructions/maister-research-synthesizer.md"
 }

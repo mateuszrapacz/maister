@@ -76,8 +76,10 @@ test_frontmatter_fields_in_json() {
   out=$(setup_fixture_out)
   bash "$GENERATOR" "$out" >/dev/null
   diff -u \
-    <(jq -S -c '{description, model}' "$EXPECTED_JSON") \
-    <(jq -S -c '{description, model}' "$out/agents/maister-gap-analyzer.json") >/dev/null
+    <(jq -S -c '{description, prompt}' "$EXPECTED_JSON") \
+    <(jq -S -c '{description, prompt}' "$out/agents/maister-gap-analyzer.json") >/dev/null
+  jq -e '(.model // null) == null and (.promptFile // null) == null' \
+    "$out/agents/maister-gap-analyzer.json" >/dev/null
 }
 
 test_all_24_agents_valid_json() {
@@ -111,7 +113,7 @@ assert "gap-analyzer.md → JSON parses with jq empty" test_gap_analyzer_json_pa
 assert "JSON name is maister-gap-analyzer (prefixed)" test_gap_analyzer_name_prefixed
 assert "tools array populated from agent-tools.json lookup" test_tools_from_agent_tools_lookup
 assert "instructions/maister-gap-analyzer.md has no YAML frontmatter" test_instructions_no_frontmatter
-assert "frontmatter fields description, model preserved in JSON" test_frontmatter_fields_in_json
+assert "frontmatter description and prompt file:// URI in JSON (no model:inherit)" test_frontmatter_fields_in_json
 assert "all 24 source agents produce valid JSON when run in isolation" test_all_24_agents_valid_json
 assert "no agents/*.md remains after full generator run" test_no_source_md_after_generation
 assert "golden-file diff for gap-analyzer JSON fields" test_golden_file_diff

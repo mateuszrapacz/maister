@@ -58,15 +58,15 @@ setup_smoke_workspace() {
   mkdir -p "$kiro_home"
   rm -rf "${kiro_home:?}/"*
   cp -R "$SOURCE/." "$kiro_home/"
-  fix_agent_prompts "$kiro_home"
   fix_hook_paths "$kiro_home"
+  fix_prompt_paths "$kiro_home"
 
   mkdir -p "$ws"
   rm -rf "$ws/.kiro"
   mkdir -p "$ws/.kiro"
   cp -R "$kiro_home/." "$ws/.kiro/"
-  fix_agent_prompts "$ws/.kiro"
   fix_hook_paths "$ws/.kiro"
+  fix_prompt_paths "$ws/.kiro"
   cd "$ws"
   git init -q 2>/dev/null || true
 }

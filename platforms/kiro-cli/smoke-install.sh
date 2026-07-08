@@ -46,25 +46,6 @@ Never modifies personal ~/.kiro/ — only the target KIRO_HOME directory.
 EOF
 }
 
-# Kiro CLI runtime fixes applied at install/smoke time (empirical API).
-# - promptFile → prompt with file:// URI
-# - model "inherit" → removed (not valid in kiro-cli headless)
-fix_agent_prompts() {
-  local root="$1"
-  local f pf tmp
-  for f in "$root"/agents/*.json; do
-    [ -f "$f" ] || continue
-    tmp="${f}.tmp.$$"
-    jq '
-      if .promptFile then
-        .prompt = "file://./" + .promptFile | del(.promptFile)
-      else . end
-      | if .model == "inherit" then del(.model) else . end
-    ' "$f" >"$tmp"
-    mv "$tmp" "$f"
-  done
-}
-
 # Patch hook commands and skill resource paths to use $dest/ (source ships ~/.kiro-maister/*).
 fix_hook_paths() {
   local dest="$1"
@@ -101,6 +82,26 @@ fix_hook_paths() {
   done
 }
 
+# Kiro CLI 2.6.0: relative file://./instructions/*.md prompts load for main agents but
+# silently fail for subagents (kirodotdev/Kiro#5241, #6100, #7776). Rewrite to absolute
+# paths rooted at the install profile so subagent delegation receives system instructions.
+fix_prompt_paths() {
+  local dest="$1"
+  [ -d "$dest/agents" ] || return 0
+
+  local f tmp
+  for f in "$dest"/agents/*.json; do
+    [ -f "$f" ] || continue
+    tmp="${f}.tmp.$$"
+    jq --arg home "$dest" '
+      if (.prompt | type) == "string" and (.prompt | startswith("file://./")) then
+        .prompt = ("file://" + $home + "/agents/" + (.prompt | ltrimstr("file://./")))
+      else . end
+    ' "$f" >"$tmp"
+    mv "$tmp" "$f"
+  done
+}
+
 install_to() {
   local dest="$1"
   if [ "$dest" = "$HOME/.kiro" ]; then
@@ -115,8 +116,8 @@ install_to() {
   mkdir -p "$dest"
   rm -rf "${dest:?}/"*
   cp -R "$SOURCE/." "$dest/"
-  fix_agent_prompts "$dest"
   fix_hook_paths "$dest"
+  fix_prompt_paths "$dest"
 }
 
 prompt_set_default() {

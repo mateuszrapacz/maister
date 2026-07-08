@@ -27,6 +27,7 @@ else
   MSG="Maister post-compaction (manual): if a workflow was in progress, read orchestrator-state.yml in .maister/tasks/ and use **CHAT GATE** at phase gates."
 fi
 
-jq -n --arg msg "$MSG" '{ "user_message": $msg }'
+# Not wired — plain text for future Kiro compaction hook parity (no JSON envelope).
+echo "$MSG"
 
 exit 0

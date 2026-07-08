@@ -67,17 +67,16 @@ test_wrapper_default_kiro_home() {
   grep -q 'exec kiro-cli' "$WRAPPER"
 }
 
-# 4. fix_agent_prompts converts promptFile → prompt file:// URI
-test_fix_agent_prompts() {
-  local tmp
-  tmp=$(mktemp -d)
-  mkdir -p "$tmp/agents/instructions"
-  echo '{"name":"t","promptFile":"instructions/t.md"}' >"$tmp/agents/t.json"
-  # shellcheck source=/dev/null
-  source "$PLATFORM/smoke-install.sh"
-  fix_agent_prompts "$tmp"
-  jq -e '.prompt == "file://./instructions/t.md" and (.promptFile | not)' "$tmp/agents/t.json" >/dev/null
-  rm -rf "$tmp"
+# 4. build output uses prompt file:// URI (no promptFile, no model:inherit)
+test_agent_json_prompt_shape() {
+  make -C "$ROOT" build-kiro >/dev/null
+  local f="$ROOT/plugins/maister-kiro/agents/maister-gap-analyzer.json"
+  jq -e '
+    .prompt == "file://./instructions/maister-gap-analyzer.md"
+    and (.promptFile | not)
+    and ((.model // null) | . == null or . != "inherit")
+  ' "$f" >/dev/null
+  ! grep -rl 'promptFile\|"model": "inherit"' "$ROOT/plugins/maister-kiro/agents"/*.json >/dev/null 2>&1
 }
 
 # 5. --set-alias writes idempotent maister-kiro/mk block to shell rc
@@ -145,7 +144,7 @@ test_smoke_cli_quick_plan() {
 assert "smoke-install.sh --help documents KIRO_HOME" test_smoke_install_help
 assert "smoke-install to temp KIRO_HOME does not touch ~/.kiro/" test_smoke_install_isolated
 assert "maister-kiro wrapper sets KIRO_HOME default" test_wrapper_default_kiro_home
-assert "fix_agent_prompts converts promptFile to file:// prompt" test_fix_agent_prompts
+assert "build emits prompt file:// URI without promptFile or model:inherit" test_agent_json_prompt_shape
 assert "--set-alias installs maister-kiro and mk in shell rc" test_install_shell_aliases
 assert "ephemeral KIRO_HOME + workspace .kiro/ copy works" test_workspace_kiro_copy
 assert "smoke-cli test 1 — maister-init skill detection" test_smoke_cli_init_detection

@@ -1,18 +1,15 @@
 {
   "name": "maister-explore",
   "description": "Read-only codebase exploration (replaces built-in explore)",
-  "model": "inherit",
   "tools": [
     "read",
     "grep",
-    "glob",
-    "use_aws"
+    "glob"
   ],
   "allowedTools": [
     "read",
     "grep",
-    "glob",
-    "use_aws"
+    "glob"
   ],
-  "promptFile": "instructions/maister-explore.md"
+  "prompt": "file://./instructions/maister-explore.md"
 }
