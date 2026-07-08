@@ -25,6 +25,7 @@ ALIAS_END_MARKER='# <<< maister-kiro aliases <<<'
 SET_DEFAULT=""
 SET_ALIAS=""
 RTK_ENABLED=0
+MCP_PLAYWRIGHT_ENABLED=0
 DEST=""
 
 usage() {
@@ -39,7 +40,8 @@ Usage: smoke-install.sh [OPTIONS] [DEST]
   --set-alias       Add maister-kiro and mk aliases to shell rc
   --no-alias        Do not add shell aliases (default in CI/non-TTY)
   --with-rtk        Install RTK token optimization hook
-  --full            Shorthand for --set-alias --set-default --with-rtk
+  --with-mcp-playwright  Install MCP Playwright for --e2e workflows (default: off)
+  --full            Shorthand for --set-alias --set-default --with-rtk --with-mcp-playwright
   --help            Show this help
 
 Never modifies personal ~/.kiro/ — only the target KIRO_HOME directory.
@@ -164,7 +166,7 @@ write_alias_block() {
 $ALIAS_BEGIN_MARKER
 # Maister Kiro CLI — isolated profile ($dest)
 alias maister-kiro='KIRO_HOME="$dest" $WRAPPER'
-alias mk='maister-kiro chat --trust-all-tools'
+alias mk='maister-kiro chat --v3 --trust-all-tools'
 $ALIAS_END_MARKER
 EOF
 }
@@ -241,10 +243,19 @@ main() {
         RTK_ENABLED=1
         shift
         ;;
+      --with-mcp-playwright)
+        MCP_PLAYWRIGHT_ENABLED=1
+        shift
+        ;;
+      --no-mcp-playwright)
+        MCP_PLAYWRIGHT_ENABLED=0
+        shift
+        ;;
       --full)
         SET_ALIAS=1
         SET_DEFAULT=1
         RTK_ENABLED=1
+        MCP_PLAYWRIGHT_ENABLED=1
         shift
         ;;
       -*)
@@ -279,6 +290,16 @@ main() {
     if [ -f "$mj" ]; then
       local tmp="${mj}.tmp.$$"
       jq '.hooks.preToolUse |= map(select(.command | contains("rtk-rewrite") | not))' "$mj" >"$tmp"
+      mv "$tmp" "$mj"
+    fi
+  fi
+
+  if [ "$MCP_PLAYWRIGHT_ENABLED" = "0" ]; then
+    rm -f "$DEST/settings/mcp.json"
+    local mj="$DEST/agents/maister.json"
+    if [ -f "$mj" ]; then
+      local tmp="${mj}.tmp.$$"
+      jq 'del(.includeMcpJson)' "$mj" >"$tmp"
       mv "$tmp" "$mj"
     fi
   fi
