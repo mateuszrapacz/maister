@@ -1,0 +1,112 @@
+orchestrator:
+  started_phase: phase-14
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-5
+    - phase-7
+    - phase-8
+    - phase-10
+    - phase-11
+    - phase-14
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+  options:
+    spec_audit_enabled: false
+    e2e_enabled: false
+    user_docs_enabled: false
+    skip_test_suite: false
+    code_review_enabled: true
+    pragmatic_review_enabled: false
+    reality_check_enabled: true
+    production_check_enabled: false
+    sequential: false
+  created: "2026-06-16T19:57:00Z"
+  updated: "2026-06-16T19:57:00Z"
+  task_path: .maister/tasks/development/2026-06-16-remove-archetype-mappers
+  task_ids: {}
+
+task:
+  title: "Remove accounting-archetype-mapper and pricing-archetype-mapper"
+  description: >
+    Wywal te accounting-archetype-mapper oraz pricing-archetype-mapper. to sa przykladowe jakie archetypy.
+    Remove both archetype mapper skills, their modeling-* commands, all cross-references,
+    documentation entries, and build pipeline entries. Revert Kiro counts accordingly.
+  status: completed
+  tags:
+    - plugin
+    - skills
+    - removal
+  priority: medium
+
+task_context:
+  risk_level: low
+  clarifications_resolved: true
+  scope_expanded: false
+  architecture_decision: null
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: false
+    involves_data_operations: false
+    ui_heavy: false
+  research_reference:
+    path: null
+    research_question: null
+    research_type: null
+    confidence_level: null
+  design_reference:
+    source: null
+    product_design_path: null
+    mockup_count: 0
+    has_brief: false
+    index_path: null
+  project_context:
+    project_doc_paths:
+      - .maister/docs/INDEX.md
+      - .maister/docs/standards/global/plugin-development.md
+      - .maister/docs/standards/global/build-pipeline.md
+  phase_summaries:
+    research:
+      summary: null
+      key_findings: []
+      recommended_approach: null
+    design:
+      summary: null
+      screen_count: 0
+      component_count: 0
+      index_path: null
+    codebase_analysis:
+      key_files:
+        - plugins/maister/skills/accounting-archetype-mapper/SKILL.md
+        - plugins/maister/skills/pricing-archetype-mapper/SKILL.md
+        - plugins/maister/skills/problem-classifier/SKILL.md
+        - plugins/maister/skills/context-distiller/SKILL.md
+        - platforms/kiro-cli/build.sh
+        - Makefile
+      primary_language: Markdown
+      summary: "Pure removal: 4 files to delete (2 skills + 2 commands), 8 files to edit. Kiro counts 71→67, 46→42."
+    clarifications: []
+    gap_analysis:
+      integration_points:
+        - problem-classifier archetype routing
+        - context-distiller optional chain
+        - Bundle B docs
+        - build.sh merge_one + sedi
+        - Makefile/test counts
+      summary: "8 gaps identified; no decisions needed — scope is clear. Low risk removal."
+    scope_clarifications:
+      scope_expanded: null
+      summary: null
+    ui_mockups:
+      components_designed: []
+      summary: null
+    specification:
+      summary: "Remove 2 archetype mapper skills + commands; 4 deletes, 8 edits; Kiro 71→67/42; grep-clean + make validate gate."
+    implementation:
+      summary: null
+    architecture_decision:
+      decision: null
+      summary: null
