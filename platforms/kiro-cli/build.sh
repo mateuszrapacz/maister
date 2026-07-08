@@ -509,8 +509,65 @@ sedi 's/Verify AGENTS.md integration/Verify AGENTS.md integration\
 
 cp "$PLATFORM/templates/steering-maister-docs.md" "$OUT/steering/maister-docs.md"
 
+sedi 's/\.claude\/AGENTS\.md/.kiro\/steering/g' "$OUT/skills/maister-standards-discover/references/docs-extractor-prompt.md"
 sedi 's/CLAUDE.md/AGENTS.md/g' "$OUT/skills/maister-standards-discover/references/docs-extractor-prompt.md"
-sedi 's/\.claude\/CLAUDE.md/.kiro\/steering/g' "$OUT/skills/maister-standards-discover/references/docs-extractor-prompt.md"
+
+# Step 16b: Extract catalog sections from steering → lazy-loaded reference
+# Sections "Available Skills", "Available Commands", "Available Subagents" waste ~8K tokens
+# in always-loaded steering context. Move them to orchestrator-framework/references/catalog.md
+# and replace with a short pointer in steering.
+extract_catalog_from_steering() {
+  local steering="$OUT/steering/maister-workflows.md"
+  local catalog="$OUT/skills/maister-orchestrator-framework/references/catalog.md"
+  [ -f "$steering" ] || return 0
+
+  # Extract from "## Available Skills" through the line before "## Key Workflow Principles"
+  awk '/^## Available Skills$/,/^## Key Workflow Principles$/{
+    if (/^## Key Workflow Principles$/) next
+    print
+  }' "$steering" > "$catalog"
+
+  # Verify extraction produced content
+  if [ ! -s "$catalog" ]; then
+    echo "WARNING: catalog extraction produced empty file" >&2
+    rm -f "$catalog"
+    return 0
+  fi
+
+  # Add header to catalog
+  {
+    echo "# Maister Skill, Command & Agent Catalog"
+    echo ""
+    echo "Reference listing of all available skills, commands, and subagents."
+    echo "This file is loaded on-demand by orchestrators — not always in context."
+    echo ""
+    cat "$catalog"
+  } > "${catalog}.tmp"
+  mv "${catalog}.tmp" "$catalog"
+
+  # Replace extracted sections in steering with a pointer
+  # Use awk to replace the range with a short reference block
+  awk '
+    /^## Available Skills$/ {
+      print "## Catalog Reference"
+      print ""
+      print "For the full listing of available skills, commands, and subagents, read:"
+      print "`skills/maister-orchestrator-framework/references/catalog.md`"
+      print ""
+      print "Key facts (always available without reading catalog):"
+      print "- **5 orchestrator workflows**: development, performance, migration, research, product-design"
+      print "- **Delegation**: skills via `/maister-*` slash, agents via subagent tool"
+      print "- **Bundles**: A (requirements quality), B (DDD modeling), C (architecture review), D (stakeholder communication)"
+      print ""
+      skip = 1
+      next
+    }
+    /^## Key Workflow Principles$/ { skip = 0 }
+    !skip { print }
+  ' "$steering" > "${steering}.tmp"
+  mv "${steering}.tmp" "$steering"
+}
+extract_catalog_from_steering
 
 # Step 11: MCP config — .mcp.json → settings/mcp.json; default TUI profile settings
 mkdir -p "$OUT/settings"
@@ -566,6 +623,7 @@ You are the Maister workflow orchestrator for Kiro CLI.
 - Read `orchestrator-state.yml` in the active task directory for resume and phase state
 - Maister targets Terminal UI (`chat.ui` = `tui`); classic interface is unsupported
 - Read `.maister/docs/INDEX.md` before coding tasks
+- After context compaction, ALWAYS read the latest `orchestrator-state.yml` under `.maister/tasks/` before continuing — verify `completed_phases` and resume from `current_phase`
 EOF
 
   jq -n \

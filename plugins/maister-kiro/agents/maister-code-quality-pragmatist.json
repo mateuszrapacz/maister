@@ -5,13 +5,13 @@
     "read",
     "grep",
     "glob",
-    "write"
+    "shell"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "write"
+    "shell"
   ],
   "prompt": "file://./instructions/maister-code-quality-pragmatist.md"
 }

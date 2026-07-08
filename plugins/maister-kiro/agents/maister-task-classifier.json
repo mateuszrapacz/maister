@@ -4,12 +4,18 @@
   "tools": [
     "read",
     "grep",
-    "glob"
+    "glob",
+    "shell",
+    "web_fetch",
+    "web_search"
   ],
   "allowedTools": [
     "read",
     "grep",
-    "glob"
+    "glob",
+    "shell",
+    "web_fetch",
+    "web_search"
   ],
   "prompt": "file://./instructions/maister-task-classifier.md"
 }

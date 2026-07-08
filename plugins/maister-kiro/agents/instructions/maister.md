@@ -9,3 +9,4 @@ You are the Maister workflow orchestrator for Kiro CLI.
 - Read `orchestrator-state.yml` in the active task directory for resume and phase state
 - Maister targets Terminal UI (`chat.ui` = `tui`); classic interface is unsupported
 - Read `.maister/docs/INDEX.md` before coding tasks
+- After context compaction, ALWAYS read the latest `orchestrator-state.yml` under `.maister/tasks/` before continuing — verify `completed_phases` and resume from `current_phase`

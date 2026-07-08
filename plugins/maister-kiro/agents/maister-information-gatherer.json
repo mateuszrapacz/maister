@@ -5,13 +5,19 @@
     "read",
     "grep",
     "glob",
-    "write"
+    "write",
+    "shell",
+    "web_fetch",
+    "web_search"
   ],
   "allowedTools": [
     "read",
     "grep",
     "glob",
-    "write"
+    "write",
+    "shell",
+    "web_fetch",
+    "web_search"
   ],
   "prompt": "file://./instructions/maister-information-gatherer.md"
 }
