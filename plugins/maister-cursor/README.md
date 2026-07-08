@@ -10,9 +10,9 @@ bash platforms/cursor/smoke-install.sh
 
 Then: **Developer: Reload Window** in Cursor IDE. CLI auto-discovers the plugin without `--plugin-dir`.
 
-## Commands
+## Skills
 
-Use `/maister-*` commands (e.g. `/maister-init`, `/maister-development`).
+Use `/maister-*` slash skills (e.g. `/maister-init`, `/maister-development`). Internal orchestrator engines live under `lib/skills/` and are not user-facing.
 
 ## MCP
 

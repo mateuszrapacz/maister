@@ -2,7 +2,7 @@
 name: maister-thermo-nuclear-review-subagent
 description: Thermo-nuclear branch audit (bugs, breaking changes, security, devex, feature-flag leaks) scoped to the diff. Invoked via Task after a parent gathers diff and file contents. Loads rubric from the thermo-nuclear-review skill in the Maister plugin.
 skills:
-  - thermo-nuclear-review
+  - maister-thermo-nuclear-review
 readonly: true
 ---
 

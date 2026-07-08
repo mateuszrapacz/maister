@@ -43,7 +43,6 @@ cat > "$OUT/.cursor-plugin/plugin.json" << EOF
   "keywords": ["development", "sdlc", "workflows", "skills"],
   "skills": "./skills/",
   "agents": "./agents/",
-  "commands": "./commands/",
   "hooks": "./hooks/hooks.json"
 }
 EOF
@@ -115,9 +114,9 @@ bash platforms/cursor/smoke-install.sh
 
 Then: **Developer: Reload Window** in Cursor IDE. CLI auto-discovers the plugin without `--plugin-dir`.
 
-## Commands
+## Skills
 
-Use `/maister-*` commands (e.g. `/maister-init`, `/maister-development`).
+Use `/maister-*` slash skills (e.g. `/maister-init`, `/maister-development`). Internal orchestrator engines live under `lib/skills/` and are not user-facing.
 
 ## MCP
 
@@ -229,28 +228,175 @@ for f in "$OUT/agents"/*.md; do
   fi
 done
 
-# 12. Overrides (quick-plan, quick-dev, quick-bugfix)
-cp "$PLATFORM/overrides/commands/quick-plan.md" "$OUT/commands/quick-plan.md"
-cp "$PLATFORM/overrides/commands/quick-dev.md" "$OUT/commands/quick-dev.md"
-cp "$PLATFORM/overrides/skills/quick-plan/SKILL.md" "$OUT/skills/quick-plan/SKILL.md"
-cp "$PLATFORM/overrides/skills/quick-bugfix/SKILL.md" "$OUT/skills/quick-bugfix/SKILL.md"
+# --- PR1: orchestrator-framework → lib/ (before skill directory renames) ---
 
-# 13. AGENTS.md template for docs-manager
-cp "$PLATFORM/templates/agents-md-template.md" "$OUT/skills/docs-manager/references/agents-md-template.md"
-sedi 's/claude-md-template\.md/agents-md-template.md/g' "$OUT/skills/docs-manager/SKILL.md"
-sedi 's/Manage CLAUDE.md Integration/Manage AGENTS.md Integration/g' "$OUT/skills/docs-manager/SKILL.md"
+relocate_orchestrator_framework() {
+  mkdir -p "$OUT/lib"
+  mv "$OUT/skills/orchestrator-framework" "$OUT/lib/orchestrator-framework"
+}
+
+update_orchestrator_framework_paths() {
+  find "$OUT" \( -name "*.md" -o -name "*.sh" \) -print0 | while IFS= read -r -d '' f; do
+    sedi 's|\.\./orchestrator-framework/|../lib/orchestrator-framework/|g' "$f"
+    sedi 's|skills/orchestrator-framework/|lib/orchestrator-framework/|g' "$f"
+    sedi 's|\[plugin\]/skills/orchestrator-framework/|[plugin]/lib/orchestrator-framework/|g' "$f"
+  done
+}
+
+# --- PR2: merge commands/ → skills/ (collapse map D1; skip rich-skill duplicates) ---
+
+apply_cursor_overrides() {
+  cp "$PLATFORM/overrides/skills/quick-plan/SKILL.md" "$OUT/skills/quick-plan/SKILL.md"
+  cp "$PLATFORM/overrides/skills/quick-bugfix/SKILL.md" "$OUT/skills/quick-bugfix/SKILL.md"
+  # quick-dev: rich body from copied plugins/maister/skills/quick-dev/SKILL.md (C1)
+}
+
+merge_commands_to_skills() {
+  local commands_dir="$OUT/commands"
+  [ -d "$commands_dir" ] || return 0
+
+  merge_one() {
+    local stem="$1" target="$2"
+    local src="$commands_dir/${stem}.md"
+    local dest_dir="$OUT/skills/${target}"
+    [ -f "$src" ] || return 0
+    mkdir -p "$dest_dir"
+    cp "$src" "$dest_dir/SKILL.md"
+  }
+
+  merge_one reviews-code maister-reviews-code
+  merge_one reviews-pragmatic maister-reviews-pragmatic
+  merge_one reviews-production-readiness maister-reviews-production-readiness
+  merge_one reviews-reality-check maister-reviews-reality-check
+  merge_one reviews-spec-audit maister-reviews-spec-audit
+  merge_one work maister-work
+
+  # Skip collapse stems — rich skill dirs already exist (W1 / D1):
+  # quick-problem-classifier, quick-transcript-critic, quick-requirements-critic,
+  # quick-metaprogram-classifier, modeling-context-distiller, modeling-aggregate-designer,
+  # reviews-test-strategy, reviews-linguistic-boundaries, quick-plan, quick-dev, quick-bugfix
+
+  rm -rf "$commands_dir"
+}
+
+# --- PR3: maister-* prefix on all public skills + reference sed ---
+
+rename_skill_directories() {
+  local dir skill_file name target_name target_dir
+  while IFS= read -r dir; do
+    skill_file="$dir/SKILL.md"
+    [ -f "$skill_file" ] || continue
+    name=$(grep -m1 '^name: ' "$skill_file" | sed 's/^name: //')
+    target_name="$name"
+    if [[ "$target_name" != maister-* ]]; then
+      target_name="maister-${target_name}"
+      sedi "s/^name: ${name}/name: ${target_name}/" "$skill_file"
+    fi
+    target_dir="$OUT/skills/$target_name"
+    if [ "$dir" != "$target_dir" ]; then
+      mv "$dir" "$target_dir"
+    fi
+  done < <(find "$OUT/skills" -mindepth 1 -maxdepth 1 -type d)
+}
+
+apply_skill_reference_transforms() {
+  local f
+  while IFS= read -r -d '' f; do
+    sedi 's|skill: "requirements-critic"|skill: "maister-requirements-critic"|g' "$f"
+    sedi 's|skill: "transcript-critic"|skill: "maister-transcript-critic"|g' "$f"
+    sedi 's|skill: "problem-classifier"|skill: "maister-problem-classifier"|g' "$f"
+    sedi 's|skill: "test-strategy-reviewer"|skill: "maister-test-strategy-reviewer"|g' "$f"
+    sedi 's|skill: "linguistic-boundary-verifier"|skill: "maister-linguistic-boundary-verifier"|g' "$f"
+    sedi 's|skill: "metaprogram-classifier"|skill: "maister-metaprogram-classifier"|g' "$f"
+    sedi 's|skill: "context-distiller"|skill: "maister-context-distiller"|g' "$f"
+    sedi 's|skill: "aggregate-designer"|skill: "maister-aggregate-designer"|g' "$f"
+    sedi 's|skill: "codebase-analyzer"|skill: "maister-codebase-analyzer"|g' "$f"
+    sedi 's|skill: "implementation-plan-executor"|skill: "maister-implementation-plan-executor"|g' "$f"
+    sedi 's|skill: "implementation-verifier"|skill: "maister-implementation-verifier"|g' "$f"
+    sedi 's|skill: "docs-manager"|skill: "maister-docs-manager"|g' "$f"
+    sedi 's|skill: "quick-dev"|skill: "maister-quick-dev"|g' "$f"
+    sedi 's|skill: "quick-plan"|skill: "maister-quick-plan"|g' "$f"
+    sedi 's|skill: "quick-bugfix"|skill: "maister-quick-bugfix"|g' "$f"
+    sedi 's|skill `requirements-critic`|skill `maister-requirements-critic`|g' "$f"
+    sedi 's|skill `transcript-critic`|skill `maister-transcript-critic`|g' "$f"
+    sedi 's|skill `problem-classifier`|skill `maister-problem-classifier`|g' "$f"
+    sedi 's|skill `test-strategy-reviewer`|skill `maister-test-strategy-reviewer`|g' "$f"
+    sedi 's|skill `linguistic-boundary-verifier`|skill `maister-linguistic-boundary-verifier`|g' "$f"
+    sedi 's|skill `metaprogram-classifier`|skill `maister-metaprogram-classifier`|g' "$f"
+    sedi 's|skill `context-distiller`|skill `maister-context-distiller`|g' "$f"
+    sedi 's|skill `aggregate-designer`|skill `maister-aggregate-designer`|g' "$f"
+    sedi 's|Invoke the `requirements-critic` skill|Invoke the `maister-requirements-critic` skill|g' "$f"
+    sedi 's|Invoke the `transcript-critic` skill|Invoke the `maister-transcript-critic` skill|g' "$f"
+    sedi 's|Invoke the `problem-classifier` skill|Invoke the `maister-problem-classifier` skill|g' "$f"
+    sedi 's|Invoke the `test-strategy-reviewer` skill|Invoke the `maister-test-strategy-reviewer` skill|g' "$f"
+    sedi 's|Invoke the `linguistic-boundary-verifier` skill|Invoke the `maister-linguistic-boundary-verifier` skill|g' "$f"
+    sedi 's|Invoke the `metaprogram-classifier` skill|Invoke the `maister-metaprogram-classifier` skill|g' "$f"
+    sedi 's|Invoke the `context-distiller` skill|Invoke the `maister-context-distiller` skill|g' "$f"
+    sedi 's|Invoke the `aggregate-designer` skill|Invoke the `maister-aggregate-designer` skill|g' "$f"
+    sedi 's|run `test-strategy-reviewer`|run `maister-test-strategy-reviewer`|g' "$f"
+    sedi 's|run `linguistic-boundary-verifier`|run `maister-linguistic-boundary-verifier`|g' "$f"
+    sedi 's|run `metaprogram-classifier`|run `maister-metaprogram-classifier`|g' "$f"
+    sedi 's|run `grill-me`|run `maister-grill-me`|g' "$f"
+    sedi 's|run `problem-classifier`|run `maister-problem-classifier`|g' "$f"
+    sedi 's|run `context-distiller`|run `maister-context-distiller`|g' "$f"
+    sedi 's|run `aggregate-designer`|run `maister-aggregate-designer`|g' "$f"
+    sedi 's|run `thermos`|run `maister-thermos`|g' "$f"
+    sedi 's|/maister:standards-discover|/maister-standards-discover|g' "$f"
+    sedi 's|/maister:standards-update|/maister-standards-update|g' "$f"
+    sedi 's|/maister:init|/maister-init|g' "$f"
+    sedi 's|standards-discover skill|maister-standards-discover skill|g' "$f"
+    sedi 's|standards-update skill|maister-standards-update skill|g' "$f"
+  done < <(find "$OUT/skills" "$OUT/agents" "$OUT/rules" "$OUT/hooks" "$OUT/lib" -type f \( -name "*.md" -o -name "*.sh" -o -name "*.mdc" \) -print0 2>/dev/null)
+
+  # Agent skills: preload lists (W4)
+  for agent_f in "$OUT/agents/docs-operator.md" \
+    "$OUT/agents/thermo-nuclear-review-subagent.md" \
+    "$OUT/agents/thermo-nuclear-code-quality-review-subagent.md"; do
+    [ -f "$agent_f" ] || continue
+    sedi 's|^  - docs-manager$|  - maister-docs-manager|' "$agent_f"
+    sedi 's|^  - thermo-nuclear-review$|  - maister-thermo-nuclear-review|' "$agent_f"
+    sedi 's|^  - thermo-nuclear-code-quality-review$|  - maister-thermo-nuclear-code-quality-review|' "$agent_f"
+  done
+}
+
+# --- PR4: internal Skill-tool engines → lib/skills/ ---
+
+relocate_internal_skills() {
+  mkdir -p "$OUT/lib/skills"
+  for name in docs-manager codebase-analyzer implementation-plan-executor implementation-verifier; do
+    local src="$OUT/skills/maister-${name}"
+    local dest="$OUT/lib/skills/maister-${name}"
+    [ -d "$src" ] && mv "$src" "$dest"
+  done
+}
+
+relocate_orchestrator_framework
+update_orchestrator_framework_paths
+
+# 12. Overrides (skill bodies only — no command wrappers)
+apply_cursor_overrides
+merge_commands_to_skills
+rename_skill_directories
+apply_skill_reference_transforms
+
+# 13. AGENTS.md template for docs-manager (paths post-rename)
+cp "$PLATFORM/templates/agents-md-template.md" "$OUT/skills/maister-docs-manager/references/agents-md-template.md"
+sedi 's/claude-md-template\.md/agents-md-template.md/g' "$OUT/skills/maister-docs-manager/SKILL.md"
+sedi 's/Manage CLAUDE.md Integration/Manage AGENTS.md Integration/g' "$OUT/skills/maister-docs-manager/SKILL.md"
 
 # Init: add Cursor project rule step
 sedi 's/Verify AGENTS.md integration/Verify AGENTS.md integration\
-- Create `.cursor\/rules\/maister-docs.mdc` in project root if missing (copy from plugin `rules\/maister-docs.mdc` template — read `.maister\/docs\/INDEX.md` first)/' "$OUT/skills/init/SKILL.md"
+- Create `.cursor\/rules\/maister-docs.mdc` in project root if missing (copy from plugin `rules\/maister-docs.mdc` template — read `.maister\/docs\/INDEX.md` first)/' "$OUT/skills/maister-init/SKILL.md"
 cp "$PLATFORM/rules/maister-docs.mdc" "$OUT/rules/maister-docs.mdc"
 cp "$PLATFORM/rules/maister-no-fast-models.mdc" "$OUT/rules/maister-no-fast-models.mdc"
 
 # standards-discover docs extractor
-sedi 's/CLAUDE.md/AGENTS.md/g' "$OUT/skills/standards-discover/references/docs-extractor-prompt.md"
-sedi 's/\.claude\/CLAUDE.md/.cursor\/rules/g' "$OUT/skills/standards-discover/references/docs-extractor-prompt.md"
+sedi 's/CLAUDE.md/AGENTS.md/g' "$OUT/skills/maister-standards-discover/references/docs-extractor-prompt.md"
+sedi 's/\.claude\/CLAUDE.md/.cursor\/rules/g' "$OUT/skills/maister-standards-discover/references/docs-extractor-prompt.md"
 
-# 14. TodoWrite transforms (Phase 1.5)
+relocate_internal_skills
+
+# 14. TodoWrite transforms (last — after all path moves)
 apply_todo_transforms() {
   local f="$1"
   [ -f "$f" ] || return 0
@@ -270,16 +416,16 @@ apply_todo_transforms() {
 }
 
 TODO_GLOB=(
-  "$OUT/skills/orchestrator-framework"
-  "$OUT/skills/development"
-  "$OUT/skills/product-design"
-  "$OUT/skills/performance"
-  "$OUT/skills/migration"
-  "$OUT/skills/research"
-  "$OUT/skills/init"
-  "$OUT/skills/standards-discover"
-  "$OUT/skills/implementation-verifier"
-  "$OUT/skills/implementation-plan-executor"
+  "$OUT/lib/orchestrator-framework"
+  "$OUT/skills/maister-development"
+  "$OUT/skills/maister-product-design"
+  "$OUT/skills/maister-performance"
+  "$OUT/skills/maister-migration"
+  "$OUT/skills/maister-research"
+  "$OUT/skills/maister-init"
+  "$OUT/skills/maister-standards-discover"
+  "$OUT/lib/skills/maister-implementation-verifier"
+  "$OUT/lib/skills/maister-implementation-plan-executor"
   "$OUT/agents"
 )
 
@@ -293,11 +439,11 @@ for dir in "${TODO_GLOB[@]}"; do
   fi
 done
 
-sedi 's/metadata: {restored: true}/(restored from state — mark completed)/g' "$OUT/skills/orchestrator-framework/references/orchestrator-patterns.md"
+sedi 's/metadata: {restored: true}/(restored from state — mark completed)/g' "$OUT/lib/orchestrator-framework/references/orchestrator-patterns.md"
 
 # Cursor-specific TodoWrite examples
 if [ -f "$PLATFORM/patches/orchestrator-patterns-todowrite.md" ]; then
-  cat "$PLATFORM/patches/orchestrator-patterns-todowrite.md" >> "$OUT/skills/orchestrator-framework/references/orchestrator-patterns.md"
+  cat "$PLATFORM/patches/orchestrator-patterns-todowrite.md" >> "$OUT/lib/orchestrator-framework/references/orchestrator-patterns.md"
 fi
 
 echo "Built Cursor Agent variant at $OUT"

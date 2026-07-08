@@ -37,18 +37,41 @@ validate-copilot:
 validate-cursor:
 	@echo "=== Cursor validation ==="
 	@test -d plugins/maister-cursor || (echo "FAIL: plugins/maister-cursor not built — run make build-cursor" && exit 1)
-	@echo "Checking command names use maister- prefix (no colons)..."
-	@! grep -r '^name:.*:' plugins/maister-cursor/commands/ 2>/dev/null || (echo "FAIL: colons in command names" && exit 1)
-	@grep -q '^name: maister-' plugins/maister-cursor/commands/quick-plan.md || (echo "FAIL: expected maister- command prefix" && exit 1)
-	@grep -q '^name: maister-' plugins/maister-cursor/commands/quick-dev.md || (echo "FAIL: quick-dev command override missing or wrong prefix" && exit 1)
-	@echo "Checking thin command wrappers (quick-dev, quick-plan)..."
-	@for f in quick-dev quick-plan; do \
-		lines=$$(wc -l < plugins/maister-cursor/commands/$$f.md | tr -d ' '); \
-		test $$lines -lt 25 || (echo "FAIL: $$f.md must be <25 lines (thin wrapper), got $$lines" && exit 1); \
-		grep -q 'Invoke Skill tool' plugins/maister-cursor/commands/$$f.md || (echo "FAIL: $$f.md must delegate via Skill tool" && exit 1); \
-	done
-	@echo "Checking quick-plan skill integrity..."
-	@! grep -q 'plan approval gate' plugins/maister-cursor/skills/quick-plan/SKILL.md 2>/dev/null || (echo "FAIL: corrupted quick-plan skill (plan approval gate fragment)" && exit 1)
+	@echo "PR1: orchestrator-framework in lib/..."
+	@test ! -d plugins/maister-cursor/skills/orchestrator-framework || (echo "FAIL: orchestrator-framework still under skills/" && exit 1)
+	@test -f plugins/maister-cursor/lib/orchestrator-framework/references/orchestrator-patterns.md || (echo "FAIL: lib orchestrator-patterns missing" && exit 1)
+	@! grep -rq 'skills/orchestrator-framework' plugins/maister-cursor/ --include="*.md" || (echo "FAIL: stale skills/orchestrator-framework path" && exit 1)
+	@echo "PR2: skills-only manifest (no commands/)..."
+	@test ! -d plugins/maister-cursor/commands || (echo "FAIL: commands/ still exists" && exit 1)
+	@! grep -q '"commands":' plugins/maister-cursor/.cursor-plugin/plugin.json || (echo "FAIL: plugin.json still has commands field" && exit 1)
+	@test -f plugins/maister-cursor/skills/maister-work/SKILL.md || (echo "FAIL: maister-work skill missing" && exit 1)
+	@test -f plugins/maister-cursor/skills/maister-reviews-code/SKILL.md || (echo "FAIL: maister-reviews-code skill missing" && exit 1)
+	@test ! -d plugins/maister-cursor/skills/maister-quick-problem-classifier || (echo "FAIL: duplicate collapse dir maister-quick-problem-classifier" && exit 1)
+	@echo "PR3: all public skills use maister- prefix..."
+	@! grep -h '^name: ' plugins/maister-cursor/skills/*/SKILL.md | grep -v '^name: maister-' || (echo "FAIL: skill without maister- prefix" && exit 1)
+	@! grep -h '^name: maister:' plugins/maister-cursor/skills/*/SKILL.md 2>/dev/null || (echo "FAIL: colon in skill name" && exit 1)
+	@! find plugins/maister-cursor/skills -mindepth 1 -maxdepth 1 -type d ! -name 'maister-*' | grep -q . || true
+	@test -f plugins/maister-cursor/skills/maister-quick-plan/SKILL.md || (echo "FAIL: maister-quick-plan missing" && exit 1)
+	@test -f plugins/maister-cursor/skills/maister-quick-dev/SKILL.md || (echo "FAIL: maister-quick-dev missing" && exit 1)
+	@test -d plugins/maister-cursor/skills/maister-problem-classifier || (echo "FAIL: maister-problem-classifier missing" && exit 1)
+	@test ! -d plugins/maister-cursor/skills/problem-classifier || (echo "FAIL: plain-kebab dir problem-classifier remains" && exit 1)
+	@echo "PR3: quick-plan skill integrity..."
+	@! grep -q 'plan approval gate' plugins/maister-cursor/skills/maister-quick-plan/SKILL.md 2>/dev/null || (echo "FAIL: corrupted quick-plan skill" && exit 1)
+	@echo "PR3: quick-dev is rich workflow (not thin wrapper)..."
+	@lines=$$(wc -l < plugins/maister-cursor/skills/maister-quick-dev/SKILL.md | tr -d ' '); \
+		test $$lines -ge 20 || (echo "FAIL: quick-dev must be rich skill (>=20 lines), got $$lines" && exit 1)
+	@echo "PR3: no plain skill: delegations..."
+	@plain=$$(grep -rE 'skill: "[^m]' plugins/maister-cursor/skills/ --include="*.md" 2>/dev/null | grep -v 'maister-' || true); \
+		test -z "$$plain" || (echo "FAIL: plain skill: reference: $$plain" && exit 1)
+	@echo "PR3: agent skills preload uses maister- prefix..."
+	@grep -A2 '^skills:' plugins/maister-cursor/agents/docs-operator.md | grep -q 'maister-docs-manager' || (echo "FAIL: docs-operator skills preload" && exit 1)
+	@echo "PR4: internal engines relocated..."
+	@test ! -d plugins/maister-cursor/skills/maister-docs-manager || (echo "FAIL: docs-manager still in skills/" && exit 1)
+	@test ! -d plugins/maister-cursor/skills/maister-codebase-analyzer || (echo "FAIL: codebase-analyzer still in skills/" && exit 1)
+	@test ! -d plugins/maister-cursor/skills/maister-implementation-plan-executor || (echo "FAIL: implementation-plan-executor still in skills/" && exit 1)
+	@test ! -d plugins/maister-cursor/skills/maister-implementation-verifier || (echo "FAIL: implementation-verifier still in skills/" && exit 1)
+	@test -d plugins/maister-cursor/lib/skills/maister-docs-manager || (echo "FAIL: lib/skills/maister-docs-manager missing (4B)" && exit 1)
+	@test ! -d plugins/maister-cursor/lib/skills/maister-sentinel-lib-skill || (echo "FAIL: sentinel committed to generated tree" && exit 1)
 	@echo "Checking no EnterPlanMode/ExitPlanMode..."
 	@! grep -rE 'EnterPlanMode|ExitPlanMode' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: plan mode references found" && exit 1)
 	@echo "Checking no CLAUDE.md in skills..."
@@ -88,7 +111,7 @@ validate-cursor:
 	@echo "Checking .cursor-plugin manifest..."
 	@test -f plugins/maister-cursor/.cursor-plugin/plugin.json || (echo "FAIL: .cursor-plugin/plugin.json missing" && exit 1)
 	@grep -q '"skills":' plugins/maister-cursor/.cursor-plugin/plugin.json || (echo "FAIL: plugin.json missing skills path" && exit 1)
-	@grep -q '"commands":' plugins/maister-cursor/.cursor-plugin/plugin.json || (echo "FAIL: plugin.json missing commands path" && exit 1)
+	@! grep -q '"commands":' plugins/maister-cursor/.cursor-plugin/plugin.json || (echo "FAIL: plugin.json must not have commands path" && exit 1)
 	@test ! -d plugins/maister-cursor/.claude-plugin || (echo "FAIL: .claude-plugin should not exist" && exit 1)
 	@echo "Checking no maister: prefixes..."
 	@! grep -r 'maister:' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: maister: prefix found" && exit 1)
@@ -100,6 +123,8 @@ validate-cursor:
 	@grep -qi 'fast' plugins/maister-cursor/rules/maister-no-fast-models.mdc || (echo "FAIL: maister-no-fast-models.mdc missing fast-model policy" && exit 1)
 	@echo "Checking no TaskCreate/TaskUpdate in cursor variant..."
 	@! grep -rE 'TaskCreate|TaskUpdate' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: TaskCreate/TaskUpdate found" && exit 1)
+	@echo "PR5: skill inventory test..."
+	@bash platforms/cursor/tests/skill-inventory.test.sh
 	@echo "Cursor checks passed"
 
 # validate-kiro rules 1–32 (see .maister/tasks/.../implementation/spec.md)

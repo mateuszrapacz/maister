@@ -2,7 +2,7 @@
 name: maister-docs-operator
 description: Internal documentation management service. Executes docs-manager operations and returns results to the calling workflow.
 skills:
-  - docs-manager
+  - maister-docs-manager
 ---
 
 # Documentation Operator (Internal Service)

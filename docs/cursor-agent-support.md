@@ -242,11 +242,23 @@ Własny flow:
 3. Gate: `AskQuestion` — approve / revise / cancel
 4. Implementacja w trybie agent
 
-Dotyczy: `commands/quick-plan.md`, `skills/quick-bugfix/SKILL.md`.
+Dotyczy: `skills/maister-quick-plan/SKILL.md`, `skills/maister-quick-bugfix/SKILL.md`.
 
-### 8. Commands vs Skills
+### 8. Skill visibility & naming
 
-Zachować oba (`commands/` + user-invocable skills), z transformacją nazw `maister-foo`.
+Cursor loads every `skills/*/SKILL.md` into slash autocomplete. There is no API to hide palette entries; `user-invocable: false` and `disable-model-invocation: true` do not suppress the `/` list.
+
+**Build output (skills-only):**
+- Public user-facing skills: `/maister-*` only (one entry per capability)
+- Internal engines: `lib/skills/maister-*` (orchestrator-only — docs-manager, codebase-analyzer, implementation-plan-executor, implementation-verifier)
+- Reference-only: `lib/orchestrator-framework/` (not a slash skill)
+
+**Naming migration (breaking):** Old plain-kebab names removed from palette. Examples:
+- `/problem-classifier` → `/maister-problem-classifier`
+- `/grill-me` → `/maister-grill-me`
+- `/maister-quick-problem-classifier` → `/maister-problem-classifier` (shorter form per D1)
+
+No `commands/` directory in Cursor build — thin command wrappers merged into skills at build time (`platforms/cursor/build.sh`).
 
 ### 9. Plugin documentation
 

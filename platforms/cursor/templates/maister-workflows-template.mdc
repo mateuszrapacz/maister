@@ -26,11 +26,18 @@ When failures occur:
 
 ## Maister Workflow Invocation
 
-When any `/maister-*` command is invoked, execute it via the **Skill tool** immediately — read the matching skill file and follow it. Do not skip workflows for "straightforward" tasks. The user chose the workflow intentionally; complexity assessment is the workflow's job.
+When any `/maister-*` slash skill is invoked, execute it via the **Skill tool** immediately — read the matching skill file and follow it. Do not skip workflows for "straightforward" tasks. The user chose the workflow intentionally; complexity assessment is the workflow's job.
 
-- **Skills** → Skill tool (orchestrators, utilities, internal engines)
+- **Public skills** → `/maister-*` slash (orchestrators, reviews, modeling, quick utilities)
+- **Internal engines** → `lib/skills/maister-*` — orchestrator-only; do not invoke from user chat unless debugging
 - **Subagents** → Task tool (`maister-*` agent types)
 - **Project standards** → Read `.maister/docs/INDEX.md` first (see `maister-docs.mdc`)
+
+## Slash Palette Policy
+
+- User-facing palette: only `/maister-*` skills (one entry per capability)
+- Internal Skill-tool engines live under `lib/skills/` — not user-facing slash commands
+- Never invoke internal skills from user chat unless explicitly debugging orchestrator behavior
 
 ## Platform: Cursor Agent
 
@@ -38,7 +45,7 @@ This is the Cursor Agent variant. Key differences from Claude Code:
 
 | Area | Cursor Agent |
 |------|--------------|
-| Commands | Prefix `maister-foo` (e.g. `/maister-development`); plugin id `maister-cursor` |
+| Skills | Prefix `maister-foo` (e.g. `/maister-development`); skills-only discovery — no `commands/` directory |
 | Project instructions | `AGENTS.md` plus `.cursor/rules/maister-docs.mdc` after init |
 | User questions | `AskQuestion` tool (supports `allow_multiple`) |
 | Progress tracking | `TodoWrite` (not TaskCreate/TaskUpdate) |
