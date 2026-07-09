@@ -102,29 +102,10 @@ Task type (feature/bug/enhancement) is auto-detected from context. Override with
 
 ### Quick Commands
 
-For smaller tasks that don't need a full workflow:
+For smaller tasks that don't need a full orchestrator workflow — quick plan/dev/bugfix plus **12 on-demand skills** (requirements critique, DDD modeling, architecture review, stakeholder communication). On-demand skills are invoked manually, not as phases of `/maister:development`.
 
-| Command | Use When |
-|---------|----------|
-| `/maister:quick-plan` | You want a plan with standards awareness before coding |
-| `/maister:quick-dev` | You know what to do - just implement with standards applied |
-| `/maister:quick-bugfix` | Quick TDD-driven bug fix — write failing test, fix, verify |
-| `/maister:quick-transcript-critic` | Audit a meeting transcript for decision-process problems |
-| `/maister:quick-requirements-critic` | Interactive requirements quality critique (4-check rubric) |
-| `/maister:quick-problem-classifier` | Classify business requirements into DDD modeling problem classes |
-| `/maister:quick-metaprogram-classifier` | Diagnose NLP metaprograms and suggest communication strategies |
-| `/maister:modeling-context-distiller` | Distill bounded contexts via generalization analysis |
-| `/maister:modeling-aggregate-designer` | Design RC consistency units (aggregate wizard) |
-| `/maister:reviews-linguistic-boundaries` | Verify linguistic boundaries between bounded contexts |
-| `/maister:reviews-test-strategy` | Review whether test strategy matches production code problem class |
-
-**Bundle A (requirements quality):** Run `/maister:quick-transcript-critic` → `/maister:quick-requirements-critic` → `/maister:quick-problem-classifier` when resource-contention signals appear — chain via each skill's Recommended Next Steps, not an orchestrator.
-
-**Bundle B (DDD modeling):** Run `/maister:quick-problem-classifier` → `/maister:modeling-context-distiller` when generalization/ambiguity signals appear → `/maister:modeling-aggregate-designer` when RC class is detected → `/maister:reviews-linguistic-boundaries` when `language.md` exists — chain via Recommended Next Steps.
-
-**Bundle C (architecture review):** Run `/maister:reviews-linguistic-boundaries` on modules with `language.md` files (see `.maister/docs/standards/global/language-md-convention.md`), then `/maister:reviews-test-strategy` on tests for the same scope. Optional: pair with `/maister:thermos` on the same PR for code risk + linguistic boundaries + test strategy alignment.
-
-**Bundle D (stakeholder communication):** Run `/maister:quick-metaprogram-classifier` on the stakeholder's message or described behavior, then `/maister:grill-me` to stress-test your proposal before the difficult conversation — chain via Recommended Next Steps, not an orchestrator.
+- **[On-Demand Skills Guide](docs/on-demand-skills.md)** — what each skill does, when to use it, and Bundle A–D chaining
+- **[Command Reference](docs/commands.md)** — slash command syntax for all commands
 
 ## Standards-Aware Development
 
@@ -355,6 +336,7 @@ Full guide: [Kilo CLI Support](docs/kilo-cli-support.md) (install, daily use, sk
 
 ## Learn More
 
+- [Documentation Hub](docs/README.md) - start here for all user documentation
 - [Workflow Details](docs/workflows.md) - phases, examples, and task structure for each workflow type
 - [Full Command Reference](docs/commands.md) - all workflow, review, utility, and quick commands
 - [Cursor Agent Support](docs/cursor-agent-support.md) - architecture and platform decisions

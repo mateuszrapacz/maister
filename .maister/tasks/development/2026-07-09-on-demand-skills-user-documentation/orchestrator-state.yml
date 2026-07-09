@@ -1,0 +1,143 @@
+orchestrator:
+  started_phase: phase-1
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+  options:
+    html_output: true
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: false
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+    sequential: null
+  created: "2026-07-09T15:21:24Z"
+  updated: "2026-07-09T16:28:19Z"
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-5
+    - phase-6
+    - phase-7
+    - phase-8
+    - phase-10
+    - phase-11
+    - phase-14
+  task_path: .maister/tasks/development/2026-07-09-on-demand-skills-user-documentation
+  task_ids:
+    phase-1: phase-1
+    phase-2: phase-2
+    phase-3: phase-3
+    phase-4: phase-4
+    phase-5: phase-5
+    phase-6: phase-6
+    phase-7: phase-7
+    phase-8: phase-8
+    phase-9: phase-9
+    phase-10: phase-10
+    phase-11: phase-11
+    phase-12: phase-12
+    phase-13: phase-13
+    phase-14: phase-14
+
+task:
+  title: On-Demand Skills User Documentation
+  description: |
+    Implement user-facing documentation for Wave 1–3 on-demand skills per plan at
+    .maister/plans/2026-07-09-on-demand-skills-user-documentation.md.
+    Deliverables: docs/on-demand-skills.md, docs/README.md hub, extend docs/commands.md,
+    update README.md navigation. Documentation-only change; source plugin unchanged except optional CLAUDE.md cross-link.
+  status: completed
+  tags:
+    - documentation
+    - on-demand-skills
+  priority: medium
+
+task_context:
+  risk_level: low
+  clarifications_resolved: true
+  scope_expanded: false
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: true
+    involves_data_operations: false
+    ui_heavy: false
+  research_reference:
+    path: null
+    research_question: null
+    research_type: null
+    confidence_level: null
+  design_reference:
+    source: null
+    product_design_path: null
+    mockup_count: 0
+    has_brief: false
+    index_path: null
+  phase_summaries:
+    research:
+      summary: null
+      key_findings: []
+      recommended_approach: null
+    design:
+      summary: null
+      screen_count: 0
+      component_count: 0
+      index_path: null
+    codebase_analysis:
+      key_files:
+        - .maister/plans/2026-07-09-on-demand-skills-user-documentation.md
+        - docs/commands.md
+        - docs/workflows.md
+        - README.md
+        - plugins/maister/CLAUDE.md
+      primary_language: Markdown
+      summary: Documentation-only task; two new docs files, extend commands.md with 10 entries, trim README. 8/12 skills have command wrappers; grill-me/thermos need explicit-request wording.
+    clarifications:
+      - grill-me/thermos: explicit request + platform callout
+      - thermo-nuclear: thermos-only catalog entry
+      - no CLAUDE.md cross-link
+      - minimal Kiro detail in guide
+    gap_analysis:
+      integration_points:
+        - README.md Learn More → docs/README.md
+        - docs/commands.md → on-demand-skills.md
+        - guide → plugins/maister/skills/*/SKILL.md
+      summary: Documentation-only; 2 new files, extend commands.md with 10 entries, trim README duplication. No code changes. Risk low, effort medium.
+    scope_clarifications:
+      scope_expanded: null
+      summary: null
+    ui_mockups:
+      components_designed: []
+      summary: null
+    specification:
+      summary: Documentation-only spec with 19 FRs across P1-P4; 2 new docs files, 10 command entries, README trim. grill-me/thermos explicit-request wording.
+    implementation:
+      summary: All 5 task groups complete. Created docs/on-demand-skills.md and docs/README.md; extended docs/commands.md with 10 entries; trimmed README Quick Commands. Verification grep scripts pass.
+      decisions: []
+      risks: []
+      artifacts:
+        - path: implementation/work-log.md
+          label: Work Log
+          html: null
+    architecture_decision:
+      decision: null
+      summary: null
+
+project_context:
+  project_doc_paths:
+    - .maister/docs/project/vision.md
+    - .maister/docs/project/roadmap.md
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/project/architecture.md
+
+verification_context:
+  last_status: passed
+  issues_found: []
+  fixes_applied: []
+  decisions_made: []
+  reverify_count: 0

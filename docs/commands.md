@@ -215,3 +215,93 @@ Lightweight TDD-driven bug fix without a full orchestrator workflow. Analyzes th
 **When to use**: Simple, isolated bugs where you can quickly identify the root cause. If the bug is too complex (multiple files, unclear root cause, architectural impact), the skill suggests escalating to `/maister:development`.
 
 No task directory created — works directly in your codebase.
+
+---
+
+## On-Demand Skills
+
+Standalone skills for requirements critique, DDD modeling, architecture review, and stakeholder communication. These are **not** orchestrator phases — invoke them manually. See [On-Demand Skills Guide](on-demand-skills.md) for when to use each skill and Bundle A–D chaining.
+
+### `/maister:quick-transcript-critic`
+
+Audits a meeting transcript or notes for decision-process problems — false consensus, marginalized voices, scope drift. Produces a structured critique with severity ratings, evidence quotes, and diagnostic questions.
+
+**When to use**: After meetings where requirements were discussed verbally; before converting notes into tickets or specs.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
+
+### `/maister:quick-requirements-critic`
+
+Interactive requirements quality critique via four checks: problem vs solution framing, observable behavior, extensible signal map, and rigid quantifier probing.
+
+**When to use**: Before writing a specification; when requirements feel vague or solution-heavy.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
+
+### `/maister:quick-problem-classifier`
+
+Classifies business requirements into four DDD modeling problem classes (CRUD, Transformation & Presentation, Integration, Resource Contention) with clarifying questions and implementation guidance.
+
+**When to use**: When unsure which modeling approach fits; as entry point for DDD modeling chains.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
+
+### `/maister:quick-metaprogram-classifier`
+
+Diagnoses NLP metaprogram patterns in utterances or described behavior and suggests context-specific communication strategies.
+
+**When to use**: Before difficult stakeholder conversations; when communication style seems mismatched.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
+
+### `/maister:modeling-context-distiller`
+
+Distills bounded contexts via bidirectional linguistic analysis — finds generalization candidates and context-split signals. Produces a strategic design artifact.
+
+**When to use**: When domain concepts might be generalized or split across contexts; after problem-classifier in modeling chains.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
+
+### `/maister:modeling-aggregate-designer`
+
+Interactive wizard for Resource Contention consistency units — aggregate boundaries, command locking, optimistic concurrency.
+
+**When to use**: When problem-classifier detects RC class; when modeling concurrent resource contention.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
+
+### `/maister:reviews-linguistic-boundaries`
+
+Read-only audit of bounded-context language leakage via `language.md` files. Gracefully degrades when the convention is not adopted.
+
+**When to use**: When modules have `language.md` files; before merging cross-module changes.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
+
+### `/maister:reviews-test-strategy`
+
+Read-only review that classifies production code by problem class and compares test strategy (output/state/interaction-based) against recommendations.
+
+**When to use**: After linguistic-boundary review; when tests feel misaligned with production code structure.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
+
+### `/maister:grill-me`
+
+**Primary invocation:** Ask explicitly in natural language (e.g., "grill me on this plan"). Cursor users: `/maister-grill-me`.
+
+Relentless interactive interview to stress-test a plan or design until shared understanding. Walks a decision tree one question at a time.
+
+**When to use**: Before stakeholder conversations; when a design has unresolved branches.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
+
+### `/maister:thermos`
+
+**Primary invocation:** Ask explicitly in natural language (e.g., "run a thermos review on this branch"). Cursor users: `/maister-thermos`.
+
+Launches both thermo-nuclear-review and thermo-nuclear-code-quality-review in parallel, then synthesizes deduplicated findings — bugs, breaking changes, security, maintainability, and structural simplification.
+
+**When to use**: Before merging a significant PR or branch; as optional final step in architecture review chains.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
