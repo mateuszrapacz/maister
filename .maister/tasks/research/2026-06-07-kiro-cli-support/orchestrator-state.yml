@@ -45,7 +45,6 @@ research_context:
     - .maister/docs/standards/global/conventions.md
     - .maister/docs/standards/testing/test-writing.md
     - docs/cursor-agent-support.md
-    - docs/cursor-agent-implementation-plan.md
     - docs/cursor-e2e-checklist.md
     - copilot-cli-issues.md
   phase_summaries:

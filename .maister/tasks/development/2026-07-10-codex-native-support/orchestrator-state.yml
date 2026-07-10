@@ -1,0 +1,184 @@
+orchestrator:
+  started_phase: phase-1
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-5: 0
+    phase-7: 0
+    phase-8: 0
+    phase-11: 0
+  options:
+    html_output: true
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: false
+    user_docs_enabled: true
+    code_review_enabled: false
+    pragmatic_review_enabled: false
+    reality_check_enabled: false
+    production_check_enabled: false
+    sequential: true
+  created: "2026-07-10T14:46:10Z"
+  updated: "2026-07-10T14:54:24Z"
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-5
+    - phase-6
+    - phase-7
+    - phase-8
+    - phase-10
+    - phase-11
+    - phase-14
+  task_path: .maister/tasks/development/2026-07-10-codex-native-support
+  task_ids:
+    phase-1: phase-1
+    phase-2: phase-2
+    phase-3: phase-3
+    phase-4: phase-4
+    phase-5: phase-5
+    phase-6: phase-6
+    phase-7: phase-7
+    phase-8: phase-8
+    phase-9: phase-9
+    phase-10: phase-10
+    phase-11: phase-11
+    phase-12: phase-12
+    phase-13: phase-13
+    phase-14: phase-14
+
+task:
+  title: Codex Native Support
+  description: |
+    Implement Maister's native Codex CLI and IDE plugin variant from the
+    completed research at .maister/tasks/research/2026-07-10-codex-native-support.
+    Deliver a native-first generated plugin with skills, hooks, MCP, marketplace
+    metadata, documentation, build/validation targets, and no pinned models.
+  status: completed
+  tags:
+    - codex
+    - plugin
+    - platform-support
+  priority: high
+
+task_context:
+  risk_level: medium
+  clarifications_resolved: true
+  scope_expanded: false
+  architecture_decision: native-first generated variant; functional subagent parity in MVP
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: true
+    involves_data_operations: false
+    ui_heavy: false
+  research_reference:
+    path: .maister/tasks/research/2026-07-10-codex-native-support
+    research_question: Codex-native plugin, skill, subagent, hook, and model support for Maister
+    research_type: technical
+    confidence_level: high
+  design_reference:
+    source: null
+    product_design_path: null
+    mockup_count: 0
+    has_brief: false
+    index_path: null
+  phase_summaries:
+    research:
+      summary: Native-first Codex packaging is recommended, with semantic transforms for skills and textual gates, native subagent delegation, host-controlled models, and hooks as defense-in-depth.
+      key_findings:
+        - Codex plugins require .codex-plugin/plugin.json and support skills, hooks, MCP, and marketplace metadata.
+        - Codex plugins do not provide a direct command component; source commands become skills.
+        - Custom agent TOML files are a separate project/user installation surface and stay outside the plugin MVP.
+      recommended_approach: Generate plugins/maister-codex from source using platforms/codex-cli/build.sh.
+    design:
+      summary: null
+      screen_count: 0
+      component_count: 0
+      index_path: null
+    codebase_analysis:
+      key_files:
+        - Makefile
+        - platforms/cursor/build.sh
+        - platforms/kiro-cli/build.sh
+        - plugins/maister/.claude-plugin/plugin.json
+        - plugins/maister/.mcp.json
+        - plugins/maister/hooks/hooks.json
+        - plugins/maister/skills/development/SKILL.md
+      primary_language: Bash and Markdown
+      summary: Maister uses source-only plugin artifacts plus platform build transforms, structural Make validation, and committed generated variants. The Codex variant needs a semantic transform rather than a copied agents/commands tree.
+    clarifications:
+      - Use native-first Codex plugin structure.
+      - Preserve functional workflow behavior while accepting non-structural agent parity for MVP.
+      - Keep models and reasoning effort controlled by Codex host/session settings.
+      - Include a repo-scoped local marketplace entry.
+      - Treat hook enforcement as defense-in-depth and document trust/sandbox limits.
+    gap_analysis:
+      integration_points:
+        - Makefile build/validate/clean targets
+        - Source skills and command wrappers
+        - Source MCP config and platform-specific hooks
+        - Generated-variant drift CI
+        - README/docs and tech-stack documentation
+      summary: No Codex variant or build pipeline existed. Required work includes a generated native plugin, semantic markdown transforms, Codex hook/MCP packaging, marketplace metadata, docs, and validation.
+    scope_clarifications:
+      scope_expanded: false
+      summary: Custom .codex/agents/*.toml bootstrap, model pinning, app-server orchestration, and live authenticated Codex smoke tests are outside the MVP.
+    ui_mockups:
+      components_designed: []
+      summary: Not applicable; this is plugin packaging and documentation.
+    specification:
+      summary: Native Codex plugin variant with 43 generated skills, Codex manifest/MCP/hooks, repo marketplace metadata, build/validate integration, documentation, and explicit MVP boundaries.
+      decisions:
+        - decision: Convert source commands into skills
+          rationale: Codex plugin manifests expose skills but no separate command component.
+        - decision: Omit custom agent files
+          rationale: Codex custom agents are standalone TOML configuration and should be opt-in.
+        - decision: Do not pin models
+          rationale: Model availability and cost/latency policy belong to the Codex host/session.
+      artifacts:
+        - path: analysis/requirements.md
+          label: Requirements
+          html: null
+        - path: implementation/spec.md
+          label: Specification
+          html: implementation/spec.html
+    implementation:
+      summary: Built the Codex generator, native hooks and MCP output, marketplace metadata, docs, Make targets, generated plugin, and drift validation.
+      decisions: []
+      risks:
+        - Live Codex install/auth/trust smoke test was not run in this session.
+      artifacts:
+        - path: platforms/codex-cli/build.sh
+          label: Codex Build Transform
+          html: null
+        - path: plugins/maister-codex/.codex-plugin/plugin.json
+          label: Generated Codex Manifest
+          html: null
+        - path: implementation/work-log.md
+          label: Work Log
+          html: null
+        - path: implementation/implementation-plan.md
+          label: Implementation Plan
+          html: implementation/implementation-plan.html
+        - path: verification/implementation-verification.md
+          label: Implementation Verification
+          html: verification/implementation-verification.html
+    architecture_decision:
+      decision: Native-first Codex plugin with semantic transforms and functional subagent parity
+      summary: Source remains authoritative; Codex receives native skills, hooks, MCP, and marketplace packaging. Workflow state remains in orchestrator-state.yml and model selection remains host-controlled.
+  project_doc_paths:
+    - .maister/docs/project/vision.md
+    - .maister/docs/project/roadmap.md
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/project/architecture.md
+
+verification_context:
+  last_status: passed_with_issues
+  issues_found:
+    - Live Codex runtime install, plugin trust, and authenticated subagent smoke test not executed.
+  fixes_applied: []
+  decisions_made:
+    - Structural validation is sufficient for this environment; live Codex verification remains a follow-up.
+  reverify_count: 0
