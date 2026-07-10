@@ -98,17 +98,3 @@ These three files need version/name changes during the merge workflow:
 2. Run `/maister:init` to initialize the framework
 3. Test commands like `/maister:development "test feature"`
 4. Test workflows with different task types and complexity levels
-
-## Agent skills
-
-### Issue tracker
-
-Issues live as local Markdown files under `.scratch/<feature>/`; external PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Uses the default canonical triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context layout with root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domain.md`.
