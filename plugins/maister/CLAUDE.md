@@ -551,7 +551,8 @@ Orchestrators manage complete workflows with state management, auto-recovery, an
 
 | Skill | Purpose | Details |
 |-------|---------|---------|
-| `grill-me` | Relentless interactive interview to stress-test a plan or design until shared understanding; walks the decision tree one question at a time with recommended answers | `skills/grill-me/SKILL.md` |
+| `grill-me` | Read-only stress-testing of a plan or design until shared understanding; one question at a time with recommended answers. Explicit request only. | `skills/grill-me/SKILL.md` |
+| `grill-with-docs` | Docs-aware grilling: same interactive discipline while maintaining `language.md` and sparse ADRs after user confirmation. Explicit request only. | `skills/grill-with-docs/SKILL.md` |
 | `thermo-nuclear-review` | Comprehensive branch/PR audit for bugs, breaking changes, security vulnerabilities, devex regressions, and feature-flag leaks. Explicit request only. | `skills/thermo-nuclear-review/SKILL.md` |
 | `thermo-nuclear-code-quality-review` | Strict maintainability audit: abstraction quality, file-size growth, spaghetti detection, structural simplification ("code judo"). Explicit request only. | `skills/thermo-nuclear-code-quality-review/SKILL.md` |
 | `thermos` | Launches both thermo-nuclear review subagents in parallel, then synthesizes deduplicated findings. Explicit request only. | `skills/thermos/SKILL.md` |
@@ -561,7 +562,9 @@ Orchestrators manage complete workflows with state management, auto-recovery, an
 
 **Bundle C — Architecture review flow**: Run `linguistic-boundary-verifier` when modules have `language.md` files (see `.maister/docs/standards/global/language-md-convention.md`). Then run `test-strategy-reviewer` on tests for the same scope. Optional: pair with `thermos` on the same PR for code risk + boundaries + test strategy.
 
-**Bundle D — Stakeholder communication flow**: Run `metaprogram-classifier` on the stakeholder's message or described behavior, then `grill-me` to stress-test your proposal before the conversation. Documented pairing only — no orchestrator wire-up.
+**Bundle D — Stakeholder communication flow**: Run `metaprogram-classifier` on the stakeholder's message or described behavior, then `grill-me` to stress-test your proposal before the conversation. For docs-aware grilling with vocabulary capture, use `grill-with-docs` as a standalone alternative — not a third Bundle D step. Documented pairing only — no orchestrator wire-up.
+
+> **Grilling vs modeling/review**: `grill-me` and `grill-with-docs` stress-test plans interactively. Use `context-distiller` or `aggregate-designer` for strategic modeling; use `linguistic-boundary-verifier` for read-only boundary audits. `grill-with-docs` is the docs-maintaining counterpart to read-only `grill-me`.
 
 > **reviews-* delegation note**: Existing `reviews-code`, `reviews-spec-audit`, etc. delegate to **subagents** via Task tool. Wave 2 `reviews-test-strategy` and `reviews-linguistic-boundaries` delegate to **skills** via Skill tool (architecture-review rubrics).
 

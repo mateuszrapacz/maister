@@ -256,7 +256,7 @@ make build-kiro
 maister-kiro chat --agent maister
 ```
 
-In Kiro TUI, start workflows with **slash shortcut skills** (`/dev`, `/init`, `/grill-me`, `/thermos`, `/quick-plan`, …). Each shortcut delegates to the matching `/maister-*` orchestrator skill. You can also invoke `/maister-*` directly. Do not use Kiro's built-in `/plan` for Maister quick-plan — use `/quick-plan`.
+In Kiro TUI, start workflows with **slash shortcut skills** (`/dev`, `/init`, `/grill-me`, `/grill-with-docs`, `/thermos`, `/quick-plan`, …). Each shortcut delegates to the matching `/maister-*` orchestrator skill. You can also invoke `/maister-*` directly. Do not use Kiro's built-in `/plan` for Maister quick-plan — use `/quick-plan`.
 
 ### Local install
 

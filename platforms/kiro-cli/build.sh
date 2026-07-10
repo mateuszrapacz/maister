@@ -193,6 +193,7 @@ apply_kiro_overrides() {
     maister-performance
     maister-product-design
     maister-grill-me
+    maister-grill-with-docs
     maister-reviews-code
     maister-reviews-pragmatic
     maister-reviews-production-readiness
@@ -321,6 +322,12 @@ apply_delegation_transforms() {
   sedi 's|run `linguistic-boundary-verifier`|run `maister-linguistic-boundary-verifier`|g' "$f"
   sedi 's|run `metaprogram-classifier`|run `maister-metaprogram-classifier`|g' "$f"
   sedi 's|run `grill-me`|run `maister-grill-me`|g' "$f"
+  sedi 's|run `grill-with-docs`|run `maister-grill-with-docs`|g' "$f"
+  sedi 's|`grill-with-docs`|`maister-grill-with-docs`|g' "$f"
+  sedi 's|`grill-me`|`maister-grill-me`|g' "$f"
+  sedi 's|`context-distiller`|`maister-context-distiller`|g' "$f"
+  sedi 's|`aggregate-designer`|`maister-aggregate-designer`|g' "$f"
+  sedi 's|`linguistic-boundary-verifier`|`maister-linguistic-boundary-verifier`|g' "$f"
   sedi 's|run `problem-classifier`|run `maister-problem-classifier`|g' "$f"
   sedi 's|run `context-distiller`|run `maister-context-distiller`|g' "$f"
   # Wave 3 AJ skills: merged modeling-* commands and chain sections reference plain kebab names
@@ -727,6 +734,7 @@ generate_shortcut_skill "migration" "Shortcut for /maister-migration. Full migra
 generate_shortcut_skill "performance" "Shortcut for /maister-performance. Static bottleneck analysis and optimization." "maister-performance"
 generate_shortcut_skill "init" "Shortcut for /maister-init. Initialize Maister SDLC framework in this project." "maister-init"
 generate_shortcut_skill "grill-me" "Shortcut for /maister-grill-me. Stress-test a plan or design with relentless questions." "maister-grill-me"
+generate_shortcut_skill "grill-with-docs" "Shortcut for /maister-grill-with-docs. Stress-test a plan while maintaining language.md and sparse ADRs." "maister-grill-with-docs"
 generate_shortcut_skill "thermos" "Shortcut for /maister-thermos. Combined thermo-nuclear branch review (security + code quality)." "maister-thermos" \
   "Gather the scoped diff and changed-file contents first, then run both review subagents."
 generate_shortcut_skill "thermo-review" "Shortcut for /maister-thermo-nuclear-review. Deep security and correctness branch diff audit." "maister-thermo-nuclear-review" \

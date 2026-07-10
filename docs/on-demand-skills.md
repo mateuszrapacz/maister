@@ -69,12 +69,13 @@ Kiro uses a different invocation model. See [Kiro CLI Support](kiro-cli-support.
 
 ### Explicit-request skills (no reliable Claude Code slash)
 
-`grill-me` and `thermos` do not have standard command wrappers. Invoke them by **asking explicitly**:
+`grill-me`, `grill-with-docs`, and `thermos` do not have standard command wrappers. Invoke them by **asking explicitly**:
 
 - "Grill me on this design until we agree on the trade-offs"
+- "Grill this plan and update language.md"
 - "Run a thermos review on my branch before merge"
 
-**Cursor users** can also try: `/maister-grill-me` and `/maister-thermos`
+**Cursor users** can also try: `/maister-grill-me`, `/maister-grill-with-docs`, and `/maister-thermos`
 
 ### Trigger phrases (summary)
 
@@ -89,6 +90,7 @@ Kiro uses a different invocation model. See [Kiro CLI Support](kiro-cli-support.
 | `test-strategy-reviewer` | "review test strategy", "are these tests output-based or interaction-based?" |
 | `metaprogram-classifier` | "what metaprogram is this person using?", "how should I communicate with them?" |
 | `grill-me` | "grill me", "stress-test this plan" |
+| `grill-with-docs` | "grill with docs", "grill this plan and update language.md", "stress-test and capture domain language" |
 | `thermos` | "thermos review", "thermo-nuclear review of this PR" |
 
 For full invocation guards and workflow detail, see each skill's `SKILL.md` (linked in §5).
@@ -177,11 +179,13 @@ Use before difficult conversations or when adapting your message to someone's st
 
 ```mermaid
 flowchart LR
-  D1[metaprogram-classifier] --> D2[grill-me]
+  D1[metaprogram-classifier] --> D2{Need doc<br/>maintenance?}
+  D2 -->|No| D3[grill-me]
+  D2 -->|Yes| D4[grill-with-docs]
 ```
 
 1. **`metaprogram-classifier`** — Diagnose NLP metaprogram patterns in their communication
-2. **`grill-me`** — Stress-test your proposal before the conversation
+2. **`grill-me`** or **`grill-with-docs`** — Stress-test your proposal before the conversation; use `grill-with-docs` when you want confirmed `language.md` and sparse ADR updates during grilling
 
 ---
 
@@ -247,19 +251,53 @@ Each entry: 2–4 sentences + when/when-not + invocation + output type + suggest
 
 #### grill-me
 
-**What it does:** Relentless interactive interview to stress-test a plan or design until shared understanding. Walks a decision tree one question at a time with recommended answers.
+**What it does:** Relentless interactive interview to stress-test a plan or design until shared understanding. Walks a decision tree one question at a time with recommended answers. Ends with a **convergence gate** — summarizes decisions, assumptions, deferrals, and contradictions; requires explicit user confirmation before closing. **Read-only** — no documentation or code edits during the session. Explicit request only.
 
-**When to use:** Before stakeholder conversations; when a design has unresolved branches; as the second step in Bundle D.
+**When to use:** Before stakeholder conversations; when a design has unresolved branches; as the second step in Bundle D; when you want stress-testing without maintaining `language.md` or ADRs.
 
-**When not to use:** For automated reports (use review skills); as a replacement for product-design orchestrator.
+**When not to use:** When you want vocabulary or decisions captured in project docs during grilling (use `grill-with-docs` instead); for automated reports (use review skills); as a replacement for product-design orchestrator.
 
 **Invocation:** Ask explicitly in natural language (e.g. "grill me on this plan"). Cursor: `/maister-grill-me`. Do not rely on a Claude Code slash command.
 
-**Output type:** Interactive session
+**Output type:** Interactive session (read-only)
 
-**Suggested next:** Proceed to implementation or stakeholder meeting — see [Bundle D](#bundle-d--stakeholder-communication)
+**Suggested next:** Proceed to implementation, stakeholder meeting, or `grill-with-docs` to harden vocabulary — see [Bundle D](#bundle-d--stakeholder-communication)
+
+**Related:** [`grill-with-docs`](#grill-with-docs) — docs-maintaining grilling variant
 
 **Full spec:** [plugins/maister/skills/grill-me/SKILL.md](../plugins/maister/skills/grill-me/SKILL.md)
+
+---
+
+#### grill-with-docs
+
+**What it does:** Same grilling discipline as `grill-me` — one question at a time, facts vs decisions, decision-tree walk, convergence gate — plus user-confirmed updates to `language.md` and sparse ADRs when decisions meet significance criteria. Explicit request only.
+
+**When to use:** When stress-testing a plan or domain topic and you want canonical vocabulary and reversible decisions captured in project documentation as you go; before implementation when `language.md` or ADRs should reflect agreed terms.
+
+**When not to use:** For read-only stress-testing without doc edits (use `grill-me`); for strategic bounded-context discovery (use `context-distiller`); for aggregate/locking design (use `aggregate-designer`); for read-only boundary audits of existing docs (use `linguistic-boundary-verifier`).
+
+**Invocation:** Ask explicitly in natural language (e.g. "grill this plan and update language.md"). Cursor: `/maister-grill-with-docs`. Do not rely on a Claude Code slash command.
+
+**Output type:** Interactive session with confirmed `language.md` and ADR edits
+
+**Suggested next:** `linguistic-boundary-verifier` for read-only boundary audit; `/maister:quick-plan` or `/maister:development` once vocabulary is settled
+
+**Related:** [`grill-me`](#grill-me) — read-only alternative; [`linguistic-boundary-verifier`](#linguistic-boundary-verifier) — post-settlement audit
+
+**Full spec:** [plugins/maister/skills/grill-with-docs/SKILL.md](../plugins/maister/skills/grill-with-docs/SKILL.md)
+
+---
+
+#### Grilling and modeling — when to use which skill
+
+| Skill | Use when… |
+|-------|-----------|
+| `grill-me` | Stress-testing a plan or design until shared understanding; **no** documentation or code edits |
+| `grill-with-docs` | Same grilling discipline, but you want confirmed terms in `language.md` and sparse ADRs as decisions resolve |
+| `context-distiller` | Strategic bounded-context discovery — generalization candidates and context-split signals across the domain |
+| `aggregate-designer` | Resource Contention consistency units — aggregate boundaries, command locking, optimistic concurrency |
+| `linguistic-boundary-verifier` | Read-only audit of existing `language.md` files for cross-module leakage (does not interactively resolve terms) |
 
 ---
 

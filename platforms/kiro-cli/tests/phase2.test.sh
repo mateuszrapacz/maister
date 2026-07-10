@@ -100,6 +100,92 @@ test_grill_thermos_prompts() {
   grep -q '/maister-thermos' "$OUT/skills/thermos/SKILL.md"
 }
 
+# 6e. /grill-with-docs shortcut maps to /maister-grill-with-docs
+test_grill_with_docs_shortcut() {
+  run_build
+  test -d "$OUT/skills/grill-with-docs" && \
+    grep -q '/maister-grill-with-docs' "$OUT/skills/grill-with-docs/SKILL.md"
+}
+
+# 6f. FR-5.4: grill skills prohibit plan implementation (grep contract A-F)
+test_grill_prohibit_implementation() {
+  run_build
+  local src_me="$ROOT/plugins/maister/skills/grill-me/SKILL.md"
+  local src_docs="$ROOT/plugins/maister/skills/grill-with-docs/SKILL.md"
+  local gen_me="$OUT/skills/maister-grill-me/SKILL.md"
+  local gen_docs="$OUT/skills/maister-grill-with-docs/SKILL.md"
+  local ok=1
+
+  # Pattern A: grill-me must prohibit plan implementation
+  if ! grep -Eiq '(never|do not|prohibit).*(implement|implementation)' "$src_me"; then
+    echo "  missing pattern A on grill-me source"
+    ok=0
+  fi
+
+  # Pattern B: grill-with-docs must prohibit plan implementation
+  if [ -f "$src_docs" ]; then
+    if ! grep -Eiq '(never|do not|prohibit).*(implement|implementation)' "$src_docs"; then
+      echo "  missing pattern B on grill-with-docs source"
+      ok=0
+    fi
+  else
+    echo "  grill-with-docs source missing (pattern B)"
+    ok=0
+  fi
+
+  # Pattern C: no permissive implementation language in both source skills
+  if grep -Eiq 'proceed to implement' "$src_me"; then
+    echo "  permissive language in grill-me (pattern C)"
+    ok=0
+  fi
+  if [ -f "$src_docs" ] && grep -Eiq 'proceed to implement' "$src_docs"; then
+    echo "  permissive language in grill-with-docs (pattern C)"
+    ok=0
+  fi
+
+  # Pattern D: grill-me must prohibit doc/code mutation
+  if ! grep -Eiq '(never|do not|prohibit).*(edit|mutat).*(documentation|code|files?)' "$src_me" && \
+     ! grep -Eiq 'read-only|no (documentation|code) edits' "$src_me"; then
+    echo "  missing pattern D on grill-me source"
+    ok=0
+  fi
+
+  # Pattern E: grill-with-docs must prohibit CONTEXT.md convention
+  if [ -f "$src_docs" ]; then
+    if ! grep -Eiq '(prohibit|do not|never).*(CONTEXT\.md|CONTEXT-MAP\.md)' "$src_docs"; then
+      echo "  missing pattern E on grill-with-docs source"
+      ok=0
+    fi
+  else
+    echo "  grill-with-docs source missing (pattern E)"
+    ok=0
+  fi
+
+  # Pattern F: prohibition survives build (skip generated file if missing during red gate)
+  if [ -f "$gen_me" ]; then
+    if ! grep -Eiq '(never|do not|prohibit).*(implement|implementation)' "$gen_me"; then
+      echo "  missing pattern F on generated grill-me"
+      ok=0
+    fi
+    if ! grep -Eiq 'read-only|no (documentation|code) edits' "$gen_me"; then
+      echo "  missing read-only prohibition on generated grill-me (pattern F2)"
+      ok=0
+    fi
+  fi
+  if [ -f "$gen_docs" ]; then
+    if ! grep -Eiq '(never|do not|prohibit).*(implement|implementation)' "$gen_docs"; then
+      echo "  missing pattern F on generated grill-with-docs"
+      ok=0
+    fi
+    if ! grep -Eiq '(prohibit|do not|never).*(CONTEXT\.md|CONTEXT-MAP\.md)' "$gen_docs"; then
+      echo "  missing CONTEXT prohibition on generated grill-with-docs (pattern F3)"
+      ok=0
+    fi
+  fi
+
+  test "$ok" -eq 1
+}
+
 # 6d. thermos skill subagent lines survive Kiro build transforms
 test_thermos_subagent_syntax() {
   run_build
@@ -136,6 +222,8 @@ assert "skill-invocation-reminder on agentSpawn + userPromptSubmit" test_skill_r
 assert "/dev skill maps to /maister-development" test_dev_prompt_maps_development
 assert "/quick-plan skill maps to /maister-quick-plan" test_quick_plan_prompt
 assert "/grill-me and /thermos skills map to maister skills" test_grill_thermos_prompts
+assert "/grill-with-docs shortcut maps to /maister-grill-with-docs" test_grill_with_docs_shortcut
+assert "grill skills prohibit plan implementation (FR-5.4 grep contract)" test_grill_prohibit_implementation
 assert "thermos skill has valid subagent syntax after build" test_thermos_subagent_syntax
 assert "steering documents preCompact gap and hook paths" test_steering_hook_docs
 assert "smoke-uninstall.sh removes KIRO_HOME" test_smoke_uninstall

@@ -404,7 +404,7 @@ Do not model them together in one class — it will force domain logic into the 
 
 > This is a Resource Contention problem — the system must protect shared mutable state under concurrent access. The next step is designing the consistency unit (aggregate): which commands must lock together, which can run in parallel, and where the boundary sits.
 >
-> See **Recommended next steps** below for the `aggregate-designer` handoff.
+> See **Recommended next steps** below for the `maister-aggregate-designer` handoff.
 
 **When to draw the diagram**: always when decomposition has 2+ components. The diagram shows:
 - Which component owns the source of truth (→ arrow = "reads from" or "sends command to")
@@ -502,7 +502,7 @@ When classification is **Resource Contention** (primary or any component), the n
 
 | Condition | Next skill | Notes |
 |-----------|-----------|-------|
-| RC class detected | `aggregate-designer` | Invoke with original domain description and this classification output as context |
-| Strategic boundaries unclear | `context-distiller` | When same noun behaves differently across processes |
+| RC class detected | `maister-aggregate-designer` | Invoke with original domain description and this classification output as context |
+| Strategic boundaries unclear | `maister-context-distiller` | When same noun behaves differently across processes |
 
-When `aggregate-designer` completes, see its Recommended next steps for test strategy review.
+When `maister-aggregate-designer` completes, see its Recommended next steps for test strategy review.

@@ -53,12 +53,12 @@ Orchestrators manage complete workflows with state management, auto-recovery, an
 | `transcript-critic` | Audits meeting transcripts for decision-process problems (false consensus, marginalized voices, scope drift). Produces structured non-interactive critique with severity, evidence quotes, and diagnostic questions. Explicit request only. | `skills/transcript-critic/SKILL.md` |
 | `requirements-critic` | Interactive requirements critique via 4 checks: problem vs solution framing, observable behavior, extensible signal map, rigid quantifier probing. Explicit request only. | `skills/requirements-critic/SKILL.md` |
 | `problem-classifier` | Classifies business requirements into 4 modeling problem classes (CRUD, Transformation & Presentation, Integration, Resource Contention). Signal scan, clarifying questions, implementation guidance — not an archetype mapper. | `skills/problem-classifier/SKILL.md` |
-| `context-distiller` | Distills bounded contexts via bidirectional linguistic analysis — finds generalization candidates and context-split signals. Strategic design artifact, not implementation. | `skills/context-distiller/SKILL.md` |
-| `aggregate-designer` | Multi-phase wizard for Resource Contention consistency units (aggregate boundaries, command locking, optimistic concurrency). | `skills/aggregate-designer/SKILL.md` |
+| `maister-context-distiller` | Distills bounded contexts via bidirectional linguistic analysis — finds generalization candidates and context-split signals. Strategic design artifact, not implementation. | `skills/context-distiller/SKILL.md` |
+| `maister-aggregate-designer` | Multi-phase wizard for Resource Contention consistency units (aggregate boundaries, command locking, optimistic concurrency). | `skills/aggregate-designer/SKILL.md` |
 
 **Bundle A — Requirements quality flow**: Run `transcript-critic` on the meeting transcript first. Use its diagnostic questions in follow-up clarification (meeting or async). Capture refined user stories or tickets, then run `requirements-critic` for interactive quality critique. When concurrency or resource-contention signals appear, run `maister-problem-classifier` for modeling-class guidance.
 
-**Bundle B — DDD modeling flow**: Run `problem-classifier` on requirements → `context-distiller` for strategic boundaries when generalization/ambiguity signals appear → `aggregate-designer` when RC class is detected → `linguistic-boundary-verifier` when `language.md` files exist. Chain via each skill's Recommended next steps, not an orchestrator.
+**Bundle B — DDD modeling flow**: Run `problem-classifier` on requirements → `maister-context-distiller` for strategic boundaries when generalization/ambiguity signals appear → `maister-aggregate-designer` when RC class is detected → `maister-linguistic-boundary-verifier` when `language.md` files exist. Chain via each skill's Recommended next steps, not an orchestrator.
 
 > **Naming distinction**: `task-classifier` **agent** routes task descriptions to orchestrators (5 workflow types: development, performance, migration, research, product-design). `problem-classifier` **skill** classifies business requirements into 4 DDD modeling problem classes. Different domains — do not conflate.
 
@@ -66,17 +66,20 @@ Orchestrators manage complete workflows with state management, auto-recovery, an
 
 | Skill | Purpose | Details |
 |-------|---------|---------|
-| `grill-me` | Relentless interactive interview to stress-test a plan or design until shared understanding; walks the decision tree one question at a time with recommended answers | `skills/grill-me/SKILL.md` |
+| `maister-grill-me` | Read-only stress-testing of a plan or design until shared understanding; one question at a time with recommended answers. Explicit request only. | `skills/grill-me/SKILL.md` |
+| `maister-grill-with-docs` | Docs-aware grilling: same interactive discipline while maintaining `language.md` and sparse ADRs after user confirmation. Explicit request only. | `skills/grill-with-docs/SKILL.md` |
 | `thermo-nuclear-review` | Comprehensive branch/PR audit for bugs, breaking changes, security vulnerabilities, devex regressions, and feature-flag leaks. Explicit request only. | `skills/thermo-nuclear-review/SKILL.md` |
 | `thermo-nuclear-code-quality-review` | Strict maintainability audit: abstraction quality, file-size growth, spaghetti detection, structural simplification ("code judo"). Explicit request only. | `skills/thermo-nuclear-code-quality-review/SKILL.md` |
 | `thermos` | Launches both thermo-nuclear review subagents in parallel, then synthesizes deduplicated findings. Explicit request only. | `skills/thermos/SKILL.md` |
 | `test-strategy-reviewer` | Read-only review: classifies production code by problem class and compares test strategy (output/state/interaction-based) against recommendations. Explicit request only. | `skills/test-strategy-reviewer/SKILL.md` |
-| `linguistic-boundary-verifier` | Read-only bounded-context language leakage audit via `language.md` files; graceful degradation when convention not adopted. Explicit request only. | `skills/linguistic-boundary-verifier/SKILL.md` |
+| `maister-linguistic-boundary-verifier` | Read-only bounded-context language leakage audit via `language.md` files; graceful degradation when convention not adopted. Explicit request only. | `skills/linguistic-boundary-verifier/SKILL.md` |
 | `metaprogram-classifier` | Diagnoses NLP metaprogram patterns in communication and suggests context-specific strategies. Interactive classifier. | `skills/metaprogram-classifier/SKILL.md` |
 
-**Bundle C — Architecture review flow**: Run `linguistic-boundary-verifier` when modules have `language.md` files (see `.maister/docs/standards/global/language-md-convention.md`). Then run `maister-test-strategy-reviewer` on tests for the same scope. Optional: pair with `thermos` on the same PR for code risk + boundaries + test strategy.
+**Bundle C — Architecture review flow**: Run `maister-linguistic-boundary-verifier` when modules have `language.md` files (see `.maister/docs/standards/global/language-md-convention.md`). Then run `maister-test-strategy-reviewer` on tests for the same scope. Optional: pair with `thermos` on the same PR for code risk + boundaries + test strategy.
 
-**Bundle D — Stakeholder communication flow**: Run `metaprogram-classifier` on the stakeholder's message or described behavior, then `grill-me` to stress-test your proposal before the conversation. Documented pairing only — no orchestrator wire-up.
+**Bundle D — Stakeholder communication flow**: Run `metaprogram-classifier` on the stakeholder's message or described behavior, then `maister-grill-me` to stress-test your proposal before the conversation. For docs-aware grilling with vocabulary capture, use `maister-grill-with-docs` as a standalone alternative — not a third Bundle D step. Documented pairing only — no orchestrator wire-up.
+
+> **Grilling vs modeling/review**: `maister-grill-me` and `maister-grill-with-docs` stress-test plans interactively. Use `maister-context-distiller` or `maister-aggregate-designer` for strategic modeling; use `maister-linguistic-boundary-verifier` for read-only boundary audits. `maister-grill-with-docs` is the docs-maintaining counterpart to read-only `maister-grill-me`.
 
 > **reviews-* delegation note**: Existing `reviews-code`, `reviews-spec-audit`, etc. delegate to **subagents** via subagent tool. Wave 2 `reviews-test-strategy` and `reviews-linguistic-boundaries` delegate to **skills** via `/maister-*` slash skill (architecture-review rubrics).
 

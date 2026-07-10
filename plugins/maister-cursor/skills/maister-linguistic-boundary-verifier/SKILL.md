@@ -39,7 +39,7 @@ Analyze bounded context boundaries to ensure ubiquitous language remains properl
 
 If **yes** — verification can proceed. Each language.md contains everything needed: module description (what it does, whether it's a generalization), core terms, and integration points with other modules (relationship type, direction, imported/exported terms). No separate context-map file needed — the relationship graph is reconstructed from integration point sections across all language.md files.
 If modules **don't have language.md** — see **Graceful degradation** below. Do not fail invocation.
-If the question is **"where should my boundaries be?"** — use `context-distiller` first to find boundaries. This skill checks whether existing boundaries are respected, not whether they're correct.
+If the question is **"where should my boundaries be?"** — use `maister-context-distiller` first to find boundaries. This skill checks whether existing boundaries are respected, not whether they're correct.
 
 ## Graceful degradation (convention not adopted)
 
@@ -352,5 +352,5 @@ Shared Kernel:    Module A <----> Module B (explicit shared terms only)
 ## Recommended next steps
 
 - After boundary fixes are planned, run `maister-test-strategy-reviewer` on tests spanning the same modules.
-- If boundaries themselves are unclear, use `context-distiller` before re-verifying.
+- If boundaries themselves are unclear, use `maister-context-distiller` before re-verifying.
 - Pair with `thermos` on the same PR scope for code-risk + linguistic boundary coverage.

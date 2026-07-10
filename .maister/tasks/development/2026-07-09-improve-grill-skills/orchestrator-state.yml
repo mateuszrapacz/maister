@@ -1,0 +1,109 @@
+task:
+  title: "Improve Grill Skills"
+  type: development
+  status: completed
+  description: "Strengthen grill-me protocol, add grill-with-docs skill, update plugin catalog and platform generation, rebuild generated variants."
+  path: .maister/tasks/development/2026-07-09-improve-grill-skills
+  created: "2026-07-09T19:37:50Z"
+  updated: "2026-07-10T09:57:20Z"
+  plan_reference: analysis/plan-input.md
+
+orchestrator:
+  current_phase: 14
+  completed_phases:
+    - 1
+    - 2
+    - 5
+    - 6
+    - 7
+    - 8
+    - 10
+    - 11
+    - 14
+  options:
+    html_output: true
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: false
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  task_context:
+    risk_level: low-medium
+    clarifications_resolved: true
+    scope_expanded: null
+    architecture_decision: null
+    tech_clarified: false
+    task_characteristics:
+      has_reproducible_defect: false
+      modifies_existing_code: true
+      creates_new_entities: true
+      involves_data_operations: false
+      ui_heavy: false
+    research_reference:
+      path: null
+      research_question: null
+      research_type: null
+      confidence_level: null
+    design_reference: null
+  project_context:
+    project_doc_paths:
+      - .maister/docs/project/vision.md
+      - .maister/docs/project/roadmap.md
+      - .maister/docs/project/tech-stack.md
+      - .maister/docs/project/architecture.md
+      - .maister/docs/standards/global/error-handling.md
+      - .maister/docs/standards/global/validation.md
+      - .maister/docs/standards/global/conventions.md
+      - .maister/docs/standards/global/language-md-convention.md
+      - .maister/docs/standards/global/coding-style.md
+      - .maister/docs/standards/global/commenting.md
+      - .maister/docs/standards/global/minimal-implementation.md
+      - .maister/docs/standards/global/plugin-development.md
+      - .maister/docs/standards/global/build-pipeline.md
+      - .maister/docs/standards/testing/test-writing.md
+  phase_summaries:
+    codebase_analysis:
+      summary: "grill-me minimal (11 lines); grill-with-docs missing. Moderate complexity, low-medium risk."
+      key_files:
+        - plugins/maister/skills/grill-me/SKILL.md
+        - platforms/kiro-cli/build.sh
+        - Makefile
+      primary_language: Markdown/Bash
+    clarifications:
+      - "User docs in scope"
+      - "ADR default .maister/docs/decisions/"
+      - "Explicit request only in catalog"
+    gap_analysis:
+      summary: "Rewrite grill-me, create grill-with-docs, bump Kiro counts 67→69, update catalog and user docs, make build/validate."
+      integration_points:
+        - plugins/maister/skills/grill-me/SKILL.md
+        - plugins/maister/skills/grill-with-docs/SKILL.md
+        - platforms/kiro-cli/build.sh
+        - Makefile
+        - docs/on-demand-skills.md
+    scope_clarifications: null
+    ui_mockups: null
+    specification: null
+    architecture_decision: null
+    implementation:
+      summary: "7/7 groups complete. grill-me rewritten, grill-with-docs created, Kiro 69/43/26, make validate PASS."
+      decisions: []
+      risks:
+        - "Generated variants uncommitted"
+      artifacts:
+        - path: implementation/work-log.md
+          label: Work Log
+    specification:
+      summary: "Two explicit grilling modes, no shared abstraction, sparse ADRs, Kiro inventory bump."
+    verification:
+      summary: "Passed after fixes — 0 critical, 0 warnings. Commit generated variants before merge."
+      decisions: []
+      risks:
+        - "CI drift until generated output committed"
+      artifacts:
+        - path: verification/implementation-verification.md
+          label: Verification Report
+          html: verification/implementation-verification.html

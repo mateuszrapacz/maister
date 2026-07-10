@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Plan — Improve Grill Skills</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.toc { font-size:13px; color:var(--dim); margin:12px 0 20px; }
+header { margin-bottom:8px; }
+header .meta { font-size:12.5px; color:var(--dim); margin-top:6px; }
+ul.compact { margin:6px 0; padding-left:18px; }
+ul.compact li { margin:4px 0; }
+.chip { display:inline-block; font-size:11px; background:var(--accent-soft); color:var(--accent);
+  padding:2px 8px; border-radius:6px; margin:2px 4px 2px 0; }
+.dep-flow { display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12.5px; margin:12px 0; }
+.dep-flow .node { background:var(--surface); border:1px solid var(--border); border-radius:6px;
+  padding:4px 10px; }
+.dep-flow .arrow { color:var(--dim); }
+.group { border-left:3px solid var(--accent); }
+.group .g-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.g-badge { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;
+  padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.g-badge::after { content:" pending"; font-weight:400; text-transform:none; letter-spacing:0; color:var(--dim); margin-left:4px; }
+.group.done .g-badge::after { content:" ✓ completed"; color:var(--ok); }
+.step.todo::before  { content:"☐ "; color:var(--dim); }
+.step.done::before  { content:"☑ "; color:var(--ok); }
+.step.done          { color:var(--dim); }
+.steps { list-style:none; padding:0; margin:8px 0; }
+.steps li { margin:5px 0; padding-left:0; }
+ol.checks { margin:6px 0; padding-left:20px; }
+ol.checks li { margin:3px 0; font-size:13px; }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="spec.html">Spec</a>
+  <span class="here">Plan</span>
+  <a href="../verification/implementation-verification.html">Verification</a>
+  <a href="implementation-plan.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <span class="badge">Implementation Plan</span>
+  <h1>Improve Grill Skills</h1>
+  <div class="meta">Task: 2026-07-09-improve-grill-skills · Generated 2026-07-10 · Status: Ready for execution</div>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>7</b><span>task groups</span></div>
+  <div class="tile"><b>52</b><span>total steps</span></div>
+  <div class="tile"><b>11</b><span>structural tests</span></div>
+  <div class="tile"><b>G1→G7</b><span>execution order</span></div>
+  <div class="tile"><b>Medium</b><span>complexity</span></div>
+</div>
+
+<section class="tldr card">
+  <h2 style="margin-top:0">TL;DR</h2>
+  <p>Seven task groups deliver two explicit-only grilling skills (<code>grill-me</code> read-only, <code>grill-with-docs</code> docs-maintaining), Kiro inventory bump (67→69), and user-doc parity. <strong>TDD red gate first</strong>: update six synchronized count sites + shortcut mapping + FR-5.4 prohibition grep contract before writing skills.</p>
+
+  <h2>Key Decisions</h2>
+  <ul class="compact">
+    <li><strong>D1</strong> — TDD order: structural tests fail (red) before skill implementation.</li>
+    <li><strong>D2 (H1)</strong> — Five concrete FR-5.4 grep patterns for implementation-ban assertions.</li>
+    <li><strong>D3 (H2)</strong> — Both catalog entries get "Explicit request only." suffix.</li>
+    <li><strong>D4–D6</strong> — Line targets 60–100 / 60–150; per-term edit gate; protocol parity cross-ref.</li>
+    <li><strong>D7</strong> — Skip FR-5.6 Cursor/Kilo inventory extension (29→30 in band).</li>
+  </ul>
+
+  <h2>Open Questions / Risks</h2>
+  <ul class="compact">
+    <li><span class="sev warning">warning</span> <strong>Kiro count drift</strong> — six sites must change atomically in Group 1.</li>
+    <li><span class="sev warning">warning</span> <strong>FR-5.4 false positives</strong> — avoid permissive "proceed to implement" wording.</li>
+    <li><span class="sev info">info</span> <strong>ADR tree missing</strong> — embed minimal MADR skeleton inline in skill.</li>
+    <li><span class="sev info">info</span> <strong>Behavioral criteria</strong> — manual session checklist in Group 7.</li>
+  </ul>
+</section>
+
+<nav class="toc">
+  Contents:
+  <a href="#overview">Overview</a> ·
+  <a href="#g1">Group 1: TDD</a> ·
+  <a href="#g2">Group 2: grill-me</a> ·
+  <a href="#g3">Group 3: grill-with-docs</a> ·
+  <a href="#g4">Group 4: Catalog + Kiro</a> ·
+  <a href="#g5">Group 5: Build</a> ·
+  <a href="#g6">Group 6: User docs</a> ·
+  <a href="#g7">Group 7: Validation</a> ·
+  <a href="#trace">Traceability</a>
+</nav>
+
+<main>
+
+<section id="overview" class="card">
+  <h2 style="margin-top:0">Overview &amp; Dependencies</h2>
+  <div class="dep-flow">
+    <span class="node">G1 TDD red</span><span class="arrow">→</span>
+    <span class="node">G2 grill-me</span><span class="arrow">∥</span>
+    <span class="node">G3 grill-with-docs</span><span class="arrow">→</span>
+    <span class="node">G4 Catalog+Kiro</span><span class="arrow">→</span>
+    <span class="node">G5 Build</span><span class="arrow">→</span>
+    <span class="node">G7 Validate</span>
+  </div>
+  <div class="dep-flow">
+    <span class="node">G2/G3</span><span class="arrow">→</span>
+    <span class="node">G6 User docs</span><span class="arrow">→</span>
+    <span class="node">G7 Validate</span>
+  </div>
+  <table>
+    <thead><tr><th>Group</th><th>Focus</th><th>Depends on</th><th>Steps</th><th>Files</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>TDD red gate</td><td>—</td><td>8</td><td><code>Makefile</code>, 3 Kiro test files</td></tr>
+      <tr><td>2</td><td>Rewrite grill-me</td><td>1</td><td>8</td><td><code>skills/grill-me/SKILL.md</code></td></tr>
+      <tr><td>3</td><td>Create grill-with-docs</td><td>1</td><td>10</td><td><code>skills/grill-with-docs/SKILL.md</code> (new)</td></tr>
+      <tr><td>4</td><td>Catalog + Kiro</td><td>2, 3</td><td>7</td><td><code>CLAUDE.md</code>, <code>build.sh</code></td></tr>
+      <tr><td>5</td><td>Build + inspect</td><td>4</td><td>6</td><td>Generated variants (via make)</td></tr>
+      <tr><td>6</td><td>User documentation</td><td>2, 3</td><td>9</td><td>4 docs files</td></tr>
+      <tr><td>7</td><td>Final validation</td><td>5, 6</td><td>4</td><td>—</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="g1" data-group="1" class="group done card">
+  <div class="g-head"><span class="g-badge">Group 1</span><h2 style="margin:0">TDD Red Gate — Structural Tests</h2></div>
+  <p><strong>Goal:</strong> Update Kiro inventory 67→69/43/26 and add FR-5.4 prohibition test. Confirm red before skill work.</p>
+  <p><strong>Files:</strong>
+    <span class="chip">Makefile</span>
+    <span class="chip">build-core.test.sh</span>
+    <span class="chip">validation.test.sh</span>
+    <span class="chip">phase2.test.sh</span>
+  </p>
+  <h3>FR-5.4 Grep Contract (audit H1)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Target</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td>Both source skills</td><td><code>grep -Eiq '(never|do not|prohibit).*(implement|implementation)'</code></td></tr>
+      <tr><td>B</td><td>Both source skills</td><td><code>! grep -Eiq 'proceed to implement'</code></td></tr>
+      <tr><td>C</td><td>grill-me only</td><td><code>grep -Eiq '(never|do not|prohibit).*(edit|mutat).*(documentation|code)'</code></td></tr>
+      <tr><td>D</td><td>grill-with-docs only</td><td><code>grep -Eiq '(prohibit|do not|never).*(CONTEXT\.md|CONTEXT-MAP\.md)'</code></td></tr>
+      <tr><td>E</td><td>Generated Kiro copies</td><td>Repeat pattern A after <code>make build</code></td></tr>
+    </tbody>
+  </table>
+  <ul class="steps">
+    <li data-step="1.1" class="step done">Read current baseline counts in Makefile + test files</li>
+    <li data-step="1.2" class="step done">Update Makefile rules 14/23/28 → 69/26/43</li>
+    <li data-step="1.3" class="step done">Update build-core.test.sh counts</li>
+    <li data-step="1.4" class="step done">Update validation.test.sh counts</li>
+    <li data-step="1.5" class="step done">Add grill-with-docs shortcut + prohibition tests to phase2.test.sh</li>
+    <li data-step="1.6" class="step done">Implement grep contract table above</li>
+    <li data-step="1.7" class="step done">Run targeted tests — confirm RED</li>
+    <li data-step="1.8" class="step done">Document red-state in work-log</li>
+  </ul>
+  <p><strong>Tests:</strong> 8 structural assertions (counts + shortcut + 5 grep patterns)</p>
+</section>
+
+<section id="g2" data-group="2" class="group done card">
+  <div class="g-head"><span class="g-badge">Group 2</span><h2 style="margin:0">Rewrite grill-me</h2></div>
+  <p><strong>Goal:</strong> Strengthen read-only grilling protocol (FR-1.1–1.11). Target 60–100 lines.</p>
+  <p><strong>Files:</strong> <span class="chip">plugins/maister/skills/grill-me/SKILL.md</span></p>
+  <p><strong>Templates:</strong> <code>thermos/SKILL.md</code> (frontmatter), <code>requirements-critic/SKILL.md</code> (invocation guard)</p>
+  <ul class="steps">
+    <li data-step="2.1" class="step done">Read template skills</li>
+    <li data-step="2.2" class="step done">Write frontmatter with disable-model-invocation</li>
+    <li data-step="2.3" class="step done">Write invocation guard (triggers + anti-triggers)</li>
+    <li data-step="2.4" class="step done">Write grilling protocol (one Q, wait, fact/decision, convergence)</li>
+    <li data-step="2.5" class="step done">Write prohibitions (grep-friendly phrases for FR-5.4)</li>
+    <li data-step="2.6" class="step done">Add protocol parity note → grill-with-docs</li>
+    <li data-step="2.7" class="step done">Verify line count ≤ 100</li>
+    <li data-step="2.8" class="step done">Gate: FR-5.4 patterns A/C/D pass on source</li>
+  </ul>
+</section>
+
+<section id="g3" data-group="3" class="group done card">
+  <div class="g-head"><span class="g-badge">Group 3</span><h2 style="margin:0">Create grill-with-docs</h2></div>
+  <p><strong>Goal:</strong> New docs-aware grilling skill (FR-2.1–2.14). Ceiling 60–150 lines.</p>
+  <p><strong>Files:</strong> <span class="chip">plugins/maister/skills/grill-with-docs/SKILL.md</span> (new)</p>
+  <ul class="steps">
+    <li data-step="3.1" class="step done">Create skill directory</li>
+    <li data-step="3.2" class="step done">Write frontmatter (explicit-only)</li>
+    <li data-step="3.3" class="step done">Write invocation guard + modeling anti-triggers</li>
+    <li data-step="3.4" class="step done">Duplicate core grilling protocol from Group 2</li>
+    <li data-step="3.5" class="step done">Session discovery (INDEX, language.md, ADRs, code)</li>
+    <li data-step="3.6" class="step done">Vocabulary conflict + edge-case + contradiction checks</li>
+    <li data-step="3.7" class="step done">language.md maintenance (one term → one edit)</li>
+    <li data-step="3.8" class="step done">Sparse ADR policy + inline MADR skeleton</li>
+    <li data-step="3.9" class="step done">Boundaries + CONTEXT.md prohibition + "Not this skill"</li>
+    <li data-step="3.10" class="step done">Cross-links to grill-me + linguistic-boundary-verifier</li>
+  </ul>
+</section>
+
+<section id="g4" data-group="4" class="group done card">
+  <div class="g-head"><span class="g-badge">Group 4</span><h2 style="margin:0">Plugin Catalog + Kiro Generation</h2></div>
+  <p><strong>Goal:</strong> Register skills in catalog; extend Kiro build (FR-3, FR-4).</p>
+  <p><strong>Files:</strong>
+    <span class="chip">plugins/maister/CLAUDE.md</span>
+    <span class="chip">platforms/kiro-cli/build.sh</span>
+    <span class="chip">platforms/cursor/build.sh</span> (optional sed)
+  </p>
+  <ul class="steps">
+    <li data-step="4.1" class="step done">Update CLAUDE.md — both skills with "Explicit request only." (H2)</li>
+    <li data-step="4.2" class="step done">Add maister-grill-with-docs to skills_needing_args</li>
+    <li data-step="4.3" class="step done">Add generate_shortcut_skill "grill-with-docs"</li>
+    <li data-step="4.4" class="step done">Add reference sed transforms (Kiro + optional Cursor)</li>
+    <li data-step="4.5" class="step done">Verify no AskUserQuestion references</li>
+    <li data-step="4.6" class="step done">Gate: grep build.sh + CLAUDE.md</li>
+    <li data-step="4.7" class="step done">Note grill-with-docs as standalone (not Bundle D step 3)</li>
+  </ul>
+</section>
+
+<section id="g5" data-group="5" class="group done card">
+  <div class="g-head"><span class="g-badge">Group 5</span><h2 style="margin:0">Build + Generated Output Inspection</h2></div>
+  <p><strong>Goal:</strong> <code>make build</code>; verify four-platform naming + read-only vs docs distinction (FR-6).</p>
+  <ul class="steps">
+    <li data-step="5.1" class="step done">Run make build</li>
+    <li data-step="5.2" class="step done">Verify Copilot/Cursor/Kiro/Kilo skill presence</li>
+    <li data-step="5.3" class="step done">Verify read-only vs docs distinction in generated content</li>
+    <li data-step="5.4" class="step done">Run FR-5.4 pattern E on generated Kiro skills</li>
+    <li data-step="5.5" class="step done">Run Kiro tests — expect GREEN</li>
+    <li data-step="5.6" class="step done">Scan for banned interactive APIs</li>
+  </ul>
+</section>
+
+<section id="g6" data-group="6" class="group done card">
+  <div class="g-head"><span class="g-badge">Group 6</span><h2 style="margin:0">User-Facing Documentation</h2></div>
+  <p><strong>Goal:</strong> Update four user-doc files with grill-with-docs parity (FR-7).</p>
+  <p><strong>Files:</strong>
+    <span class="chip">docs/on-demand-skills.md</span>
+    <span class="chip">docs/commands.md</span>
+    <span class="chip">README.md</span>
+    <span class="chip">docs/kiro-cli-support.md</span>
+  </p>
+  <ul class="steps">
+    <li data-step="6.1" class="step done">Read existing grill-me doc patterns</li>
+    <li data-step="6.2" class="step done">Add grill-with-docs catalog entry + update grill-me</li>
+    <li data-step="6.3" class="step done">Add when-to-use comparison table</li>
+    <li data-step="6.4" class="step done">Update trigger-phrases table</li>
+    <li data-step="6.5" class="step done">Add commands.md pseudo-command section</li>
+    <li data-step="6.6" class="step done">Update README Kiro shortcut list</li>
+    <li data-step="6.7" class="step done">Update kiro-cli-support shortcut table</li>
+    <li data-step="6.8" class="step done">Cross-links (not Bundle D extension)</li>
+    <li data-step="6.9" class="step done">Verify no skill body copy-paste</li>
+  </ul>
+</section>
+
+<section id="g7" data-group="7" class="group done card">
+  <div class="g-head"><span class="g-badge">Group 7</span><h2 style="margin:0">Final Validation + Manual Checklist</h2></div>
+  <ul class="steps">
+    <li data-step="7.1" class="step done">Run make validate — full suite pass</li>
+    <li data-step="7.2" class="step done">Optional Cursor CLI smoke test</li>
+    <li data-step="7.3" class="step done">Manual behavioral checklist (acceptance #1–2)</li>
+    <li data-step="7.4" class="step done">Standards compliance checklist in work-log</li>
+  </ul>
+</section>
+
+<section id="trace" class="card">
+  <h2 style="margin-top:0">Requirements Traceability</h2>
+  <table>
+    <thead><tr><th>Spec FR</th><th>Groups</th></tr></thead>
+    <tbody>
+      <tr><td>FR-1 (grill-me)</td><td>2</td></tr>
+      <tr><td>FR-2 (grill-with-docs)</td><td>3</td></tr>
+      <tr><td>FR-3 (catalog)</td><td>4, 6</td></tr>
+      <tr><td>FR-4 (Kiro)</td><td>4, 5</td></tr>
+      <tr><td>FR-5 (tests)</td><td>1, 5, 7</td></tr>
+      <tr><td>FR-6 (build)</td><td>5, 7</td></tr>
+      <tr><td>FR-7 (user docs)</td><td>6</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</main>
+</body>
+</html>

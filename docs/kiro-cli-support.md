@@ -109,6 +109,7 @@ Shortcut skills are generated in `platforms/kiro-cli/build.sh` (step 20). There 
 | `/standards-discover` | `/maister-standards-discover` | Discover standards from codebase and config |
 | `/standards-update` | `/maister-standards-update` | Add or refine project standards |
 | `/grill-me` | `/maister-grill-me` | Stress-test a plan or design (one question at a time) |
+| `/grill-with-docs` | `/maister-grill-with-docs` | Stress-test a plan while maintaining language.md and sparse ADRs |
 | `/thermos` | `/maister-thermos` | Parallel thermo-nuclear security + code-quality branch review |
 | `/thermo-review` | `/maister-thermo-nuclear-review` | Deep security/correctness diff audit only |
 | `/thermo-quality` | `/maister-thermo-nuclear-code-quality-review` | Strict maintainability diff audit only |

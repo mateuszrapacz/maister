@@ -290,9 +290,19 @@ See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
 
 **Primary invocation:** Ask explicitly in natural language (e.g., "grill me on this plan"). Cursor users: `/maister-grill-me`.
 
-Relentless interactive interview to stress-test a plan or design until shared understanding. Walks a decision tree one question at a time.
+Relentless interactive interview to stress-test a plan or design until shared understanding. Walks a decision tree one question at a time with a convergence gate. Read-only — no documentation or code edits. Explicit request only.
 
-**When to use**: Before stakeholder conversations; when a design has unresolved branches.
+**When to use**: Before stakeholder conversations; when a design has unresolved branches; when you do not want docs maintained during grilling.
+
+See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
+
+### `/maister:grill-with-docs`
+
+**Primary invocation:** Ask explicitly in natural language (e.g., "grill this plan and update language.md"). Cursor users: `/maister-grill-with-docs`.
+
+Stress-test a plan or domain topic with the same grilling discipline as `grill-me`, plus user-confirmed updates to `language.md` and sparse ADRs. Explicit request only.
+
+**When to use**: When stress-testing and you want canonical vocabulary and significant decisions captured in project documentation as you go.
 
 See [On-Demand Skills Guide](on-demand-skills.md) for when to use.
 

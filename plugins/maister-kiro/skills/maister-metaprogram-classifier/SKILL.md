@@ -494,7 +494,7 @@ Use the template matching the language gate from skill start (English, Polish, o
 
 ## Recommended next steps
 
-- After communication strategies are clear, stress-test your proposal with `grill-me` before the difficult conversation.
+- After communication strategies are clear, stress-test your proposal with `maister-grill-me` before the difficult conversation.
 - For requirements-quality issues surfaced in the conversation, consider `requirements-critic` separately.
 
 ---

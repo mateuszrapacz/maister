@@ -42,18 +42,18 @@ test_commands_merged() {
     test -f "$OUT/skills/maister-modeling-aggregate-designer/SKILL.md"
 }
 
-# 2. Exactly 67 skill directories (42 maister-* + 25 shortcut dirs)
+# 2. Exactly 69 skill directories (43 maister-* + 26 shortcut dirs)
 test_skill_dir_count() {
   run_build
   local count
   count=$(find "$OUT/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-  test "$count" -eq 67
+  test "$count" -eq 69
 }
 
-# 3. Exactly 25 unprefixed shortcut skill directories
+# 3. Exactly 26 unprefixed shortcut skill directories
 test_no_unprefixed_skill_dirs() {
   run_build
-  test "$(find "$OUT/skills" -mindepth 1 -maxdepth 1 -type d ! -name 'maister-*' | wc -l | tr -d ' ')" -eq 25
+  test "$(find "$OUT/skills" -mindepth 1 -maxdepth 1 -type d ! -name 'maister-*' | wc -l | tr -d ' ')" -eq 26
 }
 
 # 4. Each SKILL.md name: matches parent directory (rule 13)
@@ -99,8 +99,8 @@ test_quick_plan_skill_dir() {
 echo "=== Kiro CLI build core tests (Task Group 3) ==="
 
 assert "16 commands merged into skills/maister-*/; commands/ absent" test_commands_merged
-assert "exactly 67 skill directories after core build" test_skill_dir_count
-assert "exactly 25 unprefixed shortcut skill directories" test_no_unprefixed_skill_dirs
+assert "exactly 69 skill directories after core build" test_skill_dir_count
+assert "exactly 26 unprefixed shortcut skill directories" test_no_unprefixed_skill_dirs
 assert "each SKILL.md name: matches parent directory" test_skill_name_matches_dir
 assert "no maister: in output tree" test_no_maister_colon
 assert "no colons in skill name: frontmatter" test_no_colons_in_skill_names

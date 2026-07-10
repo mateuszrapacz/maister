@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Verification — Improve Grill Skills</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--warn-soft); color:var(--warn); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.verdict { font-size:18px; font-weight:700; color:var(--warn); margin:12px 0; }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="../implementation/spec.html">Spec</a>
+  <a href="../implementation/implementation-plan.html">Plan</a>
+  <span class="here">Verification</span>
+  <a href="implementation-verification.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+<header>
+  <h1>Implementation Verification</h1>
+  <span class="badge">Passed with Issues</span>
+  <p style="color:var(--dim);margin:4px 0 0">Improve Grill Skills · 2026-07-10</p>
+</header>
+<div class="tiles">
+  <div class="tile"><b>52/52</b><span>plan steps</span></div>
+  <div class="tile"><b>0</b><span>critical</span></div>
+  <div class="tile"><b>2</b><span>warnings</span></div>
+  <div class="tile"><b>5</b><span>info</span></div>
+  <div class="tile"><b class="pass">✓</b><span>validate</span></div>
+</div>
+<section class="card">
+  <div class="verdict">⚠️ Passed with Issues</div>
+  <p>Implementation functionally complete. <code>make validate</code> passes after <code>make build</code>. Primary gap: uncommitted generated platform variants.</p>
+</section>
+<section class="card">
+  <h2>Findings</h2>
+  <table>
+    <tr><th>Severity</th><th>Issue</th><th>Fixable</th></tr>
+    <tr><td><span class="sev warning">warning</span></td><td>Uncommitted generated platform variants (CI drift)</td><td>Yes</td></tr>
+    <tr><td><span class="sev warning">warning</span></td><td>Partial cross-skill name transforms in build.sh</td><td>Yes</td></tr>
+    <tr><td><span class="sev info">info</span></td><td>grill-with-docs lacks Input section</td><td>Yes</td></tr>
+    <tr><td><span class="sev info">info</span></td><td>Bundle D mermaid omits grill-with-docs path</td><td>Yes</td></tr>
+    <tr><td><span class="sev info">info</span></td><td>FR-5.4 Pattern F scope limited to generated files</td><td>Yes</td></tr>
+  </table>
+</section>
+<section class="card">
+  <h2>Check Status</h2>
+  <table>
+    <tr><th>Check</th><th>Status</th></tr>
+    <tr><td>Implementation completeness</td><td class="pass">✓ 100%</td></tr>
+    <tr><td>make validate</td><td class="pass">✓ Pass</td></tr>
+    <tr><td>Kiro tests</td><td class="pass">✓ 8/8 + 14/14</td></tr>
+    <tr><td>Code review</td><td>⚠ Pass with issues</td></tr>
+    <tr><td>Pragmatic review</td><td>⚠ Pass with concerns</td></tr>
+    <tr><td>Production readiness</td><td>⚠ Concerns (78/100)</td></tr>
+    <tr><td>Reality check</td><td>⚠ Commit gap</td></tr>
+  </table>
+</section>
+</body>
+</html>

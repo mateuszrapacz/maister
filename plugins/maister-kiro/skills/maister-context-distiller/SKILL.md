@@ -393,10 +393,10 @@ After producing the distillation map, hand off based on what the analysis reveal
 
 | Condition | Next skill | Priority |
 |-----------|-----------|----------|
-| Boundaries are drawn; need to verify they are respected in code | `linguistic-boundary-verifier` | **Primary** — pass the distilled context map and identified boundaries as context |
-| A context handles resource contention, seat limits, or locking (RC-class behavior) | `aggregate-designer` | Optional — pass the specific context and its commands/events |
+| Boundaries are drawn; need to verify they are respected in code | `maister-linguistic-boundary-verifier` | **Primary** — pass the distilled context map and identified boundaries as context |
+| A context handles resource contention, seat limits, or locking (RC-class behavior) | `maister-aggregate-designer` | Optional — pass the specific context and its commands/events |
 
-Distiller answers **"where should boundaries be?"** — `linguistic-boundary-verifier` answers **"are existing boundaries respected?"** Do not conflate the two.
+Distiller answers **"where should boundaries be?"** — `maister-linguistic-boundary-verifier` answers **"are existing boundaries respected?"** Do not conflate the two.
 
 ---
 
@@ -511,6 +511,6 @@ Distiller answers **"where should boundaries be?"** — `linguistic-boundary-ver
 - Capacity of rooms becomes part of availability (not just reserved/free but "3 of 10 seats taken") — this shifts from binary availability to quantity-based, which may warrant a separate Capacity context.
 
 ## Notes
-- The Enrollment context handles quantity-based seat management — this is resource contention. Consider applying `aggregate-designer` for the enrollment aggregate.
+- The Enrollment context handles quantity-based seat management — this is resource contention. Consider applying `maister-aggregate-designer` for the enrollment aggregate.
 - Start with Availability as a single module; split HR and Equipment Maintenance behind facades initially. If regulatory pressure or team structure demands full separation, the refactoring is straightforward because the integration is event-based.
 ```
