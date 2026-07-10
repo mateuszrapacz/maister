@@ -13,6 +13,7 @@ Start here for Maister user documentation.
 | [cursor-agent-support.md](cursor-agent-support.md) | Cursor Agent platform guide |
 | [kiro-cli-support.md](kiro-cli-support.md) | Kiro CLI platform guide |
 | [kilo-cli-support.md](kilo-cli-support.md) | Kilo CLI platform guide |
+| [codex-support.md](codex-support.md) | Codex CLI and IDE platform guide |
 
 ## Suggested reading order
 

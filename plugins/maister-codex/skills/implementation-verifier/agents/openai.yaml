@@ -1,0 +1,6 @@
+interface:
+  display_name: "Maister implementation-verifier"
+  short_description: "Internal Maister workflow capability."
+
+policy:
+  allow_implicit_invocation: false

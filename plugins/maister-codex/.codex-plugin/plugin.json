@@ -1,0 +1,24 @@
+{
+  "name": "maister",
+  "version": "2.2.1-fork.1",
+  "description": "Structured, standards-aware development workflows for Codex",
+  "author": {
+    "name": "Skillpanel",
+    "email": "marek@skillpanel.com"
+  },
+  "repository": "https://github.com/mateuszrapacz/maister",
+  "license": "MIT",
+  "homepage": "https://github.com/mateuszrapacz/maister",
+  "keywords": ["development", "sdlc", "workflows", "skills"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Maister",
+    "shortDescription": "Standards-aware development workflows for Codex",
+    "longDescription": "Specification, planning, implementation, and verification workflows for Codex.",
+    "developerName": "Skillpanel",
+    "category": "Developer tools",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": ["Use Maister's structured development workflows for this task."]
+  }
+}

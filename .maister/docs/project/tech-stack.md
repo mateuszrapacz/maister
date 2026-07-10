@@ -2,9 +2,9 @@
 
 ## Overview
 
-This document describes the technology choices and rationale for **Maister** — a Claude Code / Cursor Agent plugin marketplace that distributes AI-driven SDLC workflow plugins across multiple AI platforms from a single source of truth.
+This document describes the technology choices and rationale for **Maister** — a Claude Code / Codex / Cursor Agent plugin marketplace that distributes AI-driven SDLC workflow plugins across multiple AI platforms from a single source of truth.
 
-**Primary goal:** Maintain and evolve multi-platform AI SDLC plugins (skills, commands, agents, hooks) with consistent behavior across Claude Code, GitHub Copilot CLI, Cursor Agent, and Kiro CLI.
+**Primary goal:** Maintain and evolve multi-platform AI SDLC plugins (skills, commands, agents, hooks) with consistent behavior across Claude Code, Codex, GitHub Copilot CLI, Cursor Agent, and Kiro CLI.
 
 ## Languages
 
@@ -44,6 +44,7 @@ This document describes the technology choices and rationale for **Maister** —
 | Platform | API | Variant Directory |
 |----------|-----|-------------------|
 | Claude Code | Plugin API (skills, commands, agents, hooks) | `plugins/maister/` (source of truth) |
+| Codex CLI / IDE | Native plugin API (skills, hooks, MCP, marketplace) | `plugins/maister-codex/` (generated) |
 | GitHub Copilot CLI | Copilot CLI Plugin API | `plugins/maister-copilot/` (generated) |
 | Cursor Agent | Cursor Agent Plugin API | `plugins/maister-cursor/` (generated) |
 | Kiro CLI | Kiro CLI agent/skills/hooks API | `plugins/maister-kiro/` (generated) |
@@ -56,6 +57,7 @@ This document describes the technology choices and rationale for **Maister** —
 | `platforms/cursor/smoke-install.sh` | Cursor plugin install smoke tests |
 | `platforms/kiro-cli/smoke-cli.sh` | Kiro CLI headless smoke tests |
 | `platforms/kiro-cli/smoke-install.sh` | Kiro isolated `KIRO_HOME` install |
+| `platforms/codex-cli/smoke-cli.sh` | Codex plugin structural smoke tests |
 | Playwright MCP (`@playwright/mcp`) | E2E browser verification via `e2e-test-verifier` agent |
 
 *No unit test framework* (Jest, pytest, etc.) — validation is structural and smoke-based by design.
@@ -68,7 +70,7 @@ This document describes the technology choices and rationale for **Maister** —
 
 ### Makefile
 - **Role**: Primary build orchestration entry point
-- **Targets**: `build`, `build-copilot`, `build-cursor`, `build-kiro`, `validate`, `clean`, `watch`
+- **Targets**: `build`, `build-copilot`, `build-cursor`, `build-kiro`, `build-kilo`, `build-codex`, `validate`, `clean`, `watch`
 - **Rationale**: Simple, universal, no dependency installation required
 
 ### Platform Build Scripts
@@ -77,6 +79,7 @@ This document describes the technology choices and rationale for **Maister** —
 | `platforms/copilot-cli/build.sh` | `maister` → `maister-copilot` (command prefixes, tool mappings) |
 | `platforms/cursor/build.sh` | `maister` → `maister-cursor` (Task/TodoWrite, hook formats, rules) |
 | `platforms/kiro-cli/build.sh` | `maister` → `maister-kiro` (chat gates, MD→JSON agents, subagent/todo) |
+| `platforms/codex-cli/build.sh` | Native Codex skills, hooks, MCP, and marketplace packaging |
 
 ### Package Management
 *None at repository root.* Intentionally dependency-free for the plugin itself. Playwright MCP is invoked via `npx @playwright/mcp@latest` at runtime.
@@ -100,6 +103,7 @@ This document describes the technology choices and rationale for **Maister** —
 | Claude Code marketplace | `SkillPanel/maister` — `maister-plugins` v2.1.8 |
 | Cursor Agent | Local plugin install from generated `plugins/maister-cursor/` |
 | Kiro CLI | Isolated profile install (`~/.kiro-maister`) from `plugins/maister-kiro/` |
+| Codex CLI / IDE | Native plugin install from the repo marketplace at `.agents/plugins/marketplace.json` |
 | Beta channel | `maister-plugins-beta` with `X.Y.Z-beta.N` versioning |
 
 ## Development Tools
@@ -129,9 +133,9 @@ This document describes the technology choices and rationale for **Maister** —
 | Aspect | Approach |
 |--------|----------|
 | Semantic versioning | `2.1.8` (stable), `X.Y.Z-beta.N` (beta channel) |
-| Manifest files | `.claude-plugin/marketplace.json`, `plugins/maister/.claude-plugin/plugin.json`, `plugins/maister-copilot/.claude-plugin/plugin.json` |
+| Manifest files | `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`, and each generated variant manifest |
 | Branch strategy | `master` (stable) + `beta` (pre-release) with documented squash-merge workflow |
-| Generated variants | Version synced across all three manifest files during release |
+| Generated variants | Version synced across the source manifest and every generated variant during release |
 
 ## Architecture Notes
 
@@ -143,9 +147,11 @@ plugins/maister-copilot/  ← GENERATED (never edit)
 plugins/maister-cursor/   ← GENERATED (never edit)
     ↓ make build-kiro
 plugins/maister-kiro/     ← GENERATED (never edit)
+    ↓ make build-codex
+plugins/maister-codex/    ← GENERATED (never edit)
 ```
 
-**Critical rule:** Never edit files under `plugins/maister-copilot/`, `plugins/maister-cursor/`, or `plugins/maister-kiro/` — changes are overwritten by `make build`.
+**Critical rule:** Never edit files under `plugins/maister-copilot/`, `plugins/maister-cursor/`, `plugins/maister-kiro/`, or `plugins/maister-codex/` — changes are overwritten by `make build`.
 
 ## Migration Path
 
@@ -155,6 +161,6 @@ Not a legacy project. Ongoing evolution areas:
 - Dependency pinning for product-design Node server
 
 ---
-*Last Updated*: 2026-06-07
+*Last Updated*: 2026-07-10
 *Auto-detected*: Languages, build pipeline, CI/CD, platform APIs, testing approach, version management
 *User-provided*: Project name (Maister), primary goal (maintain and evolve multi-platform plugins)

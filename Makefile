@@ -1,6 +1,6 @@
-.PHONY: build build-copilot build-cursor build-kiro build-kilo validate validate-copilot validate-cursor validate-kiro validate-kilo clean clean-copilot clean-cursor clean-kiro clean-kilo watch
+.PHONY: build build-copilot build-cursor build-kiro build-kilo build-codex validate validate-copilot validate-cursor validate-kiro validate-kilo validate-codex clean clean-copilot clean-cursor clean-kiro clean-kilo clean-codex watch
 
-build: build-copilot build-cursor build-kiro build-kilo
+build: build-copilot build-cursor build-kiro build-kilo build-codex
 
 build-copilot:
 	bash platforms/copilot-cli/build.sh
@@ -14,7 +14,10 @@ build-kiro:
 build-kilo:
 	bash platforms/kilo-cli/build.sh
 
-validate: validate-copilot validate-cursor validate-kiro validate-kilo
+build-codex:
+	bash platforms/codex-cli/build.sh
+
+validate: validate-copilot validate-cursor validate-kiro validate-kilo validate-codex
 
 validate-copilot:
 	@echo "=== Copilot validation ==="
@@ -240,7 +243,11 @@ validate-kilo:
 	@! grep -q '/maister:' platforms/kilo-cli/smoke-install.sh || (echo "FAIL: colon-prefixed /maister: command found in smoke-install.sh" && exit 1)
 	@echo "Kilo checks passed"
 
-clean: clean-copilot clean-cursor clean-kiro clean-kilo
+validate-codex:
+	@echo "=== Codex validation ==="
+	@bash platforms/codex-cli/smoke-cli.sh
+
+clean: clean-copilot clean-cursor clean-kiro clean-kilo clean-codex
 
 clean-copilot:
 	rm -rf plugins/maister-copilot/
@@ -253,6 +260,9 @@ clean-kiro:
 
 clean-kilo:
 	rm -rf plugins/maister-kilo/
+
+clean-codex:
+	rm -rf plugins/maister-codex/
 
 watch:
 	fswatch -o plugins/maister/ | xargs -n1 -I{} make build

@@ -289,6 +289,42 @@ Kiro has no `preCompact` hook equivalent. After context compaction, use `/status
 
 Full guide: [Kiro CLI Support](docs/kiro-cli-support.md) (install, daily use, E2E matrix, manual commit checkpoint).
 
+## Codex CLI and IDE
+
+Maister ships a native Codex plugin variant for Codex CLI and
+the Codex IDE extension. It packages the workflow as native skills, Codex
+hooks, MCP configuration, and a repo marketplace entry. Claude/Cursor-style
+custom agent files are intentionally not bundled in the MVP; workflow roles use
+Codex's native subagent delegation instead.
+
+### Build and validate
+
+```bash
+make build-codex
+make validate-codex
+```
+
+### Local marketplace
+
+The repository includes `.agents/plugins/marketplace.json`, which points Codex
+at `plugins/maister-codex/`. Add the repository as a local marketplace, then
+install `maister` from the Codex plugin browser:
+
+```bash
+codex plugin marketplace add .
+```
+
+Start a new Codex session after installation or rebuilding so bundled skills
+are rediscovered. Invoke workflows with `$maister:development` or the other
+`maister:*` skills. Review and trust plugin hooks with `/hooks` before relying
+on their defense-in-depth checks.
+
+Models and reasoning effort remain host/session settings. The plugin keeps
+`orchestrator-state.yml` as the source of truth for workflow phases and resume;
+Codex Goals and native planning are optional UX aids.
+
+Full guide: [Codex Support](docs/codex-support.md).
+
 ## Kilo CLI
 
 Maister ships a **Kilo CLI** variant (`maister-kilo`) for the **[Kilo Code](https://kilocode.ai)** agent. Installs project-locally into `.kilo/` or globally into `~/.kilo/`.

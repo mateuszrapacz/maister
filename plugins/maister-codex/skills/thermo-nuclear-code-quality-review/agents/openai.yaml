@@ -1,0 +1,6 @@
+interface:
+  display_name: "Maister thermo-nuclear-code-quality-review"
+  short_description: "Internal Maister workflow capability."
+
+policy:
+  allow_implicit_invocation: false

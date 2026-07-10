@@ -1,0 +1,41 @@
+{
+  "description": "Maister plugin hooks for Codex workflow reminders and destructive-command defense-in-depth",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${PLUGIN_ROOT}/hooks/post-compact-reminder.sh\"",
+            "timeout": 10,
+            "statusMessage": "Restoring Maister workflow context"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${PLUGIN_ROOT}/hooks/skill-invocation-reminder.sh\"",
+            "timeout": 10,
+            "statusMessage": "Loading Maister workflow guidance"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${PLUGIN_ROOT}/hooks/block-destructive-commands.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking destructive command policy"
+          }
+        ]
+      }
+    ]
+  }
+}
