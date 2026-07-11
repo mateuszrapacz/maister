@@ -172,6 +172,116 @@ for source in "$CORE/commands"/*.md; do
   transform_markdown "$source" "$destination/SKILL.md" "$stem"
 done
 
+# Utility skills are platform-native entrypoints rather than Claude source
+# skills: their names and invocation syntax are specific to Codex.
+generate_utility_skills() {
+  mkdir -p "$OUT/skills/resume"
+  cat > "$OUT/skills/resume/SKILL.md" <<'SKILL'
+---
+name: resume
+description: "Resume an interrupted Maister workflow from orchestrator-state.yml."
+---
+
+Resume the Maister workflow from saved state.
+
+1. Treat an explicit task path in the user's request as authoritative.
+2. If no task path was supplied, find the latest `orchestrator-state.yml` under
+   `.maister/tasks/`.
+3. Read the workflow type, task path, `current_phase`, `completed_phases`, and
+   any failed phases or pending gates.
+4. If `current_phase` is missing, use the first phase that is not listed in
+   `completed_phases`.
+5. Invoke the matching workflow skill with the task path and
+   `--from=<phase>`:
+   - `development` → `$maister:development`
+   - `performance` → `$maister:performance`
+   - `migration` or `migrations` → `$maister:migration`
+   - `research` → `$maister:research`
+   - `product-design` → `$maister:product-design`
+
+Preserve additional flags from the user's request. Do not restart from scratch
+unless the user explicitly asks. If no active state exists, report that clearly
+and suggest `$maister:work` or `$maister:init` as appropriate.
+SKILL
+
+  mkdir -p "$OUT/skills/status"
+  cat > "$OUT/skills/status/SKILL.md" <<'SKILL'
+---
+name: status
+description: "Report the active Maister workflow state, phase, and blockers."
+---
+
+Read the active `orchestrator-state.yml` under `.maister/tasks/`. Use the task
+path supplied in the user's request when present; otherwise use the latest
+active state file.
+
+Report:
+
+- task path and workflow type
+- task status and `current_phase`
+- `completed_phases` and failed phases
+- blockers, pending gates, and the next incomplete phase
+
+Do not start or resume the workflow. If no active workflow exists, say so
+clearly and suggest `$maister:init` or `$maister:work`.
+SKILL
+
+  mkdir -p "$OUT/skills/next"
+  cat > "$OUT/skills/next/SKILL.md" <<'SKILL'
+---
+name: next
+description: "Suggest the best next action from the active Maister workflow state."
+---
+
+Read `orchestrator-state.yml` in the active task directory under `.maister/tasks/`.
+Use a task path supplied in the user's request when present; otherwise use the
+latest active state file.
+
+Suggest exactly one best next action based on `current_phase`,
+`completed_phases`, failed phases, blockers, and pending gates. Name the phase,
+skill, or user decision and explain the reason in one sentence. Do not execute
+the suggested action.
+
+If no workflow is active, suggest `$maister:init` when `.maister/docs/` is
+missing; otherwise suggest `$maister:work`.
+SKILL
+
+  mkdir -p "$OUT/skills/bye"
+  cat > "$OUT/skills/bye/SKILL.md" <<'SKILL'
+---
+name: bye
+description: "End a Maister session gracefully while preserving workflow state for resume."
+---
+
+End the Maister session gracefully.
+
+1. Identify the active task from the user's request or the latest
+   `orchestrator-state.yml` under `.maister/tasks/`.
+2. Ensure the state file reflects the latest `current_phase`,
+   `completed_phases`, blockers, pending gates, and task status.
+3. Do not mark an in-progress workflow as completed.
+4. Summarize what was completed and what remains.
+5. Record the task path and the command `$maister:resume <task-path>` for the
+   next session.
+
+Do not discard in-progress workflow state.
+SKILL
+
+  mkdir -p "$OUT/skills/dev"
+  cat > "$OUT/skills/dev/SKILL.md" <<'SKILL'
+---
+name: dev
+description: "Shortcut for $maister:development. Use for development tasks."
+---
+
+Invoke `$maister:development` with the task description or task path supplied
+in the user's request. Pass the input through verbatim and do not skip the
+Maister workflow for a task that looks straightforward.
+SKILL
+}
+
+generate_utility_skills
+
 # Keep the companion MCP file in the plugin contract's camelCase shape.
 cp "$CORE/.mcp.json" "$OUT/.mcp.json"
 

@@ -86,6 +86,22 @@ fork/
 
 **Zasada:** nigdy nie edytować ręcznie `plugins/maister-copilot/`, `plugins/maister-cursor/`, `plugins/maister-kiro/`.
 
+### Session utility skills
+
+Wariant Cursor udostępnia lekkie skille do obsługi przerwanych sesji:
+
+| Skill | Cel |
+|---|---|
+| `/maister-resume` | Wznawia najnowszy albo wskazany task z `orchestrator-state.yml`. |
+| `/maister-status` | Pokazuje task, fazę, ukończone fazy, blokery i pending gates. |
+| `/maister-next` | Sugeruje jedno następne działanie, bez wykonywania go. |
+| `/maister-bye` | Kończy sesję, zachowując stan i ścieżkę do wznowienia. |
+| `/maister-dev` | Skrót do `/maister-development`. |
+
+`/maister-resume` wybiera właściwy orchestrator na podstawie katalogu taska i
+przekazuje zapisaną fazę jako `--from=<phase>`. Źródłem prawdy pozostaje
+`orchestrator-state.yml`.
+
 ---
 
 ## Obecna architektura

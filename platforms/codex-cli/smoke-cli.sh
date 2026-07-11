@@ -25,7 +25,8 @@ jq -e '.plugins[] | select(.name == "maister") | .source.path == "./plugins/mais
 source_skills=$(find "$ROOT/plugins/maister/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
 source_commands=$(find "$ROOT/plugins/maister/commands" -maxdepth 1 -type f -name '*.md' | wc -l | tr -d ' ')
 actual_skills=$(find "$PLUGIN/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-expected_skills=$((source_skills + source_commands))
+utility_skills=5
+expected_skills=$((source_skills + source_commands + utility_skills))
 test "$actual_skills" -eq "$expected_skills"
 
 if find "$PLUGIN/skills" -mindepth 1 -maxdepth 1 -type d -name 'maister-*' | grep -q .; then
@@ -42,6 +43,13 @@ fi
 test -f "$PLUGIN/skills/product-design/SKILL.md"
 grep -q '^name: product-design$' "$PLUGIN/skills/product-design/SKILL.md"
 grep -Fq '$maister:product-design' "$PLUGIN/skills/product-design/SKILL.md"
+
+for skill in resume status next bye dev; do
+  test -f "$PLUGIN/skills/$skill/SKILL.md" || {
+    echo "FAIL: Codex utility skill '$skill' is missing" >&2
+    exit 1
+  }
+done
 
 for skill_dir in "$PLUGIN/skills"/*; do
   test -f "$skill_dir/SKILL.md" || { echo "FAIL: missing SKILL.md in $skill_dir" >&2; exit 1; }

@@ -452,4 +452,119 @@ if [ -f "$PLATFORM/patches/orchestrator-patterns-todowrite.md" ]; then
   cat "$PLATFORM/patches/orchestrator-patterns-todowrite.md" >> "$OUT/lib/orchestrator-framework/references/orchestrator-patterns.md"
 fi
 
+# Utility skills are platform-native entrypoints rather than Claude source
+# skills: their names and invocation syntax are specific to Cursor.
+generate_utility_skills() {
+  mkdir -p "$OUT/skills/maister-resume"
+  cat > "$OUT/skills/maister-resume/SKILL.md" <<'SKILL'
+---
+name: maister-resume
+description: "Resume an interrupted Maister workflow from orchestrator-state.yml."
+user-invocable: true
+---
+
+Resume the Maister workflow from saved state.
+
+1. Treat an explicit task path in the user's request as authoritative.
+2. If no task path was supplied, find the latest `orchestrator-state.yml` under
+   `.maister/tasks/`.
+3. Read the workflow type, task path, `current_phase`, `completed_phases`, and
+   any failed phases or pending gates.
+4. If `current_phase` is missing, use the first phase that is not listed in
+   `completed_phases`.
+5. Invoke the matching workflow skill with the task path and
+   `--from=<phase>`:
+   - `development` → `/maister-development`
+   - `performance` → `/maister-performance`
+   - `migration` or `migrations` → `/maister-migration`
+   - `research` → `/maister-research`
+   - `product-design` → `/maister-product-design`
+
+Preserve additional flags from the user's request. Do not restart from scratch
+unless the user explicitly asks. If no active state exists, report that clearly
+and suggest `/maister-work` or `/maister-init` as appropriate.
+SKILL
+
+  mkdir -p "$OUT/skills/maister-status"
+  cat > "$OUT/skills/maister-status/SKILL.md" <<'SKILL'
+---
+name: maister-status
+description: "Report the active Maister workflow state, phase, and blockers."
+user-invocable: true
+---
+
+Read the active `orchestrator-state.yml` under `.maister/tasks/`. Use the task
+path supplied in the user's request when present; otherwise use the latest
+active state file.
+
+Report:
+
+- task path and workflow type
+- task status and `current_phase`
+- `completed_phases` and failed phases
+- blockers, pending gates, and the next incomplete phase
+
+Do not start or resume the workflow. If no active workflow exists, say so
+clearly and suggest `/maister-init` or `/maister-work`.
+SKILL
+
+  mkdir -p "$OUT/skills/maister-next"
+  cat > "$OUT/skills/maister-next/SKILL.md" <<'SKILL'
+---
+name: maister-next
+description: "Suggest the best next action from the active Maister workflow state."
+user-invocable: true
+---
+
+Read `orchestrator-state.yml` in the active task directory under `.maister/tasks/`.
+Use a task path supplied in the user's request when present; otherwise use the
+latest active state file.
+
+Suggest exactly one best next action based on `current_phase`,
+`completed_phases`, failed phases, blockers, and pending gates. Name the phase,
+skill, or user decision and explain the reason in one sentence. Do not execute
+the suggested action.
+
+If no workflow is active, suggest `/maister-init` when `.maister/docs/` is
+missing; otherwise suggest `/maister-work`.
+SKILL
+
+  mkdir -p "$OUT/skills/maister-bye"
+  cat > "$OUT/skills/maister-bye/SKILL.md" <<'SKILL'
+---
+name: maister-bye
+description: "End a Maister session gracefully while preserving workflow state for resume."
+user-invocable: true
+---
+
+End the Maister session gracefully.
+
+1. Identify the active task from the user's request or the latest
+   `orchestrator-state.yml` under `.maister/tasks/`.
+2. Ensure the state file reflects the latest `current_phase`,
+   `completed_phases`, blockers, pending gates, and task status.
+3. Do not mark an in-progress workflow as completed.
+4. Summarize what was completed and what remains.
+5. Record the task path and the command `/maister-resume <task-path>` for the
+   next session.
+
+Do not discard in-progress workflow state.
+SKILL
+
+  mkdir -p "$OUT/skills/maister-dev"
+  cat > "$OUT/skills/maister-dev/SKILL.md" <<'SKILL'
+---
+name: maister-dev
+description: "Shortcut for /maister-development. Use for development tasks."
+user-invocable: true
+---
+
+Invoke `/maister-development` with the task description or task path supplied
+in the user's request. Pass the input through verbatim and do not skip the
+Maister workflow for a task that looks straightforward.
+SKILL
+}
+
+generate_utility_skills
+
 echo "Built Cursor Agent variant at $OUT"

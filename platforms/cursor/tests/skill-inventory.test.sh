@@ -6,9 +6,9 @@ PLUGIN="${PLUGIN_DIR:-$ROOT/plugins/maister-cursor}"
 cd "$PLUGIN"
 
 count=$(find skills -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-# 4B baseline: 29 public skills under skills/ (33 renamed minus 4 relocated internals)
-if [ "$count" -lt 27 ] || [ "$count" -gt 31 ]; then
-  echo "FAIL: skill count $count outside 27-31"
+# Public skills plus five session utility skills (resume/status/next/bye/dev).
+if [ "$count" -lt 32 ] || [ "$count" -gt 36 ]; then
+  echo "FAIL: skill count $count outside 32-36"
   exit 1
 fi
 
@@ -31,5 +31,12 @@ if [ ! -f lib/orchestrator-framework/references/orchestrator-patterns.md ]; then
   echo "FAIL: lib/orchestrator-framework/references/orchestrator-patterns.md missing"
   exit 1
 fi
+
+for skill in maister-resume maister-status maister-next maister-bye maister-dev; do
+  test -f "skills/$skill/SKILL.md" || {
+    echo "FAIL: Cursor utility skill '$skill' is missing"
+    exit 1
+  }
+done
 
 echo "PASS: skill inventory ($count public skills)"

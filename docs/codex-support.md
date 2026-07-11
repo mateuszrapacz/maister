@@ -50,6 +50,22 @@ The workflow still owns specification, planning, implementation, verification,
 and pause gates. Gates are plain-text questions because structured user-input
 support is not a stable plugin dependency.
 
+### Session utility skills
+
+The Codex variant also exposes lightweight session controls:
+
+| Skill | Purpose |
+|---|---|
+| `$maister:resume` | Resume the latest or explicitly supplied task from `orchestrator-state.yml`. |
+| `$maister:status` | Report task, phase, completed phases, blockers, and pending gates. |
+| `$maister:next` | Suggest one next action without executing it. |
+| `$maister:bye` | End the session while preserving state and recording the resume path. |
+| `$maister:dev` | Shortcut for `$maister:development`. |
+
+`$maister:resume` selects the workflow from the task directory and passes the
+saved phase as `--from=<phase>`. `orchestrator-state.yml` remains the source of
+truth; these skills do not create a second session-state mechanism.
+
 `orchestrator-state.yml` remains the source of truth for phases, decisions,
 artifacts, and resume. Codex Goals or native planning can improve the session
 experience, but do not replace the Maister state graph.

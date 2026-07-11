@@ -56,6 +56,9 @@ validate-cursor:
 	@! find plugins/maister-cursor/skills -mindepth 1 -maxdepth 1 -type d ! -name 'maister-*' | grep -q . || true
 	@test -f plugins/maister-cursor/skills/maister-quick-plan/SKILL.md || (echo "FAIL: maister-quick-plan missing" && exit 1)
 	@test -f plugins/maister-cursor/skills/maister-quick-dev/SKILL.md || (echo "FAIL: maister-quick-dev missing" && exit 1)
+	@for skill in maister-resume maister-status maister-next maister-bye maister-dev; do \
+		test -f "plugins/maister-cursor/skills/$$skill/SKILL.md" || (echo "FAIL: $$skill utility skill missing" && exit 1); \
+	done
 	@test -d plugins/maister-cursor/skills/maister-problem-classifier || (echo "FAIL: maister-problem-classifier missing" && exit 1)
 	@test ! -d plugins/maister-cursor/skills/problem-classifier || (echo "FAIL: plain-kebab dir problem-classifier remains" && exit 1)
 	@echo "PR3: quick-plan skill integrity..."
