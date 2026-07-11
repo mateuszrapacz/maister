@@ -17,7 +17,12 @@ build-kilo:
 build-codex:
 	bash platforms/codex-cli/build.sh
 
-validate: validate-copilot validate-cursor validate-kiro validate-kilo validate-codex
+validate: validate-contract validate-copilot validate-cursor validate-kiro validate-kilo validate-codex
+
+validate-contract:
+	@echo "=== Shared gate decision engine validation ==="
+	@bash tests/gate-decision-engine.test.sh
+	@bash tests/fully-automatic-phase-continue.test.sh
 
 validate-copilot:
 	@echo "=== Copilot validation ==="
@@ -106,7 +111,7 @@ validate-cursor:
 	@grep -q '^model: inherit' plugins/maister-cursor/agents/explore.md || (echo "FAIL: explore agent must inherit parent model" && exit 1)
 	@grep -q '^readonly: true' plugins/maister-cursor/agents/explore.md || (echo "FAIL: explore agent must be readonly" && exit 1)
 	@echo "Checking read-only agents have readonly: true..."
-	@for agent in bottleneck-analyzer code-quality-pragmatist code-reviewer implementation-completeness-checker production-readiness-checker reality-assessor test-suite-runner spec-auditor gap-analyzer task-classifier research-synthesizer research-planner information-gatherer codebase-analysis-reporter thermo-nuclear-review-subagent thermo-nuclear-code-quality-review-subagent solution-brainstormer e2e-test-verifier; do \
+	@for agent in advisor bottleneck-analyzer code-quality-pragmatist code-reviewer implementation-completeness-checker production-readiness-checker reality-assessor test-suite-runner spec-auditor gap-analyzer task-classifier research-synthesizer research-planner information-gatherer codebase-analysis-reporter thermo-nuclear-review-subagent thermo-nuclear-code-quality-review-subagent solution-brainstormer e2e-test-verifier; do \
 		grep -q '^readonly: true' "plugins/maister-cursor/agents/$$agent.md" || (echo "FAIL: $$agent missing readonly: true" && exit 1); \
 	done
 	@echo "Checking writer agents are not readonly..."
@@ -186,6 +191,8 @@ validate-kiro:
 	@jq -e '.hooks != null' plugins/maister-kiro/agents/maister.json >/dev/null || (echo "FAIL: maister.json missing hooks field" && exit 1)
 	@echo "Rule 18: agents/maister-explore.json exists..."
 	@test -f plugins/maister-kiro/agents/maister-explore.json || (echo "FAIL: maister-explore.json missing" && exit 1)
+	@test -f plugins/maister-kiro/agents/maister-advisor.json || (echo "FAIL: maister-advisor.json missing" && exit 1)
+	@jq -e '.tools == ["read","grep","glob"]' plugins/maister-kiro/agents/maister-advisor.json >/dev/null || (echo "FAIL: advisor must be read-only in Kiro" && exit 1)
 	@echo "Rule 19: no agents/*.md (JSON + instructions only)..."
 	@test $$(find plugins/maister-kiro/agents -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ') -eq 0 || (echo "FAIL: agents/*.md found" && exit 1)
 	@echo "Rule 20: no TaskCreate/TaskUpdate..."
@@ -250,6 +257,7 @@ validate-kilo:
 
 validate-codex:
 	@echo "=== Codex validation ==="
+	@test -f platforms/codex-cli/templates/advisor.toml || (echo "FAIL: Codex advisor template missing" && exit 1)
 	@bash platforms/codex-cli/smoke-cli.sh
 	@echo "Codex install MCP opt-in test..."
 	@bash platforms/codex-cli/tests/install.test.sh

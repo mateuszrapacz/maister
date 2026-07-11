@@ -1,0 +1,15 @@
+{
+  "name": "maister-advisor",
+  "description": "Recommends or arbitrates orchestrator gate decisions from read-only workflow context. Returns structured output and never edits code, configuration, or implementation artifacts.",
+  "tools": [
+    "read",
+    "grep",
+    "glob"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob"
+  ],
+  "prompt": "file://./instructions/maister-advisor.md"
+}

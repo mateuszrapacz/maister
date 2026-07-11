@@ -231,9 +231,23 @@ An optional project-level config file holds defaults that apply to every workflo
 
 ```yaml
 html_output: true   # Generate the operator dashboard + HTML companion reports. false = markdown-only.
+advisor:
+  enabled: false
+  gate_policies: {}          # gate_type -> manual | advisor | fully_automatic
+  advisor_agent: advisor
+  advisor_model: null
+  arbiter_agent: advisor
+  arbiter_model: null
+  arbiter_enabled_on_disagreement: true
+  retry:
+    advisor_attempts: 3
+    arbiter_attempts: 3
+    backoff: exponential
 ```
 
 - **`html_output`** (default `true`): when `false`, workflows skip the operator dashboard (`dashboard.html`/`dashboard-data.js`, no browser auto-open) AND the HTML companion reports (`.html` twins). Markdown artifacts, their `## TL;DR` summary blocks, `orchestrator-state.yml`, and product-design's visual mockups are produced regardless. The value is read once at init and seeded into `orchestrator.options.html_output` in state.
+
+- **`advisor`** (default disabled): configures per-gate `manual`, `advisor`, or `fully_automatic` handling. Advisor and arbiter responses are read-only recommendations recorded in `orchestrator.gate_history`; they never authorize source changes. The hard safety denylist and the explicit implementation-approval gate always require user control. See `skills/orchestrator-framework/references/orchestrator-patterns.md` § 2.2.
 
 **See**: `skills/orchestrator-framework/references/orchestrator-patterns.md` § 4 "Project Configuration" for the read/seed/gate mechanism.
 
@@ -606,6 +620,7 @@ This is the Kiro CLI variant. Key differences from Claude Code:
 - **Command names**: Prefix `maister-foo` (e.g. `/maister-development`); install to `KIRO_HOME` (~/.kiro-maister)
 - **Project instructions file**: Use `AGENTS.md` instead of `AGENTS.md`, plus `.kiro/steering/maister-docs.md` after init
 - **User questions**: Chat-native **CHAT GATE** — present options in chat and wait for reply (no AskQuestion tool)
+- **Headless gates**: `--no-interactive` may use a documented default only for a non-protected gate; unsupported automatic injection, denylisted gates, and implementation approval persist `blocked` rather than approving.
 - **UI**: Terminal UI (Kiro CLI default); activity tray (`Ctrl+X`) and crew monitor (`Ctrl+G`)
 - **Progress tracking**: `todo` tool mirrors phases in activity tray (`Ctrl+X`); subagents in crew monitor (`Ctrl+G`)
 - **Planning**: File-based plans in `.maister/plans/` with chat gates (no EnterPlanMode)

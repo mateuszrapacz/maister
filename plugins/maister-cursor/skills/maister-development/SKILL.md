@@ -46,7 +46,7 @@ Full framework rule: `../lib/orchestrator-framework/references/orchestrator-patt
 2. **Create Todo Items**: Use `TodoWrite` for all phases (see Phase Configuration), then set dependencies with `TodoWrite ordering in todos array (merge: true)`
 3. **Create Task Directory**: `.maister/tasks/development/YYYY-MM-DD-task-name/`
 4. **Initialize State**: Create `orchestrator-state.yml` with task info and research reference
-5. **Set up Operator Dashboard** (orchestrator-patterns.md § 8) — first read `.maister/config.yml` and set `orchestrator.options.html_output` (default true if the file/key is absent). **When `html_output` is false, SKIP this entire step** — no `dashboard.html`, no `dashboard-data.js`, no browser auto-open — and proceed. Otherwise: copy `../lib/orchestrator-framework/assets/dashboard.html` to the task root as `dashboard.html`, write the initial `dashboard-data.js` (all phases pending), then **auto-open it in the user's browser** (`open` / `xdg-open` / `start` per platform, passing the plain absolute filesystem path — NEVER a hand-built `file://` URL; on failure just print the path — never block). On resume: re-copy `dashboard.html` only if missing; regenerate `dashboard-data.js` from state; then auto-open it in the browser again (same opener as a new task — the OS focuses an already-open tab rather than duplicating).
+5. **Set up Operator Dashboard** (orchestrator-patterns.md § 8) — first read `.maister/config.yml` and seed `orchestrator.options.html_output` and `orchestrator.options.advisor` (manual defaults when absent). **When `html_output` is false, SKIP this entire step** — no `dashboard.html`, no `dashboard-data.js`, no browser auto-open — and proceed. Otherwise: copy `../lib/orchestrator-framework/assets/dashboard.html` to the task root as `dashboard.html`, write the initial `dashboard-data.js` (all phases pending), then **auto-open it in the user's browser** (`open` / `xdg-open` / `start` per platform, passing the plain absolute filesystem path — NEVER a hand-built `file://` URL; on failure just print the path — never block). On resume: re-copy `dashboard.html` only if missing; regenerate `dashboard-data.js` from state; then auto-open it in the browser again (same opener as a new task — the OS focuses an already-open tab rather than duplicating).
 6. **Discover project documentation**: Read `.maister/docs/INDEX.md` (if exists), extract ALL file paths from the "Project Documentation" section. This includes predefined docs (vision, roadmap, tech-stack, architecture) AND any user-added project docs (e.g., deployment.md, api-strategy.md). Store complete list as `project_context.project_doc_paths` in state.
 
 ### Step 4: Ingest Design Context
@@ -91,6 +91,95 @@ Cross-cutting rules from `orchestrator-patterns.md` apply throughout this workfl
 1. **Artifact Summary Contract (§ 7)**: every artifact-writing subagent prompt MUST include the contract instruction (artifacts open with TL;DR / Key Decisions / Open Questions & Risks). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` (shared entry shape, § 4).
 2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark it `in_progress` before delegating), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks so the operator reviews them on the dashboard while answering — status stays `in_progress` until the gate passes), after every phase completion (including skips, with reason), every gate decision, every verification cycle, and at finalization. It is a terse projection of state — never duplicate artifact content into it.
 3. **HTML companions (§ 9)**: pass `html_style_guide_path` (absolute path to `../lib/orchestrator-framework/references/html-report-style.md`) to specification-creator, implementation-planner, and e2e-test-verifier. Register returned `html_path` values in `phase_summaries.[phase].artifacts[].html`.
+4. **Advisor audit upkeep (§ 2.2)**: after every advisor, arbiter, retry, escalation, or user override, append the complete record to `orchestrator.gate_history`, rewrite the state, and refresh the dashboard before continuing. Do not use dashboard data as the resume source.
+
+### Advisor Gate Integration
+
+At every phase and decision gate, apply the shared `orchestrator-patterns.md` § 2.2 protocol. The gate call-site must provide a stable `gate_type`, original recommendation, complete options, and read-only context. For this development workflow, `implementation-approval` is always denylisted and must be answered explicitly by the user. Advisor agreement may advance a configured safe gate, but no advisor or arbiter result may start the implementation executor.
+
+Every phase exit, scope decision, optional-phase choice, verification matrix,
+fix-loop decision, and implementation-approval gate MUST invoke the algorithm in
+`lib/orchestrator-framework/references/gate-decision-engine.md`. The call
+site checks the idempotency key before invoking a model or user gate, persists
+`advisor_pending`, `arbiter_pending`, or `user_pending` before waiting, and
+persists the terminal record before changing phase status. The implementation
+executor must re-read state and require `implementation_approval.status:
+approved` immediately before dispatch.
+
+### Concrete Gate Call-Site Checklist
+
+The `AskQuestion` lines below describe the host adapter's
+`present_user_gate`; they are not direct gate calls. For every listed call site,
+invoke `evaluate_gate(gate_context, state, host_adapter)` from
+`lib/orchestrator-framework/references/gate-decision-engine.md` first. Build
+the complete context with `phase_id`, stable `gate_type`, the exact question,
+the exact ordered `options`, `original_recommendation`,
+`safety_classification`, and read-only `context` containing `task_path`, all
+relevant `phase_summaries`, artifact paths, dashboard summary, prior
+`gate_history`, and implementation-approval status when relevant.
+
+The call-site sequence is fixed: read state and reuse a terminal record with
+the same idempotency key; persist and dashboard-refresh the applicable
+`pending` state before any model or user call; persist every advisor and
+arbiter attempt, retry/backoff, escalation, and the single arbiter on
+disagreement; then persist the complete terminal record, refresh the
+dashboard, and write decision summaries before changing phase status or
+continuing. A host executes a valid `fully_automatic` result through
+`phase_continue(selected_option)` after persistence; it does not synthesize UI
+input. A missing or unsafe continuation falls back to the user gate or persists `blocked`. The implementation executor is reachable only after a
+fresh state read proves `orchestrator.implementation_approval.status:
+approved`.
+
+For a valid non-denylisted `fully_automatic` result, bind the terminal decision
+to `lib/orchestrator-framework/bin/phase-continue.rb` with the exact state
+path, phase/gate context, ordered options, selected option, actor, confidence,
+next phase, and report paths. Continue the workflow only after the runner exits
+successfully; it atomically persists the gate record and reports first.
+
+Stable call-site inventory (the literal option order is part of the gate's
+idempotency key): `phase-1-clarification` uses
+`["Confirm assumptions", "Correct assumptions", "Provide more context"]`;
+`phase-2-scope-decision` uses the gap-analyzer's options in returned order and
+its original recommendation; `phase-2-routing`, every `phase-N-exit`, and the
+TDD exits use `["Continue to the named next phase", "Pause workflow"]`;
+`optional-phase-selection` uses `["Run optional phase", "Skip optional phase"]`;
+`verification-options` uses the displayed verification options in displayed
+order; `verification-fix-selection` uses `["Fix all fixable issues", "Let me
+choose specific issues", "Skip fixes, proceed as-is"]`;
+`verification-rerun` uses `["Yes, re-run verification", "No, proceed to the
+next phase"]`; `verification-known-issues` uses `["Proceed with known issues",
+"Stop workflow"]`; and `implementation-approval` uses
+`["Approve complete implementation scope", "Reject implementation scope",
+"Request scope changes"]`. Rollback, production, unresolved-critical, and
+final-handoff decisions remain user-controlled.
+
+Host adapter presentation matrix (each `AskQuestion` entry is a presentation
+primitive behind the engine; it never bypasses `evaluate_gate`):
+
+- `phase-1-clarification`: AskQuestion
+- `phase-1-exit`: AskQuestion
+- `phase-2-scope-decision`: AskQuestion
+- `phase-2-routing`: AskQuestion
+- `phase-3-exit`: AskQuestion
+- `phase-4-exit`: AskQuestion
+- `requirements-clarification`: AskQuestion
+- `phase-5-exit`: AskQuestion
+- `optional-phase-selection/spec-audit`: AskQuestion
+- `phase-6-exit`: AskQuestion
+- `phase-7-exit`: AskQuestion
+- `implementation-approval`: AskQuestion
+- `phase-8-exit`: AskQuestion
+- `phase-9-exit`: AskQuestion
+- `verification-options`: AskQuestion
+- `optional-phase-selection/e2e`: AskQuestion
+- `optional-phase-selection/user-docs`: AskQuestion
+- `verification-fix-selection`: AskQuestion
+- `verification-rerun`: AskQuestion
+- `verification-known-issues`: AskQuestion
+- `phase-11-exit`: AskQuestion
+- `phase-12-exit`: AskQuestion
+- `phase-13-exit`: AskQuestion
+- `final-handoff-approval`: AskQuestion
 
 ---
 
@@ -131,12 +220,12 @@ Use for **all development tasks**: bug fixes, enhancements, new features, and an
 **Execute**:
 1. Skill tool - `maister-codebase-analyzer`
 2. Update state with analysis results
-3. Direct - use AskQuestion for max 5 critical clarifying questions
+3. For each critical clarification, invoke the engine as `phase-1-clarification` with the exact question and the ordered options from the checklist; `AskQuestion` is only its user-gate adapter.
 4. Save clarifications to `analysis/clarifications.md`
 **Output**: `analysis/codebase-analysis.md`, `analysis/clarifications.md`
 **State**: Update `task_context.risk_level`, `phase_summaries.codebase_analysis`, `task_context.clarifications_resolved`
 
-→ **AUTO-CONTINUE** — Do NOT end turn, do NOT prompt user. Proceed immediately to Phase 2.
+→ Invoke the engine as `phase-1-exit` with question "Continue to Phase 2?", options `["Continue to Phase 2", "Pause workflow"]`, and original recommendation "Continue to Phase 2"; continue only after the terminal record is persisted.
 
 ---
 
@@ -155,10 +244,10 @@ Use for **all development tasks**: bug fixes, enhancements, new features, and an
 **⛔ DECISION GATE** (mandatory — do NOT skip):
 - Parse `decisions_needed` from gap-analyzer output
 - If `decisions_needed.critical` OR `decisions_needed.important` is non-empty:
-  - MUST use `AskQuestion` — every decision is its own single-select question with its own option set (never flattened into a single question's option list). Critical decisions: one call each with full context. Important decisions: may be grouped as up to 4 separate questions within one call (orchestrator-patterns.md § 3 Decision Gate Pattern)
+  - MUST invoke the engine once per decision as `phase-2-scope-decision`, preserving each exact ordered option set and original recommendation (never flattening options). Critical decisions use separate full-context calls; important decisions may be grouped only as separate engine records.
 - If both are empty: Note "No scope decisions needed" in state
 
-**SELF-CHECK** before continuing: "Did the gap-analyzer return `decisions_needed` items? If yes, did I invoke `AskQuestion`? If I skipped this, STOP and go back."
+**SELF-CHECK** before continuing: "Did every `decisions_needed` item get a terminal `phase-2-scope-decision` record? If not, STOP and go back."
 
 3. Save scope clarifications to `analysis/scope-clarifications.md`
 4. **Set optional phase defaults** based on detected characteristics:
@@ -171,19 +260,19 @@ Use for **all development tasks**: bug fixes, enhancements, new features, and an
 
 **Context to pass**: Risk level, codebase summary, key files, clarifications, project_doc_paths (from state)
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared engine for `phase-2-routing` now; its user adapter is `AskQuestion`, and continuation requires the persisted terminal decision.
 
-The Phase 2 exit gate **always** invokes `AskQuestion`. The branching is over *which questions get asked*, not whether to ask:
+The Phase 2 exit gate **always** invokes `phase-2-routing` in the shared engine. The branching is over *which questions get asked*, not whether to ask:
 1. If `decisions_needed.critical` or `.important` is non-empty → present the DECISION GATE questions first (see DECISION GATE block above)
 2. Then **always** ask the executive-summary routing question (Phase 3 / 4 / 5 based on `task_characteristics`) shown below
 
-Empty `decisions_needed` skips step 1 only. Step 2 is unconditional. There is no path through Phase 2 that bypasses `AskQuestion`.
+Empty `decisions_needed` skips step 1 only. Step 2 is unconditional. There is no path through Phase 2 that bypasses the engine.
 
 **ANTI-PATTERN — DO NOT DO THIS:**
 - ❌ "The UI change is small/simple, skipping Phase 4..." — STOP. If `ui_heavy` is true, Phase 4 runs. The gap-analyzer made this assessment, not you.
 - ❌ "No new screens needed, just a component..." — STOP. `ui_heavy` is a signal from the gap-analyzer. Do NOT override it with your own complexity judgment.
 
-AskQuestion - Display executive summary before asking. Read `analysis/gap-analysis.md` and extract: task type detected, risk level, key characteristics enabled (TDD gates, UI mockups, E2E, user docs), scope decisions made (if any). Then read `task_context.task_characteristics` from `orchestrator-state.yml` and determine the next phase:
+`phase-2-routing` - Display executive summary before the engine call. Read `analysis/gap-analysis.md` and extract: task type detected, risk level, key characteristics enabled (TDD gates, UI mockups, E2E, user docs), scope decisions made (if any). Then read `task_context.task_characteristics` from `orchestrator-state.yml` and determine the exact ordered routing options:
 - If `has_reproducible_defect` is true → ask "Continue to Phase 3: TDD Red Gate?"
 - If `ui_heavy` is true → ask "Continue to Phase 4: UI Mockup Generation?"
 - Otherwise → ask "Continue to Phase 5: Technical Approach, Requirements & Specification?"
@@ -203,9 +292,9 @@ AskQuestion - Display executive summary before asking. Read `analysis/gap-analys
 
 **Critical**: Test MUST fail before implementation (proves defect exists)
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-AskQuestion - "TDD red gate complete. Continue to Phase 4?"
+Invoke the engine as `phase-3-exit` with question "TDD red gate complete. Continue to Phase 4?", options `["Continue to Phase 4", "Pause workflow"]`, original recommendation "Continue to Phase 4", and safety classification `test-gate`.
 
 ---
 
@@ -224,9 +313,9 @@ AskQuestion - "TDD red gate complete. Continue to Phase 4?"
 
 **Context to pass**: Gap analysis, scope decisions, component choices, `analysis/design-context/INDEX.md` path (if exists from Step 4)
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-AskQuestion - "UI mockups complete. Continue to Phase 5?"
+Invoke the engine as `phase-4-exit` with question "UI mockups complete. Continue to Phase 5?", options `["Continue to Phase 5", "Pause workflow"]`, original recommendation "Continue to Phase 5", and safety classification `design-gate`.
 
 ---
 
@@ -240,14 +329,14 @@ AskQuestion - "UI mockups complete. Continue to Phase 5?"
 **Execute**:
 
 **Part A — Technical & Architecture Clarification (inline, conditional)**:
-1. If complex task with multiple approaches: Direct - use AskQuestion for 3-5 technical questions
-2. If multiple valid architectural approaches exist: Present 2-3 approaches via AskQuestion. The chosen approach is passed to specification-creator so the spec is written with the decided architecture.
+1. If complex task with multiple approaches: invoke `technical-clarification` through the engine for 3-5 separate questions.
+2. If multiple valid architectural approaches exist: present 2-3 approaches through the engine, preserving exact option order. The chosen approach is passed to specification-creator so the spec is written with the decided architecture.
 3. Save to `analysis/technical-clarifications.md` (conditional)
 
 **Skip technical clarification if**: Simple task, risk_level = low, no multiple approaches detected
 
 **Part B — Requirements Gathering (inline)**:
-3. Direct - use AskQuestion for specification requirements:
+3. Invoke `requirements-clarification` through the engine for specification requirements:
    - Adaptive question count based on description length:
      - Brief (<30 words): 6-8 questions
      - Standard (30-100 words): 4-6 questions
@@ -283,9 +372,9 @@ AskQuestion - "UI mockups complete. Continue to Phase 5?"
 **Output**: `analysis/technical-clarifications.md` (conditional), `analysis/requirements.md`, `implementation/spec.md`
 **State**: Update `task_context.tech_clarified`, `task_context.architecture_decision`, `phase_summaries.specification`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-AskQuestion - Display executive summary before asking. Read `implementation/spec.md` and extract: spec title, scope boundaries (what's included and excluded), number of key requirements, architecture approach chosen (if any), assumptions made. Format as brief overview then "Continue to specification audit?"
+Invoke the engine as `phase-5-exit` with question "Continue to specification audit?", options `["Continue to specification audit", "Pause workflow"]`, original recommendation "Continue to specification audit", and the executive summary extracted from `implementation/spec.md` as read-only context.
 
 ---
 
@@ -300,11 +389,11 @@ AskQuestion - Display executive summary before asking. Read `implementation/spec
 
 **Recommended**: Always. Present spec audit as the recommended default. User can skip if they choose.
 
-AskQuestion - "Run specification audit? (Recommended)" with "Yes, run audit (Recommended)" as first option
+Invoke the engine as `optional-phase-selection` with question "Run specification audit? (Recommended)", exact options `["Yes, run audit (Recommended)", "No, skip audit"]`, and original recommendation "Yes, run audit (Recommended)".
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-AskQuestion - Display executive summary before asking. Read `verification/spec-audit.md` and extract: overall verdict (pass/pass-with-concerns/fail), issue counts by severity, top 1-2 critical findings if any. Format as brief overview then "Continue to implementation planning?"
+Invoke the engine as `phase-6-exit` with question "Continue to implementation planning?", options `["Continue to implementation planning", "Pause workflow"]`, original recommendation "Continue to implementation planning", and the audit summary as read-only context.
 
 ---
 
@@ -329,9 +418,9 @@ AskQuestion - Display executive summary before asking. Read `verification/spec-a
 
 **SELF-CHECK**: Did you just invoke the Task tool with `maister-implementation-planner`? Or did you start writing implementation-plan.md yourself? If the latter, STOP immediately and invoke the Task tool instead.
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-AskQuestion - Display executive summary before asking. Read `implementation/implementation-plan.md` and extract: number of task groups, total implementation steps, key dependencies between groups, estimated complexity. Format as brief overview then "Continue to implementation?"
+Invoke the engine as `phase-7-exit` with question "Continue to implementation approval?", options `["Continue to implementation approval", "Pause workflow"]`, and original recommendation "Continue to implementation approval". Then invoke the separate denylisted `implementation-approval` engine gate with question "Approve this complete implementation scope?", exact options `["Approve complete implementation scope", "Reject implementation scope", "Request scope changes"]`, and the plan summary as read-only context. Record `orchestrator.implementation_approval.status: approved` only after the explicit user option is terminal; `advisor` and `fully_automatic` cannot answer it.
 
 ---
 
@@ -351,6 +440,8 @@ AskQuestion - Display executive summary before asking. Read `implementation/impl
 **Output**: Implemented code, `implementation/work-log.md`
 **State**: Update implementation progress, extract phase_summaries.implementation
 
+**Protected entry check**: Read `orchestrator.implementation_approval.status` from `orchestrator-state.yml` immediately before invoking the executor. If it is not `approved`, do not invoke the executor; persist the `implementation-approval` gate as pending/blocked and stop for explicit user approval. The executor and task-group implementers may modify source only after this state check passes.
+
 **SELF-CHECK**: Did you just invoke the Skill tool with `maister-implementation-plan-executor`? Or did you start writing code yourself? If the latter, STOP immediately and invoke the Skill tool instead.
 
 **⚠️ POST-IMPLEMENTATION CONTINUATION** — After the skill completes and returns control:
@@ -359,9 +450,9 @@ AskQuestion - Display executive summary before asking. Read `implementation/impl
 3. Update state: add Phase 8 to `completed_phases`
 4. Evaluate conditional: if `task_characteristics.has_reproducible_defect` AND Phase 3 in `completed_phases` → Phase 9, else → Phase 10
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-AskQuestion - Display executive summary before asking. Extract from `phase_summaries.implementation` and `implementation/work-log.md`: task groups completed, files changed, test results from incremental runs, any known issues or deferred items. Format as brief overview then "Continue to verification?"
+Invoke the engine as `phase-8-exit` with question "Continue to verification?", options `["Continue to verification", "Pause workflow"]`, original recommendation "Continue to verification", and the implementation summary as read-only context.
 
 ---
 
@@ -378,9 +469,9 @@ AskQuestion - Display executive summary before asking. Extract from `phase_summa
 
 **Critical**: Test MUST pass (proves defect is fixed)
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-AskQuestion - "TDD gate passed. Continue to Phase 10?"
+Invoke the engine as `phase-9-exit` with question "TDD gate passed. Continue to Phase 10?", options `["Continue to Phase 10", "Pause workflow"]`, original recommendation "Continue to Phase 10".
 
 ---
 
@@ -389,7 +480,7 @@ AskQuestion - "TDD gate passed. Continue to Phase 10?"
 > **Phase entry self-check**: Before executing this phase, locate the `AskQuestion` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TodoWrite`) without a corresponding `AskQuestion` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Determine which verification checks to run using tiered decision matrix
-**Execute**: Direct - display plan, confirm/adjust via AskQuestion
+**Execute**: Direct - build the complete `verification-options` gate context and invoke the shared engine; `AskQuestion` is only the adapter.
 **Output**: Updated state with all verification options
 **State**: Set `options.code_review_enabled`, `options.pragmatic_review_enabled`, `options.reality_check_enabled`, `options.production_check_enabled`, `options.e2e_enabled`, `options.user_docs_enabled`
 **Auto-set**: `skip_test_suite: true` (full test suite already passed during implementation phase; cleared before re-verification if fixes are applied)
@@ -414,14 +505,14 @@ Verification Plan:
 
 **Step 2** (3 questions):
 
-**Q1** (always): AskQuestion (multi-select) — "Which standard verifications to run?"
+**Q1** (always): invoke `verification-options` (multi-select) — "Which standard verifications to run?"
 Options: "Code review (Recommended)", "Pragmatic review (Recommended)", "Reality check (Recommended)", "Production readiness (Recommended)". All pre-selected.
 
-**Q2** (SKIP if `options.e2e_enabled: false` and no `--e2e` flag): AskQuestion — "Enable E2E browser verification?" Options: "Yes (Recommended)", "No, skip".
+**Q2** (SKIP if `options.e2e_enabled: false` and no `--e2e` flag): invoke `optional-phase-selection` — "Enable E2E browser verification?" Options: `["Yes (Recommended)", "No, skip"]`.
 
-**Q3** (SKIP if `options.user_docs_enabled: false` and no `--user-docs` flag): AskQuestion — "Generate user documentation?" Options: "Yes (Recommended)", "No, skip".
+**Q3** (SKIP if `options.user_docs_enabled: false` and no `--user-docs` flag): invoke `optional-phase-selection` — "Generate user documentation?" Options: `["Yes (Recommended)", "No, skip"]`.
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — persist the terminal `verification-options` and optional-phase records through the shared engine before continuing.
 
 ---
 
@@ -456,13 +547,13 @@ Verification Results:
 
 **Step 4**: User-driven fix loop (max 3 iterations):
 1. Present all critical + warning issues as a numbered list
-2. AskQuestion — "Which issues should I fix?" with options:
+2. Invoke `verification-fix-selection` — "Which issues should I fix?" with exact options:
    - "Fix all fixable issues" (convenience default)
    - "Let me choose specific issues" (user picks by number)
    - "Skip fixes, proceed as-is"
 3. Fix selected issues, log each to `verification_context.fixes_applied`
 4. After fixes applied: set `skip_test_suite: false` (code changed, tests must re-run)
-5. AskQuestion — "Re-run verification to check fixes?" with options:
+5. Invoke `verification-rerun` — "Re-run verification to check fixes?" with exact options:
    - "Yes, re-run verification" → re-invoke `maister-implementation-verifier` → return to Step 2
    - "No, proceed to next phase"
 6. Update `verification_context.reverify_count`
@@ -470,7 +561,7 @@ Verification Results:
 **Exit conditions**:
 - No critical issues remain → proceed
 - User explicitly chooses "Skip fixes, proceed as-is" or "No, proceed to next phase" → proceed with issues logged
-- Max 3 iterations reached → AskQuestion: "Proceed with known issues?" / "Stop workflow"
+- Max 3 iterations reached → invoke `verification-known-issues` with exact options `["Proceed with known issues", "Stop workflow"]`.
 - **MUST NOT proceed with unresolved critical issues unless user explicitly approves**
 
 **⚠️ POST-VERIFICATION CONTINUATION** — After issue resolution completes:
@@ -479,9 +570,9 @@ Verification Results:
 3. Update state: add Phase 11 to `completed_phases`
 4. Proceed to Phase 12
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-AskQuestion - Display executive summary: total issues found, issues fixed, issues remaining by severity. Then "Continue to Phase 12?"
+Invoke the engine as `phase-11-exit` with question "Continue to Phase 12?", options `["Continue to Phase 12", "Pause workflow"]`, original recommendation "Continue to Phase 12", and the final verification report as read-only context.
 
 ---
 
@@ -499,9 +590,9 @@ AskQuestion - Display executive summary: total issues found, issues fixed, issue
 
 **Skip if**: `options.e2e_enabled = false`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-AskQuestion - "E2E complete. Continue to Phase 13?"
+Invoke the engine as `phase-12-exit` with question "E2E complete. Continue to Phase 13?", options `["Continue to Phase 13", "Pause workflow"]`, original recommendation "Continue to Phase 13".
 
 ---
 
@@ -521,9 +612,9 @@ AskQuestion - "E2E complete. Continue to Phase 13?"
 
 **Skip if**: `options.user_docs_enabled = false`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-AskQuestion - "Documentation complete. Continue to Phase 14?"
+Invoke the engine as `phase-13-exit` with question "Documentation complete. Continue to Phase 14?", options `["Continue to Phase 14", "Pause workflow"]`, original recommendation "Continue to Phase 14".
 
 ---
 
@@ -537,10 +628,10 @@ AskQuestion - "Documentation complete. Continue to Phase 14?"
 **State**: Set `task.status: completed`
 
 **Process**:
-1. Create workflow summary
-2. Update task status to "completed"
-3. Provide commit message template
-4. Guide next steps (code review, PR, deployment)
+1. Read `orchestrator.gate_history` and generate `outputs/decision-summary.md` with every decision, option, recommendation, rationale, confidence, model, retry, arbitration, override, and full-context link.
+2. If `orchestrator.options.html_output` is true, invoke `html-companion-writer` for `outputs/decision-summary.md` and register `outputs/decision-summary.html`; otherwise record Markdown-only output.
+3. Invoke the denylisted `final-handoff-approval` gate with exact options `["Complete workflow", "Keep workflow open"]`; update task status to `completed` only after its terminal record and the final summary are persisted. For `blocked` or `failed` termination, generate the same summary with the terminal status before stopping.
+4. Update the dashboard projection and provide a commit message template and next steps (code review, PR, deployment).
 
 → End of workflow
 
@@ -562,6 +653,18 @@ orchestrator:
     pragmatic_review_enabled: true
     reality_check_enabled: true
     production_check_enabled: true
+    advisor:
+      enabled: false
+      gate_policies: {}
+      advisor_agent: advisor
+      advisor_model: null
+      arbiter_agent: advisor
+      arbiter_model: null
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
   task_context:
     risk_level: null
     clarifications_resolved: null
@@ -596,6 +699,7 @@ orchestrator:
       ui_mockups: {components_designed: [], summary: null}
       specification: {summary: null}
       architecture_decision: {decision: null, summary: null}
+      advisor: {summary: null, decisions: [], risks: [], artifacts: []}
 ```
 
 ---
@@ -638,8 +742,11 @@ orchestrator:
 │   ├── e2e-verification-report.html    # Phase 12 (HTML companion)
 │   ├── visual-fidelity.md              # Phase 12 (when design-context exists, report-only)
 │   └── visual-fidelity.html            # Phase 12 (HTML companion)
-└── documentation/
-    └── user-guide.md              # Phase 13 (optional)
+├── documentation/
+│   └── user-guide.md              # Phase 13 (optional)
+└── outputs/
+    ├── decision-summary.md        # Full gate history and context
+    └── decision-summary.html      # HTML companion when html_output is true
 ```
 
 ---

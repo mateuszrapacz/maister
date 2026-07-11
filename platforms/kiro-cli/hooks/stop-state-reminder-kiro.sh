@@ -39,7 +39,7 @@ STATE_HINT=" Active workflow: $LATEST_STATE"
 [ -n "$COMPLETED" ] && STATE_HINT="$STATE_HINT | completed: $COMPLETED"
 [ -n "$TASK_STATUS" ] && STATE_HINT="$STATE_HINT | status: $TASK_STATUS"
 
-MSG="Maister stop check: before ending this turn, verify orchestrator-state.yml matches work done (phase progress, completed_phases, task status).$STATE_HINT Update state if you finished phase work or advanced gates."
+MSG="Maister stop check: before ending this turn, verify orchestrator-state.yml matches work done (phase progress, completed_phases, task status, gate_history, pending advisor/arbiter/user gates, implementation_approval).$STATE_HINT Update state if you finished phase work or advanced gates. Never start implementation without explicit approval."
 
 jq -n --arg msg "$MSG" '{"decision": "block", "reason": $msg}'
 

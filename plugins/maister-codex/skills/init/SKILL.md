@@ -126,7 +126,32 @@ Wait for docs-operator to complete, then immediately proceed to Phase 6.
 # markdown-only runs. Markdown artifacts, their TL;DR summary blocks, and
 # orchestrator-state.yml are produced regardless. Default: true.
 html_output: true
+
+# Advisor gate policy is opt-in. Gate types accept manual, advisor, or
+# fully_automatic. The hard safety denylist in orchestrator-patterns.md cannot
+# be overridden by this configuration.
+advisor:
+  enabled: false
+  gate_policies: {}
+  advisor_agent: advisor
+  advisor_model: null
+  arbiter_agent: advisor
+  arbiter_model: null
+  arbiter_enabled_on_disagreement: true
+  retry:
+    advisor_attempts: 3
+    arbiter_attempts: 3
+    backoff: exponential
 ```
+
+When initializing a Codex project and advisor mode is enabled, also scaffold
+`.codex/agents/advisor.toml` from `platforms/codex-cli/templates/advisor.toml`
+when that template is available. Installed builds that do not include the
+repository template must create the same file with `name = "advisor"`,
+`model = "inherit"` (or the configured `advisor_model`),
+`sandbox_mode = "read-only"`, and developer instructions requiring structured
+YAML output and forbidding edits. The plugin does not bundle a root `agents/`
+directory in the Codex MVP.
 
 ---
 

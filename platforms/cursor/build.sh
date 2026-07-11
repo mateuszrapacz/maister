@@ -71,7 +71,14 @@ find "$OUT" -name "*.md" | while read -r f; do
   sedi 's/subagent_type: "explore"/subagent_type: "maister-explore"/g' "$f"
 done
 
-# 6. AskUserQuestion → AskQuestion
+# 6. Cursor adapter mapping:
+#    - source agents/advisor.md becomes maister-advisor and is invoked by a
+#      Cursor subagent/Task call for both advisor and arbiter recommendations;
+#    - AskUserQuestion becomes AskQuestion for the final user gate;
+#    - the orchestrator owns writes/resume reads of orchestrator-state.yml;
+#    - automatic answer injection is not supported by this build until an E2E
+#      test proves it, so fully_automatic falls back to a user gate or blocks.
+# 7. AskUserQuestion → AskQuestion
 find "$OUT" -name "*.md" | while read -r f; do
   sedi 's/AskUserQuestion/AskQuestion/g' "$f"
 done
@@ -155,6 +162,7 @@ READONLY_WRITERS=(
   solution-designer
 )
 READONLY_ALLOWLIST=(
+  advisor
   spec-auditor
   gap-analyzer
   task-classifier

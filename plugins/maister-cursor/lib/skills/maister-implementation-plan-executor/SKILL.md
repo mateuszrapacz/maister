@@ -31,8 +31,10 @@ You are an implementation plan executor that delegates task groups to subagents 
    - `implementation/implementation-plan.md` (required)
    - `implementation/spec.md` (recommended)
    - `.maister/docs/INDEX.md` (required for standards)
-3. **Check for task group items**: Call `TaskList` to find existing task group items from the planner. If found, use them. If not, create them with `TodoWrite` for each task group (fallback for plans created before task system migration).
-4. **Initialize work-log.md**:
+3. **Protected implementation approval**: Read `orchestrator-state.yml` when present. If `orchestrator.implementation_approval.status` is not `approved`, stop before creating or dispatching any task-group implementer. Report the pending approval gate and preserve the state for resume. Never infer approval from advisor, arbiter, plan, or prior-session responses.
+4. **Shared gate contract**: Before dispatch, apply `lib/orchestrator-framework/references/gate-decision-engine.md` for the `implementation-approval` idempotency record. This gate is denylisted, so only an explicit user decision can produce `status: approved`; advisor, arbiter, automatic policy, and a stale state projection cannot satisfy it.
+5. **Check for task group items**: Call `TaskList` to find existing task group items from the planner. If found, use them. If not, create them with `TodoWrite` for each task group (fallback for plans created before task system migration).
+5. **Initialize work-log.md**:
    ```markdown
    # Work Log
 
@@ -48,6 +50,32 @@ You are an implementation plan executor that delegates task groups to subagents 
    ```
 
 **Do NOT read all standards upfront.** Standards are loaded lazily per task group.
+
+### Gate Call-Site Checklist
+
+Every recovery, test-order, and dispatch decision uses
+`evaluate_gate(gate_context, orchestrator-state.yml, host_adapter)` from
+`lib/orchestrator-framework/references/gate-decision-engine.md`; the
+`AskQuestion` text is only the adapter presentation. The context must
+include `phase_id`, stable `gate_type`, exact question, exact ordered options,
+original recommendation, safety classification, and read-only task/group,
+plan, work-log, phase-summary, dashboard, prior `gate_history`, and approval
+context. Reuse the terminal idempotency record before any call; persist the
+pending state before waiting; persist each advisor/arbiter retry and the single
+arbitration; and persist the terminal record plus dashboard/report refresh
+before dispatch or continuation.
+
+Use `implementation-approval` with exact options
+`["Approve complete implementation scope", "Reject implementation scope",
+"Request scope changes"]`; `test-order` with
+`["Complete tests first", "Skip with justification", "Stop"]`;
+`group-failure-recovery` with `["Try suggested fix", "Retry group", "Complete
+manually", "Rollback changes", "Stop"]`; and `test-failure-recovery` with
+`["Retry tests", "Apply a fix", "Stop"]`. These are user-controlled where
+the engine denylist requires it. Before every wave dispatch, re-read state and
+require `orchestrator.implementation_approval.status: approved`; no advisor,
+arbiter, automatic result, or resume projection can substitute for it. A
+failed or pending gate blocks dispatch and is persisted as such.
 
 ## Phase 2: Execute (wave-based, parallel by default)
 
@@ -75,7 +103,7 @@ Never assume missing `Files to Modify` means "None" — silent disjoint assumpti
 
 For each wave:
 
-0. For every group in the wave, `TodoWrite` to `status: "in_progress"` with `owner: "maister-task-group-implementer"`.
+0. Re-read `orchestrator-state.yml` and require the terminal denylisted `implementation-approval` record with `orchestrator.implementation_approval.status: approved` and approved scope covering this wave. If absent, stale, rejected, or scope-mismatched, persist `blocked` and do not dispatch. Only then, for every group in the wave, `TodoWrite` to `status: "in_progress"` with `owner: "maister-task-group-implementer"`.
 
 1. **Prepare group context** (per group):
    - Extract group content from `implementation-plan.md` (including `Visual References` section, if present)
@@ -115,7 +143,7 @@ For each wave:
 4. **Partial-wave failure handling**:
    - Do NOT cancel sibling subagents in the same wave — they may produce valid work even when one peer fails.
    - After every wave member has returned, run the existing failure recovery flow (see "Error Handling" → "Subagent Failure") for each failed group individually.
-   - Mark successful groups in the wave as `completed` normally. Keep failed groups `in_progress` with `metadata: {failed_at, failure_reason, wave: N}` until the AskQuestion recovery path resolves them.
+   - Mark successful groups in the wave as `completed` normally. Keep failed groups `in_progress` with `metadata: {failed_at, failure_reason, wave: N}` until the terminal `group-failure-recovery` engine record resolves them.
    - The next wave is NOT computed until every failed group's recovery decision is made.
 
 5. After the wave fully resolves (all members `completed` or recovered), recompute the ready set and proceed to the next wave.
@@ -303,7 +331,7 @@ N.n  - Run tests (only this group's tests)
 Before executing step N.2 or higher:
 
 1. Verify N.1 (test step) is complete
-2. If not complete, use AskQuestion:
+2. If not complete, invoke the `test-order` gate engine:
    ```
    Question: "Test step N.1 not completed. How to proceed?"
    Header: "Tests"
@@ -372,7 +400,7 @@ If task-group-implementer reports failure:
 1. **Do NOT auto-rollback** - User-confirmed rollback only
 2. **Analyze root cause** from subagent output
 3. **Check for easy fixes**: config issues, missing dependencies, test setup
-4. **Use AskQuestion**:
+4. **Invoke the shared gate engine as `group-failure-recovery`** (the user adapter presents this question):
    ```
    Question: "Group [N] implementation failed: [brief reason]. How to proceed?"
    Header: "Failure"
@@ -390,7 +418,7 @@ If tests fail after implementation:
 
 1. Analyze failure output
 2. If obvious fix: apply and re-run
-3. If unclear: use AskQuestion with options
+3. If unclear: invoke `test-failure-recovery` through the shared gate engine with exact options `["Retry tests", "Apply a fix", "Stop"]`.
 
 ## Validation Checklist
 

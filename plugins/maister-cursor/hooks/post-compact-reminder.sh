@@ -20,9 +20,9 @@ if [ -d "$TASKS_DIR" ]; then
 fi
 
 if [ -n "$STATE_HINT" ]; then
-  MSG="Maister post-compaction: READ orchestrator-state.yml before continuing.$STATE_HINT Use AskQuestion at phase gates."
+  MSG="Maister post-compaction: READ orchestrator-state.yml before continuing.$STATE_HINT Check pending advisor/arbiter/user gates, gate_history, and implementation_approval before resuming. Use AskQuestion at phase gates; never start implementation without explicit approval."
 else
-  MSG="Maister post-compaction: if a workflow was in progress, read orchestrator-state.yml in .maister/tasks/ and use AskQuestion at phase gates."
+  MSG="Maister post-compaction: if a workflow was in progress, read orchestrator-state.yml in .maister/tasks/, check pending advisor/arbiter/user gates, gate_history, and implementation_approval, and use AskQuestion at phase gates. Never start implementation without explicit approval."
 fi
 
 jq -n --arg msg "$MSG" '{ "user_message": $msg }'

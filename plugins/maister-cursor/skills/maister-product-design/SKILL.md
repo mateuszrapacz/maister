@@ -72,7 +72,55 @@ Cross-cutting rules from `orchestrator-patterns.md` (same as the development and
 1. **Artifact Summary Contract (§ 7)**: every artifact opens with TL;DR / Key Decisions / Open Questions & Risks. This applies to subagent prompts (solution-brainstormer, information-gatherer already comply) AND to the artifacts this orchestrator writes directly (`problem-statement.md`, `personas.md`, `design-decisions.md`, `feature-spec.md`, `outputs/product-brief.md`). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` — verbatim, never re-summarized.
 2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark `in_progress` before executing), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks — the operator reviews them on the dashboard while answering; status stays `in_progress` until the gate passes), after every phase completion (including skipped phases 3/7, with reason), every gate decision, after each refinement-loop iteration that changes an artifact, and at finalization. Every rewrite starts with `date -u` (one call per turn). Register Phase 7 mockups as artifacts (`analysis/mockups/{slug}.html` — they ARE html; set both `path` and `html` to the mockup path).
 3. **HTML companions (§ 9) — delegated, because this orchestrator writes its hero artifacts INLINE** (no producing subagent to attach a companion to). Right after each hero md is finalized, invoke the `maister-html-companion-writer` subagent (Task tool) to write its sibling `.html`: `analysis/design-decisions.md` (Phase 5), `analysis/feature-spec.md` (Phase 6), `outputs/product-brief.md` (Phase 8, after final approval). Pass `md_path`, `html_style_guide_path` (absolute path to `../lib/orchestrator-framework/references/html-report-style.md`), `artifact_label`, and `report_suite` (the sibling reports that exist, hrefs relative to the md's directory, for the breadcrumb). Register the returned `html_path` in `phase_summaries.[phase].artifacts[].html` so the dashboard hero cards link HTML first. Companion generation never blocks — on `status: failed` keep the md and continue. (`analysis/alternatives.md` already gets a companion from the solution-brainstormer subagent in Phase 4; `problem-statement.md`/`personas.md` are secondary — companion them too if cheap, but the three hero artifacts are the priority.)
-4. **icon_hint values** per phase: 0 `analysis`, 1 `analysis`, 2 `analysis`, 3 `analysis`, 4 `plan`, 5 `plan`, 6 `spec`, 7 `code`, 8 `done`.
+4. **Advisor gates (§ 2.2)**: classify every design decision gate, resolve it through the configured manual/advisor/fully_automatic policy, persist the full record in `orchestrator.gate_history` after each decision, and never let advisor output modify artifacts or implementation scope. Generate `outputs/decision-summary.md` and its HTML companion at completion or blocked/failed termination.
+
+Every design direction, persona, convergence, refinement, optional-phase,
+verification, and phase-exit gate MUST invoke
+`lib/orchestrator-framework/references/gate-decision-engine.md` with a stable
+`gate_type`, exact ordered options, original recommendation, safety
+classification, and complete read-only context. Check the idempotency key before
+any model or user call; persist pending states, retries, arbitration, and the
+terminal decision before continuing. Advisor and arbiter output cannot edit
+mockups, expand scope, or approve implementation.
+
+### Concrete Gate Call-Site Checklist
+
+The `AskQuestion` instructions in this skill are adapter calls only. Every
+one first invokes `evaluate_gate(gate_context, orchestrator-state.yml,
+host_adapter)` from
+`lib/orchestrator-framework/references/gate-decision-engine.md`. The
+context must contain `phase_id`, stable `gate_type`, exact question, exact
+ordered options, original recommendation, safety classification, and complete
+read-only `context` (`task_path`, phase summaries, artifact paths, dashboard
+summary, prior `gate_history`, and approval status where relevant).
+
+For a valid non-denylisted `fully_automatic` result, invoke
+`lib/orchestrator-framework/bin/phase-continue.rb` with the exact state path,
+gate context, ordered options, selected option, actor, confidence, next phase,
+and report paths. Continue design only after the runner exits successfully.
+
+Before any advisor, arbiter, or user call, compute and reuse the idempotency
+key; persist `user_pending`/`advisor_pending`/`arbiter_pending` and refresh the
+dashboard. Persist every attempt, retry/backoff, escalation, arbitration, and
+user override. Persist the terminal record, refresh the dashboard, and write
+decision summaries before changing phase state or continuing. The advisor and
+arbiter may recommend but never edit mockups, change scope, or approve
+implementation; denylisted gates always remain user-controlled.
+
+Stable inventory: `phase-0-context`, `phase-1-synthesis`, `phase-2-problem`,
+`phase-3-personas`, `phase-4-idea-convergence`, `phase-5-design-convergence`,
+`phase-6-feature-spec`, `phase-7-mockups`, and `phase-8-review-handoff` use
+the displayed question and exact displayed option order; every phase-exit
+fallback uses `["Continue to the named next phase", "Pause workflow"]`.
+`design-direction`, `persona-refinement`, and `design-convergence` preserve
+the alternatives' artifact order and append `"Need more info"` last.
+`optional-phase-selection` uses `["Run optional phase", "Skip optional phase"]`;
+`design-failure-recovery` uses `["Retry design", "Skip design", "Stop workflow"]`;
+`brief-approval` uses `["Approve product brief", "Revise a section", "Add
+missing information", "Let me explain my thinking"]` and is a
+`final-handoff-approval`/user-controlled gate. The implementation handoff
+cannot be approved by an advisor or arbiter.
+5. **icon_hint values** per phase: 0 `analysis`, 1 `analysis`, 2 `analysis`, 3 `analysis`, 4 `plan`, 5 `plan`, 6 `spec`, 7 `code`, 8 `done`.
 
 ---
 
@@ -167,7 +215,7 @@ digraph product_design_orchestrator {
     p3 -> p4 [label="Pause"];
 
     // Phase 4 (agent, non-interactive) to Phase 5
-    p4 -> p5 [label="AUTO-CONTINUE"];
+    p4 -> p5 [label="gate-engine: phase-4-exit"];
 
     // Phase 5 iterative refinement loop
     p5 -> d_refine_convergence;
@@ -209,7 +257,7 @@ digraph product_design_orchestrator {
 3. Analyze user's description to detect the 6 design characteristics: `is_greenfield`, `is_enhancement`, `is_ui_focused`, `is_backend`, `is_complex`, `is_simple`
 4. Derive `complexity_level` from characteristics: "simple" (if `is_simple`), "complex" (if `is_complex` or `is_greenfield`), "standard" (otherwise)
 
-5. AskQuestion — "Do you have additional context to provide?" with options:
+5. Invoke `phase-0-context` through the engine — "Do you have additional context to provide?" with exact options:
    - "I have files to add (I'll drop them in the context/ folder)"
    - "I have external links/URLs to reference"
    - "I need specific topics researched from the web"
@@ -223,7 +271,7 @@ digraph product_design_orchestrator {
 
 7. Present detected characteristics with rationale for user confirmation:
 
-AskQuestion — "I detected these design characteristics. Please confirm or correct:" with options:
+Invoke `phase-0-characteristics` through the engine — "I detected these design characteristics. Please confirm or correct:" with exact options:
    - "Correct, proceed with these"
    - "Override: [list characteristic corrections]"
    - "Let me explain my thinking"
@@ -288,7 +336,7 @@ AskQuestion — "I detected these design characteristics. Please confirm or corr
    - Cross-reference insights: connections between sources
    - Implications for design: what the context means for the design task
 
-6. AskQuestion — "Context synthesis complete. Key findings: [2-3 bullet summary]. Any corrections or additions before we explore the problem space?"
+6. Invoke `phase-1-synthesis` through the engine — "Context synthesis complete. Key findings: [2-3 bullet summary]. Any corrections or additions before we explore the problem space?" with exact options `["Confirm context", "Correct context", "Add information"]`.
 
 **Output**: `analysis/design-context.md`
 **State**: Update `phase_summaries.context_synthesis`
@@ -330,7 +378,7 @@ Present: problem statement, key constraints, success criteria
 
 4. Enter **iterative refinement loop** (see `references/interaction-patterns.md`):
 
-AskQuestion — with options:
+Invoke `phase-2-problem` through the engine with exact options:
    - "Approve and continue"
    - "Change the problem scope"
    - "Change the constraints"
@@ -345,7 +393,7 @@ AskQuestion — with options:
 **Output**: `analysis/problem-statement.md`
 **State**: Update `phase_summaries.problem_exploration` with `problem_statement`, `constraints`, `success_criteria`
 
-AskQuestion — "Problem space explored." Read `next_phase` from `orchestrator-state.yml`. If next phase is Phase 4, prepend "Skipping persona exploration (enhancement scope). " Ask "Continue to [next_phase value]?"
+Invoke `phase-2-exit` through the engine with question "Problem space explored. Continue to [next_phase value]?", options `["Continue to the named next phase", "Pause workflow"]`, original recommendation "Continue to the named next phase", and `next_phase` as read-only context.
 
 ---
 
@@ -361,9 +409,9 @@ AskQuestion — "Problem space explored." Read `next_phase` from `orchestrator-s
 
 **Mode: Exploration -> Convergence** (transition within phase)
 
-1. **Exploration**: Ask about user types, their goals, pain points, discovery paths. Reference design context from Phase 1.
+1. **Exploration**: Invoke `phase-3-personas` through the engine for each question about user types, goals, pain points, and discovery paths. Reference design context from Phase 1.
 
-AskQuestion — one question at a time about user types and their needs
+Each persona question is one engine call with exact ordered options and the full read-only context.
 
 2. After sufficient exploration, **transition to convergence**:
 
@@ -373,7 +421,7 @@ AskQuestion — one question at a time about user types and their needs
 
 4. Enter **iterative refinement loop**:
 
-AskQuestion — with options:
+Invoke `phase-7-mockups` through the engine with exact options:
    - "Approve personas and continue"
    - "Change [persona name]"
    - "Add another persona"
@@ -389,7 +437,7 @@ AskQuestion — with options:
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-AskQuestion — "Personas defined. Continue to Idea Generation?"
+Invoke the engine as `phase-3-exit` with question "Personas defined. Continue to Idea Generation?", options `["Continue to Idea Generation", "Pause workflow"]`, original recommendation "Continue to Idea Generation".
 
 ---
 
@@ -425,12 +473,12 @@ Task tool - `maister-solution-brainstormer` subagent
 - `analysis/problem-statement.md` (refined problem + constraints)
 - `analysis/personas.md` (if exists — persona cards + journeys)
 
-**SELF-CHECK**: After Task tool returns, verify `analysis/alternatives.md` exists and contains alternatives with trade-off analysis. If missing: re-invoke brainstormer with corrected context. If second attempt fails, AskQuestion to report failure and ask whether to retry or proceed with inline alternatives.
+**SELF-CHECK**: After Task tool returns, verify `analysis/alternatives.md` exists and contains alternatives with trade-off analysis. If missing: re-invoke brainstormer with corrected context. If second attempt fails, invoke `design-failure-recovery` through the engine with exact options `["Retry design", "Skip design", "Stop workflow"]`.
 
 **Output**: `analysis/alternatives.md`
 **State**: Update `phase_summaries.idea_generation` with summary of alternatives generated
 
--> **AUTO-CONTINUE** -- Do NOT end turn, do NOT prompt user. Proceed immediately to Phase 5.
+-> Invoke the engine as `phase-4-exit` with question "Continue to Idea Convergence?", options `["Continue to Idea Convergence", "Pause workflow"]`, original recommendation "Continue to Idea Convergence", then continue only after persistence.
 
 ---
 
@@ -455,16 +503,16 @@ Task tool - `maister-solution-brainstormer` subagent
    a. **Area header**: name and why this decision matters (1-2 sentences)
    b. **Alternatives detail**: For EVERY alternative, show name, description, pros, cons
    c. **Recommendation**: which alternative is recommended and why
-   d. AskQuestion — alternatives as options (mark recommended with "(Recommended)") + "Need more info" + "Let me explain my thinking"
+   d. Invoke `design-convergence` with alternatives in artifact order (mark recommended with "(Recommended)") + `"Need more info"` + `"Let me explain my thinking"` in that exact order.
    e. Record choice, move to next area
 
-> **SELF-CHECK before each AskQuestion**: Did you output the full alternatives with pros/cons for THIS area? If you only showed a recommendation line, STOP and output the full detail.
+> **SELF-CHECK before each convergence call**: Did you output the full alternatives with pros/cons for THIS area and build the complete gate context? If not, STOP and correct it.
 
 3. After all areas resolved, present a brief summary of the chosen direction
 
 4. Enter **iterative refinement loop** on the overall direction:
 
-AskQuestion — with options:
+Invoke `design-direction` through the engine with exact options:
    - "Approve direction and continue to specification"
    - "Refine the direction (adjust choices)"
    - "Explore more (re-generate alternatives)" -> returns to Phase 4
@@ -481,7 +529,7 @@ AskQuestion — with options:
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-AskQuestion — "Design direction approved. Continue to Feature Specification?"
+Invoke the engine as `phase-5-exit` with question "Design direction approved. Continue to Feature Specification?", options `["Continue to Feature Specification", "Pause workflow"]`, original recommendation "Continue to Feature Specification".
 
 ---
 
@@ -521,7 +569,7 @@ For each section:
 
 3. Enter **iterative refinement loop** per section:
 
-AskQuestion — with options:
+Invoke `phase-6-feature-spec` through the engine with exact options:
    - "Approve this section (implementation-ready)"
    - "Add more detail (needs specifics for implementation)"
    - "Change the scope"
@@ -554,7 +602,7 @@ If no gaps: proceed to Phase 7/8.
 **Output**: `analysis/feature-spec.md` (+ `.html` companion)
 **State**: Update `phase_summaries.feature_specification` with `spec_sections` (individually approved), `sections_count`
 
-AskQuestion — "Specification complete." Read `next_phase` from `orchestrator-state.yml`. If next phase is Phase 8, prepend "No UI prototyping needed (backend-focused design). " Ask "Continue to [next_phase value]?"
+Invoke the engine as `phase-6-exit` with question "Specification complete. Continue to [next_phase value]?", options `["Continue to the named next phase", "Pause workflow"]`, original recommendation "Continue to the named next phase", and `next_phase` as read-only context.
 
 ---
 
@@ -628,7 +676,7 @@ Task tool - `maister-ui-mockup-generator` subagent
 
 Enter **iterative refinement loop**:
 
-AskQuestion — with options:
+Invoke `phase-7-mockups` through the engine with exact options:
    - "Approve all screens and continue"
    - "Change the layout of [screen name]"
    - "Change the content of [screen name]"
@@ -647,7 +695,7 @@ Mockups are saved to `analysis/mockups/` automatically on each POST to the visua
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-AskQuestion — "Visual prototyping complete. Continue to Review & Handoff?"
+Invoke the engine as `phase-7-exit` with question "Visual prototyping complete. Continue to Review & Handoff?", options `["Continue to Review & Handoff", "Pause workflow"]`, original recommendation "Continue to Review & Handoff".
 
 ---
 
@@ -696,7 +744,7 @@ Before assembling the product brief, re-read `analysis/feature-spec.md` and veri
 
 4. Enter **iterative refinement loop** (final approval gate):
 
-AskQuestion — with options:
+Invoke `brief-approval` through the engine with exact options:
    - "Approve product brief"
    - "Revise a section"
    - "Add missing information"
@@ -706,7 +754,7 @@ AskQuestion — with options:
 
 5b. **HTML companion** *(skip when `options.html_output` is false)* (after final approval, so it reflects the approved brief — do NOT regenerate on each refinement iteration): invoke `maister-html-companion-writer` (Task tool) for `outputs/product-brief.md` (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.review_handoff.artifacts` and rewrite `dashboard-data.js` so the Product Brief hero card links the HTML.
 
-6. On approval, update task status and suggest next steps.
+6. On the terminal `brief-approval` option "Approve product brief", generate `outputs/decision-summary.md` from `orchestrator.gate_history`, including every design decision, rationale, confidence, arbitration, user override, and full-context link. Generate `outputs/decision-summary.html` when `options.html_output` is true. Only then update task status and suggest next steps.
 
    Output this message EXACTLY — do NOT invent alternative commands (e.g. `/maister-feature:new` does not exist):
 
@@ -769,6 +817,15 @@ design_context:
 
 options:
   html_output: true  # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions.
+  advisor:
+    enabled: false
+    gate_policies: {}
+    advisor_agent: advisor
+    advisor_model: null
+    arbiter_agent: advisor
+    arbiter_model: null
+    arbiter_enabled_on_disagreement: true
+    retry: {advisor_attempts: 3, arbiter_attempts: 3, backoff: exponential}
   visual_enabled: null  # null=auto-detect, false=--no-visual flag
 ```
 

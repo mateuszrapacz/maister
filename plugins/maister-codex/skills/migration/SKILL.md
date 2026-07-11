@@ -58,7 +58,54 @@ Cross-cutting rules from `orchestrator-patterns.md` (same as the development orc
 1. **Artifact Summary Contract (§ 7)**: every artifact-writing subagent prompt MUST include the contract instruction (artifacts open with TL;DR / Key Decisions / Open Questions & Risks). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` — verbatim, never re-summarized.
 2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark `in_progress` before delegating), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks — the operator reviews them on the dashboard while answering; status stays `in_progress` until the gate passes), after every phase completion (including skipped phases, with reason), every gate decision, every verification cycle, and at finalization. Every rewrite starts with `date -u` (one call per turn). It is a terse projection of state — never duplicate artifact content into it.
 3. **HTML companions (§ 9)**: pass `html_style_guide_path` (absolute path to `../orchestrator-framework/references/html-report-style.md`) to specification-creator, implementation-planner, and implementation-verifier. Register returned `html_path` values in `phase_summaries.[phase].artifacts[].html` so the dashboard hero cards link HTML first.
-4. **icon_hint values** per phase: 1 `analysis`, 2 `analysis`, 3 `spec`, 4 `plan`, 5 `code`, 6 `verify`, 7 `verify`, 8 `docs`.
+4. **Advisor gates (§ 2.2)**: classify every migration decision gate, resolve it through the configured manual/advisor/fully_automatic policy, persist the full record in `orchestrator.gate_history` after each decision, and keep rollback, data-integrity halts, and production gates user-controlled. Generate `outputs/decision-summary.md` and its HTML companion at completion or blocked/failed termination.
+
+Every migration strategy, scope, optional-phase, verification, fix-loop,
+rollback, and phase-exit gate MUST invoke
+`skills/orchestrator-framework/references/gate-decision-engine.md` with a stable
+`gate_type`, exact ordered options, original recommendation, safety
+classification, and complete read-only context. Check the idempotency key before
+any model or user call; persist pending states, retries, arbitration, and the
+terminal decision before continuing. Rollback, data-integrity, failure-recovery,
+and production decisions are denylisted and always require the user gate.
+
+### Concrete Gate Call-Site Checklist
+
+All `plain-text user question` lines in this skill are `present_user_gate` adapter steps.
+Before each one invoke `evaluate_gate(gate_context, orchestrator-state.yml,
+host_adapter)` from
+`skills/orchestrator-framework/references/gate-decision-engine.md`. Supply
+`phase_id`, stable `gate_type`, exact question, exact ordered options,
+`original_recommendation`, `safety_classification`, and read-only context with
+`task_path`, phase summaries, artifact paths, dashboard summary, prior
+`gate_history`, and approval status.
+
+For a valid non-denylisted `fully_automatic` result, invoke
+`skills/orchestrator-framework/bin/phase-continue.rb` with the exact state path,
+gate context, ordered options, selected option, actor, confidence, next phase,
+and report paths. Continue migration only after the runner exits successfully.
+
+First reuse a terminal idempotency record; otherwise persist and dashboard-
+refresh the pending state before waiting. Persist every retry/backoff,
+escalation, arbitration, and user override, then persist the terminal record,
+refresh dashboard, and write decision summaries before phase transition. On
+failure or unsupported automatic injection, fall back to user or `blocked`.
+
+Stable inventory: `phase-1-clarification` uses
+`["Confirm assumptions", "Correct assumptions", "Provide more context"]`;
+`migration-strategy` uses the strategy alternatives in gap-analysis order;
+`migration-scope` uses the exact requirements options in displayed order;
+`phase-2-exit`, `phase-3-exit`, `phase-4-exit`, `phase-5-exit`, and
+`phase-6-exit` use `["Continue to the named next phase", "Pause workflow"]`;
+`verification-fix-selection` uses `["Fix all fixable issues", "Let me choose
+specific issues", "Skip fixes, proceed as-is"]`; `verification-rerun` uses
+`["Yes, re-run verification", "No, proceed to the next phase"]`;
+`rollback-or-proceed` uses `["Rollback changes", "Proceed with warnings",
+"Stop workflow"]`; and `optional-phase-selection` uses
+`["Run optional phase", "Skip optional phase"]`. Implementation approval,
+rollback, data-integrity, unresolved-critical, and production gates are
+denylisted and user-controlled.
+5. **icon_hint values** per phase: 1 `analysis`, 2 `analysis`, 3 `spec`, 4 `plan`, 5 `code`, 6 `verify`, 7 `verify`, 8 `docs`.
 
 ---
 
@@ -117,12 +164,12 @@ Use for:
 **Execute**:
 1. skill loader - `maister:codebase-analyzer`
 2. Update state with analysis results
-3. Direct - use plain-text user question for max 5 critical clarifying questions about migration scope, target system, and constraints
+3. For each critical clarification, invoke `phase-1-clarification` through the shared engine with exact ordered options and full read-only context.
 4. Save clarifications to `analysis/clarifications.md`
 **Output**: `analysis/current-state-analysis.md`, `analysis/clarifications.md`
 **State**: Update task_context with current system info, `task_context.clarifications_resolved`
 
-→ **AUTO-CONTINUE** — Do NOT end turn, do NOT prompt user. Proceed immediately to Phase 2.
+→ Invoke the engine as `phase-1-exit` with question "Continue to Phase 2?", options `["Continue to Phase 2", "Pause workflow"]`, original recommendation "Continue to Phase 2".
 
 ---
 
@@ -142,7 +189,7 @@ Use for:
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary before asking. Extract from gap analysis: current system overview, target system, migration type classified, number of gaps identified, recommended strategy, risk level. Format as brief overview then "Continue to migration strategy?"
+Invoke the engine as `phase-2-exit` with question "Continue to migration strategy?", options `["Continue to migration strategy", "Pause workflow"]`, original recommendation "Continue to migration strategy", and the gap summary as read-only context.
 
 ---
 
@@ -154,7 +201,7 @@ plain-text user question - Display executive summary before asking. Extract from
 **Execute**:
 
 **Part A — Migration Requirements Gathering (inline)**:
-1. Direct - use plain-text user question for migration-specific requirements (3-5 questions):
+1. Invoke `migration-scope` through the engine for migration-specific requirements (3-5 questions):
    - Migration scope and boundaries (what's in/out of migration)
    - Rollback expectations and downtime tolerance
    - Data migration specifics (if data migration type)
@@ -173,7 +220,7 @@ plain-text user question - Display executive summary before asking. Extract from
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary before asking. Read `implementation/spec.md` and extract: migration strategy chosen, scope boundaries, rollback approach, breaking changes identified, key constraints. Format as brief overview then "Continue to implementation planning?"
+Invoke the engine as `phase-3-exit` with question "Continue to implementation planning?", options `["Continue to implementation planning", "Pause workflow"]`, original recommendation "Continue to implementation planning", and the spec summary as read-only context.
 
 ---
 
@@ -190,7 +237,7 @@ plain-text user question - Display executive summary before asking. Read `implem
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary before asking. Read `implementation/implementation-plan.md` and extract: number of task groups, total steps, rollback steps included, key dependencies, execution sequence. Format as brief overview then "Continue to execute migration?"
+Invoke the engine as `phase-4-exit` with question "Continue to execute migration?", options `["Continue to execute migration", "Pause workflow"]`, original recommendation "Continue to execute migration", and the plan summary as read-only context.
 
 ---
 
@@ -222,7 +269,7 @@ plain-text user question - Display executive summary before asking. Read `implem
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary before asking. Extract from `phase_summaries.implementation` and `implementation/work-log.md`: migration steps completed, files changed, test results, rollback readiness status. Format as brief overview then "Continue to verification?"
+Invoke the engine as `phase-5-exit` with question "Continue to verification?", options `["Continue to verification", "Pause workflow"]`, original recommendation "Continue to verification", and the implementation summary as read-only context.
 
 ---
 
@@ -248,7 +295,7 @@ plain-text user question - Display executive summary before asking. Extract from
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary before asking. Extract from verification results: overall verdict, issue counts by severity, compatibility test results, data integrity status, rollback test results. Format as detailed overview then "Continue to Phase [7 or 8]?"
+Invoke the engine as `phase-6-exit` with question "Continue to Phase [7 or 8]?", options `["Continue to the named next phase", "Pause workflow"]`, original recommendation "Continue to the named next phase", and the verification summary as read-only context.
 
 ---
 
@@ -266,9 +313,9 @@ plain-text user question - Display executive summary before asking. Extract from
 **Process**:
 1. Display detailed issue breakdown grouped by category and severity, listing location, description, and fixability
 2. Present all critical + warning issues as a numbered list
-3. plain-text user question — "Which issues should I fix?" with options: "Fix all fixable issues" / "Let me choose specific issues" / "Skip fixes, proceed as-is"
+3. Invoke `verification-fix-selection` — "Which issues should I fix?" with exact options `["Fix all fixable issues", "Let me choose specific issues", "Skip fixes, proceed as-is"]`.
 4. Fix selected issues
-5. plain-text user question — "Re-run verification to check fixes?" with options: "Yes, re-run verification" / "No, proceed to next phase"
+5. Invoke `verification-rerun` — "Re-run verification to check fixes?" with exact options `["Yes, re-run verification", "No, proceed to the next phase"]`.
 6. If re-run → re-invoke `maister:implementation-verifier` → return to Step 1
 7. Max 3 iterations
 
@@ -276,12 +323,12 @@ plain-text user question - Display executive summary before asking. Extract from
 
 **Exit Conditions**:
 - ✅ No critical issues remain → Proceed to Phase 8
-- ⚠️ Max iterations (3) reached → Ask user: proceed with warnings or rollback
+- ⚠️ Max iterations (3) reached → invoke `rollback-or-proceed` with exact options `["Rollback changes", "Proceed with warnings", "Stop workflow"]`.
 - ❌ Data integrity issues → HALT immediately, recommend rollback
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary: total issues found, issues fixed, issues remaining by severity. Then "Continue to documentation?"
+Invoke the engine as `phase-7-exit` with question "Continue to documentation?", options `["Continue to documentation", "Pause workflow"]`, original recommendation "Continue to documentation", and the final verification report as read-only context.
 
 ---
 
@@ -302,6 +349,8 @@ plain-text user question - Display executive summary: total issues found, issues
 - Step-by-step migration procedure
 - Rollback procedures
 - Troubleshooting common issues
+
+Before ending the workflow, invoke the denylisted `final-handoff-approval` gate with exact options `["Complete workflow", "Keep workflow open"]`, then generate `outputs/decision-summary.md` from `orchestrator.gate_history`, including every migration decision, rationale, confidence, retry, arbitration, user override, and full-context link. Generate the HTML companion when enabled and the same summary with terminal status before stopping on `blocked` or `failed`.
 
 → End of workflow
 
@@ -344,6 +393,18 @@ verification_context:
 options:
   html_output: true  # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions.
   docs_enabled: false
+  advisor:
+    enabled: false
+    gate_policies: {}
+    advisor_agent: advisor
+    advisor_model: null
+    arbiter_agent: advisor
+    arbiter_model: null
+    arbiter_enabled_on_disagreement: true
+    retry:
+      advisor_attempts: 3
+      arbiter_attempts: 3
+      backoff: exponential
 ```
 
 ---

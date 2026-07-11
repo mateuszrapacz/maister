@@ -57,7 +57,53 @@ Cross-cutting rules from `orchestrator-patterns.md` (same as the development orc
 1. **Artifact Summary Contract (§ 7)**: every artifact-writing subagent prompt MUST include the contract instruction (artifacts open with TL;DR / Key Decisions / Open Questions & Risks). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` — verbatim, never re-summarized.
 2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark `in_progress` before delegating), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks — the operator reviews them on the dashboard while answering; status stays `in_progress` until the gate passes), after every phase completion (including skipped phases 3-5, with reason), every gate decision, and at finalization. **Phase 1 addition**: also refresh after each of its 4 steps completes, registering that step's artifacts — Phase 1 is long and the operator should see brief → plan → findings → report appear incrementally. In particular, after Step 4 the report (`outputs/research-report.md` + `.html`) MUST be registered before the Phase 1 exit gate fires.
 3. **HTML companions (§ 9)**: pass `html_style_guide_path` (absolute path to `../orchestrator-framework/references/html-report-style.md`) to research-synthesizer, solution-brainstormer, and solution-designer. Register returned companion paths in `phase_summaries.[phase].artifacts[].html` so the dashboard hero cards link HTML first.
-4. **icon_hint values** per phase: 1 `analysis`, 2 `plan`, 3 `spec`, 4 `plan`, 5 `spec`, 6 `done`.
+4. **Advisor gates (§ 2.2)**: classify every research decision gate, resolve it through the configured manual/advisor/fully_automatic policy, persist the full record in `orchestrator.gate_history` after each decision, and never let advisor output modify source files. Generate `outputs/decision-summary.md` and its HTML companion at completion or blocked/failed termination.
+
+Every research convergence, clarification, scope, optional-phase, verification,
+and phase-exit gate MUST invoke
+`skills/orchestrator-framework/references/gate-decision-engine.md` with a stable
+`gate_type`, exact ordered options, original recommendation, safety
+classification, and complete read-only context. Check the idempotency key before
+any model or user call; persist pending states and every retry before waiting;
+persist the terminal decision before continuing. Advisor and arbiter output may
+recommend a research choice but cannot edit research artifacts.
+
+### Concrete Gate Call-Site Checklist
+
+Every `plain-text user question` below is only the host adapter's
+`present_user_gate`. Before it, invoke `evaluate_gate(gate_context,
+orchestrator-state.yml, host_adapter)` from
+`skills/orchestrator-framework/references/gate-decision-engine.md`. Each
+`gate_context` must include `phase_id`, stable `gate_type`, exact question,
+exact ordered options, `original_recommendation`, `safety_classification`, and
+read-only `context` with `task_path`, phase summaries, artifact paths,
+dashboard summary, and prior `gate_history`.
+
+For every call site: reuse a terminal idempotency record before any call;
+persist and refresh dashboard for `user_pending`, `advisor_pending`, or
+`arbiter_pending` before waiting; persist each retry/backoff and the one
+arbiter on disagreement; then persist the full terminal record and refresh
+dashboard/decision summaries before phase status or continuation. On retry
+exhaustion use the user gate or persist `blocked`. Advisor/arbiter output is
+read-only and cannot edit research artifacts or expand scope.
+
+For a valid non-denylisted `fully_automatic` result, invoke
+`skills/orchestrator-framework/bin/phase-continue.rb` with the exact state path,
+gate context, ordered options, selected option, actor, confidence, next phase,
+and report paths. Continue research only after the runner exits successfully.
+
+Stable inventory: `phase-1-exit`, `phase-3-exit`, `phase-4-exit`, and
+`phase-5-exit` use `["Continue to the named next phase", "Pause workflow"]`;
+`optional-phase-selection` uses `["Enable brainstorming", "Disable brainstorming"]`
+and then `["Enable high-level design", "Disable high-level design"]` in that
+order; `research-convergence` uses the decision-area alternatives in exact
+artifact order plus `"Need more info"`; `research-clarification` uses
+`["Confirm assumptions", "Correct assumptions", "Provide more context"]`;
+`design-failure-recovery` uses `["Retry design", "Skip design", "Stop workflow"]`.
+Each row carries the displayed question and original recommendation. Final
+handoff is `final-handoff-approval` with
+`["Complete workflow", "Keep workflow open"]` and is always user-controlled.
+5. **icon_hint values** per phase: 1 `analysis`, 2 `plan`, 3 `spec`, 4 `plan`, 5 `spec`, 6 `done`.
 
 ---
 
@@ -194,9 +240,9 @@ Update state: `research_context.confidence_level`
 
 ---
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `plain-text user question` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-plain-text user question - "Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?"
+Invoke the engine as `phase-1-exit` with question "Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?", options `["Continue to brainstorming evaluation", "Pause workflow"]`, original recommendation "Continue to brainstorming evaluation".
 
 ---
 
@@ -221,17 +267,15 @@ plain-text user question - "Research foundation complete (initialized, planned, 
    - Whether research suggests architectural decisions (yes → valuable)
    - Research type (requirements/mixed → likely valuable; technical → depends)
    - Whether design artifacts would feed into development workflow
-4. If `brainstorming_enabled` not already set by flag, plain-text user question:
+4. If `brainstorming_enabled` not already set by flag, invoke `optional-phase-selection` through the engine:
    - "[Brainstorming recommendation]. Would you like to explore solution alternatives?"
-   - Options: "Yes, explore alternatives" / "No, skip brainstorming"
-5. If `design_enabled` not already set by flag, plain-text user question:
+   - Exact options: `["Yes, explore alternatives", "No, skip brainstorming"]`; original recommendation is the analyzer's recommendation.
+5. If `design_enabled` not already set by flag, invoke `optional-phase-selection` through the engine:
    - "[Design recommendation]. Would you like to generate a high-level design?"
-   - Options: "Yes, generate design" / "No, skip design"
+   - Exact options: `["Yes, generate design", "No, skip design"]`; original recommendation is the analyzer's recommendation.
 6. Update state: set `brainstorming_enabled` and `design_enabled`
 
-→ If brainstorming enabled: continue to Phase 3
-→ If brainstorming disabled AND design enabled: skip to Phase 5
-→ If both disabled: skip to Phase 6
+→ Persist the terminal `optional-phase-selection` records before routing; if brainstorming is enabled continue to Phase 3, if disabled and design is enabled skip to Phase 5, otherwise skip to Phase 6.
 
 ---
 
@@ -257,9 +301,9 @@ plain-text user question - "Research foundation complete (initialized, planned, 
 - Accumulated context: `research_type`, `research_question`, `confidence_level`, `phase_summaries` (Phase 1)
 - `project_doc_paths` (from state)
 
-> **SELF-CHECK**: After native subagent delegation returns, verify `outputs/solution-exploration.md` exists and contains alternatives. If missing: **STOP. Do NOT proceed to Phase 4 or Phase 5.** Re-invoke the brainstormer with corrected context (ensure `output_path` is `outputs/solution-exploration.md`). If second attempt also fails, use plain-text user question to report the failure and ask whether to retry or skip brainstorming.
+> **SELF-CHECK**: After native subagent delegation returns, verify `outputs/solution-exploration.md` exists and contains alternatives. If missing: **STOP. Do NOT proceed to Phase 4 or Phase 5.** Re-invoke the brainstormer with corrected context (ensure `output_path` is `outputs/solution-exploration.md`). If second attempt also fails, invoke `design-failure-recovery` with exact options `["Retry design", "Skip design", "Stop workflow"]`.
 
-→ **AUTO-CONTINUE**
+→ Invoke the engine as `phase-3-exit` with question "Continue to solution convergence?", options `["Continue to solution convergence", "Pause workflow"]`, original recommendation "Continue to solution convergence", then continue only after the terminal record is persisted.
 
 ---
 
@@ -287,20 +331,20 @@ plain-text user question - "Research foundation complete (initialized, planned, 
       - Pros (bullet list)
       - Cons (bullet list)
    c. **Recommendation**: which alternative is recommended and why (1 sentence)
-   d. **plain-text user question (exactly ONE question in this call)**: this area's alternatives as options (mark recommended with "(Recommended)") + "Need more info" option
+   d. Invoke `research-convergence` (exactly ONE question for this area) with the area's alternatives in artifact order (mark recommended with "(Recommended)") + `"Need more info"` last.
    e. If user picks → record choice, move to next area
    f. If "Need more info" → present the detailed trade-off analysis for the requested alternative, then re-ask
 
-> **SELF-CHECK before each plain-text user question**: Did you output the alternatives with pros/cons for THIS area? If you only showed a recommendation line without listing all alternatives and their pros/cons, STOP and output the full detail before asking. Also: does this plain-text user question call contain exactly ONE question about exactly ONE area? If it has multiple questions, STOP and split.
+> **SELF-CHECK before each convergence call**: Did you output the alternatives with pros/cons for THIS area and construct one complete `research-convergence` context with exact ordered options? If not, STOP and correct it.
 
 3. After all areas resolved, present a brief summary of the chosen combination
 4. Update state with chosen approaches per decision area
 
-> **GATE CHECK**: Verify that plain-text user question was called for EACH decision area. If any decision area was skipped for any reason (e.g., output file missing, read failure), STOP and resolve before continuing. Do NOT mark Phase 4 complete without user convergence on all decision areas.
+> **GATE CHECK**: Verify that a terminal `research-convergence` record exists for EACH decision area. If any area was skipped, STOP and resolve before continuing. Do NOT mark Phase 4 complete without persisted convergence records.
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `plain-text user question` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-plain-text user question - "Brainstorming complete. Continue to high-level design?"
+Invoke the engine as `phase-4-exit` with question "Brainstorming complete. Continue to high-level design?", options `["Continue to high-level design", "Pause workflow"]`, original recommendation "Continue to high-level design".
 
 ---
 
@@ -320,7 +364,7 @@ plain-text user question - "Brainstorming complete. Continue to high-level desig
 **Part A — Design Direction (Direct)**:
 1. If Phase 4 ran: confirm selected approaches from convergence
 2. If Phase 4 was skipped: use research report recommendations as design input
-3. plain-text user question for any design preferences or constraints (e.g., "Any architectural constraints or preferences?")
+3. Invoke `research-clarification` through the engine for any design preferences or constraints (e.g., "Any architectural constraints or preferences?") with exact options `["Confirm assumptions", "Correct assumptions", "Provide more context"]`.
 
 **Part B — Design Generation (Subagent)**:
 
@@ -337,7 +381,7 @@ plain-text user question - "Brainstorming complete. Continue to high-level desig
 - Accumulated context: `research_type`, `research_question`, `confidence_level`, `phase_summaries`
 - `project_doc_paths` (from state)
 
-> **SELF-CHECK**: After native subagent delegation returns, verify both `outputs/high-level-design.md` and `outputs/decision-log.md` exist. If missing: **STOP. Do NOT proceed to Part C.** Re-invoke the designer with corrected context. If second attempt also fails, use plain-text user question to report the failure and ask whether to retry or skip design.
+> **SELF-CHECK**: After native subagent delegation returns, verify both `outputs/high-level-design.md` and `outputs/decision-log.md` exist. If missing: **STOP. Do NOT proceed to Part C.** Re-invoke the designer with corrected context. If second attempt also fails, invoke `design-failure-recovery` with exact options `["Retry design", "Skip design", "Stop workflow"]`.
 
 **Part C — Summary (Direct)**:
 3. Read `outputs/high-level-design.md` and `outputs/decision-log.md`
@@ -347,9 +391,9 @@ plain-text user question - "Brainstorming complete. Continue to high-level desig
    - Key decision highlights (1 line each)
    - Integration points with existing system (if applicable)
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — invoke the shared gate engine now; `plain-text user question` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
-plain-text user question - "Design complete. Continue to output generation?"
+Invoke the engine as `phase-5-exit` with question "Design complete. Continue to output generation?", options `["Continue to output generation", "Pause workflow"]`, original recommendation "Continue to output generation".
 
 ---
 
@@ -359,15 +403,16 @@ plain-text user question - "Design complete. Continue to output generation?"
 
 **Purpose**: Summarize research results and suggest next steps
 **Execute**: Direct
-**Output**: No new files — summarizes existing outputs
+**Output**: `outputs/decision-summary.md` and, when enabled, `outputs/decision-summary.html`
 
 **Process**:
 1. Inventory all generated outputs: `outputs/research-report.md` (always), plus conditional: `solution-exploration.md`, `high-level-design.md`, `decision-log.md`
-2. Present executive summary to user:
+2. Generate `outputs/decision-summary.md` from `orchestrator.gate_history`, including every question, option, recommendation, rationale, confidence, model, retry, arbitration, user override, full-context link, and terminal status. Generate the HTML companion when `options.html_output` is true.
+3. Present executive summary to user, then invoke `final-handoff-approval` through the engine:
    - Key findings and confidence level
    - Which optional phases ran (brainstorming, design)
    - Key decision highlights (if brainstorming/design ran)
-3. If design artifacts exist, suggest starting development in a fresh session:
+4. If design artifacts exist, suggest starting development in a fresh session:
    ```
    To start development based on this research, clear context first or start a new session, then run:
    $maister:development [task-path]
@@ -415,6 +460,15 @@ research_context:
 
 options:
   html_output: true  # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions.
+  advisor:
+    enabled: false
+    gate_policies: {}
+    advisor_agent: advisor
+    advisor_model: null
+    arbiter_agent: advisor
+    arbiter_model: null
+    arbiter_enabled_on_disagreement: true
+    retry: {advisor_attempts: 3, arbiter_attempts: 3, backoff: exponential}
   brainstorming_enabled: null  # null=not yet decided, set by Phase 2 or --brainstorm/--no-brainstorm flag
   design_enabled: null          # independent, set by Phase 2 or --design/--no-design flag
 ```

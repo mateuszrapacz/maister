@@ -59,7 +59,55 @@ Cross-cutting rules from `orchestrator-patterns.md` (same as the development orc
 1. **Artifact Summary Contract (§ 7)**: every artifact-writing subagent prompt MUST include the contract instruction (artifacts open with TL;DR / Key Decisions / Open Questions & Risks). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` — verbatim, never re-summarized.
 2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark `in_progress` before delegating), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks — the operator reviews them on the dashboard while answering; status stays `in_progress` until the gate passes), after every phase completion (including skipped phases, with reason), every gate decision, every verification cycle, and at finalization. Every rewrite starts with `date -u` (one call per turn). It is a terse projection of state — never duplicate artifact content into it.
 3. **HTML companions (§ 9)**: pass `html_style_guide_path` (absolute path to `../orchestrator-framework/references/html-report-style.md`) to specification-creator, implementation-planner, and implementation-verifier. Register returned `html_path` values in `phase_summaries.[phase].artifacts[].html` so the dashboard hero cards link HTML first.
-4. **icon_hint values** per phase: 1 `analysis`, 2 `analysis`, 3 `spec`, 4 `verify`, 5 `plan`, 6 `code`, 7 `verify`, 8 `verify`, 9 `done`.
+4. **Advisor gates (§ 2.2)**: classify every performance decision gate, resolve it through the configured manual/advisor/fully_automatic policy, persist the full record in `orchestrator.gate_history` after each decision, and keep rollback and production gates user-controlled. Generate `outputs/decision-summary.md` and its HTML companion at completion or blocked/failed termination.
+
+Every bottleneck priority, optimization approach, verification matrix, fix-loop,
+optional-phase, and phase-exit gate MUST invoke
+`skills/orchestrator-framework/references/gate-decision-engine.md` with a stable
+`gate_type`, exact ordered options, original recommendation, safety
+classification, and complete read-only context. Check the idempotency key before
+any model or user call; persist pending states, retries, arbitration, and the
+terminal decision before continuing. Rollback, unresolved critical verification,
+and production decisions remain user-controlled.
+
+### Concrete Gate Call-Site Checklist
+
+The `plain-text user question` text below is the adapter's `present_user_gate`, never a
+direct bypass. For each call site invoke `evaluate_gate(gate_context,
+orchestrator-state.yml, host_adapter)` from
+`skills/orchestrator-framework/references/gate-decision-engine.md` with
+`phase_id`, stable `gate_type`, exact question, exact ordered options,
+`original_recommendation`, `safety_classification`, and read-only context
+(`task_path`, phase summaries, artifact paths, dashboard summary, prior
+`gate_history`, and approval status when relevant).
+
+For a valid non-denylisted `fully_automatic` result, invoke
+`skills/orchestrator-framework/bin/phase-continue.rb` with the exact state path,
+gate context, ordered options, selected option, actor, confidence, next phase,
+and report paths. Continue performance work only after the runner exits
+successfully.
+
+Read state and reuse the terminal idempotency record first. Persist and refresh
+dashboard before each pending model/user wait; persist every advisor/arbiter
+attempt, retry/backoff, escalation, and single arbitration; then persist the
+terminal record and decision summaries before phase changes. Retry exhaustion
+falls back to user or `blocked`. Advisor/arbiter output cannot edit files,
+change optimization scope, or dispatch implementation.
+
+Stable inventory: `phase-1-clarification` uses
+`["Confirm assumptions", "Correct assumptions", "Provide more context"]`;
+`bottleneck-priority` uses the displayed priority choices in exact order;
+`optimization-approach` uses the alternatives in spec order plus
+`"Need more info"`; `optional-phase-selection` uses
+`["Run specification audit", "Skip specification audit"]`;
+`verification-options` uses `["Code review", "Production readiness check"]`;
+`verification-fix-selection` uses `["Fix all fixable issues", "Let me choose
+specific issues", "Skip fixes, proceed as-is"]`; `verification-rerun` uses
+`["Yes, re-run verification", "No, proceed to the next phase"]`; and every
+phase exit uses `["Continue to the named next phase", "Pause workflow"]`.
+`implementation-approval`, `production-go-no-go`, `rollback`, and
+`unresolved-critical-verification` are user-controlled denylisted gates.
+5. **icon_hint values** per phase: 1 `analysis`, 2 `analysis`, 3 `spec`, 4 `verify`, 5 `plan`, 6 `code`, 7 `verify`, 8 `verify`, 9 `done`.
 
 ---
 
@@ -111,14 +159,14 @@ Use for:
 **Execute**:
 1. skill loader - `maister:codebase-analyzer`
 2. Update state with analysis results
-3. Direct - use plain-text user question for max 5 critical clarifying questions about performance concerns, hotspots, and optimization goals
+3. For each critical clarification, invoke `phase-1-clarification` through the shared engine with exact ordered options and full read-only context.
 4. Save clarifications to `analysis/clarifications.md`
 **Output**: `analysis/codebase-analysis.md`, `analysis/clarifications.md`
 **State**: Update `performance_context.phase_summaries.codebase_analysis`, `task_context.clarifications_resolved`
 
 Pass `task_type="enhancement"` and the performance-focused description. The codebase-analyzer adaptively selects parallel Explore agents based on task complexity. For performance tasks, the description should guide agents toward: database query patterns, hot code paths, I/O operations, caching layers, connection management, schema/migration files.
 
-→ **AUTO-CONTINUE** — Do NOT end turn, do NOT prompt user. Proceed immediately to Phase 2.
+→ Invoke the engine as `phase-1-exit` with question "Continue to Phase 2?", options `["Continue to Phase 2", "Pause workflow"]`, original recommendation "Continue to Phase 2".
 
 ---
 
@@ -131,7 +179,7 @@ Pass `task_type="enhancement"` and the performance-focused description. The code
 
 **Process**:
 1. Check if `analysis/user-profiling-data/` contains any files
-2. If empty, use plain-text user question:
+2. If empty, invoke `profiling-data-availability` through the engine:
    - Question: "Do you have profiling data to provide (flame graphs, APM screenshots, slow query logs)?"
    - Options: "Yes, let me add files to analysis/user-profiling-data/" | "No, proceed with static analysis only"
 3. If user chooses to add files, wait for them, then proceed
@@ -150,7 +198,7 @@ Pass `task_type="enhancement"` and the performance-focused description. The code
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - "Performance analysis complete. [N] bottlenecks identified ([P0 count] P0, [P1 count] P1). Continue to specification?"
+Invoke the engine as `phase-2-exit` with question "Performance analysis complete. [N] bottlenecks identified ([P0 count] P0, [P1 count] P1). Continue to specification?", options `["Continue to specification", "Pause workflow"]`, original recommendation "Continue to specification".
 
 ---
 
@@ -165,7 +213,7 @@ plain-text user question - "Performance analysis complete. [N] bottlenecks ident
 **Part A — Requirements Gathering (inline)**:
 
 1. Present bottleneck summary from Phase 2 to user
-2. Use plain-text user question for optimization priorities:
+2. Invoke `bottleneck-priority` through the engine for optimization priorities:
    - Which bottleneck priorities to address? (All P0+P1, P0 only, specific ones)
    - Any constraints? (backward compatibility, memory limits, no new dependencies)
    - Performance targets? (specific response time goals, if known)
@@ -189,7 +237,7 @@ plain-text user question - "Performance analysis complete. [N] bottlenecks ident
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary before asking. Read `implementation/spec.md` and extract: optimization targets, approach chosen, number of changes planned, expected impact. Format as brief overview then "Continue to specification audit?"
+Invoke the engine as `phase-3-exit` with question "Continue to specification audit?", options `["Continue to specification audit", "Pause workflow"]`, original recommendation "Continue to specification audit", and the spec summary as read-only context.
 
 ---
 
@@ -205,11 +253,11 @@ plain-text user question - Display executive summary before asking. Read `implem
 **Run if**: >5 optimizations planned, spec >50 lines, or user requests
 **Skip if**: Simple optimization (1-3 changes)
 
-plain-text user question to decide - "Run specification audit?"
+Invoke `optional-phase-selection` through the engine to decide "Run specification audit?" with exact options `["Run specification audit", "Skip specification audit"]`.
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary before asking. Read `verification/spec-audit.md` and extract: overall verdict, issue counts by severity, top findings. Format as brief overview then "Continue to implementation planning?"
+Invoke the engine as `phase-4-exit` with question "Continue to implementation planning?", options `["Continue to implementation planning", "Pause workflow"]`, original recommendation "Continue to implementation planning", and the audit summary as read-only context.
 
 ---
 
@@ -237,7 +285,7 @@ plain-text user question - Display executive summary before asking. Read `verifi
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary before asking. Read `implementation/implementation-plan.md` and extract: number of task groups, total steps, key dependencies, optimization sequence. Format as brief overview then "Continue to implementation?"
+Invoke the engine as `phase-5-exit` with question "Continue to implementation?", options `["Continue to implementation", "Pause workflow"]`, original recommendation "Continue to implementation", and the plan summary as read-only context.
 
 ---
 
@@ -269,7 +317,7 @@ plain-text user question - Display executive summary before asking. Read `implem
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary before asking. Extract from `phase_summaries.implementation` and `implementation/work-log.md`: optimizations applied, files changed, test results, any known issues. Format as brief overview then "Continue to verification?"
+Invoke the engine as `phase-6-exit` with question "Continue to verification?", options `["Continue to verification", "Pause workflow"]`, original recommendation "Continue to verification", and the implementation summary as read-only context.
 
 ---
 
@@ -278,20 +326,20 @@ plain-text user question - Display executive summary before asking. Extract from
 > **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from Phase 6 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Determine which verification checks to run
-**Execute**: Direct - use plain-text user question for options
+**Execute**: Direct - invoke the shared engine for the verification options gate; `plain-text user question` is only its adapter.
 **Output**: Updated state with verification options
 **State**: Set `options.code_review_enabled`, `options.pragmatic_review_enabled`, `options.production_check_enabled`, `options.reality_check_enabled`
 
 **Always enabled**: Reality check, pragmatic review
 **Auto-set**: `skip_test_suite: true` (full test suite already passed during implementation phase; cleared before re-verification if fixes are applied)
 
-plain-text user question with multiselect - "Which additional verification checks?"
+Invoke `verification-options` with multiselect question "Which additional verification checks?" and exact options `["Code review", "Production readiness check"]`.
   - "Code review" (recommended)
   - "Production readiness check"
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - "Options selected. Continue to Phase 8?"
+Invoke the engine as `phase-7-exit` with question "Options selected. Continue to Phase 8?", options `["Continue to Phase 8", "Pause workflow"]`, original recommendation "Continue to Phase 8".
 
 ---
 
@@ -315,15 +363,15 @@ plain-text user question - "Options selected. Continue to Phase 8?"
 
 **Step 4**: User-driven fix loop (max 3 iterations):
 1. Present all critical + warning issues as a numbered list
-2. plain-text user question — "Which issues should I fix?" with options: "Fix all fixable issues" / "Let me choose specific issues" / "Skip fixes, proceed as-is"
+2. Invoke `verification-fix-selection` — "Which issues should I fix?" with exact options `["Fix all fixable issues", "Let me choose specific issues", "Skip fixes, proceed as-is"]`.
 3. Fix selected issues
 4. After fixes: set `skip_test_suite: false` (code changed, tests must re-run)
-5. plain-text user question — "Re-run verification to check fixes?" with options: "Yes, re-run verification" / "No, proceed to next phase"
+5. Invoke `verification-rerun` — "Re-run verification to check fixes?" with exact options `["Yes, re-run verification", "No, proceed to the next phase"]`.
 6. If re-run → re-invoke `maister:implementation-verifier` → return to Step 2
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
-plain-text user question - Display executive summary: total issues found, issues fixed, issues remaining by severity. Then "Continue to finalization?"
+Invoke the engine as `phase-8-exit` with question "Continue to finalization?", options `["Continue to finalization", "Pause workflow"]`, original recommendation "Continue to finalization", and the final verification report as read-only context.
 
 ---
 
@@ -338,9 +386,10 @@ plain-text user question - Display executive summary: total issues found, issues
 
 **Process**:
 1. Create workflow summary (bottlenecks found, optimizations implemented, verification result)
-2. Update task status to "completed"
-3. Provide commit message template
-4. Guide performance-specific next steps:
+2. Generate `outputs/decision-summary.md` from `orchestrator.gate_history`, including every decision, rationale, confidence, model, retry, arbitration, override, and full-context link. Generate the HTML companion when `options.html_output` is true.
+3. Invoke the denylisted `final-handoff-approval` gate with exact options `["Complete workflow", "Keep workflow open"]`; update task status to "completed" only after the decision summary and terminal gate record are persisted
+4. Provide commit message template
+5. Guide performance-specific next steps:
    - Run the application and verify improvements manually
    - Consider profiling with runtime tools to measure actual impact
    - Monitor production metrics after deployment
@@ -379,6 +428,15 @@ verification_context:
 
 options:
   html_output: true  # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions.
+  advisor:
+    enabled: false
+    gate_policies: {}
+    advisor_agent: advisor
+    advisor_model: null
+    arbiter_agent: advisor
+    arbiter_model: null
+    arbiter_enabled_on_disagreement: true
+    retry: {advisor_attempts: 3, arbiter_attempts: 3, backoff: exponential}
   spec_audit_enabled: null
   skip_test_suite: true
   code_review_enabled: true

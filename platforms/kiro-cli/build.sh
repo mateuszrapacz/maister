@@ -442,6 +442,7 @@ This is the Kiro CLI variant. Key differences from Claude Code:
 - **Command names**: Prefix `maister-foo` (e.g. `/maister-development`); install to `KIRO_HOME` (~/.kiro-maister)
 - **Project instructions file**: Use `AGENTS.md` instead of `CLAUDE.md`, plus `.kiro/steering/maister-docs.md` after init
 - **User questions**: Chat-native **CHAT GATE** — present options in chat and wait for reply (no AskQuestion tool)
+- **Headless gates**: `--no-interactive` may use a documented default only for a non-protected gate; unsupported automatic injection, denylisted gates, and implementation approval persist `blocked` rather than approving.
 - **UI**: Terminal UI (Kiro CLI default); activity tray (`Ctrl+X`) and crew monitor (`Ctrl+G`)
 - **Progress tracking**: `todo` tool mirrors phases in activity tray (`Ctrl+X`); subagents in crew monitor (`Ctrl+G`)
 - **Planning**: File-based plans in `.maister/plans/` with chat gates (no EnterPlanMode)
@@ -838,7 +839,7 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 ## Layout
 
 - `agents/maister.json` — orchestrator with embedded hooks
-- `agents/maister-*.json` — 27 subagents + `maister-explore` + `maister.json` (29 JSON files total)
+- `agents/maister-*.json` — 28 subagents + `maister-explore` + `maister.json` (30 JSON files total)
 - `skills/maister-*/` — 38 slash skills
 - `steering/maister-workflows.md` — plugin workflows and Kiro platform notes
 - `hooks/` — hook scripts (`~/.kiro-maister/hooks/*.sh`; `smoke-install.sh` rewrites for non-default installs)

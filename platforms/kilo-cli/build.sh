@@ -68,7 +68,7 @@ if [ -d "$OUT/agents" ]; then
       # docs-operator performs file operations via the docs-manager skill
       perms="  edit: allow
   bash: ask"
-    elif [[ "$agent_name" == *"analyzer"* ]] || [[ "$agent_name" == *"checker"* ]] || [[ "$agent_name" == *"auditor"* ]] || [[ "$agent_name" == *"reporter"* ]]; then
+    elif [[ "$agent_name" == "advisor" ]] || [[ "$agent_name" == *"analyzer"* ]] || [[ "$agent_name" == *"checker"* ]] || [[ "$agent_name" == *"auditor"* ]] || [[ "$agent_name" == *"reporter"* ]]; then
       perms="  edit: deny
   bash: deny"
     else
@@ -106,7 +106,14 @@ find "$OUT" -name "*.md" | while read -r f; do
   sedi 's/CLAUDE\.md/AGENTS.md/g' "$f"
 done
 
-# 7. Transform AskUserQuestion to chat-native gates (in all relevant files)
+# 7. Kilo adapter mapping:
+#    - source agents/advisor.md becomes .kilo/agents/maister-advisor.md and is
+#      invoked with @maister-advisor for both advisor and arbiter calls;
+#    - AskUserQuestion/AskQuestion/ask_user become chat gates;
+#    - the orchestrator owns writes/resume reads of orchestrator-state.yml;
+#    - automatic answer injection is unsupported until E2E proves it, so
+#      fully_automatic uses interactive chat fallback or persists blocked.
+# 8. Transform AskUserQuestion to chat-native gates (in all relevant files)
 find "$OUT" -type f \( -name "*.md" -o -name "*.sh" -o -name "*.json" \) | while read -r f; do
   sedi 's/AskUserQuestion/→ **CHAT GATE** — Present the question in chat and wait for user response/g' "$f"
   sedi 's/AskQuestion/→ **CHAT GATE** — Present the question in chat and wait for user response/g' "$f"

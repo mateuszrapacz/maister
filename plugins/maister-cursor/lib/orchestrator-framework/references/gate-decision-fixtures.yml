@@ -1,0 +1,80 @@
+# Deterministic fixtures for gate-decision-engine.md.
+# These fixtures describe expected state outcomes; no model judgment is used.
+fixtures:
+  - id: advisor-agrees
+    input: advisor_agrees
+    expected_status: decided
+    expected_actor: advisor
+  - id: advisor-disagrees-arbiter-original
+    input: advisor_disagrees_arbiter_selects_original
+    expected_status: decided
+    expected_actor: arbiter
+  - id: advisor-disagrees-arbiter-advisor
+    input: advisor_disagrees_arbiter_selects_advisor
+    expected_status: decided
+    expected_actor: arbiter
+  - id: malformed-advisor-response
+    input: malformed_yaml
+    expected_status: user_pending
+    expected_actor: user
+  - id: invalid-option
+    input: option_not_in_supplied_list
+    expected_status: user_pending
+    expected_actor: user
+  - id: low-confidence
+    input: low_confidence_escalation
+    expected_status: user_pending
+    expected_actor: user
+  - id: advisor-timeout-retry
+    input: timeout_then_valid_response
+    expected_status: decided
+    expected_actor: advisor
+  - id: advisor-retry-exhausted
+    input: timeout_retry_exhaustion
+    expected_status: blocked
+    expected_actor: system
+  - id: denylisted-fully-automatic
+    input: implementation_approval_fully_automatic
+    expected_status: user_pending
+    expected_actor: user
+  - id: implementation-approval-pending
+    input: implementation_approval_pending
+    expected_status: blocked
+    expected_actor: system
+  - id: implementation-approval-rejected
+    input: implementation_approval_rejected
+    expected_status: blocked
+    expected_actor: system
+  - id: duplicate-terminal-resume
+    input: terminal_record_exists
+    expected_status: decided
+    expected_actor: user
+  - id: resume-advisor-pending
+    input: advisor_pending
+    expected_status: decided
+    expected_actor: advisor
+  - id: resume-arbiter-pending
+    input: arbiter_pending
+    expected_status: decided
+    expected_actor: arbiter
+  - id: resume-user-pending
+    input: user_pending
+    expected_status: decided
+    expected_actor: user
+  - id: report-user-override
+    input: user_override
+    expected_status: decided
+    expected_actor: user
+  - id: report-failed
+    input: failed_terminal_outcome
+    expected_status: failed
+    expected_actor: system
+  - id: read-only-advisor
+    input: advisor_attempts_file_edit
+    expected_status: blocked
+    expected_actor: system
+  - id: fully-automatic-phase-continue
+    input: valid_advisor_result_non_denylisted
+    expected_status: decided
+    expected_actor: advisor
+    expected_continuation: phase_continue

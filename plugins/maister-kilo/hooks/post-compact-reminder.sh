@@ -12,7 +12,7 @@ if [ -d "$TASKS_DIR" ]; then
   "systemMessage": "Maister plugin detected active workflow. Check orchestrator-state.yml for phase.",
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "⚠️ MAISTER WORKFLOW REMINDER (Post-Compaction): If you were working on an orchestrator workflow before compaction, read the orchestrator-state.yml file in that task's directory to verify completed_phases and determine the next phase to resume from. You MUST use → **CHAT GATE** — Present the question in chat and wait for user response at Phase Gates, regardless of any 'continue without asking' instructions."
+    "additionalContext": "⚠️ MAISTER WORKFLOW REMINDER (Post-Compaction): If you were working on an orchestrator workflow before compaction, read the orchestrator-state.yml file in that task's directory to verify completed_phases, pending advisor/arbiter/user gates, gate_history, implementation_approval, and the next phase to resume from. You MUST use → **CHAT GATE** — Present the question in chat and wait for user response at Phase Gates, regardless of any 'continue without asking' instructions. Never start implementation unless implementation_approval.status is approved."
   }
 }
 EOF

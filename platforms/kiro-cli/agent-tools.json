@@ -3,6 +3,9 @@
     "tools": ["read", "grep", "glob"]
   },
   "agents": {
+    "advisor": {
+      "tools": ["read", "grep", "glob"]
+    },
     "bottleneck-analyzer": {
       "tools": ["read", "grep", "glob"]
     },

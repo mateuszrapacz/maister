@@ -231,9 +231,23 @@ An optional project-level config file holds defaults that apply to every workflo
 
 ```yaml
 html_output: true   # Generate the operator dashboard + HTML companion reports. false = markdown-only.
+advisor:
+  enabled: false
+  gate_policies: {}          # gate_type -> manual | advisor | fully_automatic
+  advisor_agent: advisor
+  advisor_model: null
+  arbiter_agent: advisor
+  arbiter_model: null
+  arbiter_enabled_on_disagreement: true
+  retry:
+    advisor_attempts: 3
+    arbiter_attempts: 3
+    backoff: exponential
 ```
 
 - **`html_output`** (default `true`): when `false`, workflows skip the operator dashboard (`dashboard.html`/`dashboard-data.js`, no browser auto-open) AND the HTML companion reports (`.html` twins). Markdown artifacts, their `## TL;DR` summary blocks, `orchestrator-state.yml`, and product-design's visual mockups are produced regardless. The value is read once at init and seeded into `orchestrator.options.html_output` in state.
+
+- **`advisor`** (default disabled): configures per-gate `manual`, `advisor`, or `fully_automatic` handling. Advisor and arbiter responses are read-only recommendations recorded in `orchestrator.gate_history`; they never authorize source changes. The hard safety denylist and the explicit implementation-approval gate always require user control. See `skills/orchestrator-framework/references/orchestrator-patterns.md` § 2.2.
 
 **See**: `skills/orchestrator-framework/references/orchestrator-patterns.md` § 4 "Project Configuration" for the read/seed/gate mechanism.
 

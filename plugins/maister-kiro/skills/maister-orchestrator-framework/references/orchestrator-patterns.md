@@ -91,6 +91,34 @@ Every phase that follows a `→ **CHAT GATE**` gate includes an entry check at i
 
 This catches missed gates: if the previous phase's `→ **CHAT GATE**` was skipped (e.g., the model output a summary and moved on), the entry check forces the gate to fire before the next phase executes. If the gate already fired, continue normally.
 
+### 2.2 Advisor and Arbiter Gate Policy
+
+The executable call-site contract for this policy is defined in
+`references/gate-decision-engine.md`. Every orchestrator must follow that
+algorithm and supply the host adapter primitives listed there; this section
+defines the policy floor and safety rules. If this section and the engine
+reference differ, the engine reference is the normative schema and transition
+source.
+
+Advisor mode changes who analyzes a gate response; it does not grant an agent permission to edit source code, configuration, or implementation artifacts. The `orchestrator-state.yml` file remains the source of truth for every gate and must be rewritten immediately after each decision so the workflow can be interrupted and resumed safely.
+
+At every gate, before invoking any platform mechanism:
+
+1. Classify the gate with one stable `gate_type` (for example `phase-exit`, `decisions-needed`, `optional-phase`, `clarify`, `convergence`, `refine`, `verify-matrix`, `fix-loop`, `failure-recovery`, `rollback`, `scope-expansion`, `implementation-approval`, or `production-go-no-go`).
+2. Read `orchestrator.options.advisor` from state. Its per-type policy is `manual`, `advisor`, or `fully_automatic`; missing configuration means `manual`.
+3. Apply the non-overridable safety denylist before the configured policy. Rollback, data-integrity halts, scope expansion, unresolved critical verification, failure-recovery skips, final handoff approval, and production GO/NO-GO always require the user gate.
+4. For `manual`, run the existing user gate unchanged.
+5. For `advisor` or `fully_automatic`, invoke the configured read-only `advisor` agent with the exact question and every option, the original recommendation when one exists, the current dashboard and relevant artifacts, prior gate history and phase summaries, and the current gate type and safety policy.
+6. Require the exact four-key response map with `selected_option`, `rationale`, `confidence`, and `escalate_to_user`; reject extra decision fields, duplicate YAML keys, and options not in the supplied list. Retry malformed, unavailable, or timed-out calls using `advisor.retry.advisor_attempts` and `advisor.retry.backoff`. Persist each attempt and backoff timestamp. `confidence: low` is not an automatic approval.
+7. When the advisor agrees with the original recommendation, record the advisor decision and continue automatically for the configured non-denylisted gate. When no original recommendation exists, the advisor may choose one available option without arbitration.
+8. When the advisor disagrees with the original recommendation and arbitration is enabled, create exactly one logical arbiter decision in `arbiter_pending`. The arbiter receives both recommendations, their rationales, and the same read-only workflow context. Use `arbiter_agent` and `arbiter_model` when configured; otherwise use the advisor agent/model. Retry only within that arbiter record with `advisor.retry.arbiter_attempts` and the same backoff policy; never start a second arbiter or loop back to the advisor.
+9. In `advisor` mode, show the original recommendation, advisor recommendation, and arbiter result to the user; the user makes the final choice. In `fully_automatic`, the arbiter may choose between the competing recommendations for non-denylisted gates, and the orchestrator continues through `phase_continue(selected_option)` after terminal state/report persistence. It must not synthesize input into a user prompt. If the arbiter cannot produce a valid, sufficiently confident result, fail closed: return to a manual gate or stop the workflow in fully automatic mode. Never start an unbounded arbitration loop.
+10. Compute the deterministic idempotency key from `phase_id`, `gate_type`, question, and ordered options before any invocation. Reuse terminal `decided`, `blocked`, or `failed` records without another model or user call. Persist the complete decision record before changing phase status or continuing: question, options, gate type, original recommendation, advisor response, arbiter response, retry attempts, selected option, final actor, model identifiers, rationale, confidence, escalation, and any user override. Append it to `orchestrator.gate_history[]` once and mirror the concise record in the phase's `gate` field.
+
+The final workflow summary must be generated from `gate_history`, not from transient dashboard data. Write both `outputs/decision-summary.md` and, when `orchestrator.options.html_output` is true, `outputs/decision-summary.html`. The summary includes every decision, all alternatives, explanations, full context links, arbitration history, retry failures, resume reuse, and the terminal workflow status. Generate it after successful completion and after blocked or failed termination. Reports must be written after the terminal state record and before phase continuation.
+
+Implementation is a separate protected boundary. Advisors, arbiters, and automatic gate handling may write state and audit artifacts only. The implementation executor MUST NOT run until the user has explicitly approved the complete implementation scope at the `implementation-approval` gate. Store that approval in `orchestrator.implementation_approval` with `status: pending|approved|rejected`, the approving actor, timestamp, and approved scope. A resume must stop at a pending or rejected approval gate.
+
 ### AUTO-CONTINUE Rules
 
 When a phase ends with `→ **AUTO-CONTINUE**`:
@@ -210,6 +238,30 @@ html_output: true   # Generate the operator dashboard + HTML companion reports. 
 |-----|---------|--------|
 | `html_output` | `true` | When `false`, workflows skip the operator dashboard (§ 8) AND the HTML companion reports (§ 9): no `dashboard.html`/`dashboard-data.js`, no browser auto-open, no `.html` companions. Markdown artifacts, their § 7 TL;DR blocks, and `orchestrator-state.yml` are produced regardless. |
 
+Advisor configuration is optional and defaults to manual gates. A project may set it in `.maister/config.yml`; initialization seeds the values into `orchestrator.options.advisor`, and resumed workflows read only the state copy.
+
+```yaml
+advisor:
+  enabled: false
+  gate_policies:
+    phase-exit: advisor
+    optional-phase: advisor
+    clarify: advisor
+    convergence: advisor
+    verify-matrix: advisor
+  advisor_agent: advisor
+  advisor_model: null
+  arbiter_agent: advisor
+  arbiter_model: null
+  arbiter_enabled_on_disagreement: true
+  retry:
+    advisor_attempts: 3
+    arbiter_attempts: 3
+    backoff: exponential
+```
+
+The denylist is a hard safety floor and cannot be removed by project configuration. `fully_automatic` applies only to configured, non-denylisted gate types.
+
 **How it is read**: at initialization (§ 5) the orchestrator reads `.maister/config.yml` if present and seeds `orchestrator.options.html_output` into state (default `true` when the file or key is absent). All downstream gates read `options.html_output` from state, not the file — so resume is consistent and the file is read once.
 
 ### Common Fields
@@ -233,6 +285,18 @@ orchestrator:
     code_review_enabled: true | false | null
     sequential: true | false | null  # Set by --sequential. Read by implementation-plan-executor Phase 2 to disable parallel wave dispatch.
     html_output: true | false        # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions — see "Project Configuration" below.
+    advisor:
+      enabled: false
+      gate_policies: {}               # gate_type -> manual | advisor | fully_automatic
+      advisor_agent: advisor
+      advisor_model: null
+      arbiter_agent: advisor
+      arbiter_model: null
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
 
   # Timestamps
   created: [ISO 8601 timestamp]
@@ -243,6 +307,14 @@ orchestrator:
   task_ids:
     phase-1: null
     phase-2: null
+
+  # Advisor gate audit and protected implementation boundary
+  gate_history: []
+  implementation_approval:
+    status: not_required | pending | approved | rejected
+    approved_by: null
+    approved_at: null
+    approved_scope: []
 
 # Task metadata
 task:
@@ -484,7 +556,8 @@ window.MAISTER_DATA = {
                                   // other values. When an issue gets fixed, KEEP its original
                                   // severity and set fixed: true (the viewer dims it and shows ✓ fixed)
     fixes: [], reverify_count: 0
-  }
+  },
+  gate_history: []                  // durable advisor/user decisions projected from state
 }
 ```
 
@@ -515,6 +588,7 @@ Selected high-value artifacts get a rich HTML companion written by the **same su
 | `outputs/solution-exploration.md` | `outputs/solution-exploration.html` | solution-brainstormer |
 | `outputs/high-level-design.md` | `outputs/high-level-design.html` | solution-designer |
 | `outputs/decision-log.md` | `outputs/decision-log.html` | solution-designer |
+| `outputs/decision-summary.md` | `outputs/decision-summary.html` | finalization / html-companion-writer |
 
 **Rules**:
 - The markdown remains the source of truth for subagent context passing — subagents read md, humans read HTML. The companion adds visual structure (severity badges, matrices, embedded screenshots), never unique content.

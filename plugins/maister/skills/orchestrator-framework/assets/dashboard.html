@@ -351,7 +351,7 @@ function render(d) {
     renderHeroes(d, phases) +
     '<div class="cols">' +
       '<div>' + renderTimeline(phases) + renderDrawer(phases) + '</div>' +
-      '<div>' + renderVerification(d.verification) + renderDecisions(phases) + renderRisks(phases) + renderCharacteristics(d.characteristics) + '</div>' +
+      '<div>' + renderVerification(d.verification) + renderGateHistory(d.gate_history) + renderDecisions(phases) + renderRisks(phases) + renderCharacteristics(d.characteristics) + '</div>' +
     '</div>' +
     '<footer>Maister workflow dashboard · data: <code>dashboard-data.js</code> · auto-refreshes every 5s</footer>';
 
@@ -540,6 +540,20 @@ function renderVerification(v) {
     ((v.fixes || []).length ? '<div class="ph-section"><div class="sec-label">Fixes applied</div><ul>' +
       v.fixes.map(f => '<li>' + esc(typeof f === "string" ? f : (f.fix || f.description || JSON.stringify(f))) + '</li>').join("") + '</ul></div>' : "") +
   '</div></div>';
+}
+
+function renderGateHistory(history) {
+  const rows = Array.isArray(history) ? history : [];
+  if (!rows.length) return "";
+  const body = rows.map((g, i) => {
+    const actor = g.final_actor || g.answered_by || "unknown";
+    const selected = g.selected_option || g.answer || "pending";
+    const gateType = g.gate_type ? " · " + g.gate_type : "";
+    const rationale = g.rationale ? '<div class="rationale">' + esc(g.rationale) + '</div>' : "";
+    return '<div class="dec-item"><b>#' + (i + 1) + '</b> ' + esc(selected) +
+      ' <span class="rationale">— ' + esc(actor + gateType) + '</span>' + rationale + '</div>';
+  }).join("");
+  return '<div class="card"><h2>Gate history</h2><div class="body">' + body + '</div></div>';
 }
 
 /* sidebar lists grouped by phase — full text, never truncated */

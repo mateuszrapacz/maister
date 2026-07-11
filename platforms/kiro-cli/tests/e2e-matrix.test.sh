@@ -76,9 +76,9 @@ test_scenario_5_6_smoke_paths() {
     grep -q '\-\-test 4' "$SMOKE_CLI"
 }
 
-# 7. Scenario 8 — 26 agents discoverable in built output
+# 7. Scenario 8 — all agents discoverable in built output
 test_scenario_8_agent_inventory() {
-  test "$(find "$OUT/agents" -maxdepth 1 -name '*.json' | wc -l | tr -d ' ')" -eq 29
+  test "$(find "$OUT/agents" -maxdepth 1 -name '*.json' | wc -l | tr -d ' ')" -eq 30
 }
 
 # 8. Scenario 2a manual, scenario 4 parallel limit, known gaps recorded
@@ -95,7 +95,7 @@ assert "scenario 1 — init artifacts documented and build outputs exist" test_s
 assert "scenario 2 — TUI task progress documented and in maister-development skill" test_scenario_2_tui_progress
 assert "scenario 3 — resume/orchestrator-state.yml documented" test_scenario_3_resume
 assert "scenarios 5–6 — smoke-cli.sh headless paths referenced" test_scenario_5_6_smoke_paths
-assert "scenario 8 — exactly 29 agent JSON files after build" test_scenario_8_agent_inventory
+assert "scenario 8 — exactly 30 agent JSON files after build" test_scenario_8_agent_inventory
 assert "scenario 2a manual, parallel max 4, and known gaps documented" test_manual_parallel_gaps_documented
 
 echo ""
