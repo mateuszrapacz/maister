@@ -95,7 +95,7 @@ read-only `context` (`task_path`, phase summaries, artifact paths, dashboard
 summary, prior `gate_history`, and approval status where relevant).
 
 For a valid non-denylisted `fully_automatic` result, invoke
-`lib/orchestrator-framework/bin/phase-continue.rb` with the exact state path,
+`lib/orchestrator-framework/bin/phase-continue.mjs` with the exact state path,
 gate context, ordered options, selected option, actor, confidence, next phase,
 and report paths. Continue design only after the runner exits successfully.
 

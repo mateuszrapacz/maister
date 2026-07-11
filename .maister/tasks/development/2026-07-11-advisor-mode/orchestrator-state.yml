@@ -38,7 +38,7 @@ orchestrator:
     reality_check_enabled: true
     production_check_enabled: true
   created: 2026-07-11T14:46:21Z
-  updated: 2026-07-11T22:07:03Z
+  updated: 2026-07-11T22:35:51Z
   task_path: .maister/tasks/development/2026-07-11-advisor-mode
   task_ids:
     phase-1: null
@@ -232,8 +232,8 @@ task_context:
     completion_summary: "Groups 0–6 completed; executable phase-continue runner added, source workflows and host adapters rebuilt and validated. fully_automatic now continues only validated non-denylisted results through the runner."
     runtime_fix:
       status: completed
-      completed_at: 2026-07-11T22:07:03Z
-      runner: plugins/maister/skills/orchestrator-framework/bin/phase-continue.rb
+      completed_at: 2026-07-11T22:35:51Z
+      runner: plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs
       tests:
         - tests/fully-automatic-phase-continue.test.sh
         - tests/gate-decision-engine.test.sh

@@ -452,7 +452,7 @@ Every host must map these primitives explicitly:
 | `phase_continuation_supported` | Return true when the orchestrator can consume `phase_continue(selected_option)` in the current host runtime. |
 
 The bundled reference adapter is executable at
-`lib/orchestrator-framework/bin/phase-continue.rb`. A host invokes it with
+`lib/orchestrator-framework/bin/phase-continue.mjs`. A host invokes it with
 the current state path, exact gate context, selected option, actor, confidence,
 next phase, and report paths. It validates exact option membership, rejects the
 denylist, computes the idempotency key, writes the terminal record atomically,

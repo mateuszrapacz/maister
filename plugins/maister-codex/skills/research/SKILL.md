@@ -88,7 +88,7 @@ exhaustion use the user gate or persist `blocked`. Advisor/arbiter output is
 read-only and cannot edit research artifacts or expand scope.
 
 For a valid non-denylisted `fully_automatic` result, invoke
-`skills/orchestrator-framework/bin/phase-continue.rb` with the exact state path,
+`skills/orchestrator-framework/bin/phase-continue.mjs` with the exact state path,
 gate context, ordered options, selected option, actor, confidence, next phase,
 and report paths. Continue research only after the runner exits successfully.
 

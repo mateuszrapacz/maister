@@ -55,23 +55,23 @@ The follow-up implementation completed the runtime contract and every documented
 | Kiro E2E matrix | PASS | `platforms/kiro-cli/tests/e2e-matrix.test.sh`, 8/8 |
 | Whitespace validation | PASS | `git diff --check` |
 
-The Kiro development workflow now contains 54 transformed `CHAT GATE` markers, satisfying the platform threshold while retaining the shared engine as the decision authority. No host claims `fully_automatic` support without proof of automatic answer injection.
+The Kiro development workflow now contains 54 transformed `CHAT GATE` markers, satisfying the platform threshold while retaining the shared engine as the decision authority. `fully_automatic` uses the normalized Node.js continuation seam; it does not synthesize input into a user-facing gate.
 
 ## Executable Continuation Fix — 2026-07-11T22:07:03Z
 
 The previous documentation-only continuation seam was replaced with the bundled
-`plugins/maister/skills/orchestrator-framework/bin/phase-continue.rb` adapter.
+`plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs` adapter.
 It atomically persists the normalized terminal gate record, generates decision
 reports, advances the phase only after report success, reuses terminal records
 by idempotency key, and rejects every denylisted gate.
 
 | Check | Result | Evidence |
 |---|---|---|
-| Runner syntax | PASS | `ruby -c phase-continue.rb` |
+| Runner syntax | PASS | `node --check phase-continue.mjs` |
 | Fully automatic continuation | PASS | temp-state integration test |
 | Idempotent resume | PASS | second identical runner call returns `reused` |
 | Denylist protection | PASS | implementation-approval runner call exits blocked |
-| Source orchestrator bindings | PASS | all five source SKILL.md files bind `bin/phase-continue.rb` |
+| Source orchestrator bindings | PASS | all five source SKILL.md files bind `bin/phase-continue.mjs` |
 | Generated runner copies | PASS | all five generated variants contain the executable runner |
 | Contract suite | PASS | 19/19 |
 | Full validation | PASS | `make build`, `make validate` |

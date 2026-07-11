@@ -45,7 +45,7 @@ Validation completed at `2026-07-11T21:37:54Z`: `make build`, `make validate`, 1
 ## Executable Continuation Fix
 
 At `2026-07-11T22:07:03Z`, the workflow gained the executable
-`phase-continue.rb` adapter. It validates exact options and confidence, rejects
+`phase-continue.mjs` adapter. It validates exact options and confidence, rejects
 denylisted gates, writes state atomically, generates Markdown/HTML reports,
 advances the phase, and returns a `phase_continue` result. The integration test
 also verifies terminal idempotent reuse and that implementation approval cannot

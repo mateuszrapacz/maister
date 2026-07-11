@@ -209,7 +209,7 @@ test_all_source_orchestrators_reference_engine() {
 test_all_source_orchestrators_bind_runner() {
   local skill
   for skill in development research product-design performance migration; do
-    contains 'bin/phase-continue.rb' "$ROOT/plugins/maister/skills/$skill/SKILL.md" || return 1
+    contains 'bin/phase-continue.mjs' "$ROOT/plugins/maister/skills/$skill/SKILL.md" || return 1
   done
 }
 
@@ -227,7 +227,7 @@ test_host_adapter_contract_is_present() {
     contains '`automatic_answer_injection_supported`' "$ENGINE" && \
     contains '`phase_continue`' "$ENGINE" && \
     contains '`phase_continuation_supported`' "$ENGINE" && \
-    contains 'phase-continue.rb' "$ENGINE" && \
+    contains 'phase-continue.mjs' "$ENGINE" && \
     contains 'fully_automatic` may continue through `phase_continue(selected_option)`' "$ENGINE" && \
     contains 'must not call `present_user_gate`' "$ENGINE"
 }
@@ -261,11 +261,11 @@ test_generated_variants_preserve_continuation_contract() {
     test -f "$file" && grep -Fq 'phase_continue(selected_option)' "$file" || return 1
   done
   for file in \
-    "$ROOT/plugins/maister-codex/skills/orchestrator-framework/bin/phase-continue.rb" \
-    "$ROOT/plugins/maister-copilot/skills/orchestrator-framework/bin/phase-continue.rb" \
-    "$ROOT/plugins/maister-cursor/lib/orchestrator-framework/bin/phase-continue.rb" \
-    "$ROOT/plugins/maister-kilo/.kilo/skills/orchestrator-framework/bin/phase-continue.rb" \
-    "$ROOT/plugins/maister-kiro/skills/maister-orchestrator-framework/bin/phase-continue.rb"; do
+    "$ROOT/plugins/maister-codex/skills/orchestrator-framework/bin/phase-continue.mjs" \
+    "$ROOT/plugins/maister-copilot/skills/orchestrator-framework/bin/phase-continue.mjs" \
+    "$ROOT/plugins/maister-cursor/lib/orchestrator-framework/bin/phase-continue.mjs" \
+    "$ROOT/plugins/maister-kilo/.kilo/skills/orchestrator-framework/bin/phase-continue.mjs" \
+    "$ROOT/plugins/maister-kiro/skills/maister-orchestrator-framework/bin/phase-continue.mjs"; do
     test -f "$file" || return 1
   done
 }

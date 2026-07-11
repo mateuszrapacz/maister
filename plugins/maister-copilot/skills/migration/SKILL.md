@@ -82,7 +82,7 @@ host_adapter)` from
 `gate_history`, and approval status.
 
 For a valid non-denylisted `fully_automatic` result, invoke
-`skills/orchestrator-framework/bin/phase-continue.rb` with the exact state path,
+`skills/orchestrator-framework/bin/phase-continue.mjs` with the exact state path,
 gate context, ordered options, selected option, actor, confidence, next phase,
 and report paths. Continue migration only after the runner exits successfully.
 

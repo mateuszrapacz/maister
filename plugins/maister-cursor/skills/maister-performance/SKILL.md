@@ -83,7 +83,7 @@ orchestrator-state.yml, host_adapter)` from
 `gate_history`, and approval status when relevant).
 
 For a valid non-denylisted `fully_automatic` result, invoke
-`lib/orchestrator-framework/bin/phase-continue.rb` with the exact state path,
+`lib/orchestrator-framework/bin/phase-continue.mjs` with the exact state path,
 gate context, ordered options, selected option, actor, confidence, next phase,
 and report paths. Continue performance work only after the runner exits
 successfully.

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-RUNNER="$ROOT/plugins/maister/skills/orchestrator-framework/bin/phase-continue.rb"
+RUNNER="$ROOT/plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -29,7 +29,7 @@ phases:
     status: pending
 YAML
 
-result=$(ruby "$RUNNER" \
+result=$(node "$RUNNER" \
   --state "$STATE" \
   --phase-id phase-1 \
   --gate-type phase-exit \
@@ -44,11 +44,15 @@ result=$(ruby "$RUNNER" \
 
 grep -Fq '"status":"decided"' <<<"$result"
 grep -Fq '"continuation":"phase_continue"' <<<"$result"
-grep -Fq 'phase-2' "$STATE"
+grep -Fq 'current_phase: phase-2' "$STATE"
+grep -A1 -F '  - id: phase-1' "$STATE" | grep -Fq '    status: completed'
+grep -A1 -F '  - id: phase-2' "$STATE" | grep -Fq '    status: in_progress'
+grep -Fq '1 persisted gate decision(s)' "$REPORT_MD"
+grep -Fq 'Options' "$REPORT_MD"
 grep -Fq 'Continue to phase 2' "$REPORT_MD"
 grep -Fq 'Continue to phase 2' "$REPORT_HTML"
 
-second=$(ruby "$RUNNER" \
+second=$(node "$RUNNER" \
   --state "$STATE" \
   --phase-id phase-1 \
   --gate-type phase-exit \
@@ -63,7 +67,7 @@ second=$(ruby "$RUNNER" \
 
 grep -Fq '"status":"reused"' <<<"$second"
 
-if ruby "$RUNNER" \
+if node "$RUNNER" \
   --state "$STATE" \
   --phase-id phase-2 \
   --gate-type implementation-approval \

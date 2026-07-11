@@ -131,7 +131,7 @@ fresh state read proves `orchestrator.implementation_approval.status:
 approved`.
 
 For a valid non-denylisted `fully_automatic` result, bind the terminal decision
-to `lib/orchestrator-framework/bin/phase-continue.rb` with the exact state
+to `lib/orchestrator-framework/bin/phase-continue.mjs` with the exact state
 path, phase/gate context, ordered options, selected option, actor, confidence,
 next phase, and report paths. Continue the workflow only after the runner exits
 successfully; it atomically persists the gate record and reports first.

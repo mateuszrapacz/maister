@@ -35,7 +35,7 @@
 ## 2026-07-11T22:07:03Z — Executable Continuation Fix
 
 **Completed**:
-- Added the bundled `skills/orchestrator-framework/bin/phase-continue.rb` adapter.
+- Added the bundled `skills/orchestrator-framework/bin/phase-continue.mjs` adapter.
 - Added atomic state persistence, exact option validation, idempotent terminal reuse, phase advancement, Markdown/HTML report generation, and denylist rejection.
 - Bound all five source orchestrators to the executable continuation runner and rebuilt every generated platform variant.
 
@@ -45,3 +45,15 @@
 - `make build` and `make validate`: passed.
 
 **Boundary**: The runner continues only validated non-denylisted advisor/arbiter decisions. It never grants implementation approval or writes a synthetic answer into a user-facing prompt.
+
+## 2026-07-11T22:35:51Z — Runtime Consistency Pass
+
+**Completed**:
+- Replaced the Ruby dependency with the Node.js built-in-only runner used by the project stack.
+- Rebuilt all generated host variants from `plugins/maister/`.
+- Added strict unknown-option rejection, clean I/O errors, descriptor cleanup, and report regeneration on idempotent retry.
+
+**Validation**:
+- `node --check` passed.
+- `make build` and `make validate` passed.
+- Ruby references removed from source, generated variants, tests, and task artifacts.
