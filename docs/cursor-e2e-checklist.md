@@ -9,6 +9,9 @@ make build-cursor
 bash platforms/cursor/smoke-install.sh
 ```
 
+The default install omits Playwright MCP. For scenario 7, install with
+`bash platforms/cursor/smoke-install.sh --with-mcp-playwright`.
+
 Use a **fresh test project** (or disposable branch) for each full run.
 
 ## Scenarios
@@ -40,7 +43,7 @@ Use a **fresh test project** (or disposable branch) for each full run.
 - ☐ Plugin widoczny w Cursor IDE (opcjonalne)
 - ☑ `/maister-init` startuje (CLI `--plugin-dir`)
 - ☐ AskQuestion multi-select (init Phase 3) — headless używa domyślnych
-- ☑ `mcp.json` — Playwright w bundle (`validate-cursor`)
+- ☑ Default install omits `mcp.json`; Playwright is available via explicit opt-in
 
 ## Wyniki CLI 2026-06-06
 

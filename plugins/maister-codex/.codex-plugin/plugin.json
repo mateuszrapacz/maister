@@ -11,7 +11,6 @@
   "homepage": "https://github.com/mateuszrapacz/maister",
   "keywords": ["development", "sdlc", "workflows", "skills"],
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Maister",
     "shortDescription": "Standards-aware development workflows for Codex",

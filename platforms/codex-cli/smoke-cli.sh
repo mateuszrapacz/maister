@@ -9,17 +9,15 @@ MARKETPLACE="$ROOT/.agents/plugins/marketplace.json"
 make -C "$ROOT" build-codex >/dev/null
 
 test -f "$PLUGIN/.codex-plugin/plugin.json"
-test -f "$PLUGIN/.mcp.json"
 test -f "$PLUGIN/hooks/hooks.json"
 test -f "$MARKETPLACE"
 jq empty "$PLUGIN/.codex-plugin/plugin.json"
-jq empty "$PLUGIN/.mcp.json"
 jq empty "$PLUGIN/hooks/hooks.json"
 jq empty "$MARKETPLACE"
-jq -e '.skills == "./skills/" and .mcpServers == "./.mcp.json" and (.interface.defaultPrompt | length > 0)' \
+jq -e '.skills == "./skills/" and (.mcpServers | not) and (.interface.defaultPrompt | length > 0)' \
   "$PLUGIN/.codex-plugin/plugin.json" >/dev/null
 jq -e '.name == "maister"' "$PLUGIN/.codex-plugin/plugin.json" >/dev/null
-jq -e '.mcpServers.playwright.command == "npx"' "$PLUGIN/.mcp.json" >/dev/null
+test ! -f "$PLUGIN/.mcp.json"
 jq -e '.plugins[] | select(.name == "maister") | .source.path == "./plugins/maister-codex"' "$MARKETPLACE" >/dev/null
 
 source_skills=$(find "$ROOT/plugins/maister/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
@@ -65,4 +63,4 @@ if find "$PLUGIN" -maxdepth 1 -type d -name agents | grep -q .; then
   exit 1
 fi
 
-echo "PASS: Codex plugin structure, transforms, manifest, MCP, and hooks"
+echo "PASS: Codex plugin structure, transforms, manifest, and hooks"

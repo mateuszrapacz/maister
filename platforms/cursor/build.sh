@@ -89,10 +89,9 @@ find "$OUT/skills" -name "*.md" | while read -r f; do
   sedi 's/CLAUDE\.md/AGENTS.md/g' "$f"
 done
 
-# 9. MCP: .mcp.json → mcp.json
-if [ -f "$OUT/.mcp.json" ]; then
-  mv "$OUT/.mcp.json" "$OUT/mcp.json"
-fi
+# 9. Playwright MCP is opt-in. The local installer can add it explicitly;
+# default builds stay free of external MCP servers.
+rm -f "$OUT/.mcp.json" "$OUT/mcp.json"
 
 # 10. Condensed workflow rule (not full CLAUDE.md — reduces alwaysApply token cost)
 mkdir -p "$OUT/rules"
@@ -120,7 +119,8 @@ Use `/maister-*` slash skills (e.g. `/maister-init`, `/maister-development`). In
 
 ## MCP
 
-Enable MCP in Cursor settings to use Playwright for `--e2e` workflows. Bundle: `mcp.json`.
+Playwright MCP is opt-in. Install locally with
+`--with-mcp-playwright` when an `--e2e` workflow needs it.
 
 ## Rules
 

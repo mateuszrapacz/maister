@@ -68,11 +68,9 @@ test_no_classic_enable_todo_list() {
   ! grep -rE 'enableTodoList true|settings chat\.ui.*classic|chat\.ui "classic"' "$OUT" 2>/dev/null
 }
 
-# 8. Default TUI settings shipped
-test_default_tui_settings() {
-  test -f "$OUT/settings/cli.json" && \
-    jq -e '.["chat.ui"] == "tui"' "$OUT/settings/cli.json" >/dev/null && \
-    jq -e '.["chat.enableTodoList"] == null' "$OUT/settings/cli.json" >/dev/null
+# 8. No forced chat.ui in profile settings (Kiro CLI defaults to TUI)
+test_no_forced_chat_ui_settings() {
+  test ! -f "$OUT/settings/cli.json"
 }
 
 echo "=== Kiro CLI delegation/TUI progress tests (Task Group 5) ==="
@@ -83,7 +81,7 @@ assert "Task tool rewritten to subagent in docs-operator instruction" test_task_
 assert "Skill tool rewritten to /maister-* slash in development skill" test_skill_to_slash
 assert "TUI progress transforms on orchestrator-framework skill" test_tui_progress_on_orchestrator_glob
 assert "no enableTodoList or classic UI references in output" test_no_classic_enable_todo_list
-assert "settings/cli.json ships chat.ui=tui without enableTodoList" test_default_tui_settings
+assert "settings/cli.json does not force chat.ui" test_no_forced_chat_ui_settings
 
 echo ""
 echo "Results: $pass passed, $fail failed"

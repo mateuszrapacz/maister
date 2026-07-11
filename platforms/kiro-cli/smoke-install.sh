@@ -41,7 +41,7 @@ Usage: smoke-install.sh [OPTIONS] [DEST]
   --no-alias        Do not add shell aliases (default in CI/non-TTY)
   --with-rtk        Install RTK token optimization hook
   --with-mcp-playwright  Install MCP Playwright for --e2e workflows (default: off)
-  --full            Shorthand for --set-alias --set-default --with-rtk --with-mcp-playwright
+  --full            Shorthand for --set-alias --set-default --with-rtk (Playwright stays opt-in)
   --help            Show this help
 
 Never modifies personal ~/.kiro/ — only the target KIRO_HOME directory.
@@ -202,16 +202,6 @@ apply_default_agent() {
   fi
 }
 
-apply_tui_profile() {
-  local dest="$1"
-  if ! command -v kiro-cli >/dev/null 2>&1; then
-    return 0
-  fi
-  echo "Ensuring chat.ui=tui (Maister targets Terminal UI)"
-  KIRO_HOME="$dest" kiro-cli settings chat.ui tui 2>/dev/null || true
-  KIRO_HOME="$dest" kiro-cli settings --delete chat.enableTodoList 2>/dev/null || true
-}
-
 main() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -255,7 +245,6 @@ main() {
         SET_ALIAS=1
         SET_DEFAULT=1
         RTK_ENABLED=1
-        MCP_PLAYWRIGHT_ENABLED=1
         shift
         ;;
       -*)
@@ -304,7 +293,6 @@ main() {
     fi
   fi
 
-  apply_tui_profile "$DEST"
   apply_default_agent "$DEST"
 
   if [ "$SET_ALIAS" = "1" ]; then

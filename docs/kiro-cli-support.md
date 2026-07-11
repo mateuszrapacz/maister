@@ -35,7 +35,10 @@ make validate-kiro
 bash platforms/kiro-cli/smoke-install.sh
 ```
 
-Options: `--set-default` (set `chat.defaultAgent=maister`), `--set-alias` / `--no-alias` (add `maister-kiro` and `mk` to shell rc; prompts when omitted in a TTY).
+The default install sets `chat.defaultAgent=maister`, adds `maister-kiro` and
+`mk` to the shell rc, and omits Playwright MCP. Use `--no-default` or
+`--no-alias` to disable those defaults; use `--with-mcp-playwright` to opt in
+to browser E2E support.
 
 Manual equivalent (requires `smoke-install.sh` for working subagent prompts — see Known gaps):
 
@@ -64,7 +67,7 @@ Use `maister-kiro` from the repo (or add to PATH) so `KIRO_HOME` defaults to `~/
 
 ## Daily use
 
-Maister targets the **Terminal UI** (default since Kiro CLI 2.0). The install profile ships with `chat.ui` = `tui`. Classic interface and `chat.enableTodoList` are not used.
+Maister targets Kiro's **Terminal UI** (default since Kiro CLI 2.0). The install profile does not override `chat.ui`.
 
 | Shortcut | Purpose |
 |----------|---------|
@@ -171,7 +174,7 @@ Key transforms (see `platforms/kiro-cli/` and `.maister/docs/standards/global/bu
 | Gates | `AskUserQuestion` / `AskQuestion` → **CHAT GATE** (interactive) |
 | Delegation | `Task` → `subagent`; `Skill tool` → slash + `skill://` |
 | Progress (TUI) | `TaskCreate`/`TaskUpdate` → `todo` tool; visible in activity tray (`Ctrl+X`) |
-| UI default | `settings/cli.json` ships `chat.ui` = `tui` |
+| UI | Terminal UI (Kiro CLI default); no `chat.ui` override in install profile |
 | MCP | `.mcp.json` → `settings/mcp.json` |
 | Init | `.kiro/steering/maister-docs.md` + `AGENTS.md` template |
 
@@ -232,7 +235,7 @@ Adapted from [`docs/cursor-e2e-checklist.md`](cursor-e2e-checklist.md). Status r
 | 4 | Parallel subagent waves | Executor dispatches parallel waves; Kiro **max 4 concurrent** `subagent` calls | Development without `--sequential`; verify wave size ≤ 4 | ☐ draft |
 | 5 | gap-analyzer delegation | `subagent` to `maister-gap-analyzer` | `smoke-cli.sh --test 2` | ☐ draft |
 | 6 | quick-plan + quick-bugfix | Chat gate overrides; plan/TDD artifacts | `smoke-cli.sh --test 3` (plan); `--test 4` (bugfix plan) | ☐ draft |
-| 7 | Playwright MCP `--e2e` | Optional browser E2E via bundled `settings/mcp.json` | Enable MCP; run development with `--e2e` flag | ☐ optional |
+| 7 | Playwright MCP `--e2e` | Optional browser E2E | Install with `--with-mcp-playwright`; run development with `--e2e` | ☐ optional |
 | 8 | Subagent availability | All **26** agents in `agents/*.json` discoverable | `make validate-kiro` + `e2e-matrix.test.sh` scenario 8 | ☑ structural |
 
 ### Interactive gate UX (scenario 2a)
@@ -317,7 +320,7 @@ maister-kiro chat --no-interactive --trust-all-tools --agent maister \
 | **preCompact** hook | Kiro has no `preCompact`; compaction may lose in-context state | `orchestrator-state.yml` SOT; `/status` / `/resume`; `post-compact-reminder-stub.sh` (documented, not wired) |
 | **TUI task sync** | Agent `todo` tool vs activity tray may drift | `orchestrator-state.yml` remains authoritative for resume; use `/status` / `/resume` |
 | **Max 4 subagents** | Parallel waves capped at 4 concurrent `subagent` calls | Executor should batch waves; use `--sequential` to disable parallelism |
-| **Scenario 7 MCP** | Playwright E2E optional | Enable `settings/mcp.json`; not required for release |
+| **Scenario 7 MCP** | Playwright E2E optional | Install with `--with-mcp-playwright`; not required for release |
 | **Interactive multi-select** | Init Phase 3 multi-select not headless | Headless defaults use `global` standards only |
 
 ### Hooks (Phase 2)
@@ -333,7 +336,7 @@ maister-kiro chat --no-interactive --trust-all-tools --agent maister \
 
 - ☑ `make validate-kiro` (32 rules)
 - ☑ `smoke-cli.sh` tests 1–4 (when `kiro-cli` installed)
-- ☑ `settings/mcp.json` in bundle
+- ☑ `settings/mcp.json` available in the build; default install removes it unless `--with-mcp-playwright` is used
 - ☐ Interactive multi-select (init Phase 3) — headless uses `global` only default
 
 ---

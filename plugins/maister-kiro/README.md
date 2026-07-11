@@ -31,10 +31,8 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 
 ## Terminal UI
 
-Maister targets the **Terminal UI** (default since Kiro CLI 2.0). Profile ships with `chat.ui` = `tui`.
+Maister targets Kiro's **Terminal UI** (default in Kiro CLI 2.0+).
 
 - **Activity tray** (`Ctrl+X`) — phase/task progress
 - **Crew monitor** (`Ctrl+G`) — subagent execution
 - **Resume** — `@status` / `@resume` or read `orchestrator-state.yml`
-
-Classic interface and `chat.enableTodoList` are not used.

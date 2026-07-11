@@ -29,7 +29,6 @@ cat > "$OUT/.codex-plugin/plugin.json" <<EOF
   "homepage": "${PLUGIN_REPOSITORY}",
   "keywords": ["development", "sdlc", "workflows", "skills"],
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Maister",
     "shortDescription": "Standards-aware development workflows for Codex",
@@ -281,9 +280,6 @@ SKILL
 }
 
 generate_utility_skills
-
-# Keep the companion MCP file in the plugin contract's camelCase shape.
-cp "$CORE/.mcp.json" "$OUT/.mcp.json"
 
 cp "$PLATFORM/hooks/hooks.json" "$OUT/hooks/hooks.json"
 cp "$PLATFORM/hooks/block-destructive-commands.sh" "$OUT/hooks/block-destructive-commands.sh"

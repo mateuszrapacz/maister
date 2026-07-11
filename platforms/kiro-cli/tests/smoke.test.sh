@@ -59,7 +59,41 @@ test_smoke_install_isolated() {
   rm -rf "$dest"
 }
 
-# 3. maister-kiro wrapper defaults KIRO_HOME to ~/.kiro-maister
+# 3. Default install enables the default agent and aliases, but not Playwright MCP
+test_default_install_profile() {
+  local dest rc mock_bin log
+  dest=$(mktemp -d)
+  rc=$(mktemp)
+  mock_bin=$(mktemp -d)
+  log=$(mktemp)
+  cat >"$mock_bin/kiro-cli" <<EOF
+#!/bin/bash
+echo "\$*" >> "$log"
+EOF
+  chmod +x "$mock_bin/kiro-cli"
+
+  PATH="$mock_bin:$PATH" KIRO_HOME="$dest" MAISTER_SHELL_RC="$rc" \
+    "$SMOKE_INSTALL" "$dest" >/dev/null
+
+  grep -q 'settings chat.defaultAgent maister --global' "$log"
+  grep -q "alias maister-kiro='KIRO_HOME=\"$dest\"" "$rc"
+  grep -q "alias mk='maister-kiro chat" "$rc"
+  test ! -e "$dest/settings/mcp.json"
+
+  rm -rf "$dest" "$mock_bin" "$rc" "$log"
+}
+
+# 4. Playwright MCP remains an explicit opt-in for Kiro
+test_opt_in_mcp_install() {
+  local dest
+  dest=$(mktemp -d)
+  KIRO_HOME="$dest" "$SMOKE_INSTALL" --no-default --no-alias --with-mcp-playwright "$dest" >/dev/null
+  test -f "$dest/settings/mcp.json"
+  jq -e '.includeMcpJson == true' "$dest/agents/maister.json" >/dev/null
+  rm -rf "$dest"
+}
+
+# 5. maister-kiro wrapper defaults KIRO_HOME to ~/.kiro-maister
 test_wrapper_default_kiro_home() {
   test -x "$WRAPPER"
   bash -n "$WRAPPER"
@@ -67,7 +101,7 @@ test_wrapper_default_kiro_home() {
   grep -q 'exec kiro-cli' "$WRAPPER"
 }
 
-# 4. build output uses prompt file:// URI (no promptFile, no model:inherit)
+# 6. build output uses prompt file:// URI (no promptFile, no model:inherit)
 test_agent_json_prompt_shape() {
   make -C "$ROOT" build-kiro >/dev/null
   local f="$ROOT/plugins/maister-kiro/agents/maister-gap-analyzer.json"
@@ -79,7 +113,7 @@ test_agent_json_prompt_shape() {
   ! grep -rl 'promptFile\|"model": "inherit"' "$ROOT/plugins/maister-kiro/agents"/*.json >/dev/null 2>&1
 }
 
-# 5. --set-alias writes idempotent maister-kiro/mk block to shell rc
+# 7. --set-alias writes idempotent maister-kiro/mk block to shell rc
 test_install_shell_aliases() {
   local dest rc
   dest=$(mktemp -d)
@@ -97,7 +131,7 @@ test_install_shell_aliases() {
   rm -rf "$dest" "$rc"
 }
 
-# 6. fix_prompt_paths rewrites relative file:// prompts to absolute KIRO_HOME paths
+# 8. fix_prompt_paths rewrites relative file:// prompts to absolute KIRO_HOME paths
 test_fix_prompt_paths_absolute() {
   local dest
   dest=$(mktemp -d)
@@ -113,7 +147,7 @@ test_fix_prompt_paths_absolute() {
   rm -rf "$dest"
 }
 
-# 7. Hook contracts: plain text for agentSpawn, JSON block for stop
+# 9. Hook contracts: plain text for agentSpawn, JSON block for stop
 test_hook_output_contracts() {
   local skill_out stop_out
   skill_out=$("$ROOT/plugins/maister-kiro/hooks/skill-invocation-reminder.sh" </dev/null)
@@ -133,7 +167,7 @@ EOF
   rm -rf "$ws"
 }
 
-# 8. Ephemeral KIRO_HOME + workspace .kiro/ copy pattern
+# 10. Ephemeral KIRO_HOME + workspace .kiro/ copy pattern
 test_workspace_kiro_copy() {
   local kiro_home ws
   kiro_home=$(mktemp -d)
@@ -179,6 +213,8 @@ test_smoke_cli_quick_plan() {
 
 assert "smoke-install.sh --help documents KIRO_HOME" test_smoke_install_help
 assert "smoke-install to temp KIRO_HOME does not touch ~/.kiro/" test_smoke_install_isolated
+assert "default install enables agent and aliases without Playwright MCP" test_default_install_profile
+assert "Playwright MCP is opt-in for Kiro" test_opt_in_mcp_install
 assert "maister-kiro wrapper sets KIRO_HOME default" test_wrapper_default_kiro_home
 assert "build emits prompt file:// URI without promptFile or model:inherit" test_agent_json_prompt_shape
 assert "fix_prompt_paths rewrites relative prompts to absolute KIRO_HOME paths" test_fix_prompt_paths_absolute

@@ -199,7 +199,7 @@ Flags:
 - `-p` / `--print` — non-interactive output (scripts/CI)
 - `--trust` — trust workspace without prompt (required with `-p`)
 - `--force` / `--yolo` — auto-approve shell commands (orchestrators need this headless)
-- `--approve-mcps` — for `--e2e` workflows with Playwright (`mcp.json` in bundle)
+- `--approve-mcps` — for `--e2e` workflows after explicitly installing Playwright MCP
 
 ### Local install (no `--plugin-dir` each run)
 
@@ -208,6 +208,10 @@ Cursor CLI and IDE auto-discover plugins in `~/.cursor/plugins/local/`:
 ```bash
 bash platforms/cursor/smoke-install.sh
 ```
+
+The default install does not add Playwright MCP. Use
+`bash platforms/cursor/smoke-install.sh --with-mcp-playwright` only for
+workflows that need browser E2E.
 
 Manual equivalent:
 
@@ -264,6 +268,10 @@ In Kiro TUI, start workflows with **slash shortcut skills** (`/dev`, `/init`, `/
 bash platforms/kiro-cli/smoke-install.sh
 ```
 
+The default Kiro install sets `chat.defaultAgent=maister`, installs the
+`maister-kiro` and `mk` aliases, and omits Playwright MCP. Add
+`--with-mcp-playwright` to opt in.
+
 Manual equivalent:
 
 ```bash
@@ -293,7 +301,7 @@ Full guide: [Kiro CLI Support](docs/kiro-cli-support.md) (install, daily use, E2
 
 Maister ships a native Codex plugin variant for Codex CLI and
 the Codex IDE extension. It packages the workflow as native skills, Codex
-hooks, MCP configuration, and a repo marketplace entry. Claude/Cursor-style
+hooks, and a repo marketplace entry. Claude/Cursor-style
 custom agent files are intentionally not bundled in the MVP; workflow roles use
 Codex's native subagent delegation instead.
 

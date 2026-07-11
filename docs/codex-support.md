@@ -26,7 +26,8 @@ The build performs these transformations:
 - Custom `agents/*.md` are not copied. Native Codex subagent delegation is the
   MVP role mechanism; optional project-scoped custom agents can be added later
   under `.codex/agents/*.toml`.
-- The Playwright MCP configuration is emitted as Codex-native `.mcp.json`.
+- Playwright MCP is not enabled by the default Codex plugin installation. Add
+  it explicitly in the Codex host configuration when an E2E workflow needs it.
 - Codex hook scripts and `hooks/hooks.json` are emitted separately from the
   Claude hook source.
 

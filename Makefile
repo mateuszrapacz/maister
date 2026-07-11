@@ -95,8 +95,8 @@ validate-cursor:
 	@echo "Checking agent frontmatter uses maister- prefix..."
 	@! grep -h '^name: ' plugins/maister-cursor/agents/*.md 2>/dev/null | grep -v '^name: maister-' || (echo "FAIL: agent without maister- prefix" && exit 1)
 	@test -f plugins/maister-cursor/agents/gap-analyzer.md && grep -q '^name: maister-gap-analyzer' plugins/maister-cursor/agents/gap-analyzer.md || (echo "FAIL: gap-analyzer name mismatch" && exit 1)
-	@echo "Checking mcp.json exists, .mcp.json does not..."
-	@test -f plugins/maister-cursor/mcp.json || (echo "FAIL: mcp.json missing" && exit 1)
+	@echo "Checking default build has no Playwright MCP..."
+	@test ! -f plugins/maister-cursor/mcp.json || (echo "FAIL: default Cursor build must not include mcp.json" && exit 1)
 	@test ! -f plugins/maister-cursor/.mcp.json || (echo "FAIL: .mcp.json should not exist" && exit 1)
 	@echo "Checking explore subagent uses maister-explore..."
 	@! grep -r 'subagent_type.*Explore' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: Explore (capitalized) found" && exit 1)
@@ -131,6 +131,8 @@ validate-cursor:
 	@! grep -rE 'TaskCreate|TaskUpdate' plugins/maister-cursor/ --include="*.md" 2>/dev/null || (echo "FAIL: TaskCreate/TaskUpdate found" && exit 1)
 	@echo "PR5: skill inventory test..."
 	@bash platforms/cursor/tests/skill-inventory.test.sh
+	@echo "PR6: default installation MCP test..."
+	@bash platforms/cursor/tests/install.test.sh
 	@echo "Cursor checks passed"
 
 # validate-kiro rules 1–32 (see .maister/tasks/.../implementation/spec.md)

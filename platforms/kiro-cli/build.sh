@@ -442,7 +442,7 @@ This is the Kiro CLI variant. Key differences from Claude Code:
 - **Command names**: Prefix `maister-foo` (e.g. `/maister-development`); install to `KIRO_HOME` (~/.kiro-maister)
 - **Project instructions file**: Use `AGENTS.md` instead of `CLAUDE.md`, plus `.kiro/steering/maister-docs.md` after init
 - **User questions**: Chat-native **CHAT GATE** — present options in chat and wait for reply (no AskQuestion tool)
-- **UI**: Terminal UI only (`chat.ui` = `tui`); classic interface unsupported
+- **UI**: Terminal UI (Kiro CLI default); activity tray (`Ctrl+X`) and crew monitor (`Ctrl+G`)
 - **Progress tracking**: `todo` tool mirrors phases in activity tray (`Ctrl+X`); subagents in crew monitor (`Ctrl+G`)
 - **Planning**: File-based plans in `.maister/plans/` with chat gates (no EnterPlanMode)
 - **Subagents**: Custom `maister-explore` agent; other agents referenced as `maister-*`
@@ -576,18 +576,12 @@ extract_catalog_from_steering() {
 }
 extract_catalog_from_steering
 
-# Step 11: MCP config — .mcp.json → settings/mcp.json; default TUI profile settings
+# Step 11: MCP config — .mcp.json → settings/mcp.json
 mkdir -p "$OUT/settings"
 if [ -f "$OUT/.mcp.json" ]; then
   mv "$OUT/.mcp.json" "$OUT/settings/mcp.json"
 fi
-if [ -f "$OUT/settings/cli.json" ]; then
-  tmp="${OUT}/settings/cli.json.tmp.$$"
-  jq '.["chat.ui"] = "tui" | del(.["chat.enableTodoList"])' "$OUT/settings/cli.json" >"$tmp"
-  mv "$tmp" "$OUT/settings/cli.json"
-else
-  echo '{"chat.ui":"tui"}' >"$OUT/settings/cli.json"
-fi
+rm -f "$OUT/settings/cli.json"
 
 # Step 17: MD→JSON agent generation (post-transform only — semantic transforms must complete first)
 generate_agent_json() {
@@ -628,7 +622,7 @@ You are the Maister workflow orchestrator for Kiro CLI.
 - Track phase progress with the `todo` tool (visible in TUI activity tray via Ctrl+X)
 - Monitor subagent waves in crew monitor (Ctrl+G); max 4 parallel subagents
 - Read `orchestrator-state.yml` in the active task directory for resume and phase state
-- Maister targets Terminal UI (`chat.ui` = `tui`); classic interface is unsupported
+- Use Terminal UI features: activity tray (`Ctrl+X`), crew monitor (`Ctrl+G`)
 - Read `.maister/docs/INDEX.md` before coding tasks
 - After context compaction, ALWAYS read the latest `orchestrator-state.yml` under `.maister/tasks/` before continuing — verify `completed_phases` and resume from `current_phase`
 EOF
@@ -852,13 +846,11 @@ Invoke workflows with `/maister-*` slash skills (e.g. `/maister-init`, `/maister
 
 ## Terminal UI
 
-Maister targets the **Terminal UI** (default since Kiro CLI 2.0). Profile ships with `chat.ui` = `tui`.
+Maister targets Kiro's **Terminal UI** (default in Kiro CLI 2.0+).
 
 - **Activity tray** (`Ctrl+X`) — phase/task progress
 - **Crew monitor** (`Ctrl+G`) — subagent execution
 - **Resume** — `@status` / `@resume` or read `orchestrator-state.yml`
-
-Classic interface and `chat.enableTodoList` are not used.
 EOF
 
 echo "Built $OUT (Kiro CLI)"

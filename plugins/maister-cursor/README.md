@@ -16,7 +16,8 @@ Use `/maister-*` slash skills (e.g. `/maister-init`, `/maister-development`). In
 
 ## MCP
 
-Enable MCP in Cursor settings to use Playwright for `--e2e` workflows. Bundle: `mcp.json`.
+Playwright MCP is opt-in. Install locally with
+`--with-mcp-playwright` when an `--e2e` workflow needs it.
 
 ## Rules
 

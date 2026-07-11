@@ -33,7 +33,9 @@ maister-kiro chat --agent maister
 
 ## MCP settings
 
-MCP config ships at `settings/mcp.json`. Agent config uses `"includeMcpJson": true` to load it.
+The build can provide Playwright MCP at `settings/mcp.json`, but the default
+installer removes it and disables `includeMcpJson`. Use
+`smoke-install.sh --with-mcp-playwright` to opt in.
 
 ## Hook path resolution
 

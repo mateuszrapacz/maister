@@ -26,7 +26,7 @@ Repozytorium ma sprawdzony wzorzec multi-platformy: **`plugins/maister`** to źr
 | 14 | Branchy | Teraz branch **`cursor`**; po E2E Cursor → **merge do `master` forka** |
 | 15 | Przyszłość | **`kiro-cli`** ten sam wzorzec; docelowo **wszystko na `master` forka** |
 | 16 | Makefile | Osobne targety (`build-cursor`, `build-kiro`, …) + **`make build` = all** |
-| 17 | MCP | **Playwright w bundle** (`mcp.json`, jak core) |
+| 17 | MCP | **Playwright opt-in** (`mcp.json` only when explicitly installed) |
 
 ---
 
@@ -152,7 +152,7 @@ flowchart LR
 | Pytania | `AskUserQuestion` → `AskQuestion` |
 | Plik projektu | `CLAUDE.md` → **`AGENTS.md`** |
 | Explore | `"Explore"` / `explore` → **`maister-explore`**; agent z `platforms/cursor/agents/explore.md` |
-| MCP | `.mcp.json` → **`mcp.json`** |
+| MCP | Optional `.mcp.json` → `mcp.json` when explicitly enabled |
 | Plugin doc | `CLAUDE.md` → `rules/maister-workflows.mdc` + README |
 | Hooks | Przepisać na format Cursor (nie usuwać) |
 | Plan mode | Usunąć `EnterPlanMode`/`ExitPlanMode`; własny flow w quick-plan/bugfix |
@@ -176,7 +176,7 @@ flowchart LR
 | Claude Code | Cursor |
 |-------------|--------|
 | `.claude-plugin/plugin.json` | `.cursor-plugin/plugin.json` |
-| `.mcp.json` | `mcp.json` (Playwright — zostaje w bundle) |
+| `.mcp.json` | Optional `mcp.json` (Playwright; not included by default) |
 | `CLAUDE.md` (plugin doc) | `rules/maister-workflows.mdc` + README |
 | `hooks/hooks.json` (PascalCase) | `hooks/hooks.json` (`version: 1`, camelCase) |
 
@@ -286,7 +286,7 @@ No `commands/` directory in Cursor build — thin command wrappers merged into s
 
 | Element | Decyzja |
 |---------|---------|
-| Playwright MCP | W bundle (`mcp.json`); README: włącz MCP jeśli używasz `--e2e` |
+| Playwright MCP | Opt-in via `smoke-install.sh --with-mcp-playwright`; README: enable only for `--e2e` |
 | 25 custom agents | Pliki w `agents/` (+ `maister-explore`); referencje `maister-*` |
 | `docs-operator` + `skills:` frontmatter | Wspierane |
 | Product-design server | Bez zmian |
@@ -304,7 +304,7 @@ No `commands/` directory in Cursor build — thin command wrappers merged into s
 
 ### Faza 1 — MVP mechaniczny (1–2 dni)
 
-1. `platforms/cursor/build.sh` (nazwy, AGENTS.md, AskQuestion, explore, manifest, mcp.json)
+1. `platforms/cursor/build.sh` (nazwy, AGENTS.md, AskQuestion, explore, manifest, optional MCP)
 2. Przepisanie `quick-plan` + `quick-bugfix` (własny plan flow)
 3. Hooks: destructive + compact
 4. `make build-cursor`, `validate-cursor`
