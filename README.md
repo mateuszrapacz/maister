@@ -312,14 +312,22 @@ make build-codex
 make validate-codex
 ```
 
-### Local marketplace
-
-The repository includes `.agents/plugins/marketplace.json`, which points Codex
-at `plugins/maister-codex/`. Add the repository as a local marketplace, then
-install `maister` from the Codex plugin browser:
+### Local install
 
 ```bash
+bash platforms/codex-cli/smoke-install.sh
+```
+
+The default install does not add Playwright MCP. Use
+`bash platforms/codex-cli/smoke-install.sh --with-mcp-playwright` only for
+workflows that need browser E2E.
+
+Manual equivalent:
+
+```bash
+make build-codex
 codex plugin marketplace add .
+codex plugin add maister@maister-local
 ```
 
 Start a new Codex session after installation or rebuilding so bundled skills

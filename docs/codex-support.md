@@ -36,13 +36,23 @@ The build performs these transformations:
 The repository marketplace is `.agents/plugins/marketplace.json`:
 
 ```bash
-codex plugin marketplace add .
-codex plugin marketplace list
+bash platforms/codex-cli/smoke-install.sh
 ```
 
-Use the Codex plugin browser to install `maister`, then start a new
-session. If the plugin or its skills do not appear after a rebuild, restart the
-Codex session so the installed plugin cache is refreshed.
+The default install omits Playwright MCP. Use
+`bash platforms/codex-cli/smoke-install.sh --with-mcp-playwright` only for
+workflows that need browser E2E.
+
+Manual equivalent:
+
+```bash
+make build-codex
+codex plugin marketplace add .
+codex plugin add maister@maister-local
+```
+
+Start a new Codex session after installation or rebuilding so bundled skills
+are rediscovered.
 
 ## Workflow behavior
 

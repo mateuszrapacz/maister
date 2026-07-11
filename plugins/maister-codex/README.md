@@ -3,16 +3,15 @@
 Native Codex plugin packaging for Maister's standards-aware development
 workflows.
 
-## Local development
+## Local install
 
 ```bash
-make build-codex
-codex plugin marketplace add .
+bash platforms/codex-cli/smoke-install.sh
 ```
 
-For a repo-scoped marketplace, use the repository's
-`.agents/plugins/marketplace.json`. After installing or changing the plugin,
-start a new Codex session so the bundled skills are rediscovered.
+Playwright MCP is opt-in via `--with-mcp-playwright` when an `--e2e` workflow
+needs it. After installing or changing the plugin, start a new Codex session so
+the bundled skills are rediscovered.
 
 Invoke public workflows with `$maister:development`, `$maister:init`, or the
 other `maister:*` skills. Internal workflow capabilities are bundled as

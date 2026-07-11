@@ -251,6 +251,8 @@ validate-kilo:
 validate-codex:
 	@echo "=== Codex validation ==="
 	@bash platforms/codex-cli/smoke-cli.sh
+	@echo "Codex install MCP opt-in test..."
+	@bash platforms/codex-cli/tests/install.test.sh
 
 clean: clean-copilot clean-cursor clean-kiro clean-kilo clean-codex
 
