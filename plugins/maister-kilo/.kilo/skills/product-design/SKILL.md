@@ -94,10 +94,23 @@ ordered options, original recommendation, safety classification, and complete
 read-only `context` (`task_path`, phase summaries, artifact paths, dashboard
 summary, prior `gate_history`, and approval status where relevant).
 
-For a valid non-denylisted `fully_automatic` result, invoke
-`skills/orchestrator-framework/bin/phase-continue.mjs` with the exact state path,
-gate context, ordered options, selected option, actor, confidence, next phase,
-and report paths. Continue design only after the runner exits successfully.
+### JSON continuation runner contract
+
+The host remains responsible for evaluating the gate and selecting the option. For a valid non-denylisted `fully_automatic` result, the call site constructs one JSON object for `skills/orchestrator-framework/bin/phase-continue.mjs`. The payload has exactly these fields:
+
+- Required: `state`, `phase_id`, `gate_type`, `question`, `options`, `selected_option`, `actor`, and `confidence`.
+- Optional: `next_phase`, `report_md`, and `report_html`.
+
+`actor` is `advisor` or `arbiter`, and `confidence` is `high` or `medium`. The host preserves the ordered options and exact selected option; low-confidence or escalated results remain outside automatic execution. Advisor/arbiter selection and policy are unchanged, and the runner accepts only this validated JSON payload.
+
+Transport is a hard cutover: with no arguments, pass the complete JSON object on stdin; alternatively invoke the runner with exactly `--input-file PATH`. This is the only accepted CLI argument; additional command-line arguments are invalid.
+
+Before invoking the runner, read canonical state and reuse a validated terminal record for the same idempotency key. The runner performs canonical-state preflight, evaluates denylist and idempotency on every attempt, and rejects changed selections without appending or overwriting. A denylisted gate remains blocked and cannot continue automatically.
+
+Persist the terminal record and requested reports.
+Only after durable state and reports does the runner continue. Phase continuation happens only after that durable work succeeds. Reports project persisted `orchestrator.gate_history`. stdout contains only the compact JSON result; actionable errors go to stderr. A non-zero runner exit stops continuation and falls back to the user gate or persists blocked; it never advances the phase.
+
+Retry from the validated terminal state after an interrupted report or transition: it regenerates missing reports, applies a pending phase transition exactly once, and must not append another history entry or downgrade a blocked or terminal selection. No low-confidence automatic execution is added.
 
 Before any advisor, arbiter, or user call, compute and reuse the idempotency
 key; persist `user_pending`/`advisor_pending`/`arbiter_pending` and refresh the

@@ -1,0 +1,11 @@
+orchestrator:
+  current_phase: phase-1
+	completed_phases: []
+  gate_history: []
+task:
+  status: in_progress
+phases:
+  - id: phase-1
+    status: in_progress
+  - id: phase-2
+    status: pending

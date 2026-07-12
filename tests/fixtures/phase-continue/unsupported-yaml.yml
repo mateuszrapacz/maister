@@ -1,0 +1,7 @@
+---
+orchestrator:
+  current_phase: phase-1
+  gate_history: &history []
+task:
+  status: in_progress
+phases: *history

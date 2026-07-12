@@ -429,7 +429,51 @@ summary covers success, blocked, failed, retry exhaustion, arbitration, user
 override, and resume reuse. The HTML companion is a faithful presentation of the
 Markdown report and contains no additional decision data.
 
-## 7. Host adapter primitives
+## 7. Executable continuation runner contract
+
+The host remains responsible for selecting the option. Once the host has a
+validated automatic result, it constructs one JSON object for the bundled
+`phase-continue.mjs` runner. The payload has exactly these fields:
+
+- Required: `state`, `phase_id`, `gate_type`, `question`, `options`,
+  `selected_option`, `actor`, and `confidence`.
+- Optional: `next_phase`, `report_md`, and `report_html`.
+
+`actor` is exactly `advisor` or `arbiter`; `confidence` is exactly `high` or
+`medium`. Low-confidence or escalated results never enter this automatic
+executor path. `options` remains an ordered unique list, and
+`selected_option` must be an exact member. The runner accepts only this
+validated JSON payload and does not choose an option or reinterpret the
+question.
+
+Transport is a hard cutover. With no arguments, the runner reads one complete
+JSON object from stdin. The host may instead pass exactly `--input-file PATH`
+and the runner reads that file. This is the only accepted CLI argument;
+additional command-line arguments are invalid.
+
+Before any write, the runner validates the payload and performs canonical-state
+preflight against the requested `orchestrator-state.yml`. It validates phase
+membership, the canonical `gate_history`, path separation, denylist status,
+and the idempotency key. A denylisted gate is blocked on every attempt and
+cannot be continued automatically. A terminal record with the same key is
+reused; a changed selection cannot overwrite it or append another record.
+
+Persist the terminal record and requested reports.
+Only after durable state and reports does the runner continue. Phase continuation happens only after that durable work succeeds. Reports are
+generated from persisted `orchestrator.gate_history`, not from the payload or
+dashboard projection. If report generation or a transition write fails, the
+terminal record remains durable. Retry from the validated terminal state: it
+regenerates missing reports, applies a pending phase transition exactly once,
+and must not append another history entry or downgrade a blocked or terminal
+selection.
+
+The result channel is strict: stdout contains only the compact JSON result.
+Actionable validation, denylist, and operational errors go to stderr and use a
+non-zero exit. A non-zero runner exit stops continuation and falls back to the user gate or persists blocked; it never advances the phase. The host must
+inspect that result before changing phase state. No low-confidence automatic
+execution is added by this contract.
+
+## 8. Host adapter primitives
 
 The host adapter supplies five primitives: `invoke_advisor`,
 `invoke_arbiter`, `present_user_gate`, `write_state`, and `refresh_dashboard`.
@@ -447,20 +491,20 @@ Every host must map these primitives explicitly:
 | `refresh_dashboard` | Project current persisted state only; never make decisions. |
 | `generate_decision_reports` | Read state and write Markdown plus optional faithful HTML after terminal persistence. |
 | `is_interactive` | Report whether a user answer can actually be collected now. |
-| `automatic_answer_injection_supported` | Deprecated UI wording. The supported capability is normalized phase continuation, not synthetic user input. |
+| `automatic_answer_injection_supported` | Host capability identifier; the supported capability is normalized phase continuation, not synthetic user input. |
 | `phase_continue` | Consume the terminal `selected_option` after state, dashboard, and reports succeed. In `fully_automatic`, this is the automatic-answer seam; it must not present a user gate or be callable by advisor/arbiter before validation. |
 | `phase_continuation_supported` | Return true when the orchestrator can consume `phase_continue(selected_option)` in the current host runtime. |
 
 The bundled reference adapter is executable at
-`lib/orchestrator-framework/bin/phase-continue.mjs`. A host invokes it with
-the current state path, exact gate context, selected option, actor, confidence,
-next phase, and report paths. It validates exact option membership, rejects the
+`lib/orchestrator-framework/bin/phase-continue.mjs`. A host serializes the
+exact runner payload above and supplies it through stdin or
+`--input-file PATH`. The runner validates exact option membership, rejects the
 denylist, computes the idempotency key, writes the terminal record atomically,
 generates reports, and only then advances the phase. Hosts may wrap this command
-with their native task/subagent mechanism, but they must not replace it with a
-prompt-only claim of continuation.
+with their native task/subagent mechanism, but they must not bypass the
+validated JSON result.
 
-### 7.1 Fully automatic continuation
+### 8.1 Fully automatic continuation
 
 For a non-denylisted gate in `fully_automatic` mode, automatic answer injection
 is the normalized result passed to `phase_continue(selected_option)`. It is not

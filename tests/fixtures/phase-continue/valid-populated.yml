@@ -1,0 +1,36 @@
+orchestrator:
+  current_phase: phase-1
+  completed_phases:
+    - phase-0
+  gate_history:
+    - schema_version: 1
+      idempotency_key: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      phase_id: phase-0
+      gate_type: phase-0-exit
+      question: "Continue to phase 1?"
+      options:
+        - "Continue to phase 1"
+        - "Pause workflow"
+      status: decided
+      selected_option: "Continue to phase 1"
+      final_actor: user
+      original_recommendation: "Continue to phase 1"
+      rationale: "The user approved the phase transition."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+task:
+  status: in_progress
+phases:
+  - id: phase-1
+    name: First phase
+    status: in_progress
+  - id: phase-2
+    name: Second phase
+    status: pending
+  - id: phase-3
+    name: Third phase
+    status: skipped
+    skip_reason: not requested

@@ -29,18 +29,7 @@ phases:
     status: pending
 YAML
 
-result=$(node "$RUNNER" \
-  --state "$STATE" \
-  --phase-id phase-1 \
-  --gate-type phase-exit \
-  --question "Continue to phase 2?" \
-  --options-json '["Continue to phase 2","Pause workflow"]' \
-  --selected-option "Continue to phase 2" \
-  --actor advisor \
-  --confidence high \
-  --next-phase phase-2 \
-  --report-md "$REPORT_MD" \
-  --report-html "$REPORT_HTML")
+result=$(printf '{"state":"%s","phase_id":"phase-1","gate_type":"phase-exit","question":"Continue to phase 2?","options":["Continue to phase 2","Pause workflow"],"selected_option":"Continue to phase 2","actor":"advisor","confidence":"high","next_phase":"phase-2","report_md":"%s","report_html":"%s"}' "$STATE" "$REPORT_MD" "$REPORT_HTML" | node "$RUNNER")
 
 grep -Fq '"status":"decided"' <<<"$result"
 grep -Fq '"continuation":"phase_continue"' <<<"$result"
@@ -52,33 +41,11 @@ grep -Fq 'Options' "$REPORT_MD"
 grep -Fq 'Continue to phase 2' "$REPORT_MD"
 grep -Fq 'Continue to phase 2' "$REPORT_HTML"
 
-second=$(node "$RUNNER" \
-  --state "$STATE" \
-  --phase-id phase-1 \
-  --gate-type phase-exit \
-  --question "Continue to phase 2?" \
-  --options-json '["Continue to phase 2","Pause workflow"]' \
-  --selected-option "Pause workflow" \
-  --actor advisor \
-  --confidence high \
-  --next-phase phase-2 \
-  --report-md "$REPORT_MD" \
-  --report-html "$REPORT_HTML")
+second=$(printf '{"state":"%s","phase_id":"phase-1","gate_type":"phase-exit","question":"Continue to phase 2?","options":["Continue to phase 2","Pause workflow"],"selected_option":"Continue to phase 2","actor":"advisor","confidence":"high","next_phase":"phase-2","report_md":"%s","report_html":"%s"}' "$STATE" "$REPORT_MD" "$REPORT_HTML" | node "$RUNNER")
 
 grep -Fq '"status":"reused"' <<<"$second"
 
-if node "$RUNNER" \
-  --state "$STATE" \
-  --phase-id phase-2 \
-  --gate-type implementation-approval \
-  --question "Approve?" \
-  --options-json '["Approve","Reject"]' \
-  --selected-option "Approve" \
-  --actor advisor \
-  --confidence high \
-  --next-phase phase-3 \
-  --report-md "$REPORT_MD" \
-  --report-html "$REPORT_HTML"; then
+if printf '{"state":"%s","phase_id":"phase-2","gate_type":"implementation-approval","question":"Approve?","options":["Approve","Reject"],"selected_option":"Approve","actor":"advisor","confidence":"high","next_phase":"phase-3","report_md":"%s","report_html":"%s"}' "$STATE" "$REPORT_MD" "$REPORT_HTML" | node "$RUNNER"; then
   echo "FAIL: denylisted gate was continued automatically" >&2
   exit 1
 fi

@@ -24,6 +24,34 @@ contains() {
   grep -Fq -- "$1" "$2"
 }
 
+source_contract_files() {
+  printf '%s\n' "$ENGINE" \
+    "$ROOT/plugins/maister/skills/development/SKILL.md" \
+    "$ROOT/plugins/maister/skills/migration/SKILL.md" \
+    "$ROOT/plugins/maister/skills/performance/SKILL.md" \
+    "$ROOT/plugins/maister/skills/product-design/SKILL.md" \
+    "$ROOT/plugins/maister/skills/research/SKILL.md"
+}
+
+runner_paths() {
+  printf '%s\n' \
+    "$ROOT/plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs" \
+    "$ROOT/plugins/maister-codex/skills/orchestrator-framework/bin/phase-continue.mjs" \
+    "$ROOT/plugins/maister-copilot/skills/orchestrator-framework/bin/phase-continue.mjs" \
+    "$ROOT/plugins/maister-cursor/lib/orchestrator-framework/bin/phase-continue.mjs" \
+    "$ROOT/plugins/maister-kilo/.kilo/skills/orchestrator-framework/bin/phase-continue.mjs" \
+    "$ROOT/plugins/maister-kiro/skills/maister-orchestrator-framework/bin/phase-continue.mjs"
+}
+
+generated_reference_files() {
+  printf '%s\n' \
+    "$ROOT/plugins/maister-codex/skills/orchestrator-framework/references/gate-decision-engine.md" \
+    "$ROOT/plugins/maister-copilot/skills/orchestrator-framework/references/gate-decision-engine.md" \
+    "$ROOT/plugins/maister-cursor/lib/orchestrator-framework/references/gate-decision-engine.md" \
+    "$ROOT/plugins/maister-kilo/.kilo/skills/orchestrator-framework/references/gate-decision-engine.md" \
+    "$ROOT/plugins/maister-kiro/skills/maister-orchestrator-framework/references/gate-decision-engine.md"
+}
+
 in_order() {
   local first="$1"
   local second="$2"
@@ -250,24 +278,101 @@ test_hosts_declare_phase_continuation_support() {
     contains 'phase_continue(selected_option)' "$ROOT/plugins/maister/skills/orchestrator-framework/references/gate-decision-engine.md"
 }
 
+test_source_payload_contract_is_exact() {
+  local file field
+  while IFS= read -r file; do
+    for field in state phase_id gate_type question options selected_option actor confidence next_phase report_md report_html; do
+      grep -Fq -- "\`$field\`" "$file" || return 1
+    done
+    contains 'one JSON object' "$file" || return 1
+    contains 'exactly these fields' "$file" || return 1
+  done < <(source_contract_files)
+}
+
+test_source_transport_is_hard_cutover() {
+  local file
+  while IFS= read -r file; do
+    contains 'stdin' "$file" || return 1
+    contains '--input-file PATH' "$file" || return 1
+    contains 'only accepted CLI argument' "$file" || return 1
+    contains 'additional command-line arguments are invalid' "$file" || return 1
+    ! grep -Eiq 'options-json|options_json|prose.?as.?input|compatibility.?shim|--state|--phase-id|--gate-type|--question|--options|--selected-option|--actor|--confidence|--next-phase|--report-md|--report-html' "$file" || return 1
+  done < <(source_contract_files)
+}
+
+test_source_persistence_precedes_json_continuation() {
+  local file
+  while IFS= read -r file; do
+    contains 'Persist the terminal record and requested reports.' "$file" || return 1
+    contains 'stdout contains only the compact JSON result' "$file" || return 1
+    in_order 'Persist the terminal record and requested reports.' 'Phase continuation happens' "$file" || return 1
+  done < <(source_contract_files)
+}
+
+test_source_nonzero_exit_stops_or_falls_back() {
+  local file
+  while IFS= read -r file; do
+    contains 'A non-zero runner exit stops continuation' "$file" || return 1
+    contains 'falls back to the user gate or persists blocked' "$file" || return 1
+    contains 'low-confidence' "$file" || return 1
+  done < <(source_contract_files)
+}
+
+test_source_retry_reuses_durable_terminal_state() {
+  local file
+  while IFS= read -r file; do
+    contains 'Retry from the validated terminal state' "$file" || return 1
+    contains 'regenerates missing reports' "$file" || return 1
+    contains 'applies a pending phase transition exactly once' "$file" || return 1
+    contains 'must not append another history entry' "$file" || return 1
+  done < <(source_contract_files)
+}
+
 test_generated_variants_preserve_continuation_contract() {
   local file
-  for file in \
-    "$ROOT/plugins/maister-codex/skills/orchestrator-framework/references/gate-decision-engine.md" \
-    "$ROOT/plugins/maister-copilot/skills/orchestrator-framework/references/gate-decision-engine.md" \
-    "$ROOT/plugins/maister-cursor/lib/orchestrator-framework/references/gate-decision-engine.md" \
-    "$ROOT/plugins/maister-kilo/.kilo/skills/orchestrator-framework/references/gate-decision-engine.md" \
-    "$ROOT/plugins/maister-kiro/skills/maister-orchestrator-framework/references/gate-decision-engine.md"; do
+  while IFS= read -r file; do
     test -f "$file" && grep -Fq 'phase_continue(selected_option)' "$file" || return 1
-  done
-  for file in \
-    "$ROOT/plugins/maister-codex/skills/orchestrator-framework/bin/phase-continue.mjs" \
-    "$ROOT/plugins/maister-copilot/skills/orchestrator-framework/bin/phase-continue.mjs" \
-    "$ROOT/plugins/maister-cursor/lib/orchestrator-framework/bin/phase-continue.mjs" \
-    "$ROOT/plugins/maister-kilo/.kilo/skills/orchestrator-framework/bin/phase-continue.mjs" \
-    "$ROOT/plugins/maister-kiro/skills/maister-orchestrator-framework/bin/phase-continue.mjs"; do
+  done < <(generated_reference_files)
+  while IFS= read -r file; do test -f "$file" || return 1; done < <(runner_paths)
+}
+
+test_expected_runner_matrix_paths() {
+  local file count=0
+  while IFS= read -r file; do
     test -f "$file" || return 1
-  done
+    count=$((count + 1))
+  done < <(runner_paths)
+  test "$count" -eq 6
+}
+
+test_all_runner_syntax_is_valid() {
+  local file
+  while IFS= read -r file; do node --check "$file" || return 1; done < <(runner_paths)
+}
+
+test_generated_references_are_fresh() {
+  local file marker
+  local markers=(
+    'one JSON object'
+    '--input-file PATH'
+    'Persist the terminal record and requested reports.'
+    'Retry from the validated terminal state'
+    'stdout contains only the compact JSON result'
+  )
+  while IFS= read -r file; do
+    test -f "$file" || return 1
+    for marker in "${markers[@]}"; do grep -Fq -- "$marker" "$file" || return 1; done
+    ! grep -Eiq 'options-json|options_json|prose.?as.?input|compatibility.?shim|--state|--phase-id|--gate-type|--question|--options|--selected-option|--actor|--confidence|--next-phase|--report-md|--report-html' "$file" || return 1
+  done < <(generated_reference_files)
+}
+
+test_make_validate_wires_final_checks() {
+  local makefile="$ROOT/Makefile"
+  contains 'validate-phase-continue' "$makefile" && \
+    contains 'PHASE_CONTINUE_RUNNER' "$makefile" && \
+    contains 'tests/phase-continue-contract.test.sh' "$makefile" && \
+    contains 'node --check' "$makefile" && \
+    contains 'git diff --check' "$makefile"
 }
 
 echo "=== Gate decision engine deterministic contract tests ==="
@@ -289,7 +394,16 @@ assert "all source orchestrators bind the executable continuation runner" test_a
 assert "host adapter capability contract is documented" test_host_adapter_contract_is_present
 assert "fully automatic continuation is executable" test_fully_automatic_continuation_is_executable
 assert "all hosts declare phase continuation support" test_hosts_declare_phase_continuation_support
+assert "source payload fields are exact across the normative and five source contracts" test_source_payload_contract_is_exact
+assert "source transport is the stdin or named input-file hard cutover" test_source_transport_is_hard_cutover
+assert "source persistence and JSON continuation ordering is explicit" test_source_persistence_precedes_json_continuation
+assert "source non-zero runner exits stop or fall back safely" test_source_nonzero_exit_stops_or_falls_back
+assert "source retries reuse durable terminal state" test_source_retry_reuses_durable_terminal_state
 assert "generated variants preserve continuation contract" test_generated_variants_preserve_continuation_contract
+assert "the final matrix names all six expected runner paths" test_expected_runner_matrix_paths
+assert "all six runners pass node syntax validation" test_all_runner_syntax_is_valid
+assert "generated references are fresh and contain no stale invocation contract" test_generated_references_are_fresh
+assert "Makefile wires the final matrix and quality gates" test_make_validate_wires_final_checks
 
 echo ""
 echo "Results: $pass passed, $fail failed"

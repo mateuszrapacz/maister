@@ -1,0 +1,507 @@
+orchestrator:
+  started_phase: phase-1
+  current_phase: phase-14
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-5
+    - phase-6
+    - phase-7
+    - phase-8
+    - phase-10
+    - phase-11
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+    phase-7: 0
+    phase-8: 0
+    phase-9: 0
+    phase-10: 0
+    phase-11: 0
+    phase-12: 0
+    phase-13: 0
+    phase-14: 0
+  options:
+    html_output: true
+    advisor: manual
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: false
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  created: 2026-07-12T10:32:29Z
+  updated: 2026-07-12T19:50:01Z
+  resume_from: null
+  pending_gate: null
+  session_status: completed
+  task_path: .maister/tasks/development/2026-07-12-runner-input-contract
+  task_ids:
+    phase-1: null
+    phase-2: null
+    phase-3: null
+    phase-4: null
+    phase-5: null
+    phase-6: null
+    phase-7: null
+    phase-8: null
+    phase-9: null
+    phase-10: null
+    phase-11: null
+    phase-12: null
+    phase-13: null
+    phase-14: null
+  gate_history:
+    - schema_version: 1
+      idempotency_key: manual:phase-1-exit
+      phase_id: phase-1
+      gate_type: phase-1-exit
+      question: "Continue to Phase 2?"
+      options:
+        - "Continue to Phase 2"
+        - "Pause workflow"
+      status: decided
+      selected_option: "Continue to Phase 2"
+      final_actor: user
+      original_recommendation: "Continue to Phase 2"
+      rationale: "User approved continuation with 'go'."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+    - schema_version: 1
+      idempotency_key: manual:phase-7-exit
+      phase_id: phase-7
+      gate_type: phase-7-exit
+      question: "Continue to implementation?"
+      options:
+        - "Continue to implementation"
+        - "Pause workflow"
+      status: decided
+      selected_option: "Continue to implementation"
+      final_actor: user
+      original_recommendation: "Continue to implementation"
+      rationale: "User approved continuation with 'yes'."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+    - schema_version: 1
+      idempotency_key: manual:phase-5-exit
+      phase_id: phase-5
+      gate_type: phase-5-exit
+      question: "Continue to specification audit?"
+      options:
+        - "Run specification audit"
+        - "Pause workflow"
+      status: decided
+      selected_option: "Run specification audit"
+      final_actor: user
+      original_recommendation: "Run specification audit"
+      rationale: "User approved with 'tak'."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+    - schema_version: 1
+      idempotency_key: manual:phase-6-exit
+      phase_id: phase-6
+      gate_type: phase-6-exit
+      question: "Continue to implementation planning?"
+      options:
+        - "Continue to implementation planning"
+        - "Pause workflow"
+      status: decided
+      selected_option: "Continue to implementation planning"
+      final_actor: user
+      original_recommendation: "Continue to implementation planning"
+      rationale: "User approved continuation with 'yes'."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+    - schema_version: 1
+      idempotency_key: manual:phase-2-scope
+      phase_id: phase-2
+      gate_type: phase-2-scope-decision
+      question: "Approve all recommended scope decisions from gap analysis?"
+      options:
+        - "Approve all recommended decisions"
+        - "Request scope changes"
+      status: decided
+      selected_option: "Approve all recommended decisions"
+      final_actor: user
+      original_recommendation: "Approve all recommended decisions"
+      rationale: "User answered 'yes to all'."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+    - schema_version: 1
+      idempotency_key: manual:phase-2-routing
+      phase_id: phase-2
+      gate_type: phase-2-routing
+      question: "Continue to Phase 5: specification?"
+      options:
+        - "Continue to Phase 5"
+        - "Pause workflow"
+      status: decided
+      selected_option: "Continue to Phase 5"
+      final_actor: user
+      original_recommendation: "Continue to Phase 5"
+      rationale: "User approved continuation with 'yes'."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+    - schema_version: 1
+      idempotency_key: manual:implementation-approval
+      phase_id: phase-8
+      gate_type: implementation-approval
+      question: "Approve complete implementation scope"
+      options:
+        - "Approve complete implementation scope"
+        - "Reject implementation scope"
+        - "Request scope changes"
+      status: decided
+      selected_option: "Approve complete implementation scope"
+      final_actor: user
+      original_recommendation: "Approve complete implementation scope"
+      rationale: "User explicitly approved the complete implementation scope."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+    - schema_version: 1
+      idempotency_key: manual:phase-8-exit
+      phase_id: phase-8
+      gate_type: phase-8-exit
+      question: "Continue to verification?"
+      options:
+        - "Continue to verification"
+        - "Pause workflow"
+      status: decided
+      selected_option: "Continue to verification"
+      final_actor: user
+      original_recommendation: "Continue to verification"
+      rationale: "User approved continuation with 'yes'."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+
+    - schema_version: 1
+      idempotency_key: manual:phase-10-options
+      phase_id: phase-10
+      gate_type: phase-10-verification-options
+      question: "Which standard verifications to run?"
+      options:
+        - "Code review"
+        - "Pragmatic review"
+        - "Reality check"
+        - "Production readiness"
+        - "All four recommended checks"
+      status: decided
+      selected_option: "All four recommended checks"
+      final_actor: user
+      original_recommendation: "All four recommended checks"
+      rationale: "User selected all recommended verifications with 'all'."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+    - schema_version: 1
+      idempotency_key: manual:phase-11-exit
+      phase_id: phase-11
+      gate_type: phase-11-exit
+      question: "Continue to Phase 12?"
+      options:
+        - "Continue to Phase 12"
+        - "Pause workflow"
+      status: decided
+      selected_option: "Continue to Phase 12"
+      final_actor: user
+      original_recommendation: "Continue to Phase 12"
+      rationale: "User approved continuation with 'yes'. E2E is disabled, so optional phases are skipped."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+      error: null
+
+task:
+  title: "Harden phase-continue input contract"
+  description: >
+    Implement .maister/plans/2026-07-12-runner-input-contract.md: replace the
+    runner's multi-flag decision input with one validated JSON payload, harden
+    the canonical YAML state boundary, migrate all source call-sites, rebuild
+    generated platform variants, and verify the existing safety guarantees.
+  status: completed
+  tags:
+    - development
+    - runner
+    - input-contract
+    - validation
+  priority: high
+
+task_context:
+  risk_level: high
+  clarifications_resolved: false
+  scope_expanded: false
+  architecture_decision: null
+  tech_clarified: false
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: false
+    involves_data_operations: true
+    ui_heavy: false
+  research_reference:
+    path: null
+    research_question: null
+    research_type: null
+    confidence_level: null
+  design_reference:
+    source: null
+    product_design_path: null
+    mockup_count: 0
+    has_brief: false
+    index_path: null
+  project_context:
+    project_doc_paths:
+      - .maister/docs/INDEX.md
+      - .maister/docs/project/vision.md
+      - .maister/docs/project/roadmap.md
+      - .maister/docs/project/tech-stack.md
+      - .maister/docs/project/architecture.md
+      - .maister/docs/standards/global/error-handling.md
+      - .maister/docs/standards/global/validation.md
+      - .maister/docs/standards/global/conventions.md
+      - .maister/docs/standards/global/coding-style.md
+      - .maister/docs/standards/global/commenting.md
+      - .maister/docs/standards/global/minimal-implementation.md
+      - .maister/docs/standards/global/plugin-development.md
+      - .maister/docs/standards/global/build-pipeline.md
+      - .maister/docs/standards/testing/test-writing.md
+  phase_summaries:
+    codebase_analysis:
+      summary: "The runner still uses legacy multi-flag input and indentation-sensitive YAML mutation. Five source orchestrators and all generated variants inherit the contract; executable coverage lacks strict payload and state-boundary cases."
+      decisions:
+        - decision: "Use source-only runner and orchestrator edits, then rebuild platform variants"
+          rationale: "Generated variants are outputs of the project build pipeline."
+      risks:
+        - "Report or second-write failure can leave a terminal record with stale phase state."
+        - "Generated runners have no behavioral contract test coverage."
+      artifacts: []
+    clarifications: []
+    gap_analysis:
+      summary: "The migration is high-risk but bounded to the runner, five source call-sites, normative docs, tests, and generated rebuilds. JSON transport, strict payload validation, canonical state validation, and retry-safe mutation are the remaining gaps; all recommended decisions were approved."
+      decisions:
+        - decision: "Use stdin plus --input-file PATH and remove legacy flags"
+          rationale: "User approved the recommended JSON-only hard cutover."
+        - decision: "Accept only the dependency-free canonical state shape"
+          rationale: "User approved fail-closed state validation without a new runtime dependency."
+        - decision: "Make report/transition retries resume safely"
+          rationale: "User approved retry-safe recovery rather than manual recovery or cross-file transactions."
+        - decision: "Keep actor advisor|arbiter and confidence high|medium"
+          rationale: "User approved preserving the current automatic executor boundary."
+        - decision: "Validate non-empty NUL-free paths and reject state/report collisions"
+          rationale: "User approved the recommended path safety policy."
+        - decision: "Validate phase membership and supported transitions before writes"
+          rationale: "User approved strict phase transition validation."
+        - decision: "Run shared contract tests against source and all built runners"
+          rationale: "User approved generated-variant behavioral verification."
+        - decision: "Update the normative reference, five source skills, and tests"
+          rationale: "User approved source-only documentation migration followed by regeneration."
+      risks:
+        - "Report/second-write failures can leave a terminal record without phase advancement."
+        - "Generated platform copies need behavioral verification after rebuild."
+      artifacts:
+        - path: analysis/gap-analysis.md
+          label: Gap Analysis
+          html: null
+    scope_clarifications:
+      summary: null
+      decisions: []
+      risks: []
+      artifacts: []
+    specification:
+      summary: "The specification defines a JSON-only stdin/--input-file contract, strict payload and canonical YAML validation, retry-safe persistence, five source call-site migrations, shared source/generated tests, and build validation."
+      decisions:
+        - decision: "Use strict JSON transport followed by payload/state validation, durable history, reports, and retry-safe transition"
+          rationale: "This preserves the runner as an executor while closing ambiguity and state-boundary gaps."
+      risks:
+        - "Cross-file atomicity is unavailable; retries must be deterministic."
+        - "The strict YAML subset must cover all orchestrator state shapes."
+        - "Generated runner parity requires a shared matrix."
+      artifacts:
+        - path: implementation/spec.md
+          label: Specification
+          html: implementation/spec.html
+    architecture_decision:
+      summary: null
+      decisions: []
+      risks: []
+      artifacts: []
+    specification_audit:
+      summary: "Pass with concerns: the specification is complete enough to plan, with medium implementation risks around duplicate-key detection, canonical YAML fixtures, and retry failure injection."
+      decisions:
+        - decision: "Carry three medium concerns into implementation planning rather than expanding scope"
+          rationale: "They are already covered by the specification and verification matrix."
+      risks:
+        - "Dependency-free duplicate-key detection must be explicit."
+        - "Canonical YAML acceptance needs fixture-defined boundaries."
+        - "Report/transition recovery needs observable failure-injection tests."
+      artifacts:
+        - path: verification/spec-audit.md
+          label: Specification Audit
+          html: null
+    implementation_plan:
+      summary: "The implementation is organized into five serialized groups covering strict JSON transport, canonical YAML and phase preflight, durable recovery, source contract migration, and generated-variant verification; the plan contains 29 steps and 34 focused tests."
+      decisions:
+        - decision: "Serialize the runner and shared contract harness through the first three groups, then migrate source docs before rebuilding generated variants"
+          rationale: "The runner is the shared safety boundary and generated outputs must come from the source build pipeline."
+        - decision: "Use deterministic test-only failure injection for report and transition recovery"
+          rationale: "It makes cross-file recovery observable without adding a production-facing contract field."
+      risks:
+        - "Duplicate JSON keys require dependency-free scanning before materialization."
+        - "Canonical YAML must remain a fixture-defined fail-closed subset."
+        - "Generated runner parity depends on the final build and shared behavioral matrix."
+      artifacts:
+        - path: implementation/implementation-plan.md
+          label: Implementation Plan
+          html: implementation/implementation-plan.html
+    implementation:
+      summary: "Implementation completed across five groups: strict JSON transport, canonical YAML/phase validation, durable report/transition recovery, source contract migration, and generated-runner parity. The shared matrix passed 19 cases across all six runner paths; build validation and targeted checks are green."
+      decisions:
+        - decision: "Use the build pipeline as the only source of generated platform changes"
+          rationale: "The generated trees are platform outputs and the final audit found only expected drift."
+        - decision: "Keep recovery test failure injection disabled by default"
+          rationale: "It provides deterministic coverage without expanding the production payload contract."
+      risks:
+        - "Optional headless Kiro smoke was interrupted after 13 passes; the shared contract matrix completed successfully."
+        - "Cross-file state/report atomicity remains an inherent limitation; deterministic retry recovery is covered."
+      artifacts:
+        - path: implementation/work-log.md
+          label: Implementation Work Log
+          html: null
+
+    verification:
+      summary: "Verification found no critical issues and confirmed 126/126 shared runner cases, 28/28 gate tests, syntax checks, canonical current-state compatibility, and final build validation. The requested runner-contract scope is ready; production deployment still has broader concurrency, rollback/release, finalization, and optional Kiro-smoke residuals."
+      decisions: []
+      risks:
+        - "Production concurrency serialization, rollback compatibility, and release controls remain outside this runner-contract fix scope."
+        - "Optional headless Kiro smoke remains incomplete; full repository validation is green."
+      artifacts:
+        - path: verification/implementation-verification.md
+          label: Implementation Verification
+          html: verification/implementation-verification.html
+        - path: verification/completeness-report.md
+          label: Completeness Report
+          html: null
+        - path: verification/code-review-report.md
+          label: Code Review Report
+          html: null
+        - path: verification/pragmatic-review.md
+          label: Pragmatic Review
+          html: null
+        - path: verification/production-readiness-report.md
+          label: Production Readiness Report
+          html: null
+        - path: verification/reality-check.md
+          label: Reality Check
+          html: null
+        - path: verification/test-suite-results.md
+          label: Test Suite Results
+          html: null
+
+verification_context:
+  last_status: passed_with_issues
+  issues_found:
+    - source: production
+      severity: high
+      description: Concurrency serialization, rollback compatibility, and release-control evidence remain outside the runner-contract fix scope.
+    - source: completeness
+      severity: medium
+      description: Workflow finalization is still pending.
+    - source: completeness
+      severity: low
+      description: Optional headless Kiro smoke remains incomplete.
+  fixes_applied:
+    - "Materialized dependency-free JSON parser objects with safe own-key handling and added __proto__ regression coverage."
+    - "Validated terminal retry transitions before report rendering and added report immutability coverage."
+    - "Added explicit missing gate_history and missing root phases fixtures/assertions."
+    - "Canonicalized the workflow state by removing duplicate phase-summary keys and storing the verification multi-select decision as a string."
+  decisions_made: []
+  reverify_count: 1
+
+implementation_approval:
+  status: approved
+  approved_scope: "complete implementation scope"
+  requested_at: 2026-07-12T13:29:56Z
+  decided_at: 2026-07-12T13:34:33Z
+
+phases:
+  - id: phase-1
+    name: Codebase Analysis
+    status: completed
+  - id: phase-2
+    name: Gap Analysis
+    status: completed
+  - id: phase-3
+    name: TDD Red
+    status: skipped
+    skip_reason: no reproducible defect identified yet
+  - id: phase-4
+    name: UI Mockups
+    status: skipped
+    skip_reason: non-UI task
+  - id: phase-5
+    name: Specification
+    status: completed
+  - id: phase-6
+    name: Specification Audit
+    status: completed
+  - id: phase-7
+    name: Implementation Plan
+    status: completed
+  - id: phase-8
+    name: Implementation
+    status: completed
+  - id: phase-9
+    name: TDD Green
+    status: skipped
+    skip_reason: no reproducible defect identified yet
+  - id: phase-10
+    name: Verification Options
+    status: completed
+  - id: phase-11
+    name: Verification
+    status: completed
+  - id: phase-12
+    name: E2E Testing
+    status: skipped
+    skip_reason: non-UI task
+  - id: phase-13
+    name: User Documentation
+    status: skipped
+    skip_reason: not requested
+  - id: phase-14
+    name: Finalization
+    status: completed

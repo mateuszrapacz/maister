@@ -1,0 +1,27 @@
+orchestrator:
+  current_phase: phase-1
+  gate_history:
+    - schema_version: 1
+      idempotency_key: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      phase_id: phase-0
+      gate_type: phase-0-exit
+      question: "Continue?"
+      options:
+        - "Continue"
+        - "Continue"
+      status: decided
+      selected_option: "Continue"
+      final_actor: user
+      original_recommendation: "Continue"
+      rationale: "Duplicate options are not canonical."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      continuation: phase_continue
+task:
+  status: in_progress
+phases:
+  - id: phase-1
+    status: in_progress
+  - id: phase-2
+    status: pending

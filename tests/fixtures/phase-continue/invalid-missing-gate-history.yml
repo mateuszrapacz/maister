@@ -1,0 +1,9 @@
+orchestrator:
+  current_phase: phase-1
+task:
+  status: in_progress
+phases:
+  - id: phase-1
+    status: in_progress
+  - id: phase-2
+    status: pending

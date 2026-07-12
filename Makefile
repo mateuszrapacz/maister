@@ -1,4 +1,12 @@
-.PHONY: build build-copilot build-cursor build-kiro build-kilo build-codex validate validate-copilot validate-cursor validate-kiro validate-kilo validate-codex clean clean-copilot clean-cursor clean-kiro clean-kilo clean-codex watch
+.PHONY: build build-copilot build-cursor build-kiro build-kilo build-codex validate validate-contract validate-phase-continue validate-diff-check validate-copilot validate-cursor validate-kiro validate-kilo validate-codex clean clean-copilot clean-cursor clean-kiro clean-kilo clean-codex watch
+
+PHASE_CONTINUE_MATRIX := \
+	source:plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs \
+	codex:plugins/maister-codex/skills/orchestrator-framework/bin/phase-continue.mjs \
+	copilot:plugins/maister-copilot/skills/orchestrator-framework/bin/phase-continue.mjs \
+	cursor:plugins/maister-cursor/lib/orchestrator-framework/bin/phase-continue.mjs \
+	kilo:plugins/maister-kilo/.kilo/skills/orchestrator-framework/bin/phase-continue.mjs \
+	kiro:plugins/maister-kiro/skills/maister-orchestrator-framework/bin/phase-continue.mjs
 
 build: build-copilot build-cursor build-kiro build-kilo build-codex
 
@@ -17,12 +25,27 @@ build-kilo:
 build-codex:
 	bash platforms/codex-cli/build.sh
 
-validate: validate-contract validate-copilot validate-cursor validate-kiro validate-kilo validate-codex
+validate: validate-contract validate-copilot validate-cursor validate-kiro validate-kilo validate-codex validate-diff-check
 
 validate-contract:
 	@echo "=== Shared gate decision engine validation ==="
 	@bash tests/gate-decision-engine.test.sh
+	@$(MAKE) --no-print-directory validate-phase-continue
 	@bash tests/fully-automatic-phase-continue.test.sh
+
+validate-phase-continue:
+	@set -eu; \
+	for entry in $(PHASE_CONTINUE_MATRIX); do \
+		label=$${entry%%:*}; \
+		runner=$${entry#*:}; \
+		test -f "$$runner" || (echo "FAIL: missing $$label runner at $$runner" && exit 1); \
+		echo "=== phase-continue matrix: $$label ($$runner) ==="; \
+		node --check "$$runner"; \
+		PHASE_CONTINUE_RUNNER="$$runner" PHASE_CONTINUE_RUNNER_LABEL="$$label" bash tests/phase-continue-contract.test.sh; \
+	done
+
+validate-diff-check:
+	@git diff --check
 
 validate-copilot:
 	@echo "=== Copilot validation ==="

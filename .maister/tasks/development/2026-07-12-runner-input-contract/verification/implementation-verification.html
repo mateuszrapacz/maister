@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Implementation Verification — phase-continue Input Contract</title>
+  <style>
+    :root { color-scheme: light; --ink:#17202a; --muted:#586574; --line:#d9e0e7; --bg:#f5f7fa; --card:#fff; --red:#a61b1b; --amber:#8a5a00; --green:#176b3a; }
+    * { box-sizing:border-box; } body { margin:0; font:16px/1.55 system-ui,-apple-system,sans-serif; color:var(--ink); background:var(--bg); }
+    main { max-width:1000px; margin:0 auto; padding:36px 22px 60px; } header, section { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px; margin:0 0 18px; }
+    h1 { margin:0 0 8px; font-size:28px; } h2 { margin:0 0 12px; font-size:20px; } h3 { margin:18px 0 6px; font-size:17px; }
+    .banner { border-left:6px solid var(--red); } .banner strong { color:var(--red); font-size:20px; } .muted { color:var(--muted); }
+    table { border-collapse:collapse; width:100%; } th,td { border-bottom:1px solid var(--line); padding:9px 8px; text-align:left; vertical-align:top; } th { background:#eef2f6; }
+    .pass { color:var(--green); font-weight:700; } .warn { color:var(--amber); font-weight:700; } .fail { color:var(--red); font-weight:700; }
+    li { margin:5px 0; } code { background:#eef2f6; padding:2px 4px; border-radius:4px; } a { color:#075aa6; }
+  </style>
+</head>
+<body>
+<main>
+  <header class="banner"><h1>Implementation Verification</h1><p><strong>Passed with residual production-readiness concerns</strong></p><p class="muted">Correctness findings were fixed and re-verified; broader deployment controls remain. <a href="implementation-verification.md">Read the Markdown report</a>.</p></header>
+  <section><h2>Evidence</h2><table><tr><th>Check</th><th>Result</th></tr><tr><td>Shared contract matrix</td><td class="pass">126/126 passed</td></tr><tr><td>Gate tests</td><td class="pass">28/28 passed</td></tr><tr><td>Generated runners</td><td class="pass">6 paths checked</td></tr><tr><td>make validate</td><td class="pass">Passed with 0 failures</td></tr><tr><td>Full suite / Kiro smoke</td><td class="warn">Repository validation passed; optional smoke interrupted</td></tr></table></section>
+  <section><h2>Findings</h2><h3 class="pass">Resolved</h3><ul><li>Canonical persisted state compatibility.</li><li>Invalid terminal retry report immutability.</li><li><code>__proto__</code> allowlist bypass.</li><li>Missing-anchor fixture coverage and standards trail.</li></ul><h3 class="warn">Residual</h3><ul><li>Concurrency serialization, rollback, and release controls require broader production policy decisions.</li><li>Optional headless Kiro smoke was interrupted after 13 passes.</li><li>Workflow finalization remains pending.</li></ul></section>
+  <section><h2>Recommendation</h2><p>The requested runner-contract scope is ready after fixes. Keep the broader production controls and optional Kiro smoke as explicit residuals before deployment approval.</p></section>
+</main>
+</body>
+</html>
