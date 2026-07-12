@@ -197,7 +197,7 @@ Regenerate before commit:
 make build-kiro && make validate-kiro
 ```
 
-`plugins/maister-kiro/` must be reproducible from `make build-kiro` only — same pattern as `maister-cursor` and `maister-copilot`.
+`plugins/maister-kiro/` must be reproducible from `make build-kiro` only — the same generated-variant pattern used by Cursor and Codex.
 
 ---
 

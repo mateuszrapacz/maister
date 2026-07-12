@@ -341,51 +341,6 @@ Codex Goals and native planning are optional UX aids.
 
 Full guide: [Codex Support](docs/codex-support.md).
 
-## Kilo CLI
-
-Maister ships a **Kilo CLI** variant (`maister-kilo`) for the **[Kilo Code](https://kilocode.ai)** agent. Installs project-locally into `.kilo/` or globally into `~/.kilo/`.
-
-### Prerequisites
-
-```bash
-kilo --version   # must be installed
-make build-kilo
-```
-
-### Local install (per-project)
-
-```bash
-bash platforms/kilo-cli/smoke-install.sh
-```
-
-This copies `.kilo/` (skills, agents, rules), `AGENTS.md`, and `kilo.json` into the current directory.
-
-### Global install
-
-```bash
-bash platforms/kilo-cli/smoke-install.sh --global
-```
-
-Merges skills/agents/rules into `~/.kilo/` so they're available in every project.
-
-### Run workflows
-
-Start Kilo in your project, then invoke skills directly:
-
-```
-/maister-init
-/maister-development Add user profile page
-/maister-quick-plan Refactor auth module
-```
-
-### Smoke test (CLI)
-
-```bash
-bash platforms/kilo-cli/smoke-cli.sh
-```
-
-Full guide: [Kilo CLI Support](docs/kilo-cli-support.md) (install, daily use, skill naming).
-
 ## Learn More
 
 - [Documentation Hub](docs/README.md) - start here for all user documentation
@@ -393,4 +348,3 @@ Full guide: [Kilo CLI Support](docs/kilo-cli-support.md) (install, daily use, sk
 - [Full Command Reference](docs/commands.md) - all workflow, review, utility, and quick commands
 - [Cursor Agent Support](docs/cursor-agent-support.md) - architecture and platform decisions
 - [Kiro CLI Support](docs/kiro-cli-support.md) - Kiro install, workflows, and E2E verification
-- [Kilo CLI Support](docs/kilo-cli-support.md) - Kilo install, project/global modes, skill invocation

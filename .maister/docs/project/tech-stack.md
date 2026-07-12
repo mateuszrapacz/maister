@@ -4,7 +4,7 @@
 
 This document describes the technology choices and rationale for **Maister** — a Claude Code / Codex / Cursor Agent plugin marketplace that distributes AI-driven SDLC workflow plugins across multiple AI platforms from a single source of truth.
 
-**Primary goal:** Maintain and evolve multi-platform AI SDLC plugins (skills, commands, agents, hooks) with consistent behavior across Claude Code, Codex, GitHub Copilot CLI, Cursor Agent, and Kiro CLI.
+**Primary goal:** Maintain and evolve multi-platform AI SDLC plugins (skills, commands, agents, hooks) with consistent behavior across Claude Code, Codex CLI/IDE, Cursor Agent, and Kiro CLI.
 
 ## Languages
 
@@ -45,7 +45,6 @@ This document describes the technology choices and rationale for **Maister** —
 |----------|-----|-------------------|
 | Claude Code | Plugin API (skills, commands, agents, hooks) | `plugins/maister/` (source of truth) |
 | Codex CLI / IDE | Native plugin API (skills, hooks, MCP, marketplace) | `plugins/maister-codex/` (generated) |
-| GitHub Copilot CLI | Copilot CLI Plugin API | `plugins/maister-copilot/` (generated) |
 | Cursor Agent | Cursor Agent Plugin API | `plugins/maister-cursor/` (generated) |
 | Kiro CLI | Kiro CLI agent/skills/hooks API | `plugins/maister-kiro/` (generated) |
 
@@ -70,13 +69,12 @@ This document describes the technology choices and rationale for **Maister** —
 
 ### Makefile
 - **Role**: Primary build orchestration entry point
-- **Targets**: `build`, `build-copilot`, `build-cursor`, `build-kiro`, `build-kilo`, `build-codex`, `validate`, `clean`, `watch`
+- **Targets**: `build`, `build-cursor`, `build-kiro`, `build-codex`, `validate`, `clean`, `watch`
 - **Rationale**: Simple, universal, no dependency installation required
 
 ### Platform Build Scripts
 | Script | Transform |
 |--------|-----------|
-| `platforms/copilot-cli/build.sh` | `maister` → `maister-copilot` (command prefixes, tool mappings) |
 | `platforms/cursor/build.sh` | `maister` → `maister-cursor` (Task/TodoWrite, hook formats, rules) |
 | `platforms/kiro-cli/build.sh` | `maister` → `maister-kiro` (chat gates, MD→JSON agents, subagent/todo) |
 | `platforms/codex-cli/build.sh` | Native Codex skills, hooks, MCP, and marketplace packaging |
@@ -93,9 +91,7 @@ This document describes the technology choices and rationale for **Maister** —
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `.github/workflows/release.yml` | Tag push (`v*`) | Create GitHub releases via `softprops/action-gh-release` |
-| `.github/workflows/build-copilot.yml` | Push to `master` | Auto-rebuild and commit `maister-copilot` variant |
-
-**Gap:** No equivalent auto-rebuild CI for `maister-cursor` on master push (Copilot variant has this, Cursor does not yet).
+| `.github/workflows/validate-generated-variants.yml` | Push/PR | Drift detection for Cursor, Kiro, and Codex |
 
 ### Hosting / Distribution
 | Channel | Details |
@@ -141,8 +137,6 @@ This document describes the technology choices and rationale for **Maister** —
 
 ```
 plugins/maister/          ← SOURCE OF TRUTH (edit here only)
-    ↓ make build-copilot
-plugins/maister-copilot/  ← GENERATED (never edit)
     ↓ make build-cursor
 plugins/maister-cursor/   ← GENERATED (never edit)
     ↓ make build-kiro
@@ -151,12 +145,11 @@ plugins/maister-kiro/     ← GENERATED (never edit)
 plugins/maister-codex/    ← GENERATED (never edit)
 ```
 
-**Critical rule:** Never edit files under `plugins/maister-copilot/`, `plugins/maister-cursor/`, `plugins/maister-kiro/`, or `plugins/maister-codex/` — changes are overwritten by `make build`.
+**Critical rule:** Never edit files under `plugins/maister-cursor/`, `plugins/maister-kiro/`, or `plugins/maister-codex/` — changes are overwritten by `make build`.
 
 ## Migration Path
 
 Not a legacy project. Ongoing evolution areas:
-- Add Cursor variant auto-rebuild CI (parity with Copilot)
 - Automated regression tests for sed-based build transforms
 - Dependency pinning for product-design Node server
 

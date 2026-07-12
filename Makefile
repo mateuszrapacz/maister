@@ -1,17 +1,12 @@
-.PHONY: build build-copilot build-cursor build-kiro build-kilo build-codex validate validate-contract validate-phase-continue validate-diff-check validate-copilot validate-cursor validate-kiro validate-kilo validate-codex clean clean-copilot clean-cursor clean-kiro clean-kilo clean-codex watch
+.PHONY: build build-cursor build-kiro build-codex validate validate-contract validate-phase-continue validate-diff-check validate-cursor validate-kiro validate-codex clean clean-cursor clean-kiro clean-codex watch
 
 PHASE_CONTINUE_MATRIX := \
 	source:plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs \
 	codex:plugins/maister-codex/skills/orchestrator-framework/bin/phase-continue.mjs \
-	copilot:plugins/maister-copilot/skills/orchestrator-framework/bin/phase-continue.mjs \
 	cursor:plugins/maister-cursor/lib/orchestrator-framework/bin/phase-continue.mjs \
-	kilo:plugins/maister-kilo/.kilo/skills/orchestrator-framework/bin/phase-continue.mjs \
 	kiro:plugins/maister-kiro/skills/maister-orchestrator-framework/bin/phase-continue.mjs
 
-build: build-copilot build-cursor build-kiro build-kilo build-codex
-
-build-copilot:
-	bash platforms/copilot-cli/build.sh
+build: build-cursor build-kiro build-codex
 
 build-cursor:
 	bash platforms/cursor/build.sh
@@ -19,13 +14,10 @@ build-cursor:
 build-kiro:
 	bash platforms/kiro-cli/build.sh
 
-build-kilo:
-	bash platforms/kilo-cli/build.sh
-
 build-codex:
 	bash platforms/codex-cli/build.sh
 
-validate: validate-contract validate-copilot validate-cursor validate-kiro validate-kilo validate-codex validate-diff-check
+validate: validate-contract validate-cursor validate-kiro validate-codex validate-diff-check
 
 validate-contract:
 	@echo "=== Shared gate decision engine validation ==="
@@ -46,22 +38,6 @@ validate-phase-continue:
 
 validate-diff-check:
 	@git diff --check
-
-validate-copilot:
-	@echo "=== Copilot validation ==="
-	@echo "Checking no colons in command names..."
-	@! grep -r '^name:.*:' plugins/maister-copilot/commands/ 2>/dev/null || (echo "FAIL: colons in command names" && exit 1)
-	@echo "Checking no multi-select references..."
-	@! grep -ri 'multi.select\|multiSelect' plugins/maister-copilot/skills/ 2>/dev/null || (echo "FAIL: multi-select found in skills" && exit 1)
-	@echo "Checking commands are flat (no subdirectories)..."
-	@test $$(find plugins/maister-copilot/commands -mindepth 2 -name "*.md" 2>/dev/null | wc -l) -eq 0 || (echo "FAIL: nested command directories found" && exit 1)
-	@echo "Checking no CLAUDE.md references in skills..."
-	@! grep -ri 'CLAUDE\.md' plugins/maister-copilot/skills/ 2>/dev/null || (echo "FAIL: CLAUDE.md references found in skills" && exit 1)
-	@echo "Checking no maister- prefix in copilot command names..."
-	@! grep -r '^name: maister-' plugins/maister-copilot/commands/ 2>/dev/null || (echo "FAIL: maister- prefix in command names" && exit 1)
-	@echo "Checking no maister: prefixes in copilot variant..."
-	@! grep -r 'maister:' plugins/maister-copilot/ --include="*.md" 2>/dev/null || (echo "FAIL: maister: prefix found" && exit 1)
-	@echo "Copilot checks passed"
 
 # Structural checks only (prefixes, manifest, hook wiring). Does not verify runtime
 # hook behavior — e.g. destructive-command deny requires a live Cursor session.
@@ -258,26 +234,6 @@ validate-kiro:
 		(echo "FAIL: maister.json missing stop-state-reminder-kiro on hooks.stop (rule 32)" && exit 1)
 	@echo "Kiro checks passed"
 
-validate-kilo:
-	@echo "=== Kilo validation ==="
-	@echo "Checking plugins/maister-kilo exists..."
-	@test -d plugins/maister-kilo || (echo "FAIL: plugins/maister-kilo not built — run make build-kilo" && exit 1)
-	@echo "Checking docs-operator has edit permission..."
-	@grep -A2 '^permission:' plugins/maister-kilo/.kilo/agents/maister-docs-operator.md | grep -q 'edit: allow' || (echo "FAIL: docs-operator missing edit permission" && exit 1)
-	@echo "Checking all agent references use maister- prefix..."
-	@! grep -rnE 'subagent_type:' plugins/maister-kilo/.kilo/skills/ | grep -vE 'maister-|general-purpose' || (echo "FAIL: unprefixed subagent_type found" && exit 1)
-	@echo "Checking all skill directories have SKILL.md..."
-	@test $$(find plugins/maister-kilo/.kilo/skills -mindepth 1 -maxdepth 1 -type d ! -exec test -f {}/SKILL.md \; -print | wc -l | tr -d ' ') -eq 0 || (echo "FAIL: skill directory missing SKILL.md" && exit 1)
-	@echo "Checking skill names match directory names..."
-	@for d in plugins/maister-kilo/.kilo/skills/*/; do \
-		dir=$$(basename "$$d"); \
-		name=$$(grep -m1 '^name:' "$$d/SKILL.md" 2>/dev/null | sed 's/^name: *//'); \
-		test "$$name" = "$$dir" || (echo "FAIL: skill name mismatch $$dir vs $$name" && exit 1); \
-	done
-	@echo "Checking no colon-prefixed commands in smoke-install.sh..."
-	@! grep -q '/maister:' platforms/kilo-cli/smoke-install.sh || (echo "FAIL: colon-prefixed /maister: command found in smoke-install.sh" && exit 1)
-	@echo "Kilo checks passed"
-
 validate-codex:
 	@echo "=== Codex validation ==="
 	@test -f platforms/codex-cli/templates/advisor.toml || (echo "FAIL: Codex advisor template missing" && exit 1)
@@ -285,19 +241,13 @@ validate-codex:
 	@echo "Codex install MCP opt-in test..."
 	@bash platforms/codex-cli/tests/install.test.sh
 
-clean: clean-copilot clean-cursor clean-kiro clean-kilo clean-codex
-
-clean-copilot:
-	rm -rf plugins/maister-copilot/
+clean: clean-cursor clean-kiro clean-codex
 
 clean-cursor:
 	rm -rf plugins/maister-cursor/
 
 clean-kiro:
 	rm -rf plugins/maister-kiro/
-
-clean-kilo:
-	rm -rf plugins/maister-kilo/
 
 clean-codex:
 	rm -rf plugins/maister-codex/

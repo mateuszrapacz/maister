@@ -1,7 +1,7 @@
 ## Plugin Development
 
 ### Never Edit Generated Plugin Variants
-Do not manually modify `plugins/maister-copilot/`, `plugins/maister-cursor/`, or `plugins/maister-kiro/`. Edit source in `plugins/maister/` (and Kiro-specific transforms in `platforms/kiro-cli/`) and rebuild with `make build`.
+Do not manually modify generated variants in `plugins/maister-cursor/`, `plugins/maister-kiro/`, or `plugins/maister-codex/`. Edit source in `plugins/maister/` and platform-specific transforms under `platforms/`, then rebuild with `make build`.
 
 ### Kebab-case Agent Filenames
 Agent files use lowercase kebab-case matching the agent identifier (e.g., `code-reviewer.md`).

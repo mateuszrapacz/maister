@@ -11,9 +11,6 @@ name: maister:development
 ### Flat Command Layout
 Command markdown files must live directly under `commands/` with no nested subdirectories.
 
-### Copilot Command Naming
-Copilot variant: no colons in `name:`, no `maister-` prefix, no `maister:` references anywhere.
-
 ### Cursor Command Naming
 Cursor variant: `maister-` hyphenated names, no colons, no `maister:` references.
 
@@ -26,7 +23,7 @@ name: maister-development
 Cursor agent frontmatter must use `maister-` prefix (e.g., `name: maister-gap-analyzer`).
 
 ### Platform Instruction File Mapping
-Source uses `CLAUDE.md`. Copilot uses `.github/copilot-instructions.md`. Cursor uses `AGENTS.md`.
+Source uses `CLAUDE.md`. Cursor and Kiro use `AGENTS.md`; Codex uses its native plugin instructions.
 
 ### Cursor Manifest Layout
 Cursor plugin ships `.cursor-plugin/plugin.json` with skills, agents, commands, hooks paths. No `.claude-plugin/`.
@@ -44,9 +41,6 @@ Two enforcement points on Cursor (see `platforms/cursor/hooks/`):
 2. **preToolUse Shell** (`block-destructive-commands.sh`, primary): Block destructive git/fs patterns (stash, reset --hard, checkout ., clean, push --force, rm -rf) when subagent type is inferred from `subagent-start-tracker.sh` state plus `conversation_id`. Whitelist: test-suite-runner, e2e-test-verifier, user-docs-generator, docs-operator. Main agent is never blocked. Parallel subagent waves may fail-open when attribution is ambiguous.
 
 `beforeShellExecution` runs the same script but Cursor documents only `{ command, cwd, sandbox }` — no subagent identity. Do not rely on it alone; `make validate-cursor` checks hook wiring structurally, not runtime deny behavior.
-
-### No Multi-Select In Copilot Skills
-Copilot skills must not reference multi-select UI patterns.
 
 ### Cursor-Specific API Bans
 Cursor variant must not reference EnterPlanMode/ExitPlanMode, capitalized Explore, or TaskCreate/TaskUpdate.
@@ -87,13 +81,8 @@ Use portable `sedi()` wrapper for in-place sed (macOS `sed -i ''` vs Linux `sed 
 ### CI Build and Validate Gate
 All CI pipelines run `make build && make validate` before publishing or committing generated artifacts.
 
-### Auto-Rebuild Copilot Variant
-Pushes to master touching `plugins/maister/**` or `platforms/**` trigger Copilot variant rebuild and auto-commit via `.github/workflows/build-copilot.yml`.
-
-### Fail-Fast Drift Check (Cursor, Kiro, Kilo)
-PRs and pushes to master touching `plugins/maister/**` or `platforms/**` run `.github/workflows/validate-generated-variants.yml`. The job runs `make build`, then `git diff --exit-code` on `plugins/maister-cursor/`, `plugins/maister-kiro/`, and `plugins/maister-kilo/`. CI fails if committed output differs from a fresh build — no auto-commit. Developers must run `make build` locally and commit updated variants before merging.
-
-Unlike Copilot (auto-rebuild + bot commit), Cursor/Kiro/Kilo use fail-fast drift detection so manual curation in generated trees is not silently overwritten.
+### Fail-Fast Drift Check (Cursor, Kiro, Codex)
+PRs and pushes to master touching `plugins/maister/**` or `platforms/**` run `.github/workflows/validate-generated-variants.yml`. The job runs `make build`, then `git diff --exit-code` on `plugins/maister-cursor/`, `plugins/maister-kiro/`, and `plugins/maister-codex/`. CI fails if committed output differs from a fresh build. Developers must run `make build` locally and commit updated variants before merging.
 
 ### Tag-Triggered Release
 Production releases gated on `v*` tags with build, validate, and GitHub release notes.

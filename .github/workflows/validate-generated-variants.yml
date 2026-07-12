@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build all platform variants
+      - name: Build supported platform variants
         run: make build
 
       - name: Check committed variants match fresh build
@@ -26,7 +26,6 @@ jobs:
           VARIANTS=(
             plugins/maister-cursor
             plugins/maister-kiro
-            plugins/maister-kilo
             plugins/maister-codex
           )
 
@@ -41,7 +40,7 @@ jobs:
           echo ""
           echo "Fix locally:"
           echo "  make build"
-          echo "  git add plugins/maister-cursor/ plugins/maister-kiro/ plugins/maister-kilo/ plugins/maister-codex/"
+          echo "  git add plugins/maister-cursor/ plugins/maister-kiro/ plugins/maister-codex/"
           echo "  git commit -m \"Rebuild platform variants\""
           echo ""
           echo "Diff summary:"

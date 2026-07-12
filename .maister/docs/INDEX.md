@@ -23,7 +23,7 @@ Located in `.maister/docs/project/`
 *Pending generation.* Will outline development milestones, planned features, and timeline.
 
 ### Tech Stack (`project/tech-stack.md`)
-Multi-platform AI SDLC plugin marketplace technology choices: Markdown-as-code for skills, commands, agents, and docs (~70% of artifacts); Bash build/transform scripts; JSON plugin manifests and MCP config; YAML GitHub Actions CI; minimal Node.js ESM for product-design visual companion. Plugin Platform APIs for Claude Code (source of truth in `plugins/maister/`), GitHub Copilot CLI, Cursor Agent, and Kiro CLI (generated variants). Makefile orchestration (`build`, `validate`, `watch`); sed-based platform transforms; structural validation via `make validate` and smoke tests; Playwright MCP for E2E verification. No database, containerization, or traditional frontend/backend frameworks. Distribution via Claude Code marketplace, local Cursor install, and isolated Kiro `KIRO_HOME` profile; semantic versioning with master/beta branch workflow.
+Multi-platform AI SDLC plugin marketplace technology choices: Markdown-as-code for skills, commands, agents, and docs (~70% of artifacts); Bash build/transform scripts; JSON plugin manifests and MCP config; YAML GitHub Actions CI; minimal Node.js ESM for product-design visual companion. Plugin Platform APIs for Claude Code (source of truth in `plugins/maister/`), Cursor Agent, Kiro CLI, and Codex CLI/IDE (generated variants). Makefile orchestration (`build`, `validate`, `watch`); sed-based platform transforms; structural validation via `make validate` and smoke tests; Playwright MCP for E2E verification. No database, containerization, or traditional frontend/backend frameworks. Distribution via Claude Code marketplace, local Cursor install, isolated Kiro `KIRO_HOME` profile, and the local Codex marketplace; semantic versioning with master/beta branch workflow.
 
 ### Architecture (`project/architecture.md`)
 *Pending generation.* Will describe system architecture, component structure, data flow, and design patterns.
@@ -63,7 +63,7 @@ No speculative code, no unused methods, no "just in case" abstractions, YAGNI pr
 Source-only edits in `plugins/maister/` with `make build`; kebab-case agents/skills/commands; agent and skill frontmatter schemas; thin command wrappers; SKILL.md as single source of truth; principles over prescriptive implementations; plugin directory layout; backtick path cross-references; task directory naming and artifact placement; user-confirmed rollback; mandatory Maister workflow execution; docs-operator companion pattern scope.
 
 #### Build Pipeline (`standards/global/build-pipeline.md`)
-Platform-specific command/agent naming transforms (source `maister:`, Copilot plain, Cursor `maister-` hyphenated); flat command layout; platform instruction file mapping (CLAUDE.md, copilot-instructions.md, AGENTS.md); Cursor manifest, MCP, and hooks contracts; destructive shell command guards; Copilot/Cursor API bans; Bash fail-fast and cross-platform sed; CI build/validate gates; auto-rebuild and tag-triggered release; git ignore local artifacts.
+Platform-specific command/agent naming transforms (source `maister:`, Cursor and Kiro `maister-` hyphenated); flat command layout; platform instruction file mapping (CLAUDE.md, AGENTS.md); Cursor, Kiro, and Codex manifest, MCP, and hooks contracts; destructive shell command guards; platform API bans; Bash fail-fast and cross-platform sed; CI build/validate gates; tag-triggered release; git ignore local artifacts.
 
 ---
 

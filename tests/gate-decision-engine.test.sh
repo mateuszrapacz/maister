@@ -37,18 +37,14 @@ runner_paths() {
   printf '%s\n' \
     "$ROOT/plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs" \
     "$ROOT/plugins/maister-codex/skills/orchestrator-framework/bin/phase-continue.mjs" \
-    "$ROOT/plugins/maister-copilot/skills/orchestrator-framework/bin/phase-continue.mjs" \
     "$ROOT/plugins/maister-cursor/lib/orchestrator-framework/bin/phase-continue.mjs" \
-    "$ROOT/plugins/maister-kilo/.kilo/skills/orchestrator-framework/bin/phase-continue.mjs" \
     "$ROOT/plugins/maister-kiro/skills/maister-orchestrator-framework/bin/phase-continue.mjs"
 }
 
 generated_reference_files() {
   printf '%s\n' \
     "$ROOT/plugins/maister-codex/skills/orchestrator-framework/references/gate-decision-engine.md" \
-    "$ROOT/plugins/maister-copilot/skills/orchestrator-framework/references/gate-decision-engine.md" \
     "$ROOT/plugins/maister-cursor/lib/orchestrator-framework/references/gate-decision-engine.md" \
-    "$ROOT/plugins/maister-kilo/.kilo/skills/orchestrator-framework/references/gate-decision-engine.md" \
     "$ROOT/plugins/maister-kiro/skills/maister-orchestrator-framework/references/gate-decision-engine.md"
 }
 
@@ -268,13 +264,10 @@ test_fully_automatic_continuation_is_executable() {
 }
 
 test_hosts_declare_phase_continuation_support() {
-  local matrix="$ROOT/.maister/tasks/development/2026-07-11-advisor-mode/analysis/runtime-capability-matrix.md"
-  for host in Cursor Kiro Kilo Copilot Codex; do
-    grep -Fq "| $host |" "$matrix" || return 1
-  done
+  local matrix="$ENGINE"
+  contains '| Capability | Cursor | Kiro | Codex |' "$matrix" || return 1
   contains 'phase_continue(selected_option)' "$matrix" && \
     contains 'fully_automatic: supported' "$matrix" && \
-    contains 'denylisted gates remain manual' "$matrix" && \
     contains 'phase_continue(selected_option)' "$ROOT/plugins/maister/skills/orchestrator-framework/references/gate-decision-engine.md"
 }
 
@@ -342,7 +335,7 @@ test_expected_runner_matrix_paths() {
     test -f "$file" || return 1
     count=$((count + 1))
   done < <(runner_paths)
-  test "$count" -eq 6
+  test "$count" -eq 4
 }
 
 test_all_runner_syntax_is_valid() {
@@ -393,15 +386,15 @@ assert "all source orchestrators reference the shared engine" test_all_source_or
 assert "all source orchestrators bind the executable continuation runner" test_all_source_orchestrators_bind_runner
 assert "host adapter capability contract is documented" test_host_adapter_contract_is_present
 assert "fully automatic continuation is executable" test_fully_automatic_continuation_is_executable
-assert "all hosts declare phase continuation support" test_hosts_declare_phase_continuation_support
+assert "all supported hosts declare phase continuation support" test_hosts_declare_phase_continuation_support
 assert "source payload fields are exact across the normative and five source contracts" test_source_payload_contract_is_exact
 assert "source transport is the stdin or named input-file hard cutover" test_source_transport_is_hard_cutover
 assert "source persistence and JSON continuation ordering is explicit" test_source_persistence_precedes_json_continuation
 assert "source non-zero runner exits stop or fall back safely" test_source_nonzero_exit_stops_or_falls_back
 assert "source retries reuse durable terminal state" test_source_retry_reuses_durable_terminal_state
 assert "generated variants preserve continuation contract" test_generated_variants_preserve_continuation_contract
-assert "the final matrix names all six expected runner paths" test_expected_runner_matrix_paths
-assert "all six runners pass node syntax validation" test_all_runner_syntax_is_valid
+assert "the final matrix names all four supported runner paths" test_expected_runner_matrix_paths
+assert "all four supported runners pass node syntax validation" test_all_runner_syntax_is_valid
 assert "generated references are fresh and contain no stale invocation contract" test_generated_references_are_fresh
 assert "Makefile wires the final matrix and quality gates" test_make_validate_wires_final_checks
 

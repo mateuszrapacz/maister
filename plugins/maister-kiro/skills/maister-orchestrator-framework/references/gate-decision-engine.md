@@ -525,14 +525,14 @@ unvalidated option.
 
 Required host mapping:
 
-| Capability | Cursor | Kiro | Kilo | Copilot | Codex |
-|---|---|---|---|---|---|
-| Invoke advisor | custom `maister-advisor` agent | `maister-advisor` JSON agent | `@maister-advisor` | converted advisor agent | native subagent or documented fallback |
-| Invoke arbiter | configured custom agent/model | configured agent/model | configured agent/model | configured agent/model | configured native role |
-| User gate | **CHAT GATE** | chat gate | chat gate | `ask_user` | plain-text user question |
-| State write | orchestrator writes YAML atomically | orchestrator writes YAML atomically | orchestrator writes YAML atomically | orchestrator writes YAML atomically | orchestrator writes YAML atomically |
-| Resume | `maister-resume` state read | `maister-resume`/chat state read | `.maister` state read | resume workflow state read | `$maister-resume` state read |
-| Automatic answer injection | `phase_continue` supported by orchestrator | `phase_continue` supported by orchestrator | `phase_continue` supported by orchestrator | `phase_continue` supported by orchestrator | `phase_continue` supported by orchestrator |
+| Capability | Cursor | Kiro | Codex |
+|---|---|---|---|
+| Invoke advisor | custom `maister-advisor` agent | `maister-advisor` JSON agent | native subagent or documented fallback |
+| Invoke arbiter | configured custom agent/model | configured agent/model | configured native role |
+| User gate | **CHAT GATE** | chat gate | plain-text user question |
+| State write | orchestrator writes YAML atomically | orchestrator writes YAML atomically | orchestrator writes YAML atomically |
+| Resume | `maister-resume` state read | `maister-resume`/chat state read | `$maister-resume` state read |
+| Automatic answer injection | `phase_continue` supported by orchestrator | `phase_continue` supported by orchestrator | `phase_continue` supported by orchestrator |
 
 If a host cannot consume a validated decision through `phase_continue`, its
 generated documentation must state that `fully_automatic` falls back to a user

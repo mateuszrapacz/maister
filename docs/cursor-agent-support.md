@@ -13,8 +13,8 @@ Repozytorium ma sprawdzony wzorzec multi-platformy: **`plugins/maister`** to źr
 | 1 | Architektura | `plugins/maister` = source of truth; `platforms/cursor/build.sh` generuje `maister-cursor` |
 | 2 | Repo | **Fork GitHub** SkillPanel/maister (nie nowe repo od zera) |
 | 3 | Dystrybucja | **Local** (`~/.cursor/plugins/local/`) + **GitHub**; **bez** publicznego Cursor Marketplace |
-| 4 | Artefakty | **Commitować** `plugins/maister-cursor` (jak `maister-copilot`) |
-| 5 | Nazewnictwo | Prefix **`maister-foo`** (`/maister-development`, nie `development` jak Copilot) |
+| 4 | Artefakty | **Commitować** `plugins/maister-cursor` jako wygenerowany wariant |
+| 5 | Nazewnictwo | Prefix **`maister-foo`** (`/maister-development`) |
 | 6 | Instrukcje projektu | **`AGENTS.md`** + krótka reguła **`.cursor/rules/`** przy `init` |
 | 7 | Progress tracking | Faza 1 (build) → **Faza 1.5 (TodoWrite)** → E2E; nie blokować MVP buildem TodoWrite |
 | 8 | Quick commands | **Przepisać od razu** `quick-plan` + `quick-bugfix` |
@@ -73,18 +73,16 @@ Licencja upstream: **MIT** — fork i dystrybucja dozwolone (zachować LICENSE).
 fork/
 ├── plugins/
 │   ├── maister              ← sync z upstream (nie edytować platform-specific)
-│   ├── maister-copilot      ← make build-copilot
 │   ├── maister-cursor       ← make build-cursor
 │   └── maister-kiro         ← make build-kiro
 ├── platforms/
-│   ├── copilot-cli/build.sh
 │   ├── cursor/build.sh
 │   └── kiro-cli/build.sh
 ├── .claude-plugin/marketplace.json
 └── .cursor-plugin/marketplace.json
 ```
 
-**Zasada:** nigdy nie edytować ręcznie `plugins/maister-copilot/`, `plugins/maister-cursor/`, `plugins/maister-kiro/`.
+**Zasada:** nigdy nie edytować ręcznie `plugins/maister-cursor/` ani `plugins/maister-kiro/`.
 
 ### Session utility skills
 
@@ -109,45 +107,28 @@ przekazuje zapisaną fazę jako `--from=<phase>`. Źródłem prawdy pozostaje
 ```mermaid
 flowchart LR
   CORE["plugins/maister<br/>(source of truth)"]
-  BUILD_COPILOT["platforms/copilot-cli/build.sh"]
   BUILD_CURSOR["platforms/cursor/build.sh"]
   BUILD_KIRO["platforms/kiro-cli/build.sh"]
-  COPILOT["plugins/maister-copilot"]
   CURSOR["plugins/maister-cursor"]
   KIRO["plugins/maister-kiro"]
   CLAUDE["Claude Code"]
-  COPILOT_CLI["Copilot CLI"]
   CURSOR_AGENT["Cursor IDE / CLI"]
   KIRO_CLI["Kiro CLI"]
 
-  CORE --> BUILD_COPILOT --> COPILOT --> COPILOT_CLI
   CORE --> BUILD_CURSOR --> CURSOR --> CURSOR_AGENT
   CORE --> BUILD_KIRO --> KIRO --> KIRO_CLI
   CORE --> CLAUDE
 ```
 
-### Copilot build (referencja)
+### Cursor build
 
-`platforms/copilot-cli/build.sh`:
-
-1. `cp -r maister → maister-copilot`
-2. `plugin.json` name → `maister-copilot`
-3. `maister:foo` → `foo` (strip prefix)
-4. `maister:` → `maister-` w referencjach
-5. multi-select → sequential
-6. `CLAUDE.md` → `.github/copilot-instructions.md`
-7. `AskUserQuestion` → `ask_user`
-8. Usuwa `hooks/`
-
-### Cursor build (plan)
-
-`platforms/cursor/build.sh` — kopia copilot z innymi transformacjami:
+`platforms/cursor/build.sh` — transformacje źródłowego pluginu dla Cursor:
 
 | Krok | Transformacja |
 |------|---------------|
 | Kopia | `cp -r maister → maister-cursor` |
 | Manifest | `.claude-plugin/` → `.cursor-plugin/`, name → `maister-cursor` |
-| Nazwy skill/command | `maister:foo` → **`maister-foo`** (nie strip jak Copilot) |
+| Nazwy skill/command | `maister:foo` → **`maister-foo`** |
 | Referencje | `maister:` → `maister-` |
 | Pytania | `AskUserQuestion` → `AskQuestion` |
 | Plik projektu | `CLAUDE.md` → **`AGENTS.md`** |
@@ -279,7 +260,7 @@ No `commands/` directory in Cursor build — thin command wrappers merged into s
 ### 9. Plugin documentation
 
 - Kluczowe zasady → `rules/maister-workflows.mdc` (`alwaysApply: true`)
-- Sekcja „Platform: Cursor” na końcu (jak copilot variant)
+- Sekcja „Platform: Cursor” na końcu
 - Usunąć linki do dokumentacji Claude Code
 
 ### 10. MCP, agenci, pozostałe
@@ -360,4 +341,4 @@ Upstream SkillPanel: opcjonalny PR z `platforms/cursor/` po stabilizacji — nie
 
 ## Rekomendacja implementacyjna
 
-Najkrótsza ścieżka: **skopiować i rozszerzyć `platforms/copilot-cli/build.sh`** → `platforms/cursor/build.sh`. Copilot rozwiązał ~60% (kopia, prefiksy, plik instrukcji). Cursor wymaga dodatkowo: hooks, TodoWrite, własny plan flow, rules, **`maister-explore`** — ~40% unikalnej pracy.
+Najkrótsza ścieżka: rozwijać `platforms/cursor/build.sh` bezpośrednio na bazie transformacji źródłowego pluginu. Cursor wymaga obsługi hooks, TodoWrite, własnego plan flow, rules i **`maister-explore`**.
