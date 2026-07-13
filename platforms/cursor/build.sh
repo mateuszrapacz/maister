@@ -575,4 +575,8 @@ SKILL
 
 generate_utility_skills
 
+MATRIX="$CORE/skills/orchestrator-framework/references/host-capabilities.yml"
+grep -A2 '^  - host: cursor$' "$MATRIX" | grep -Eq 'declared_status: (supported|unsupported)'
+grep -A2 '^  - host: cursor$' "$MATRIX" | grep -Fq 'target: platforms/cursor/tests/fully-automatic-continuation.e2e.sh'
+
 echo "Built Cursor Agent variant at $OUT"

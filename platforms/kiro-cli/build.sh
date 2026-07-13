@@ -854,4 +854,8 @@ Maister targets Kiro's **Terminal UI** (default in Kiro CLI 2.0+).
 - **Resume** — `@status` / `@resume` or read `orchestrator-state.yml`
 EOF
 
+MATRIX="$CORE/skills/orchestrator-framework/references/host-capabilities.yml"
+grep -A2 '^  - host: kiro$' "$MATRIX" | grep -Eq 'declared_status: (supported|unsupported)'
+grep -A2 '^  - host: kiro$' "$MATRIX" | grep -Fq 'target: platforms/kiro-cli/tests/fully-automatic-continuation.e2e.sh'
+
 echo "Built $OUT (Kiro CLI)"

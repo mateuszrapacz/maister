@@ -1,4 +1,4 @@
-.PHONY: build build-cursor build-kiro build-codex validate validate-contract validate-phase-continue validate-diff-check validate-cursor validate-kiro validate-codex clean clean-cursor clean-kiro clean-codex watch
+.PHONY: build build-cursor build-kiro build-codex validate validate-contract validate-phase-continue validate-host-capabilities print-host-capabilities validate-diff-check validate-cursor validate-kiro validate-codex clean clean-cursor clean-kiro clean-codex watch
 
 PHASE_CONTINUE_MATRIX := \
 	source:plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs \
@@ -24,6 +24,32 @@ validate-contract:
 	@bash tests/gate-decision-engine.test.sh
 	@$(MAKE) --no-print-directory validate-phase-continue
 	@bash tests/fully-automatic-phase-continue.test.sh
+	@$(MAKE) --no-print-directory validate-host-capabilities
+
+print-host-capabilities:
+	@set -eu; \
+	matrix=plugins/maister/skills/orchestrator-framework/references/host-capabilities.yml; \
+	awk '/^invariants:/{emit=1; next} /^hosts:/{emit=0} emit && /^  [a-z_]+:/{sub(/^  /, ""); print}' "$$matrix"; \
+	awk '/^  - host:/{host=$$3} /declared_status:/{status=$$2} /target:/{print host "|" status "|" $$2}' "$$matrix" | \
+	while IFS='|' read -r host declared target; do \
+		if test -n "$${HOST_CAPABILITY_TEST_OUTCOME:-}"; then outcome="$${HOST_CAPABILITY_TEST_OUTCOME}"; \
+		elif test -n "$${HOST_CAPABILITY_MATRIX_TARGET:-}"; then target="$${HOST_CAPABILITY_MATRIX_TARGET}"; outcome=failed; \
+		elif test ! -f "$$target"; then outcome=missing; \
+		elif test ! -x "$$target"; then outcome=skipped; \
+		else set +e; bash "$$target" >/dev/null 2>&1; rc=$$?; set -e; if test $$rc -eq 0; then outcome=passed; elif test $$rc -eq 77; then outcome=unavailable; else outcome=failed; fi; fi; \
+		case "$$outcome" in passed) projected=supported;; *) projected=unsupported;; esac; \
+		echo "HOST_CAPABILITY host=$$host declared=$$declared projected=$$projected evidence=$$outcome target=$$target"; \
+	done
+
+validate-host-capabilities:
+	@set -eu; \
+	matrix=plugins/maister/skills/orchestrator-framework/references/host-capabilities.yml; \
+	test -f "$$matrix" || { echo "FAIL: missing host capability matrix"; exit 1; }; \
+	test "$$(grep -c '^  - host:' "$$matrix")" -eq 4 || { echo "FAIL: matrix must contain four rows"; exit 1; }; \
+	for host in claude cursor kiro codex; do test "$$(grep -c "^  - host: $$host$$" "$$matrix")" -eq 1 || { echo "FAIL: missing or duplicate $$host row"; exit 1; }; done; \
+	case "$${HOST_CAPABILITY_MATRIX_TARGET:-}" in tests/phase-continue-contract.test.sh|tests/fully-automatic-phase-continue.test.sh) echo "FAIL: shared runner is not native evidence"; exit 1;; esac; \
+	output="$$( $(MAKE) -s --no-print-directory print-host-capabilities )"; echo "$$output"; \
+	echo "$$output" | awk '/^HOST_CAPABILITY / { declared=""; projected=""; host=""; for (i=1;i<=NF;i++) { split($$i,a,"="); if (a[1]=="host") host=a[2]; if (a[1]=="declared") declared=a[2]; if (a[1]=="projected") projected=a[2] } if (declared != projected) { print "FAIL: " host " declaration does not match native evidence"; bad=1 } } END { exit bad }'
 
 validate-phase-continue:
 	@set -eu; \
@@ -137,6 +163,7 @@ validate-cursor:
 	@bash platforms/cursor/tests/skill-inventory.test.sh
 	@echo "PR6: default installation MCP test..."
 	@bash platforms/cursor/tests/install.test.sh
+	@bash platforms/cursor/smoke-cli.sh --contract
 	@echo "Cursor checks passed"
 
 # validate-kiro rules 1–32 (see .maister/tasks/.../implementation/spec.md)
@@ -232,6 +259,7 @@ validate-kiro:
 	@jq -e '(.hooks.stop // []) | map(.command) | any(test("stop-state-reminder-kiro"))' \
 		plugins/maister-kiro/agents/maister.json >/dev/null || \
 		(echo "FAIL: maister.json missing stop-state-reminder-kiro on hooks.stop (rule 32)" && exit 1)
+	@bash platforms/kiro-cli/smoke-cli.sh --contract
 	@echo "Kiro checks passed"
 
 validate-codex:

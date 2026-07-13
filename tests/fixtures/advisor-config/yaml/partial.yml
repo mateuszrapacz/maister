@@ -1,0 +1,8 @@
+project: sample
+# This comment belongs to the top level.
+advisor: # managed comment
+  enabled: false
+  gate_policies:
+    phase-exit: manual
+  advisor_model: gpt-5-fast
+tail: untouched # exact

@@ -1,0 +1,8 @@
+before: "preserve  "
+advisor:
+  enabled: true
+  gate_policies:
+    phase-exit: fully_automatic
+    obsolete-gate: manual
+  legacy_mode: false
+after: preserve

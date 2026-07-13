@@ -7,6 +7,35 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PLUGIN="${PLUGIN_DIR:-$ROOT/plugins/maister-cursor}"
 WORKSPACE="${WORKSPACE:-/tmp/maister-cli-smoke-$$}"
 
+contract_check() {
+  local framework="$PLUGIN/lib/orchestrator-framework"
+  local patterns="$framework/references/orchestrator-patterns.md"
+  local engine="$framework/references/gate-decision-engine.md"
+  local matrix="$framework/references/host-capabilities.yml"
+  local init="$PLUGIN/skills/maister-init/SKILL.md"
+
+  test -f "$PLUGIN/agents/advisor.md"
+  grep -q '^name: maister-advisor$' "$PLUGIN/agents/advisor.md"
+  grep -q '^readonly: true$' "$PLUGIN/agents/advisor.md"
+  grep -q '^[[:space:]]\+advisor_agent: advisor$' "$patterns"
+  grep -q '^[[:space:]]\+arbiter_agent: advisor$' "$patterns"
+  grep -q '^[[:space:]]\+phase-exit: manual$' "$patterns"
+  grep -q 'The hard denylist is:' "$engine"
+  grep -q 'exactly one complete `orchestrator.options.advisor` snapshot' "$patterns"
+  grep -q '^  - host: cursor$' "$matrix"
+  grep -A2 '^  - host: cursor$' "$matrix" | grep -q 'target: platforms/cursor/tests/fully-automatic-continuation.e2e.sh'
+  grep -q '^argument-hint: "\[--standards-from=PATH\] \[--advisor=on|off\]"$' "$init"
+  grep -q 'native question capability' "$init"
+  ! grep -RInE 'schema_version:|advisor_version:|synthetic user answer' "$PLUGIN/skills" "$framework" --include='*.md' >/dev/null
+  test ! -e "$PLUGIN/skills/maister-init/bin/advisor.toml"
+  echo "PASS: Cursor Advisor platform contract"
+}
+
+if [ "${1:-}" = "--contract" ]; then
+  contract_check
+  exit 0
+fi
+
 if ! command -v agent >/dev/null 2>&1; then
   echo "FAIL: 'agent' CLI not found. Install Cursor Agent CLI first."
   exit 1

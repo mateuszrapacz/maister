@@ -1,0 +1,3 @@
+advisor:
+  enabled: &choice true
+  arbiter_enabled_on_disagreement: *choice

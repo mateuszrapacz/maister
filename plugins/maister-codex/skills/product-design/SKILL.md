@@ -827,19 +827,30 @@ design_context:
     visual_prototyping: {mockup_references: [], summary: null}
     review_handoff: {brief_layers: [], summary: null}
 
-options:
-  html_output: true  # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions.
-  advisor:
-    enabled: false
-    gate_policies: {}
-    advisor_agent: advisor
-    advisor_model: null
-    arbiter_agent: advisor
-    arbiter_model: null
-    arbiter_enabled_on_disagreement: true
-    retry: {advisor_attempts: 3, arbiter_attempts: 3, backoff: exponential}
-  visual_enabled: null  # null=auto-detect, false=--no-visual flag
+orchestrator:
+  options:
+    html_output: true  # Seeded from .maister/config.yml at init (default true). Gates dashboard + HTML companions.
+    advisor:
+      enabled: false
+      gate_policies:
+        phase-exit: manual
+        optional-phase: manual
+        clarify: manual
+        convergence: manual
+        verify-matrix: manual
+      advisor_agent: advisor
+      advisor_model: null
+      arbiter_agent: advisor
+      arbiter_model: null
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
+    visual_enabled: null  # null=auto-detect, false=--no-visual flag
 ```
+
+Creation normalizes the project configuration once into the complete block above, independently of `html_output`. Resume reads `orchestrator.options.advisor` from canonical state only and never rereads `.maister/config.yml`.
 
 ---
 

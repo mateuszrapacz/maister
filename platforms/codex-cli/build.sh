@@ -142,6 +142,14 @@ copy_skill() {
   mv "$destination/SKILL.md.tmp" "$destination/SKILL.md"
   transform_tree_markdown "$destination"
 
+  if [ "$stem" = "init" ]; then
+    mkdir -p "$destination/bin"
+    cp "$PLATFORM/templates/advisor.toml" "$destination/bin/advisor.toml"
+    sed -e 's/authoritative `codex` or `non-codex` signal/authoritative `codex` signal/' \
+      "$destination/SKILL.md" > "$destination/SKILL.md.tmp"
+    mv "$destination/SKILL.md.tmp" "$destination/SKILL.md"
+  fi
+
   if grep -qE '^(user-invocable|disable-model-invocation): false|^disable-model-invocation: true' "$source/SKILL.md"; then
     mkdir -p "$destination/agents"
     cat > "$destination/agents/openai.yaml" <<EOF
@@ -315,5 +323,9 @@ Models are selected by the Codex host/session; the plugin does not pin models.
 Bundled hooks are defense-in-depth and require review/trust in Codex. Keep the
 session sandbox and approval policy as the primary security boundary.
 EOF
+
+MATRIX="$CORE/skills/orchestrator-framework/references/host-capabilities.yml"
+grep -A2 '^  - host: codex$' "$MATRIX" | grep -Eq 'declared_status: (supported|unsupported)'
+grep -A2 '^  - host: codex$' "$MATRIX" | grep -Fq 'target: platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh'
 
 echo "Built Codex plugin at $OUT"

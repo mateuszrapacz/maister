@@ -1,0 +1,17 @@
+advisor:
+  enabled: false
+  gate_policies:
+    phase-exit: manual
+    optional-phase: manual
+    clarify: manual
+    convergence: manual
+    verify-matrix: manual
+  advisor_agent: advisor
+  advisor_model: null
+  arbiter_agent: advisor
+  arbiter_model: null
+  arbiter_enabled_on_disagreement: true
+  retry:
+    advisor_attempts: 3
+    arbiter_attempts: 3
+    backoff: exponential

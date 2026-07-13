@@ -63,4 +63,27 @@ if find "$PLUGIN" -maxdepth 1 -type d -name agents | grep -q .; then
   exit 1
 fi
 
-echo "PASS: Codex plugin structure, transforms, manifest, and hooks"
+framework="$PLUGIN/skills/orchestrator-framework"
+patterns="$framework/references/orchestrator-patterns.md"
+engine="$framework/references/gate-decision-engine.md"
+matrix="$framework/references/host-capabilities.yml"
+init="$PLUGIN/skills/init/SKILL.md"
+advisor_template="$PLUGIN/skills/init/bin/advisor.toml"
+
+test -f "$advisor_template"
+grep -q '^name = "advisor"$' "$advisor_template"
+grep -q '^sandbox_mode = "read-only"$' "$advisor_template"
+grep -q 'same read-only advisor for the primary recommendation and' "$advisor_template"
+grep -q 'phase_continue(selected_option)' "$advisor_template"
+grep -q 'implementation-approval gate always remain manual' "$advisor_template"
+grep -q '^[[:space:]]\+advisor_agent: advisor$' "$patterns"
+grep -q '^[[:space:]]\+arbiter_agent: advisor$' "$patterns"
+grep -q '^[[:space:]]\+phase-exit: manual$' "$patterns"
+grep -q 'The hard denylist is:' "$engine"
+grep -q 'exactly one complete `orchestrator.options.advisor` snapshot' "$patterns"
+grep -A2 '^  - host: codex$' "$matrix" | grep -q 'target: platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh'
+grep -q -- '--advisor=on|off' "$init"
+grep -q 'authoritative `codex` signal' "$init"
+! grep -RInE 'advisor_version:|AskUserQuestion|AskQuestion' "$PLUGIN/skills" --include='*.md' >/dev/null
+
+echo "PASS: Codex plugin structure, transforms, manifest, hooks, and Advisor platform contract"

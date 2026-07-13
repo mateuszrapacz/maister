@@ -669,7 +669,12 @@ orchestrator:
     production_check_enabled: true
     advisor:
       enabled: false
-      gate_policies: {}
+      gate_policies:
+        phase-exit: manual
+        optional-phase: manual
+        clarify: manual
+        convergence: manual
+        verify-matrix: manual
       advisor_agent: advisor
       advisor_model: null
       arbiter_agent: advisor
@@ -690,6 +695,8 @@ orchestrator:
       creates_new_entities: false
       involves_data_operations: false
       ui_heavy: false
+
+Creation normalizes the project configuration once into the complete block above, independently of `html_output`. Resume reads `orchestrator.options.advisor` from canonical state only and never rereads `.maister/config.yml`.
     research_reference:
       path: null
       research_question: null

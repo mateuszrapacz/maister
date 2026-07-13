@@ -29,6 +29,30 @@ SINGLE_TEST=""
 CLEANUP_KIRO_HOME=0
 CLEANUP_WORKSPACE=0
 
+contract_check() {
+  local framework="$SOURCE/skills/maister-orchestrator-framework"
+  local patterns="$framework/references/orchestrator-patterns.md"
+  local engine="$framework/references/gate-decision-engine.md"
+  local matrix="$framework/references/host-capabilities.yml"
+  local init="$SOURCE/skills/maister-init/SKILL.md"
+
+  test -f "$SOURCE/agents/maister-advisor.json"
+  jq -e '.name == "maister-advisor" and .tools == ["read","grep","glob"]' "$SOURCE/agents/maister-advisor.json" >/dev/null
+  grep -q '^[[:space:]]\+advisor_agent: advisor$' "$patterns"
+  grep -q '^[[:space:]]\+arbiter_agent: advisor$' "$patterns"
+  grep -q '^[[:space:]]\+phase-exit: manual$' "$patterns"
+  grep -q 'The hard denylist is:' "$engine"
+  grep -q 'exactly one complete `orchestrator.options.advisor` snapshot' "$patterns"
+  grep -q '^  - host: kiro$' "$matrix"
+  grep -A2 '^  - host: kiro$' "$matrix" | grep -q 'target: platforms/kiro-cli/tests/fully-automatic-continuation.e2e.sh'
+  grep -q '^argument-hint: "\[--standards-from=PATH\] \[--advisor=on|off\]"$' "$init"
+  grep -q 'native question capability' "$init"
+  grep -q 'CHAT GATE' "$SOURCE/skills/maister-development/SKILL.md"
+  ! grep -RInE 'AskUserQuestion|AskQuestion|schema_version:|advisor_version:|synthetic user answer' "$SOURCE/skills" "$framework" --include='*.md' >/dev/null
+  test ! -e "$SOURCE/skills/maister-init/bin/advisor.toml"
+  echo "PASS: Kiro Advisor platform contract"
+}
+
 usage() {
   cat <<EOF
 Headless smoke tests for Maister on Kiro CLI.
@@ -135,6 +159,11 @@ run_test() {
 }
 
 main() {
+  if [ "${1:-}" = "--contract" ]; then
+    contract_check
+    exit 0
+  fi
+
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --test)

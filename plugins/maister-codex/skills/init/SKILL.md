@@ -7,6 +7,42 @@ description: Initialize Maister framework with intelligent project analysis and 
 
 Initialize `.maister/docs/` with intelligent project analysis and meaningful documentation generation based on actual codebase inspection.
 
+## Advisor pre-flight (before Phase 1)
+
+Resolve Advisor intent before creating backups, documentation, standards,
+scaffolding, or any other project artifact. Repeated identical
+`--advisor=on|off` flags are one effective value. Reject mixed values, invalid
+values, and unexpected Advisor arguments before reading or changing managed
+files. An explicit value wins and suppresses the question.
+
+Without an explicit value, use the host's declared native question capability.
+An interactive host asks `on` versus `off`, recommending the current valid
+`advisor.enabled` value (or `off` when absent). A host without that capability
+is non-interactive and resolves to `off`; do not infer interactivity from a TTY.
+
+The host adapter must invoke `bin/reconcile-advisor-config.sh init` with an
+authoritative `codex` signal. Only the generated Codex adapter
+passes `codex`; never infer it from `.codex/`, an existing TOML file, or the
+environment. The pre-flight validates and stages all managed artifacts, then
+commits `.maister/config.yml` and, for Codex, `.codex/agents/advisor.toml` as
+one transaction. A Codex `on` creates or field-reconciles the strict current
+TOML; `off` atomically removes it. A non-Codex invocation never inspects or
+touches that file.
+
+Advisor model values are either YAML `null` (inherit the host default) or a
+portable, unquoted identifier matching `[A-Za-z][A-Za-z0-9._/-]*`. Quoted,
+escaped, whitespace-bearing, and Unicode representations are rejected so the
+same model bytes have one meaning in YAML and generated TOML. The managed
+top-level key must be the canonical plain `advisor:` mapping; directives,
+document markers, explicit keys, tags, and quoted aliases are rejected.
+
+If staging, replacement, deletion, or rollback fails, stop initialization and
+show the actionable diagnostic. Never continue to Phase 1 after a failed or
+partial transaction. On success, display the effective enabled value, all five
+gate policies, logical Advisor/Arbiter roles and models, disagreement and retry
+settings, managed-field removals, Codex TOML outcome, and capability-matrix
+posture before continuing.
+
 **NOTE**: This skill invokes other skills and subagents at specific phases. Use the **native subagent delegation with `docs-operator` subagent** (agent role: `native Codex subagent`) for all docs-manager operations, and **native subagent delegation** for project-analyzer. Use the **skill loader** only for standards-discover (Phase 8, last phase). The native subagent delegation returns control to this skill after completion; the skill loader does not.
 
 ## Phase Configuration
@@ -27,6 +63,8 @@ Initialize `.maister/docs/` with intelligent project analysis and meaningful doc
 ---
 
 ## PHASE 1: Pre-flight Checks
+
+Advisor pre-flight above must already have completed successfully.
 
 **If `--standards-from=PATH` is provided:**
 1. Resolve the path (absolute or relative to current working directory)
@@ -144,14 +182,9 @@ advisor:
     backoff: exponential
 ```
 
-When initializing a Codex project and advisor mode is enabled, also scaffold
-`.codex/agents/advisor.toml` from `platforms/codex-cli/templates/advisor.toml`
-when that template is available. Installed builds that do not include the
-repository template must create the same file with `name = "advisor"`,
-`model = "inherit"` (or the configured `advisor_model`),
-`sandbox_mode = "read-only"`, and developer instructions requiring structured
-YAML output and forbidding edits. The plugin does not bundle a root `agents/`
-directory in the Codex MVP.
+Advisor configuration is not scaffolded here. It was already committed by the
+pre-flight transaction, including the generated Codex adapter's bundled TOML
+template when applicable.
 
 ---
 

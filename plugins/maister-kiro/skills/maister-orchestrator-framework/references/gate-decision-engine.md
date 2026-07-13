@@ -33,7 +33,23 @@ every state transition in `orchestrator-state.yml`.
 - Backoff waiting is host-specific, but the schedule and outcome must be
   persisted so resume is deterministic and observable.
 
+Host continuation support is evidence-gated by
+`references/host-capabilities.yml`. A declared `supported` row is valid only
+for the validation run in which its named host-native E2E target exists, is
+executable, runs to completion, and passes. Exit 77 (runtime unavailable), a
+skip, missing target, inconclusive output, or any other failure projects
+`unsupported`. Agent discovery and shared runner contract tests do not prove
+native continuation support.
+
 ## 1. Contract inputs and strict normalized schemas
+
+Read `enabled`, every gate policy, both logical role names and models,
+`arbiter_enabled_on_disagreement`, retry attempt limits, and backoff only from
+the complete `orchestrator.options.advisor` workflow snapshot. The logical role
+names remain `advisor`; native role resolution belongs to the host adapter.
+Invalid or incomplete workflow snapshots fail closed to a manual user gate, or
+to persisted `blocked` when no user gate is available. They are never repaired
+from `.maister/config.yml` during resume.
 
 The only engine operation is:
 
@@ -237,6 +253,11 @@ do not call a model or user gate.
 6. On exhaustion, use `user_pending` and a user gate when the host is
    interactive. On a non-interactive host, persist terminal `blocked`.
 
+On disagreement, arbitration creates exactly one logical arbiter record and
+uses its configured snapshot role, model, attempt limit, and backoff. Retries
+append attempts to that record. After a valid or exhausted Arbiter result, the
+engine never invokes Advisor again and never creates another Arbiter record.
+
 Retry advisor failures up to `retry.advisor_attempts`, recording the configured
 exponential backoff metadata and every attempt before proceeding. Each attempt
 is persisted in order. After exhaustion, use a user gate if interactive and
@@ -359,6 +380,10 @@ These gates always use the user gate.
 Advisor and arbiter responses are read-only recommendations. They cannot edit
 files, approve implementation, skip a required recovery step, or authorize a
 release.
+
+Capability support never overrides this section. Even a host with passing
+native continuation evidence must route every denylisted gate through the
+native user gate, or persist `blocked` when that gate cannot be presented.
 
 Before dispatching an implementation executor, the host must read the current
 persisted state and require this exact boundary:

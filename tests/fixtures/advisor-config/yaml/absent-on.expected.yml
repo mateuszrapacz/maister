@@ -1,0 +1,21 @@
+project: sample
+# Advisor configuration
+other:
+  value: keep
+advisor:
+  enabled: true
+  gate_policies:
+    phase-exit: advisor
+    optional-phase: advisor
+    clarify: advisor
+    convergence: advisor
+    verify-matrix: advisor
+  advisor_agent: advisor
+  advisor_model: null
+  arbiter_agent: advisor
+  arbiter_model: null
+  arbiter_enabled_on_disagreement: true
+  retry:
+    advisor_attempts: 3
+    arbiter_attempts: 3
+    backoff: exponential

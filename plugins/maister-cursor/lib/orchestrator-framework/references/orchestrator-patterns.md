@@ -107,8 +107,16 @@ At every gate, before invoking any platform mechanism:
 1. Classify the gate with one stable `gate_type` (for example `phase-exit`, `decisions-needed`, `optional-phase`, `clarify`, `convergence`, `refine`, `verify-matrix`, `fix-loop`, `failure-recovery`, `rollback`, `scope-expansion`, `implementation-approval`, or `production-go-no-go`).
 2. Read `orchestrator.options.advisor` from state. Its per-type policy is `manual`, `advisor`, or `fully_automatic`; missing configuration means `manual`.
 3. Apply the non-overridable safety denylist before the configured policy. Rollback, data-integrity halts, scope expansion, unresolved critical verification, failure-recovery skips, final handoff approval, and production GO/NO-GO always require the user gate.
-4. For `manual`, run the existing user gate unchanged.
-5. For `advisor` or `fully_automatic`, invoke the configured read-only `advisor` agent with the exact question and every option, the original recommendation when one exists, the current dashboard and relevant artifacts, prior gate history and phase summaries, and the current gate type and safety policy.
+4. Resolve host continuation support from `references/host-capabilities.yml`
+   for the current validation run. Only a present, executable, passing
+   host-native target permits `fully_automatic`; missing, skipped, unavailable,
+   inconclusive, or failed evidence resolves to `unsupported`. Advisor agent
+   availability and shared runner tests are separate capabilities and do not
+   qualify a host.
+5. For `manual`, or for `fully_automatic` on an unsupported host, run the
+   existing native user gate unchanged. If no user gate is available, persist
+   `blocked`; never synthesize a user answer.
+6. For `advisor` or supported `fully_automatic`, invoke the configured read-only `advisor` agent with the exact question and every option, the original recommendation when one exists, the current dashboard and relevant artifacts, prior gate history and phase summaries, and the current gate type and safety policy.
 6. Require the exact four-key response map with `selected_option`, `rationale`, `confidence`, and `escalate_to_user`; reject extra decision fields, duplicate YAML keys, and options not in the supplied list. Retry malformed, unavailable, or timed-out calls using `advisor.retry.advisor_attempts` and `advisor.retry.backoff`. Persist each attempt and backoff timestamp. `confidence: low` is not an automatic approval.
 7. When the advisor agrees with the original recommendation, record the advisor decision and continue automatically for the configured non-denylisted gate. When no original recommendation exists, the advisor may choose one available option without arbitration.
 8. When the advisor disagrees with the original recommendation and arbitration is enabled, create exactly one logical arbiter decision in `arbiter_pending`. The arbiter receives both recommendations, their rationales, and the same read-only workflow context. Use `arbiter_agent` and `arbiter_model` when configured; otherwise use the advisor agent/model. Retry only within that arbiter record with `advisor.retry.arbiter_attempts` and the same backoff policy; never start a second arbiter or loop back to the advisor.
@@ -238,17 +246,17 @@ html_output: true   # Generate the operator dashboard + HTML companion reports. 
 |-----|---------|--------|
 | `html_output` | `true` | When `false`, workflows skip the operator dashboard (§ 8) AND the HTML companion reports (§ 9): no `dashboard.html`/`dashboard-data.js`, no browser auto-open, no `.html` companions. Markdown artifacts, their § 7 TL;DR blocks, and `orchestrator-state.yml` are produced regardless. |
 
-Advisor configuration is optional and defaults to manual gates. A project may set it in `.maister/config.yml`; initialization seeds the values into `orchestrator.options.advisor`, and resumed workflows read only the state copy.
+Advisor configuration is optional and defaults to manual gates. A project may set it in `.maister/config.yml`; initialization validates and normalizes it once into exactly one complete `orchestrator.options.advisor` snapshot, independently of `html_output`. Resumed workflows read only that canonical state snapshot and never reread project configuration. A disabled snapshot resolves every execution policy to `manual` without deleting the complete stored policy map.
 
 ```yaml
 advisor:
   enabled: false
   gate_policies:
-    phase-exit: advisor
-    optional-phase: advisor
-    clarify: advisor
-    convergence: advisor
-    verify-matrix: advisor
+    phase-exit: manual
+    optional-phase: manual
+    clarify: manual
+    convergence: manual
+    verify-matrix: manual
   advisor_agent: advisor
   advisor_model: null
   arbiter_agent: advisor
