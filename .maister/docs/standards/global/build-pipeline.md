@@ -1,91 +1,21 @@
 ## Build Pipeline
 
-### Source Command Namespace
-Source commands use `maister:` prefix in frontmatter `name:` fields. Build scripts transform per platform.
+### Canonical Source and Reproducible Generated Variants
+Treat `plugins/maister/` as the canonical editable plugin and put host-specific behavior in `platforms/`. Never directly edit `plugins/maister-cursor/`, `plugins/maister-kiro/`, or `plugins/maister-codex/`.
 
-```yaml
-# Source (plugins/maister/)
-name: maister:development
-```
+After changing canonical sources or adapters, run `make build`, inspect and validate the generated changes, and commit the matching generated variants. CI rebuilds the variants and applies `git diff --exit-code` to them, so any diff means the committed outputs do not reproduce from their sources. This preserves deterministic cross-host parity and prevents silent generated drift.
 
-### Flat Command Layout
-Command markdown files must live directly under `commands/` with no nested subdirectories.
+**Preferred:** Edit `plugins/maister/` and/or `platforms/`, run `make build`, inspect the generated diff, validate it, and commit the source, adapter, and generated outputs together.
 
-### Cursor Command Naming
-Cursor variant: `maister-` hyphenated names, no colons, no `maister:` references.
+**Avoid:** Patching a generated target directly; the next build will overwrite it and leave the canonical source inconsistent.
 
-```yaml
-# Cursor variant
-name: maister-development
-```
+**Evidence:** `platforms/codex-cli/build.sh`, `platforms/cursor/build.sh`, `platforms/kiro-cli/build.sh`, `.github/workflows/validate-generated-variants.yml`, `CLAUDE.md`, `docs/codex-support.md`, and `docs/kiro-cli-support.md`.
 
-### Cursor Agent Naming
-Cursor agent frontmatter must use `maister-` prefix (e.g., `name: maister-gap-analyzer`).
+### Build and Validate Every Platform Before Release
+Before creating or pushing any `v*` release tag, run a fresh `make build && make validate` successfully. The aggregate build and validation gates must cover Cursor, Kiro, Codex, and shared contracts before GitHub Release creation. This prevents publishing stale, divergent, or invalid platform artifacts.
 
-### Platform Instruction File Mapping
-Source uses `CLAUDE.md`. Cursor and Kiro use `AGENTS.md`; Codex uses its native plugin instructions.
+**Preferred:** Run `make build && make validate`, inspect the resulting outputs, and only then push the release tag.
 
-### Cursor Manifest Layout
-Cursor plugin ships `.cursor-plugin/plugin.json` with skills, agents, commands, hooks paths. No `.claude-plugin/`.
+**Avoid:** Creating or pushing a release tag after only a platform-specific build or test.
 
-### Cursor MCP File Location
-Cursor uses `mcp.json` at plugin root. Legacy `.mcp.json` must not remain after build.
-
-### Cursor Hooks Contract
-`hooks.json` version 1 with subagentStart, subagentStop, preToolUse, beforeShellExecution, preCompact, sessionStart. Timeouts 5-10s.
-
-### Destructive Shell Command Guard
-Two enforcement points on Cursor (see `platforms/cursor/hooks/`):
-
-1. **subagentStart** (`block-risky-subagents.sh`): Deny subagent types outside `maister-*` and a small built-in allowlist (`generalPurpose`, `shell`, `explore`). Reliable — `subagent_type` is always present.
-2. **preToolUse Shell** (`block-destructive-commands.sh`, primary): Block destructive git/fs patterns (stash, reset --hard, checkout ., clean, push --force, rm -rf) when subagent type is inferred from `subagent-start-tracker.sh` state plus `conversation_id`. Whitelist: test-suite-runner, e2e-test-verifier, user-docs-generator, docs-operator. Main agent is never blocked. Parallel subagent waves may fail-open when attribution is ambiguous.
-
-`beforeShellExecution` runs the same script but Cursor documents only `{ command, cwd, sandbox }` — no subagent identity. Do not rely on it alone; `make validate-cursor` checks hook wiring structurally, not runtime deny behavior.
-
-### Cursor-Specific API Bans
-Cursor variant must not reference EnterPlanMode/ExitPlanMode, capitalized Explore, or TaskCreate/TaskUpdate.
-
-### Kiro Command Naming
-Kiro variant: `maister-` hyphenated skill names, no colons, no `maister:` references. Slash invocation uses `/maister-*`.
-
-```yaml
-# Kiro variant (skills/maister-development/SKILL.md)
-name: maister-development
-```
-
-### Kiro Agent Layout
-Kiro agents ship as JSON (`agents/maister-<stem>.json`) with instructions in `agents/instructions/maister-<stem>.md`. Orchestrator `agents/maister.json` omits an explicit `resources` skill glob — Kiro custom agents inherit installed skills by default (`chat.disableInheritingDefaultResources` is not set). Subagents that need a specific skill get an absolute `skill://~/.kiro-maister/skills/maister-<stem>/SKILL.md` entry from `generate-agent-json.sh` (rewritten at install time for non-default `KIRO_HOME`). Source `agents/*.md` is removed from output after JSON generation.
-
-### Kiro Instruction File Mapping
-Init creates `AGENTS.md` (project) and `.kiro/steering/maister-docs.md` (steering). No `CLAUDE.md` or `.cursor-plugin/` in output.
-
-### Kiro Hooks Contract
-Hooks embedded in `agents/maister.json`: `userPromptSubmit`, `preToolUse`, `postToolUse`, `agentSpawn`, `stop`. `stop` uses Kiro's `{"decision":"block","reason":"..."}` JSON on STDOUT to nudge the agent to verify `orchestrator-state.yml` before ending a turn when a workflow is still in progress. No `preCompact` equivalent — document compaction gap; use `orchestrator-state.yml` + `@resume`.
-
-### Kiro-Specific API Bans
-Kiro variant must not reference AskUserQuestion, AskQuestion, EnterPlanMode/ExitPlanMode, capitalized Explore, TaskCreate/TaskUpdate, or Claude/Cursor-only tool names. Interactive gates use **CHAT GATE** markers; headless builds apply documented defaults from `transforms/askuser-to-chat-gate.md`.
-
-### Never Edit maister-kiro Output
-Do not manually modify `plugins/maister-kiro/`. Edit `plugins/maister/` or `platforms/kiro-cli/` and rebuild with `make build-kiro`.
-
-### Bash Fail-Fast
-Shell scripts use `set -e`. Install/smoke scripts use `set -euo pipefail`.
-
-```bash
-set -euo pipefail
-```
-
-### Cross-Platform sed
-Use portable `sedi()` wrapper for in-place sed (macOS `sed -i ''` vs Linux `sed -i`).
-
-### CI Build and Validate Gate
-All CI pipelines run `make build && make validate` before publishing or committing generated artifacts.
-
-### Fail-Fast Drift Check (Cursor, Kiro, Codex)
-PRs and pushes to master touching `plugins/maister/**` or `platforms/**` run `.github/workflows/validate-generated-variants.yml`. The job runs `make build`, then `git diff --exit-code` on `plugins/maister-cursor/`, `plugins/maister-kiro/`, and `plugins/maister-codex/`. CI fails if committed output differs from a fresh build. Developers must run `make build` locally and commit updated variants before merging.
-
-### Tag-Triggered Release
-Production releases gated on `v*` tags with build, validate, and GitHub release notes.
-
-### Git Ignore Local Artifacts
-Do not commit `.DS_Store`, `.idea/`, `.claude/settings.local.json`, `.maister/`, `/.worktrees/`.
+**Evidence:** `.github/workflows/release.yml`, `Makefile`, `docs/kiro-cli-support.md`, and `README.md`.

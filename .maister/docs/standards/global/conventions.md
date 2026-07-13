@@ -29,21 +29,3 @@ Maintain a changelog or release notes for significant changes.
 
 ### Build What's Needed
 Avoid speculative code and "just in case" additions (see minimal-implementation.md).
-
-### Read INDEX Before Work
-Always read `.maister/docs/INDEX.md` before starting any task.
-
-### Follow Project Standards
-Follow standards in `.maister/docs/standards/`. If they conflict with the task, ask the user.
-
-### Documentation First During Work
-Check `docs/INDEX.md` before and during work, not only at start.
-
-### Continuous Standards Discovery
-Check standards throughout the workflow, not just at the start.
-
-### Specification Before Implementation
-Create clear specs before coding.
-
-### Planning Before Execution
-Break implementation into manageable steps before executing.

@@ -1,0 +1,152 @@
+schema_version: 1
+workflow: maister:init
+status: completed
+created_at: 2026-07-13
+updated_at: 2026-07-13
+current_phase: completed
+advisor:
+  enabled: true
+  capability_posture: capability-matrix-controlled
+phases:
+  - id: phase-1-pre-flight
+    name: Pre-flight checks
+    status: completed
+    metadata:
+      existing_content_removed: true
+      backup_created: false
+    blocked_by: []
+  - id: phase-2-project-analysis
+    name: Analyze project codebase
+    status: completed
+    metadata:
+      report: analysis/project-analysis.md
+    blocked_by: [phase-1-pre-flight]
+  - id: phase-3-project-context
+    name: Present findings and gather context
+    status: completed
+    metadata:
+      analysis_confirmed: true
+      project_context_confirmed: true
+      project_architecture_type: Standard
+      architecture_qualifier: multi-platform
+      selected_documentation: [vision, roadmap, tech-stack, architecture]
+    blocked_by: [phase-2-project-analysis]
+  - id: phase-4-standards-selection
+    name: Select standards to initialize
+    status: completed
+    metadata:
+      selection_mode: smart-defaults
+      source: built-in
+      selected_categories: [global, testing]
+    blocked_by: [phase-3-project-context]
+  - id: phase-5-docs-structure
+    name: Initialize documentation structure
+    status: completed
+    metadata:
+      standards_categories: [global, testing]
+      index_created: true
+      project_directory_created: true
+    blocked_by: [phase-4-standards-selection]
+  - id: phase-6-project-docs
+    name: Generate project documentation
+    status: completed
+    metadata:
+      generated_documents: [vision.md, roadmap.md, tech-stack.md, architecture.md]
+    blocked_by: [phase-5-docs-structure]
+  - id: phase-7-validation
+    name: Validate initialization
+    status: completed
+    metadata:
+      validation_result: passed
+      indexed_documents: 12
+      broken_references: 0
+      git_diff_check: passed
+    blocked_by: [phase-6-project-docs]
+  - id: phase-8-standards-discovery
+    name: Discover coding standards
+    status: completed
+    blocked_by: [phase-7-validation]
+    metadata:
+      scope: full
+      confidence_threshold: 60
+      auto_apply: false
+      skip_external: false
+      pr_count: 20
+    phases:
+      - id: standards-1-plan
+        name: Plan discovery scope
+        status: completed
+        metadata:
+          user_approved: true
+          temp_directory: /tmp/maister-standards-discover.3hOEyM
+        blocked_by: []
+      - id: standards-2-config
+        name: Analyze configuration files
+        status: completed
+        metadata:
+          findings: 0
+          output: /tmp/maister-standards-discover.3hOEyM/config.yml
+        blocked_by: [standards-1-plan]
+      - id: standards-3-code
+        name: Mine code patterns
+        status: completed
+        metadata:
+          findings: 10
+          output: /tmp/maister-standards-discover.3hOEyM/code.yml
+        blocked_by: [standards-1-plan]
+      - id: standards-4-docs
+        name: Extract documentation standards
+        status: completed
+        metadata:
+          findings: 22
+          documents_analyzed: 13
+          output: /tmp/maister-standards-discover.3hOEyM/docs.yml
+        blocked_by: [standards-1-plan]
+      - id: standards-5-external
+        name: Analyze external sources
+        status: completed
+        metadata:
+          findings: 3
+          github_available: true
+          merged_prs_available: 2
+          output: /tmp/maister-standards-discover.3hOEyM/external.yml
+        blocked_by: [standards-1-plan]
+      - id: standards-6-aggregate
+        name: Aggregate and deduplicate findings
+        status: completed
+        metadata:
+          raw_findings: 35
+          unique_standards: 31
+          conflicts: 0
+          high_confidence: 1
+          medium_confidence: 2
+          low_confidence: 28
+          report: standards-discovery/findings.md
+        blocked_by: [standards-2-config, standards-3-code, standards-4-docs, standards-5-external]
+      - id: standards-7-review
+        name: Review findings with user
+        status: completed
+        metadata:
+          approved: [H1, M1, M2]
+          skipped: [L1-L28]
+          conflicts_resolved: 0
+        blocked_by: [standards-6-aggregate]
+      - id: standards-8-apply
+        name: Apply approved standards
+        status: completed
+        metadata:
+          created: 1
+          updated: 2
+          approved_applied: [H1, M1, M2]
+          index_regenerated: true
+          agents_integration_verified: true
+        blocked_by: [standards-7-review]
+      - id: standards-9-summary
+        name: Generate summary report
+        status: completed
+        metadata:
+          report: standards-discovery/summary.md
+          sources_analyzed: [config, code-patterns, documentation, ci-config, pull-requests]
+          standards_applied: 3
+          standards_skipped: 28
+        blocked_by: [standards-8-apply]

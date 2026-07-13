@@ -2,158 +2,112 @@
 
 ## Overview
 
-This document describes the technology choices and rationale for **Maister** — a Claude Code / Codex / Cursor Agent plugin marketplace that distributes AI-driven SDLC workflow plugins across multiple AI platforms from a single source of truth.
+Maister is a documentation-as-code plugin system. Most behavior is expressed as Markdown instructions and YAML state contracts, transformed by portable shell tooling into native plugin variants for multiple AI coding hosts. Small JavaScript ESM components provide runtime continuation and visual-companion behavior.
 
-**Primary goal:** Maintain and evolve multi-platform AI SDLC plugins (skills, commands, agents, hooks) with consistent behavior across Claude Code, Codex CLI/IDE, Cursor Agent, and Kiro CLI.
+## Languages and Artifact Formats
 
-## Languages
+### Markdown with YAML Frontmatter
 
-### Markdown (Primary)
-- **Usage**: ~70% of source artifacts (skills, agents, commands, references, docs)
-- **Rationale**: Plugin logic is documentation-as-code — orchestration workflows, agent definitions, and user-facing commands are expressed as structured markdown consumed by AI platforms
-- **Key Features Used**: Frontmatter metadata, phased workflow definitions, cross-references between skills/agents/commands
+- **Usage**: Primary repository format for skills, agents, commands, references, standards, and user documentation
+- **Rationale**: Human-readable, versionable, portable across AI coding hosts, and suitable for declarative workflow contracts
+- **Key features used**: Structured headings, templates, cross-references, command wrappers, skill metadata, and agent metadata
 
-### Bash
-- **Usage**: Build scripts, CI hooks, smoke tests (~12 files)
-- **Rationale**: Platform transform pipelines (`platforms/*/build.sh`) use sed-based transforms without requiring a heavyweight build toolchain
-- **Key Features Used**: Sed transforms, file copying, validation grep patterns
+### Bash and POSIX-Oriented Shell
 
-### JSON
-- **Usage**: Plugin manifests, MCP configuration, hooks configuration
-- **Rationale**: Native format for Claude Code and Cursor plugin manifests
-- **Key Files**: `.claude-plugin/marketplace.json`, `plugins/maister/.claude-plugin/plugin.json`, `.mcp.json`
+- **Usage**: Build transforms, installation, validation, smoke tests, and release support
+- **Rationale**: Available in target developer environments and effective for filesystem-oriented plugin generation
+- **Key features used**: Fail-fast execution, functions, temporary files, traps, pipelines, fixture setup, and macOS/Linux compatibility branches
 
-### YAML
-- **Usage**: GitHub Actions CI/CD workflows
-- **Rationale**: Standard format for GitHub Actions pipeline definitions
+### JavaScript ESM on Node.js
 
-### JavaScript (ESM, minimal)
-- **Usage**: Single file — product-design visual companion server
-- **Rationale**: Lightweight HTTP server for browser-based design prototyping during product-design workflows
-- **Key File**: `plugins/maister/skills/product-design/server/index.mjs`
+- **Usage**: Workflow continuation and the product-design visual companion server
+- **Rationale**: Provides portable process, HTTP, filesystem, path, and cryptographic primitives without a large application framework
+- **Key features used**: `node:http`, `node:fs`, `node:path`, and `node:crypto`
+
+### JSON, YAML, and TOML
+
+- **Usage**: Plugin manifests, marketplaces, MCP configuration, workflow state, GitHub Actions, project configuration, and Codex agent configuration
+- **Rationale**: These are the native configuration formats of the supported hosts and automation systems
+
+### HTML, CSS, and MDC
+
+- **Usage**: Operator dashboards, visual companion output, and Cursor-native rules
+- **Rationale**: Lightweight presentation and host-native rule delivery without a frontend framework
 
 ## Frameworks
 
 ### Frontend
-*Not applicable.* Maister is a plugin distribution repository, not a UI application. No React, Vue, Angular, or frontend build tools are used.
+
+No frontend application framework is used. HTML and CSS assets are generated or served directly where visual output is needed.
 
 ### Backend
-*Not applicable.* No server application, API framework, or database layer. The only runtime code is a minimal Node.js HTTP server for the product-design visual companion.
 
-### Plugin Platform APIs
-| Platform | API | Variant Directory |
-|----------|-----|-------------------|
-| Claude Code | Plugin API (skills, commands, agents, hooks) | `plugins/maister/` (source of truth) |
-| Codex CLI / IDE | Native plugin API (skills, hooks, MCP, marketplace) | `plugins/maister-codex/` (generated) |
-| Cursor Agent | Cursor Agent Plugin API | `plugins/maister-cursor/` (generated) |
-| Kiro CLI | Kiro CLI agent/skills/hooks API | `plugins/maister-kiro/` (generated) |
+No backend framework is used. Runtime services use Node.js built-in modules.
 
 ### Testing
-| Tool | Purpose |
-|------|---------|
-| `make validate` | Structural validation via grep patterns (20+ checks per platform variant) |
-| `platforms/cursor/smoke-cli.sh` | Cursor CLI smoke tests |
-| `platforms/cursor/smoke-install.sh` | Cursor plugin install smoke tests |
-| `platforms/kiro-cli/smoke-cli.sh` | Kiro CLI headless smoke tests |
-| `platforms/kiro-cli/smoke-install.sh` | Kiro isolated `KIRO_HOME` install |
-| `platforms/codex-cli/smoke-cli.sh` | Codex plugin structural smoke tests |
-| Playwright MCP (`@playwright/mcp`) | E2E browser verification via `e2e-test-verifier` agent |
 
-*No unit test framework* (Jest, pytest, etc.) — validation is structural and smoke-based by design.
+- Shell contract tests (`*.test.sh`)
+- Fixture-driven YAML, TOML, JSON, and generated-file validation
+- Structural assertions against generated platform variants
+- Host-specific installation, smoke, and end-to-end scripts
+- `make validate` as the primary full quality gate
+- Optional Playwright MCP integration for browser-oriented verification
 
 ## Database
 
-*Not applicable.* No database, ORM, or persistent data layer. Plugin state in consumer projects is managed via YAML files (`orchestrator-state.yml`) and markdown artifacts.
+No database, ORM, or persistent service is used. Workflow state is stored as project-local YAML, primarily `orchestrator-state.yml`; reports and dashboards are derived projections.
 
-## Build Tools & Package Management
+## Build Tools and Package Management
 
-### Makefile
-- **Role**: Primary build orchestration entry point
-- **Targets**: `build`, `build-cursor`, `build-kiro`, `build-codex`, `validate`, `clean`, `watch`
-- **Rationale**: Simple, universal, no dependency installation required
-
-### Platform Build Scripts
-| Script | Transform |
-|--------|-----------|
-| `platforms/cursor/build.sh` | `maister` → `maister-cursor` (Task/TodoWrite, hook formats, rules) |
-| `platforms/kiro-cli/build.sh` | `maister` → `maister-kiro` (chat gates, MD→JSON agents, subagent/todo) |
-| `platforms/codex-cli/build.sh` | Native Codex skills, hooks, MCP, and marketplace packaging |
-
-### Package Management
-*None at repository root.* Intentionally dependency-free for the plugin itself. Playwright MCP is invoked via `npx @playwright/mcp@latest` at runtime.
+- **GNU Make**: Coordinates build, validation, and watch workflows.
+- **Platform build scripts**: `platforms/cursor/build.sh`, `platforms/kiro-cli/build.sh`, and `platforms/codex-cli/build.sh` generate native variants.
+- **Text and data tooling**: `sed`, `awk`, `grep`, `find`, and `jq` perform transforms and validation.
+- **Package management**: There is no root package manifest or lockfile. Optional Node-based tools may be invoked with `npx`.
 
 ## Infrastructure
 
 ### Containerization
-*Not used.* No Docker or container orchestration.
+
+No Docker, Kubernetes, or infrastructure-as-code layer is present.
 
 ### CI/CD
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `.github/workflows/release.yml` | Tag push (`v*`) | Create GitHub releases via `softprops/action-gh-release` |
-| `.github/workflows/validate-generated-variants.yml` | Push/PR | Drift detection for Cursor, Kiro, and Codex |
 
-### Hosting / Distribution
-| Channel | Details |
-|---------|---------|
-| Claude Code marketplace | `SkillPanel/maister` — `maister-plugins` v2.1.8 |
-| Cursor Agent | Local plugin install from generated `plugins/maister-cursor/` |
-| Kiro CLI | Isolated profile install (`~/.kiro-maister`) from `plugins/maister-kiro/` |
-| Codex CLI / IDE | Native plugin install from the repo marketplace at `.agents/plugins/marketplace.json` |
-| Beta channel | `maister-plugins-beta` with `X.Y.Z-beta.N` versioning |
+GitHub Actions provides:
+
+- generated-variant drift validation on pushes and pull requests;
+- tag-triggered releases using `softprops/action-gh-release@v2`;
+- periodic non-blocking Cursor CLI smoke checks.
+
+### Distribution
+
+- Claude Code plugin marketplace
+- Codex CLI/IDE local marketplace and native plugin layout
+- Cursor Agent plugin/CLI layout
+- Kiro CLI custom agents and skills
 
 ## Development Tools
 
-### Linting & Formatting
-*No repo-level ESLint, Prettier, or similar tools.* Conventions are enforced through:
-- Plugin documentation principles (`plugins/maister/CLAUDE.md`)
-- `make validate` structural checks
-- Review during development workflows
+### Linting and Formatting
+
+There is no general ESLint, Prettier, or equivalent formatter configuration. Repository-specific structural validation, shell checks, deterministic builds, and diff checks enforce the relevant contracts.
 
 ### Type Checking
-*Not applicable.* No TypeScript or typed language in the primary codebase.
 
-### Dev Watch Mode
-- `make watch` — uses `fswatch` to trigger rebuilds on source changes
+No static type checker is configured. JavaScript runtime components are intentionally small and use Node.js built-ins.
 
 ## Key Dependencies
 
-| Dependency | Version | Usage |
-|------------|---------|-------|
-| `@playwright/mcp` | `latest` (via npx) | Browser automation for E2E verification |
-| `fswatch` | System package | Dev watch mode (optional) |
-| `softprops/action-gh-release` | GitHub Action | Release automation |
+- Node.js runtime for ESM continuation and visual companion components
+- GNU Make and standard shell tools for build orchestration
+- `jq` for Kiro configuration generation and validation
+- GitHub Actions maintained actions for checkout and releases
+- Optional `@playwright/mcp` through `npx` for browser verification
 
 ## Version Management
 
-| Aspect | Approach |
-|--------|----------|
-| Semantic versioning | `2.1.8` (stable), `X.Y.Z-beta.N` (beta channel) |
-| Manifest files | `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`, and each generated variant manifest |
-| Branch strategy | `master` (stable) + `beta` (pre-release) with documented squash-merge workflow |
-| Generated variants | Version synced across the source manifest and every generated variant during release |
-
-## Architecture Notes
-
-```
-plugins/maister/          ← SOURCE OF TRUTH (edit here only)
-    ↓ make build-cursor
-plugins/maister-cursor/   ← GENERATED (never edit)
-    ↓ make build-kiro
-plugins/maister-kiro/     ← GENERATED (never edit)
-    ↓ make build-codex
-plugins/maister-codex/    ← GENERATED (never edit)
-```
-
-**Critical rule:** Never edit files under `plugins/maister-cursor/`, `plugins/maister-kiro/`, or `plugins/maister-codex/` — changes are overwritten by `make build`.
-
-## Migration Path
-
-Not a legacy project. Ongoing evolution areas:
-- Automated regression tests for sed-based build transforms
-- Dependency pinning for product-design Node server
+The project uses semantic version tags and synchronizes version metadata across the canonical plugin, generated variants, and marketplace manifests. The repository follows a master/beta workflow with release automation and generated-output drift checks.
 
 ---
-*Last Updated*: 2026-07-10
-*Auto-detected*: Languages, build pipeline, CI/CD, platform APIs, testing approach, version management
-*User-provided*: Project name (Maister), primary goal (maintain and evolve multi-platform plugins)
+
+*Last Updated*: 2026-07-13
+*Auto-detected*: Repository formats, build tools, runtime components, CI workflows, platform adapters, testing patterns, and version tags. Project purpose and priorities were confirmed during initialization.

@@ -24,32 +24,11 @@ Ensure core user workflows and critical business logic are well-tested.
 ### Appropriate Depth
 Match edge case testing to the risk profile of the code.
 
-### Structural Validation As Quality Gate
-This repo uses `make validate` (grep/find structural checks) instead of unit test frameworks. CI requires `make validate` pass.
+### Prove Rejected Transactional Mutations Leave State Unchanged
+For configuration and state writers, snapshot every affected file before invalid-input and injected-failure cases, then assert byte-for-byte non-mutation or exact rollback. When relevant, also verify modes and permissions plus the unchanged existence of created or deleted directories. Transactional safety means preserving the complete original state, not merely reporting failure.
 
-### Playwright MCP For E2E
-Browser E2E verification via Playwright MCP (`npx @playwright/mcp@latest`). No local playwright.config.
+**Preferred:** Snapshot with `cp -p "$target" "$target.before"`, run the invalid case, compare with `cmp "$target" "$target.before"`, and assert expected file modes and directory existence.
 
-### CLI Smoke Test Script
-Cursor integration verified via `platforms/cursor/smoke-cli.sh` after `make build-cursor`.
+**Avoid:** Checking only that the command returned a nonzero exit code.
 
-### Test-Driven Development Approach
-Write tests first, implement, then verify.
-
-### TDD Red Gate For Bug Fixes
-Bug fixes: write failing test first (TDD Red) before implementation.
-
-### TDD Green Gate For Bug Fixes
-Bug fixes: verify test passes (TDD Green) after implementation.
-
-### Incremental Test Verification
-After each implementation group, run only new tests, not the entire suite.
-
-### Full Test Suite Before Commit
-Run full test suite and create verification report before code review or completion.
-
-### Read-only Test Verifier Agents
-Test agents (test-suite-runner, e2e-test-verifier) are read-only: run tests and report, do not fix code.
-
-### Test-driven Implementation Ordering
-Implementation steps: test step (N.1) before implementation steps (N.2+) within each task group.
+**Evidence:** `tests/phase-continue-contract.test.sh`, `tests/advisor-config-reconciliation.test.sh`, and `tests/advisor-init-lifecycle.test.sh`.

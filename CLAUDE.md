@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Coding Standards & Project Documentation
+
+Read @.maister/docs/INDEX.md at the beginning of every task. It is the master map for project documentation and coding standards. Follow the relevant files under `.maister/docs/standards/` when changing code.
+
 ## Repository Overview
 
 This is a Claude Code plugin marketplace repository containing bundled plugins for AI-driven SDLC workflows. The main plugin is `maister` which provides structured development workflows.
