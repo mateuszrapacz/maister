@@ -16,7 +16,9 @@ sedi() {
 }
 
 # Avoid concurrent builds corrupting plugins/maister-kiro/ (make watch + manual build).
-BUILD_LOCK_DIR="${TMPDIR:-/tmp}/maister-kiro-build.lock.d"
+# Keep the lock repository-local: separate processes may use different TMPDIR values,
+# and a temporary-directory lock would allow those processes to mutate one output tree.
+BUILD_LOCK_DIR="$ROOT/.maister-kiro-build.lock.d"
 
 acquire_build_lock() {
   local waited=0

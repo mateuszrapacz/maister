@@ -1,0 +1,25 @@
+orchestrator:
+  schema_version: 2
+  revision: 0
+  initial_phase: "phase-1"
+  current_phase: "phase-1"
+  completed_phases: []
+  failed_phases: []
+  gate_history: []
+  work:
+    phase-1:
+      inventory_version: "sha256:inventory"
+      items:
+        - id: "item-1"
+          ordinal: 1
+          status: "in_progress"
+          source_gate_key: null
+          selected_option: null
+  dispatch_outbox: []
+task:
+  status: "in_progress"
+phases:
+  - id: "phase-1"
+    status: "in_progress"
+  - id: "phase-2"
+    status: "pending"

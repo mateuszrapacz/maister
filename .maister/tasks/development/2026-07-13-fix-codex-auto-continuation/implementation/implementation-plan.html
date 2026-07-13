@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Plan — Codex Fully Automatic Continuation</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.step.todo::before  { content:"☐ "; color:var(--dim); }
+.step.done::before  { content:"☑ "; color:var(--ok); }
+.step.done          { color:var(--dim); }
+.group.todo .g-badge::after { content:"pending"; }
+.group.done .g-badge::after { content:"✓ completed"; color:var(--ok); }
+.tldr { border-left:4px solid var(--accent); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+.toc { font-size:13px; color:var(--dim); margin:18px 0; }
+.flow { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin:10px 0; }
+.node { border:1px solid var(--border); border-radius:99px; padding:5px 10px; background:var(--surface); font-weight:600; }
+.arrow { color:var(--dim); }
+.group { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin:16px 0; }
+.group h2 { margin:0 0 8px; display:flex; justify-content:space-between; gap:12px; }
+.g-badge { color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; }
+.meta { display:flex; flex-wrap:wrap; gap:8px 14px; color:var(--dim); font-size:12px; margin-bottom:10px; }
+.files { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+.steps { list-style:none; padding:0; margin:12px 0; }
+.step { padding:7px 8px; border-bottom:1px solid var(--border); }
+.step small { display:block; color:var(--dim); margin-left:19px; }
+.accept { background:var(--ok-soft); border-radius:8px; padding:10px 12px; }
+.accept strong { color:var(--ok); }
+.risk { border-left:3px solid var(--warn); }
+.decision { border-left:3px solid var(--info); }
+header p { color:var(--dim); margin-top:-6px; }
+@media (max-width:600px) { .group h2 { display:block; } .g-badge { display:block; margin-top:5px; } }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="spec.html">Spec</a>
+  <span class="here">Plan</span>
+  <a href="implementation-plan.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+<header>
+  <span class="badge">Implementation plan</span>
+  <h1>Codex Fully Automatic Continuation</h1>
+  <p>Generated 2026-07-13 · audited specification · high-risk runtime/state change</p>
+</header>
+<div class="tiles">
+  <div class="tile"><b>7</b><span>task groups</span></div>
+  <div class="tile"><b>39</b><span>total steps</span></div>
+  <div class="tile"><b>25–34</b><span>expected tests</span></div>
+  <div class="tile"><b>1 → 7</b><span>execution order</span></div>
+</div>
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Prove the D1 active-turn hook first, then establish schema-v2 state, the shared evaluator, workflow-owned continuation, the thin Codex projection, native evidence/activation, and final feature test review. The state repository precedes every writer. Shared behavior remains canonical under <code>plugins/maister/</code>; Codex mechanics remain under <code>platforms/codex-cli/</code>.</p>
+  <p><strong>Hard gate:</strong> Codex remains <code>unsupported</code> until native evidence exits <code>0</code>. A disproved D1 hook stops the plan for scope clarification.</p>
+</section>
+<div class="grid">
+  <section class="card decision">
+    <h2>Key decisions</h2>
+    <ul>
+      <li>D1 viability is Group 1 and blocks production work.</li>
+      <li>Repository precedes evaluator and continuation.</li>
+      <li>Policy/state transitions remain shared executable modules.</li>
+      <li>Research is the first same-phase workflow tracer.</li>
+      <li>Capability activation is a two-change evidence gate.</li>
+    </ul>
+  </section>
+  <section class="card risk">
+    <h2>Open risks</h2>
+    <ul>
+      <li>The exact active-turn hook remains empirically unproven.</li>
+      <li>Native runtime absence (<code>77</code>) is safe but not success.</li>
+      <li>Filesystem locking/metadata behavior is platform-sensitive.</li>
+      <li>Post-acknowledgement crashes must not repeat target starts.</li>
+      <li>Generated trees must come only from deterministic builds.</li>
+    </ul>
+  </section>
+</div>
+<nav class="toc">Contents: <a href="#dependency-flow">Dependency flow</a> · <a href="#group-1">Group 1</a> · <a href="#group-2">Group 2</a> · <a href="#group-3">Group 3</a> · <a href="#group-4">Group 4</a> · <a href="#group-5">Group 5</a> · <a href="#group-6">Group 6</a> · <a href="#group-7">Group 7</a> · <a href="#standards">Standards</a></nav>
+<main>
+<section id="dependency-flow" class="card">
+  <h2>Dependency flow</h2>
+  <div class="flow"><span class="node">1 D1 proof</span><span class="arrow">→</span><span class="node">2 State</span><span class="arrow">→</span><span class="node">3 Evaluator</span><span class="arrow">→</span><span class="node">4 Continuation</span><span class="arrow">→</span><span class="node">5 Codex/build</span><span class="arrow">→</span><span class="node">6 Native evidence</span><span class="arrow">→</span><span class="node">7 Review</span></div>
+  <p>There is no implementation parallelism before the D1 checkpoint. Group 4 requires both repository and evaluator; the final review requires all implementation groups.</p>
+</section>
+
+<section data-group="1" class="group done" id="group-1">
+  <h2>Group 1 · Codex Active-Turn Hook Viability <span class="g-badge"></span></h2>
+  <div class="meta"><span><strong>Dependencies:</strong> none</span><span><strong>Steps:</strong> 5</span><span><strong>Tests:</strong> 3</span></div>
+  <div class="files"><code>platforms/codex-cli/bin/fully-automatic-gate.mjs</code><code>platforms/codex-cli/tests/active-turn-hook.e2e.sh</code><code>tests/codex-fully-automatic-workflow-loop.test.sh</code></div>
+  <ul class="steps">
+    <li data-step="1.0" class="step done"><strong>Prove the D1 active-turn hook or stop for scope clarification.</strong></li>
+    <li data-step="1.1" class="step done">Write 3 focused directive/native tests.<small>Reject unknown directives; observe same-turn continuation without final output or user gate; keep unavailable exit 77.</small></li>
+    <li data-step="1.2" class="step done">Implement the narrow Codex binding entrypoint.<small>Consume shared output as data; do not implement policy, select work, bypass the denylist, or expose evidence eligibility.</small></li>
+    <li data-step="1.3" class="step done">Run the real-host spike and record the outcome.<small>Require an observable target-start marker. If D1 is impossible, stop before Group 2 with no D2/MCP fallback.</small></li>
+    <li data-step="1.4" class="step done">Run only the 3 Group 1 tests.</li>
+  </ul>
+  <div class="accept"><strong>Acceptance:</strong> real Codex proves same-turn re-entry and three directives only; exit 77 does not claim proof; disproved D1 stops/reclarifies.</div>
+</section>
+
+<section data-group="2" class="group done" id="group-2">
+  <h2>Group 2 · Schema-v2 State Repository and Migration <span class="g-badge"></span></h2>
+  <div class="meta"><span><strong>Dependencies:</strong> Group 1</span><span><strong>Steps:</strong> 6</span><span><strong>Tests:</strong> 5</span></div>
+  <div class="files"><code>plugins/maister/skills/orchestrator-framework/bin/orchestrator-state-schema.mjs</code><code>plugins/maister/skills/orchestrator-framework/bin/orchestrator-state-repository.mjs</code><code>tests/orchestrator-state-repository.test.sh</code><code>tests/orchestrator-state-migration.test.sh</code><code>tests/fixtures/orchestrator-state-v2/**</code></div>
+  <ul class="steps">
+    <li data-step="2.0" class="step done"><strong>Implement the transactional schema-v2 state boundary.</strong></li>
+    <li data-step="2.1" class="step done">Write 5 focused repository/migration tests.<small>Valid commit, supported migration, ambiguous rejection, revision conflict, and lock/metadata/symlink failure with byte/mode/topology snapshots.</small></li>
+    <li data-step="2.2" class="step done">Implement exact schema-v2 parsing and invariants.<small>Strict anchors, fields, enums, timestamps, phase cursor, and legal gate/work/outbox transitions; reuse strict runner boundaries.</small></li>
+    <li data-step="2.3" class="step done">Implement the supported legacy migration matrix.<small>One locked migration to revision 1; complete or explicitly legacy provenance; no lossy fabrication.</small></li>
+    <li data-step="2.4" class="step done">Implement token lock, revision/CAS, and durable replacement.<small>Bounded leases, safe stale-owner proof, same-directory staging/flush/rename, exact mode, safe ownership, caller-only cleanup.</small></li>
+    <li data-step="2.5" class="step done">Run only the 5 Group 2 tests.</li>
+  </ul>
+  <div class="accept"><strong>Acceptance:</strong> exact schema/migration, one revision per commit, no stale overwrite, and non-mutating rejection across supported macOS/Linux filesystem boundaries.</div>
+</section>
+
+<section data-group="3" class="group done" id="group-3">
+  <h2>Group 3 · Shared Gate Evaluator and Policy Compatibility <span class="g-badge"></span></h2>
+  <div class="meta"><span><strong>Dependencies:</strong> Group 2</span><span><strong>Steps:</strong> 6</span><span><strong>Tests:</strong> 5</span></div>
+  <div class="files"><code>plugins/maister/skills/orchestrator-framework/bin/gate-evaluator.mjs</code><code>references/gate-decision-engine.md</code><code>references/gate-decision-fixtures.yml</code><code>tests/gate-evaluator.test.sh</code><code>tests/gate-decision-engine.test.sh</code><code>tests/fixtures/gate-evaluator/**</code></div>
+  <ul class="steps">
+    <li data-step="3.0" class="step done"><strong>Implement one executable gate state machine.</strong></li>
+    <li data-step="3.1" class="step done">Write 5 focused evaluator tests.<small>Agreement; one-logical-Arbiter disagreement/retry; invalid/low/escalated failure; mixed policies/override; terminal and pending resume.</small></li>
+    <li data-step="3.2" class="step done">Implement strict gate and role-response boundaries.<small>Exact allowlists and four role fields; role contexts read-only and outputs data-only.</small></li>
+    <li data-step="3.3" class="step done">Implement pending-to-terminal evaluation through the repository.<small>Persist attempts before effects; Advisor terminal on agreement; stable Arbiter identity across bounded retries.</small></li>
+    <li data-step="3.4" class="step done">Preserve mixed-policy and fallback semantics.<small>Denylist explicit, manual role-free, advisor user-confirmed, exact override, unsupported automatic falls back effectively to manual.</small></li>
+    <li data-step="3.5" class="step done">Run only the 5 Group 3 tests.</li>
+  </ul>
+  <div class="accept"><strong>Acceptance:</strong> one Advisor and zero Arbiter on agreement; one logical Arbiter on disagreement; complete durable envelope; no workflow mutation inside evaluator.</div>
+</section>
+
+<section data-group="4" class="group done" id="group-4">
+  <h2>Group 4 · Runner, Workflow Inventory, and Dispatch <span class="g-badge"></span></h2>
+  <div class="meta"><span><strong>Dependencies:</strong> Groups 2 and 3</span><span><strong>Steps:</strong> 6</span><span><strong>Tests:</strong> 5</span></div>
+  <div class="files"><code>bin/phase-continue.mjs</code><code>bin/workflow-continuation.mjs</code><code>references/orchestrator-patterns.md</code><code>skills/research/SKILL.md</code><code>skills/development/SKILL.md</code><code>skills/migration/SKILL.md</code><code>skills/performance/SKILL.md</code><code>skills/product-design/SKILL.md</code><code>tests/workflow-continuation.test.sh</code><code>tests/phase-continue-contract.test.sh</code><code>tests/fully-automatic-phase-continue.test.sh</code><code>tests/codex-fully-automatic-workflow-loop.test.sh</code><code>tests/fixtures/phase-continue/**</code></div>
+  <ul class="steps">
+    <li data-step="4.0" class="step done"><strong>Implement durable workflow-owned routing and recovery.</strong></li>
+    <li data-step="4.1" class="step done">Write 5 focused continuation tests.<small>Same-phase advance, phase-entry checkpoint, expired claim reclaim, post-ack crash, and runner/report recovery; retain the red tracer.</small></li>
+    <li data-step="4.2" class="step done">Refactor the runner into terminal verifier/recovery.<small>Verify persisted identity, actor, option, confidence, revision, denylist, transition; never call roles, synthesize provenance, select, or dispatch.</small></li>
+    <li data-step="4.3" class="step done">Implement workflow inventory, choice application, and outbox.<small>Research first; stable IDs and deterministic dispatch; workflows own target selection.</small></li>
+    <li data-step="4.4" class="step done">Implement atomic receiver checkpoint and equivalent phase-entry evidence.<small>Acknowledge with target checkpoint; retry returns stored receipt; protected gates never gain equivalence.</small></li>
+    <li data-step="4.5" class="step done">Run only the 5 Group 4 tests.</li>
+  </ul>
+  <div class="accept"><strong>Acceptance:</strong> red tracer passes; terminal persistence precedes every later effect; same/next-phase paths have one dispatch/checkpoint; existing interactive safety remains compatible.</div>
+</section>
+
+<section data-group="5" class="group done" id="group-5">
+  <h2>Group 5 · Thin Codex Binding and Build Projection <span class="g-badge"></span></h2>
+  <div class="meta"><span><strong>Dependencies:</strong> Groups 1, 3, and 4</span><span><strong>Steps:</strong> 6</span><span><strong>Tests:</strong> 4</span></div>
+  <div class="files"><code>platforms/codex-cli/bin/fully-automatic-gate.mjs</code><code>platforms/codex-cli/templates/advisor.toml</code><code>platforms/codex-cli/templates/arbiter.toml</code><code>platforms/codex-cli/build.sh</code><code>platforms/kiro-cli/build.sh</code><code>platforms/kiro-cli/tests/reproducible-build.test.sh</code><code>.gitignore</code><code>references/host-capabilities.yml</code><code>Makefile</code><code>tests/codex-fully-automatic-workflow-loop.test.sh</code><code>tests/host-capability-matrix.test.sh</code><code>generated Codex/Cursor/Kiro orchestrator + workflow projections</code></div>
+  <ul class="steps">
+    <li data-step="5.0" class="step done"><strong>Connect Codex host mechanics and regenerate platform variants.</strong></li>
+    <li data-step="5.1" class="step done">Write 4 focused binding/build tests.<small>Role isolation, directive validation, safe-result passthrough, deterministic parity while support remains unsupported; evidence provider unreachable normally.</small></li>
+    <li data-step="5.2" class="step done">Complete role and receiver binding.<small>Shared evaluator → runner/receiver → one directive; continue re-reads canonical state and starts the acknowledged target in-turn.</small></li>
+    <li data-step="5.3" class="step done">Project canonical runtime/workflow contracts.<small>Update adapter/build, run make build, inspect generated variants, and keep Codex unsupported.</small></li>
+    <li data-step="5.4" class="step done">Validate deterministic build ownership.<small>Repository-local lock prevents TMPDIR-specific overlap; two clean aggregate builds have identical generated manifests and the evidence harness is absent from generated/installable plugins.</small></li>
+    <li data-step="5.5" class="step done">Run only the 4 Group 5 tests.</li>
+  </ul>
+  <div class="accept"><strong>Acceptance:</strong> binding has host mechanics only; generated variants reproduce twice; Codex remains unsupported; no production evidence bypass exists.</div>
+</section>
+
+<section data-group="6" class="group done" id="group-6">
+  <h2>Group 6 · Native Evidence and Capability Activation <span class="g-badge"></span></h2>
+  <div class="meta"><span><strong>Dependencies:</strong> Group 5</span><span><strong>Steps:</strong> 5</span><span><strong>Tests:</strong> 3</span></div>
+  <div class="files"><code>platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh</code><code>platforms/codex-cli/tests/native-evidence-bootstrap.mjs</code><code>references/host-capabilities.yml</code><code>tests/host-capability-matrix.test.sh</code><code>Makefile</code><code>docs/codex-support.md</code></div>
+  <ul class="steps">
+    <li data-step="6.0" class="step done"><strong>Prove native behavior before activating capability.</strong></li>
+    <li data-step="6.1" class="step done">Write 3 focused native-evidence tests.<small>Real entrypoint agreement/disagreement, same/next-phase, zero UI, resume/dedupe/checkpoints; isolated bootstrap; unavailable exit 77.</small></li>
+    <li data-step="6.2" class="step done">Implement the test-tree-only evidence bootstrap.<small>Bypass declaration eligibility only; no build/install inclusion or production selector; every safety check remains active.</small></li>
+    <li data-step="6.3" class="step done">Execute two-step activation.<small>First evidence exit 0 while unsupported; then a separate change to supported and normal eligibility rerun. Failure/77 leaves or restores unsupported.</small></li>
+    <li data-step="6.4" class="step done">Run only the 3 Group 6 tests.</li>
+  </ul>
+  <div class="accept"><strong>Acceptance:</strong> real native exit 0 precedes a distinct declaration change; normal supported execution and matrix pass; bootstrap is unpackageable and cannot weaken safety.</div>
+</section>
+
+<section data-group="7" class="group done" id="group-7">
+  <h2>Group 7 · Test Review and Gap Analysis <span class="g-badge"></span></h2>
+  <div class="meta"><span><strong>Dependencies:</strong> Groups 1–6</span><span><strong>Steps:</strong> 5</span><span><strong>Tests:</strong> up to 9 additions</span></div>
+  <div class="files"><code>feature test files from Groups 1–6</code></div>
+  <ul class="steps">
+    <li data-step="7.0" class="step done"><strong>Review and fill critical feature gaps.</strong></li>
+    <li data-step="7.1" class="step done">Review the 25 focused tests.<small>Mapped schema/migration, policy, crash/retry, active-turn, native activation, and generated parity evidence across R1–R30.</small></li>
+    <li data-step="7.2" class="step done">Analyze feature-only gaps.<small>No uncovered critical safety or continuation gap remained after the native activation review.</small></li>
+    <li data-step="7.3" class="step done">Write up to 9 strategic tests.<small>No additional tests were necessary; the feature suite remains within the 25–34 target.</small></li>
+    <li data-step="7.4" class="step done">Run the 25–34 feature-specific tests.<small>31 shared feature tests plus 3 native evidence scenarios passed.</small></li>
+  </ul>
+  <div class="accept"><strong>Acceptance:</strong> all 25–34 feature tests pass, R1–R30 and critical safety/crash boundaries are mapped, and no protected gate, D2/MCP, UI, service, database, or generated hand-edit enters scope.</div>
+</section>
+
+<section id="standards" class="card">
+  <h2>Standards compliance</h2>
+  <table>
+    <thead><tr><th>Standard</th><th>Plan contract</th></tr></thead>
+    <tbody>
+      <tr><td><code>global/build-pipeline.md</code></td><td>Edit canonical/adapters, regenerate all variants, require reproducible output.</td></tr>
+      <tr><td><code>global/coding-style.md</code>, <code>commenting.md</code>, <code>minimal-implementation.md</code></td><td>Focused descriptive modules, sparse timeless comments, immediate callers, no speculative framework.</td></tr>
+      <tr><td><code>global/error-handling.md</code>, <code>validation.md</code></td><td>Exact allowlists, early actionable rejection, bounded retries, fail-closed outcomes, reliable cleanup.</td></tr>
+      <tr><td><code>global/conventions.md</code></td><td>Minimal dependencies and unsupported capability posture until native proof.</td></tr>
+      <tr><td><code>testing/test-writing.md</code></td><td>Behavior-focused risk coverage and byte/mode/permission/topology proofs for transaction rejection.</td></tr>
+    </tbody>
+  </table>
+</section>
+<section class="card">
+  <h2>Execution notes</h2>
+  <ul>
+    <li>Each implementation group begins with 2–8 focused tests; review adds at most 9.</li>
+    <li>Run only new or directly affected tests until final verification.</li>
+    <li>Mirror completed Markdown checkboxes by flipping these exact HTML markers from <code>todo</code> to <code>done</code>.</li>
+    <li>Reuse strict runner boundaries, reconciliation failure injection, canonical workflows, build projections, and capability matrices.</li>
+    <li>If Group 1 disproves D1, or Group 6 lacks native exit 0, do not change architecture or claim support.</li>
+  </ul>
+</section>
+</main>
+</body>
+</html>

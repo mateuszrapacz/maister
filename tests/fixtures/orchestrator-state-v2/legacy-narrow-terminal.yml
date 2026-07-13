@@ -1,0 +1,35 @@
+orchestrator:
+  started_phase: "phase-1"
+  current_phase: "phase-1"
+  completed_phases: []
+  failed_phases: []
+  created: "2026-07-13T00:00:00Z"
+  updated: "2026-07-13T00:01:00Z"
+  gate_history:
+    - schema_version: 1
+      idempotency_key: "sha256:legacy-terminal"
+      phase_id: "phase-1"
+      gate_type: "phase-exit"
+      question: "Continue?"
+      options:
+        - "Continue"
+        - "Pause"
+      original_recommendation: "Continue"
+      configured_policy: "manual"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Continue"
+      final_actor: "user"
+      rationale: "User chose Continue"
+      confidence: "high"
+      escalate_to_user: false
+      user_override: false
+      error: null
+task:
+  status: "in_progress"
+phases:
+  - id: "phase-1"
+    status: "in_progress"
+  - id: "phase-2"
+    status: "pending"

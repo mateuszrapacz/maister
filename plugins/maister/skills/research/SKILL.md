@@ -88,23 +88,33 @@ dashboard/decision summaries before phase status or continuation. On retry
 exhaustion use the user gate or persist `blocked`. Advisor/arbiter output is
 read-only and cannot edit research artifacts or expand scope.
 
-### JSON continuation runner contract
+### Durable continuation and phase-entry evidence
 
-The host remains responsible for evaluating the gate and selecting the option. For a valid non-denylisted `fully_automatic` result, the call site constructs one JSON object for `skills/orchestrator-framework/bin/phase-continue.mjs`. The payload has exactly these fields:
+The evaluator owns policy, role invocation, and the complete terminal gate envelope. For a valid non-denylisted `fully_automatic` result, pass the exact persisted identity, selection, actor, and confidence to `skills/orchestrator-framework/bin/phase-continue.mjs`. Its JSON payload remains:
 
 - Required: `state`, `phase_id`, `gate_type`, `question`, `options`, `selected_option`, `actor`, and `confidence`.
 - Optional: `next_phase`, `report_md`, and `report_html`.
 
-`actor` is `advisor` or `arbiter`, and `confidence` is `high` or `medium`. The host preserves the ordered options and exact selected option; low-confidence or escalated results remain outside automatic execution. Advisor/arbiter selection and policy are unchanged, and the runner accepts only this validated JSON payload.
+The runner is a verifier and recovery boundary only. It re-reads schema-v2 state, requires one matching `decided` record with `provenance_kind: complete`, checks the exact option, actor, confidence, denylist, and legal forward transition, then projects reports and performs only the requested legacy forward-phase commit. It never invokes roles, synthesizes provenance, chooses domain work, creates dispatches, or starts targets. Use stdin or exactly `--input-file PATH`; stdout is compact JSON and actionable errors use stderr.
 
-Transport is a hard cutover: with no arguments, pass the complete JSON object on stdin; alternatively invoke the runner with exactly `--input-file PATH`. This is the only accepted CLI argument; additional command-line arguments are invalid.
+Workflow-owned routing uses `workflow-continuation.mjs`. Materialize a stable ordered inventory, atomically apply the terminal selection to the source item and create one deterministic outbox record, claim it with a bounded lease, then atomically establish the receiver's target `in_progress` checkpoint and acknowledge that same `dispatch_id`. A retry after acknowledgement returns the stored checkpoint; it never starts the target twice. Research convergence materializes decision-area IDs and artifact order first; other workflows keep target selection in their own phase logic.
 
-Before invoking the runner, read canonical state and reuse a validated terminal record for the same idempotency key. The runner performs canonical-state preflight, evaluates denylist and idempotency on every attempt, and rejects changed selections without appending or overwriting. A denylisted gate remains blocked and cannot continue automatically.
+At every phase entry, accept either (a) the explicit user-gate call evidence required by the existing checkpoint, or (b) matching automatic evidence: a complete non-denylisted terminal gate, its legal applied selection, one acknowledged outbox record, and the target's matching durable `in_progress` checkpoint. State flags or a claimed-but-unacknowledged dispatch are insufficient. Protected and denylisted gates always require explicit user evidence.
 
-Persist the terminal record and requested reports.
-Only after durable state and reports does the runner continue. Phase continuation happens only after that durable work succeeds. Reports project persisted `orchestrator.gate_history`. stdout contains only the compact JSON result; actionable errors go to stderr. A non-zero runner exit stops continuation and falls back to the user gate or persists blocked; it never advances the phase.
+Terminal persistence precedes report projection, selection application, outbox creation, claim, checkpoint, and acknowledgement. Report or transition retries reuse the terminal gate and never append another decision or change its selection.
 
-Retry from the validated terminal state after an interrupted report or transition: it regenerates missing reports, applies a pending phase transition exactly once, and must not append another history entry or downgrade a blocked or terminal selection. No low-confidence automatic execution is added.
+#### JSON continuation runner contract
+
+The host sends one JSON object with exactly these fields: `state`, `phase_id`,
+`gate_type`, `question`, `options`, `selected_option`, `actor`, `confidence`,
+`next_phase`, `report_md`, and `report_html`. The runner reads a complete object
+from stdin, or from a file when passed exactly `--input-file PATH`; this is the
+only accepted CLI argument and additional command-line arguments are invalid.
+
+Persist the terminal record and requested reports. stdout contains only the compact JSON result.
+Phase continuation happens only after durable persistence and report generation. A non-zero runner exit stops continuation and falls back to the user gate or persists blocked; low-confidence results never enter the automatic executor path.
+
+Retry from the validated terminal state regenerates missing reports, applies a pending phase transition exactly once, and must not append another history entry.
 
 Stable inventory: `phase-1-exit`, `phase-3-exit`, `phase-4-exit`, and
 `phase-5-exit` use `["Continue to the named next phase", "Pause workflow"]`;
@@ -262,7 +272,7 @@ Invoke the engine as `phase-1-exit` with question "Research foundation complete 
 
 ### Phase 2: Optional Phases Decision
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from Phase 1 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Before executing this phase, require either the Phase 1 explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require the explicit call.
 
 **Purpose**: Evaluate whether brainstorming and/or design phases would be valuable (independently)
 **Execute**: Direct
@@ -329,7 +339,7 @@ Invoke the engine as `phase-1-exit` with question "Research foundation complete 
 **State**: Update `phase_summaries.phase-4` with `decision_areas` and `deferred_ideas`
 
 **Skip if**: `brainstorming_enabled = false`
-**Resume check**: If `phase_summaries.phase-4.decision_areas` has entries with `chosen_approach` set, skip already-resolved areas
+**Resume check**: Re-read `orchestrator.work.phase-4` and skip only items already `completed` with a matching terminal source gate and applied selection. Phase summaries are projections, not resume authority.
 
 > **ANTI-PATTERN**: Do NOT present all decision areas in a single summary table and ask one combined "do you agree?" question. Each area MUST get its own detailed presentation and its own AskUserQuestion call.
 >
@@ -337,8 +347,8 @@ Invoke the engine as `phase-1-exit` with question "Research foundation complete 
 >
 > **ANTI-PATTERN**: Do NOT batch multiple decision areas into one AskUserQuestion call. The tool accepts up to 4 questions per call — using that capacity here IS the documented failure mode. One call = one question = one decision area. The § 3 "group important decisions" guidance applies to subagent `decisions_needed` triage, NOT to convergence — convergence is strictly sequential.
 
-1. Read `outputs/solution-exploration.md`
-2. For each decision area **sequentially** — later areas may depend on earlier answers (a choice in area 1 can change which alternatives are even relevant in area 3), so do NOT pre-render or pre-ask later areas before the current one is answered. Output ALL of the following (steps a-d) BEFORE calling AskUserQuestion:
+1. Read `outputs/solution-exploration.md`, derive one stable `decision-area:<artifact-id>` for every area in artifact order plus a final `convergence-summary` item, hash that ordered identity list as `inventory_version`, and call `materializeInventory` once. Reject identity drift on resume.
+2. For each unresolved decision-area item **sequentially** — later areas may depend on earlier answers (a choice in area 1 can change which alternatives are even relevant in area 3), so do NOT pre-render or pre-ask later areas before the current one is answered. Output ALL of the following (steps a-d) BEFORE invoking the gate engine:
    a. **Area header**: area name and why this decision matters (1-2 sentences of context)
    b. **Alternatives detail**: For EVERY alternative in this area, show:
       - Name and description (2-3 sentences)
@@ -346,7 +356,7 @@ Invoke the engine as `phase-1-exit` with question "Research foundation complete 
       - Cons (bullet list)
    c. **Recommendation**: which alternative is recommended and why (1 sentence)
    d. Invoke `research-convergence` (exactly ONE question for this area) with the area's alternatives in artifact order (mark recommended with "(Recommended)") + `"Need more info"` last.
-   e. If user picks → record choice, move to next area
+   e. After a terminal choice, call `applySelectionAndCreateDispatch` with the current item and the next stable item, then claim and acknowledge that dispatch. Move to the next area only after its durable `in_progress` checkpoint exists. A successful `fully_automatic` decision presents no user gate.
    f. If "Need more info" → present the detailed trade-off analysis for the requested alternative, then re-ask
 
 > **SELF-CHECK before each convergence call**: Did you output the alternatives with pros/cons for THIS area and construct one complete `research-convergence` context with exact ordered options? If not, STOP and correct it.
@@ -364,7 +374,7 @@ Invoke the engine as `phase-4-exit` with question "Brainstorming complete. Conti
 
 ### Phase 5: High-Level Design
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching complete terminal/applied-selection/acknowledged-dispatch/`in_progress` checkpoint evidence. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Create architecture design from selected solution approach
 **Execute**: Orchestrator-Direct Hybrid
@@ -413,7 +423,7 @@ Invoke the engine as `phase-5-exit` with question "Design complete. Continue to 
 
 ### Phase 6: Completion
 
-> **Phase entry self-check**: Before executing this phase, locate the `AskUserQuestion` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `TaskUpdate`) without a corresponding `AskUserQuestion` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching complete terminal/applied-selection/acknowledged-dispatch/`in_progress` checkpoint evidence. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Summarize research results and suggest next steps
 **Execute**: Direct

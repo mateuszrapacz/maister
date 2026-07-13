@@ -1,0 +1,650 @@
+orchestrator:
+  started_phase: phase-6
+  completed_phases: [phase-1, phase-2, phase-3, phase-4, phase-5, phase-6]
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    html_output: true
+    brainstorming_enabled: true
+    design_enabled: true
+    advisor:
+      enabled: true
+      gate_policies:
+        phase-exit: fully_automatic
+        optional-phase: fully_automatic
+        clarify: fully_automatic
+        convergence: fully_automatic
+        verify-matrix: fully_automatic
+      advisor_agent: advisor
+      advisor_model: gpt-5.6-sol
+      arbiter_agent: arbiter
+      arbiter_model: gpt-5.6-sol
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
+  created: "2026-07-13T16:29:57Z"
+  updated: "2026-07-13T17:45:47Z"
+  task_path: .maister/tasks/research/2026-07-13-fix-codex-auto-continuation
+  task_ids:
+    phase-1: research-phase-1
+    phase-2: research-phase-2
+    phase-3: research-phase-3
+    phase-4: research-phase-4
+    phase-5: research-phase-5
+    phase-6: research-phase-6
+  gate_history:
+    - schema_version: 1
+      idempotency_key: sha256:8dc80ac772693c815f0dfac96f7baa45a3cded3e406f16c6f5a42756f1e157d4
+      phase_id: phase-1
+      gate_type: phase-1-exit
+      question: Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?
+      options:
+        - Continue to brainstorming evaluation
+        - Pause workflow
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to brainstorming evaluation
+      final_actor: user
+      original_recommendation: Continue to brainstorming evaluation
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User confirmed continuation to optional-phase evaluation after reviewing the completed research report.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:947722f8e62401e5336692e2111b5e96368af8bed9af2b88b6901de279abeef5
+      phase_id: phase-2
+      gate_type: optional-phase-selection
+      question: Multiple viable implementation seams and unresolved trade-offs make brainstorming valuable. Would you like to explore solution alternatives?
+      options:
+        - Yes, explore alternatives
+        - No, skip brainstorming
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Yes, explore alternatives
+      final_actor: user
+      original_recommendation: Yes, explore alternatives
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User accepted the recommendation to explore alternatives because the repair contains multiple coupled design seams and trade-offs.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:9370fe762f9aac3a82681193f9b4edf42ab09841dc696b521f77705a0ebc4549
+      phase_id: phase-2
+      gate_type: optional-phase-selection
+      question: The fix requires coordinated state-schema, evaluator, runner, Codex adapter, and workflow-loop decisions, so high-level design is valuable. Would you like to generate a high-level design?
+      options:
+        - Yes, generate design
+        - No, skip design
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Yes, generate design
+      final_actor: user
+      original_recommendation: Yes, generate design
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User accepted high-level design because the repair coordinates multiple architectural seams and must preserve strict state, safety, and host boundaries.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:b44cce49b270e039db9825c224697b82b1f7ac236d4a1a361cd36e21a6e3cd13
+      phase_id: phase-3
+      gate_type: phase-3-exit
+      question: Continue to solution convergence?
+      options:
+        - Continue to solution convergence
+        - Pause workflow
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to solution convergence
+      final_actor: user
+      original_recommendation: Continue to solution convergence
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User chose to continue from solution generation to sequential convergence.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:062092ecba0c9acbea7029183919a6f17fbef223d18664a26cfb5a43abbc2048
+      phase_id: phase-4
+      gate_type: research-convergence
+      question: Gdzie powinna być wykonywana logika agreement, arbitration, retry i resume?
+      options:
+        - A1 — logika wyłącznie w instrukcjach workflow hosta
+        - A2 — monolityczny phase-continue.mjs
+        - A3 — wspólny executable evaluator z portami hosta (Recommended)
+        - A4 — Codex-only evaluator w adapterze platformy
+        - Need more info
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: A3 — wspólny executable evaluator z portami hosta (Recommended)
+      final_actor: user
+      original_recommendation: A3 — wspólny executable evaluator z portami hosta (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User selected the shared executable evaluator because it makes agreement, arbitration, retry, and resume deterministic and portable without absorbing domain routing.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:b5a379b7ee2f1713f0557c05206c537fc10ba237bcfabeec57daaba82febeb85
+      phase_id: phase-4
+      gate_type: research-convergence
+      question: Kto powinien być właścicielem kanonicznego stanu i pełnego terminalnego rekordu gate?
+      options:
+        - B1 — evaluator zapisuje pełny rekord, runner konsumuje i weryfikuje (Recommended)
+        - B2 — runner jest jedynym writerem pełnego rekordu
+        - B3 — jeden zintegrowany command transaction dla gate i continuation
+        - B4 — append-only event log jako jedyne źródło prawdy
+        - Need more info
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: B1 — evaluator zapisuje pełny rekord, runner konsumuje i weryfikuje (Recommended)
+      final_actor: user
+      original_recommendation: B1 — evaluator zapisuje pełny rekord, runner konsumuje i weryfikuje (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User selected evaluator-owned terminal records so the component executing the gate state machine also preserves full provenance before runner effects.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:837b61a6dc98accdccf9714d197591c0b89916de73f0c281e1745d27a4a98e4b
+      phase_id: phase-4
+      gate_type: research-convergence
+      question: Jak powinien działać trwały cursor i dispatch kolejnego problemu w tej samej fazie?
+      options:
+        - C1 — workflow-owned inventory plus durable outbox/receipt (Recommended)
+        - C2 — tylko liczbowy cursor/index w phase summary
+        - C3 — runner wylicza i zapisuje generyczny następny target
+        - C4 — ephemeral same-turn loop bez durable dispatch state
+        - Need more info
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: C1 — workflow-owned inventory plus durable outbox/receipt (Recommended)
+      final_actor: user
+      original_recommendation: C1 — workflow-owned inventory plus durable outbox/receipt (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User selected the workflow-owned stable inventory and durable outbox/receipt to preserve domain ordering and logical exactly-once dispatch through resume.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:508e5ca0e153b0f0240fc7afaa47d291a3795392c4d504f11b989657c51bd5cb
+      phase_id: phase-4
+      gate_type: research-convergence
+      question: Jak Codex powinien połączyć natywne role, wspólny evaluator/runner i workflow loop bez kończenia tury?
+      options:
+        - D1 — cienki host-native binding wokół wspólnych CLI (Recommended)
+        - D2 — lokalny MCP/tool server jako runtime adapter
+        - D3 — zewnętrzny headless Codex wrapper sterujący sesją
+        - D4 — Codex-specific background daemon/outbox consumer
+        - Need more info
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: D1 — cienki host-native binding wokół wspólnych CLI (Recommended)
+      final_actor: user
+      original_recommendation: D1 — cienki host-native binding wokół wspólnych CLI (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User selected the thin host-native Codex binding so the shared evaluator and runner remain canonical while successful execution returns control to the active workflow loop.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:deff7dc9407e4bf7bd8e9827eea83f0943d11d5daa1793b43db636eb584db001
+      phase_id: phase-4
+      gate_type: phase-4-exit
+      question: Brainstorming complete. Continue to high-level design?
+      options:
+        - Continue to high-level design
+        - Pause workflow
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to high-level design
+      final_actor: user
+      original_recommendation: Continue to high-level design
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User approved the converged A3+B1+C1+D1 package and continued to high-level design.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:cb98ff2bc72c18e9b770811df2023a41e3c771d1173b795ee4a03aafb7e4aed8
+      phase_id: phase-5
+      gate_type: research-clarification
+      question: "Czy potwierdzasz założenia projektu: A3+B1+C1+D1, current_phase jako canonical cursor, evaluator-owned full gate record, workflow-owned durable outbox, thin Codex binding oraz brak zmian w denyliście?"
+      options:
+        - Confirm assumptions
+        - Correct assumptions
+        - Provide more context
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Confirm assumptions
+      final_actor: user
+      original_recommendation: Confirm assumptions
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User confirmed the converged A3+B1+C1+D1 architecture assumptions, canonical cursor, full gate audit, durable outbox, thin Codex binding, and unchanged safety denylist.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:6bdf08499f5ea52adcb109887df08612b87fed5c1a2a6ba779d4fc70c9cb160e
+      phase_id: phase-5
+      gate_type: phase-5-exit
+      question: Design complete. Continue to output generation?
+      options:
+        - Continue to output generation
+        - Pause workflow
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to output generation
+      final_actor: user
+      original_recommendation: Continue to output generation
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User accepted the completed high-level design and continued to final output generation.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:b35883e703798a8680ccae7ccae72418a71acd780faaa9c19d3a12a5723f17ce
+      phase_id: phase-6
+      gate_type: final-handoff-approval
+      question: Research workflow complete. Complete workflow?
+      options:
+        - Complete workflow
+        - Keep workflow open
+      policy: manual
+      safety_classification: denylisted
+      status: decided
+      selected_option: Complete workflow
+      final_actor: user
+      original_recommendation: Complete workflow
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User explicitly approved final handoff and completion of the research workflow.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+  implementation_approval:
+    status: not_required
+    approved_by: null
+    approved_at: null
+    approved_scope: []
+
+task:
+  title: Naprawa automatycznej kontynuacji Codex
+  description: Ustalić precyzyjną naprawę fully_automatic dla zgodności rekomendacji, arbitrażu przy rozbieżności i automatycznego przechodzenia do kolejnego problemu bez kliknięcia użytkownika.
+  status: completed
+  tags: [research, codex, advisor, arbiter, continuation]
+  priority: high
+
+phases:
+  - id: phase-1
+    name: Research foundation
+    status: completed
+    blocked_by: []
+    started: "2026-07-13T16:29:57Z"
+    completed: "2026-07-13T16:49:07Z"
+    gate:
+      question: Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?
+      answer: Continue to brainstorming evaluation
+  - id: phase-2
+    name: Evaluate brainstorming value
+    status: completed
+    blocked_by: [phase-1]
+    started: "2026-07-13T16:49:07Z"
+    completed: "2026-07-13T16:56:55Z"
+    gate:
+      question: The fix requires coordinated state-schema, evaluator, runner, Codex adapter, and workflow-loop decisions, so high-level design is valuable. Would you like to generate a high-level design?
+      answer: Yes, generate design
+  - id: phase-3
+    name: Generate solution alternatives
+    status: completed
+    blocked_by: [phase-2]
+    started: "2026-07-13T16:56:55Z"
+    completed: "2026-07-13T17:05:41Z"
+    gate:
+      question: Continue to solution convergence?
+      answer: Continue to solution convergence
+  - id: phase-4
+    name: Evaluate brainstorming alternatives
+    status: completed
+    blocked_by: [phase-3]
+    started: "2026-07-13T17:05:41Z"
+    completed: "2026-07-13T17:27:26Z"
+    gate:
+      question: Brainstorming complete. Continue to high-level design?
+      answer: Continue to high-level design
+  - id: phase-5
+    name: Design high-level architecture
+    status: completed
+    blocked_by: [phase-4]
+    started: "2026-07-13T17:27:26Z"
+    completed: "2026-07-13T17:43:21Z"
+    gate:
+      question: Design complete. Continue to output generation?
+      answer: Continue to output generation
+  - id: phase-6
+    name: Summarize research and suggest next steps
+    status: completed
+    blocked_by: [phase-5]
+    started: "2026-07-13T17:43:21Z"
+    completed: "2026-07-13T17:45:47Z"
+    gate:
+      question: Research workflow complete. Complete workflow?
+      answer: Complete workflow
+
+research_context:
+  research_type: technical
+  research_question: Jak naprawić Codex fully_automatic tak, aby zgodność rekomendacji głównego agenta i advisora automatycznie wybierała decyzję, rozbieżność uruchamiała arbitra dokładnie raz, a wynik automatycznie kontynuował do następnego problemu bez interakcji użytkownika?
+  scope:
+    included:
+      - Kanoniczny kontrakt orchestrator-state.yml i gate_history
+      - Gate decision engine oraz phase-continue.mjs
+      - Adapter i host-native E2E dla Codex
+      - Pętla automatycznego przechodzenia przez kolejne problemy lub decision areas
+      - Idempotencja, raportowanie, retry i bezpieczeństwo denylist
+    excluded:
+      - Implementacja poprawki
+      - Zmiana chronionych bramek wymagających zgody użytkownika
+      - Rozszerzenie funkcjonalności trackerów poza automatyczną kontynuację workflow
+    constraints:
+      - Zachować fail-closed dla denylisty i niskiej pewności
+      - Edytować wyłącznie źródła kanoniczne oraz adaptery, nie generated variants
+      - Udowodnić zachowanie testami kontraktowymi i host-native E2E
+  methodology:
+    - Codebase flow tracing
+    - State schema comparison
+    - Multi-source triangulation across code, tests, generated adapters, and prior diagnosis
+  sources:
+    - .maister/tasks/research/2026-07-13-issue-tracker-workflow/analysis/codex-fully-automatic-diagnosis.md
+    - plugins/maister/skills/orchestrator-framework/references/gate-decision-engine.md
+    - plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs
+    - platforms/codex-cli/
+    - tests/
+  confidence_level: high
+  gathering_strategy:
+    categories:
+      - gate-state-contract
+      - continuation-dispatch
+      - codex-host-adapter
+      - verification-safety
+    count: 4
+    source: planner
+  project_doc_paths:
+    - .maister/docs/project/vision.md
+    - .maister/docs/project/roadmap.md
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/project/architecture.md
+  phase_summaries:
+    phase-1:
+      steps_completed: [initialize, plan, gather, synthesize]
+      summary: Wymagany jest wykonywalny łańcuch evaluator → durable runner commit → Codex adapter → workflow loop; zgodność kończy advisor, rozbieżność dokładnie jeden arbiter, a trwały cursor i dispatch_id przenoszą sterowanie do kolejnego problemu bez kończenia tury.
+      decisions:
+        - decision: Użyć current_phase i pełnego gate_history jako jednego canonical contractu.
+          rationale: Obecny started_phase i wąska historia runnera są niezgodne z realnym workflow i wymaganym audytem.
+        - decision: Rozdzielić commit runnera od dispatchu workflow.
+          rationale: Runner kończy proces po stdout i nie zna domenowej kolejności problemów.
+        - decision: Nie zmieniać Codex capability na supported przed zielonym host-native E2E.
+          rationale: Shared runner i fake integration nie dowodzą utrzymania tury ani rzeczywistego następnego dispatchu.
+      risks:
+        - Stabilny headless binding Codex wymaga krótkiego spike'a implementacyjnego.
+        - Exactly-once musi oznaczać logiczny efekt deduplikowany przez dispatch_id, nie brak fizycznego retry.
+      artifacts:
+        - path: planning/research-brief.md
+          label: Research brief
+          html: null
+        - path: planning/research-plan.md
+          label: Research plan
+          html: null
+        - path: planning/sources.md
+          label: Sources
+          html: null
+        - path: analysis/findings/01-gate-state-contract.md
+          label: Gate and state contract
+          html: null
+        - path: analysis/findings/02-continuation-dispatch.md
+          label: Continuation dispatch
+          html: null
+        - path: analysis/findings/03-codex-host-adapter.md
+          label: Codex host adapter
+          html: null
+        - path: analysis/findings/04-verification-safety.md
+          label: Verification and safety
+          html: null
+        - path: analysis/synthesis.md
+          label: Research synthesis
+          html: null
+        - path: outputs/research-report.md
+          label: Research report
+          html: outputs/research-report.html
+    phase-3:
+      summary: Przeanalizowano 16 wariantów w czterech obszarach; rekomendowany zestaw A3+B1+C1+D1 rozdziela executable evaluator, pełny audit, workflow-owned durable dispatch i cienki binding Codex.
+      decisions:
+        - decision: A3 — wspólny executable evaluator z portami hosta.
+          rationale: Zapewnia wykonywalną i przenośną state machine bez łączenia hosta z domenowym routingiem.
+        - decision: B1 — evaluator zapisuje pełny rekord, runner go weryfikuje i kontynuuje.
+          rationale: Zachowuje pełny provenance i umożliwia resume raportu/transition bez ponawiania modelu.
+        - decision: C1 — workflow-owned inventory plus durable outbox/receipt.
+          rationale: Pozwala sekwencyjnie przeliczać zależne work itemy oraz deduplikować logiczny efekt przez dispatch_id.
+        - decision: D1 — cienki host-native binding Codex.
+          rationale: Adapter utrzymuje turę i zwraca continue bez stawania się drugim źródłem prawdy.
+      risks:
+        - Headless i active-turn hook Codex wymaga krótkiego spike'a.
+        - Dwa procesy zapisujące YAML wymagają wspólnego repository, revision/CAS lub lockowania.
+      artifacts:
+        - path: outputs/solution-exploration.md
+          label: Solution exploration
+          html: outputs/solution-exploration.html
+    phase-4:
+      summary: Trwa sekwencyjna konwergencja czterech zależnych decyzji architektonicznych.
+      decision_areas:
+        - area: Evaluator ownership and packaging
+          alternatives_count: 4
+          chosen_approach: A3 — wspólny executable evaluator z portami hosta
+        - area: Canonical state and terminal record ownership
+          alternatives_count: 4
+          chosen_approach: B1 — evaluator zapisuje pełny rekord, runner konsumuje i weryfikuje
+        - area: Same-phase cursor and dispatch protocol
+          alternatives_count: 4
+          chosen_approach: C1 — workflow-owned inventory plus durable outbox/receipt
+        - area: Codex binding and native E2E seam
+          alternatives_count: 4
+          chosen_approach: D1 — cienki host-native binding wokół wspólnych CLI
+      deferred_ideas: []
+      decisions:
+        - decision: A3 — wspólny executable evaluator z portami hosta.
+          rationale: Jeden wykonywalny i przenośny gate engine bez domenowego routingu.
+        - decision: B1 — evaluator zapisuje pełny rekord, runner konsumuje i weryfikuje.
+          rationale: Pełny provenance jest trwały przed raportami i continuation.
+        - decision: C1 — workflow-owned inventory plus durable outbox/receipt.
+          rationale: Stabilne ID i dispatch_id zapewniają sekwencyjność oraz logiczne exactly-once.
+        - decision: D1 — cienki host-native binding wokół wspólnych CLI.
+          rationale: Codex utrzymuje aktywną turę bez duplikowania state machine lub routingu.
+      risks: []
+      artifacts: []
+    phase-5:
+      summary: Zaprojektowano executable state machine w architekturze ports-and-adapters z ośmioma komponentami runtime, wspólnym state repository, durable dispatch oraz cienkim bindingiem Codex.
+      architecture_style: Executable state machine plus ports-and-adapters in a single-source multi-target plugin pipeline
+      decisions_count: 8
+      decisions:
+        - decision: Shared executable gate evaluator.
+          rationale: Agreement, arbitration, retry and resume become deterministic and portable.
+        - decision: Evaluator-owned full gate record with runner verification.
+          rationale: Full provenance is durable before reports and continuation.
+        - decision: Workflow-owned inventory and durable outbox/receipt.
+          rationale: Stable work_item_id and dispatch_id support logical exactly-once resume.
+        - decision: Thin Codex binding returns continue to the active workflow loop.
+          rationale: Host integration remains thin and does not duplicate state or routing logic.
+      risks:
+        - Codex active-turn/headless hook requires an implementation spike.
+        - Schema v2 migration must fail closed for real existing workflow states.
+        - Dispatch receivers must deduplicate by dispatch_id.
+      artifacts:
+        - path: outputs/high-level-design.md
+          label: High-level design
+          html: outputs/high-level-design.html
+        - path: outputs/decision-log.md
+          label: Decision log
+          html: outputs/decision-log.html

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Specification — Codex Fully Automatic Continuation</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { border-left:4px solid var(--accent); }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.story-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.story { margin:0; }
+.toc { font-size:13px; color:var(--dim); margin:18px 0; }
+.toc a { margin:0 4px; }
+.compact { margin:8px 0; padding-left:20px; }
+.scope-in { border-top:3px solid var(--ok); }
+.scope-out { border-top:3px solid var(--warn); }
+.priority { white-space:nowrap; }
+.req-id { font-weight:700; color:var(--accent); white-space:nowrap; }
+.decision-list li, .risk-list li, .checklist li { margin:5px 0; }
+header p { color:var(--dim); margin-top:-8px; }
+details.card[open] summary { margin-bottom:12px; }
+@media (max-width:760px) { .grid,.story-grid { grid-template-columns:1fr; } table { font-size:12px; } }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <span class="here">Spec</span>
+  <a href="implementation-plan.html">Plan</a>
+  <a href="../verification/implementation-verification.html">Verification</a>
+  <a href="spec.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <span class="badge">Specification</span>
+  <h1>Codex Fully Automatic Continuation</h1>
+  <p>Binding implementation requirements for the accepted A3/B1/C1/D1 repair · Generated 2026-07-13 · <a href="spec.md" target="_blank" rel="noopener">Open Markdown twin ↗</a></p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>30</b><span>requirements</span></div>
+  <div class="tile"><b>14</b><span>reuse seams</span></div>
+  <div class="tile"><b>4</b><span>new components</span></div>
+  <div class="tile"><b>High</b><span>risk level</span></div>
+</div>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Maister will execute safe Codex <code>fully_automatic</code> gates through one shared evaluator and a thin Codex binding, without adding a command or UI. Agreement ends with the Advisor's choice; disagreement uses one logical Arbiter, including all bounded retries under that identity. The complete decision is persisted before projections or routing, then a durable workflow-owned dispatch starts the next same-phase item or phase in the active turn. Codex remains <code>unsupported</code> until a real host-native end-to-end test proves the complete no-UI path.</p>
+  <div class="grid">
+    <div>
+      <h2>Key Decisions</h2>
+      <ul class="decision-list">
+        <li>Use accepted A3/B1/C1/D1 boundaries.</li>
+        <li>Keep one canonical executable evaluator.</li>
+        <li>Evaluator owns the full gate envelope.</li>
+        <li>Workflow owns inventory, routing, outbox, and receipts.</li>
+        <li><code>current_phase</code> is the only mutable phase cursor.</li>
+        <li>State commits use task-local lock plus revision CAS.</li>
+        <li>Exactly-once means one logical effect keyed by <code>dispatch_id</code>.</li>
+        <li>Capability remains <code>unsupported</code> until native evidence succeeds.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Open Questions / Risks</h2>
+      <ul class="risk-list">
+        <li><span class="sev warning">Risk</span>The exact Codex active-turn hook requires a narrow spike; disproving D1 returns work to scope clarification before an MCP fallback.</li>
+        <li><span class="sev warning">Risk</span>Ambiguous legacy state migration must fail without changing bytes, permissions, or topology.</li>
+        <li><span class="sev warning">Risk</span>A post-effect/pre-ack crash can physically retry, so receiver deduplication is required.</li>
+        <li><span class="sev warning">Risk</span>Recovery must resume durable checkpoints without replaying completed roles or logical effects.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="grid" aria-label="scope">
+  <div class="card scope-in">
+    <h2>In Scope</h2>
+    <ul class="compact">
+      <li>Shared evaluator and full terminal provenance.</li>
+      <li>Schema-v2 state repository and migration.</li>
+      <li>Workflow-owned same- and next-phase durable dispatch.</li>
+      <li>Thin Codex active-turn binding.</li>
+      <li>Canonical/generated parity and native capability evidence.</li>
+    </ul>
+  </div>
+  <div class="card scope-out">
+    <h2>Out of Scope</h2>
+    <ul class="compact">
+      <li>Protected-gate automation or backward refinement.</li>
+      <li>New command, UI, daemon, service, database, event store, or speculative SDK.</li>
+      <li>Codex-only policy or direct generated-tree edits.</li>
+      <li>Claiming support from shared, fake-port, smoke, or file-presence tests.</li>
+    </ul>
+  </div>
+</section>
+
+<nav class="toc">Contents:
+  <a href="#goal">Goal</a> · <a href="#stories">Stories</a> · <a href="#requirements">Requirements</a> ·
+  <a href="#components">Components</a> · <a href="#technical">Technical</a> ·
+  <a href="#guidance">Guidance</a> · <a href="#scope">Out of Scope</a> · <a href="#success">Success</a>
+</nav>
+
+<main>
+<section id="goal" class="card">
+  <h2>Goal</h2>
+  <p>Make eligible Codex <code>fully_automatic</code> gates select, persist, route, and begin their next target without user interaction, while preserving Maister's auditability, resumability, protected-gate safety, and cross-platform canonical ownership.</p>
+</section>
+
+<section id="stories">
+  <h2>User Stories</h2>
+  <div class="story-grid">
+    <article class="card story"><span class="badge">Operator</span><p>I want safe automatic gates to continue inside my current Codex turn so that I am not asked to approve the recommendation the system is configured to resolve automatically.</p></article>
+    <article class="card story"><span class="badge">Operator</span><p>I want protected, ambiguous, unsupported, or exhausted decisions to stop safely so that automation never overrides decisions that require me.</p></article>
+    <article class="card story"><span class="badge">Workflow maintainer</span><p>I want one shared gate state machine and full provenance so that every host applies the same agreement, arbitration, retry, and resume rules.</p></article>
+    <article class="card story"><span class="badge">Maintainer</span><p>I want stable work and dispatch identities with durable receipts so that I can distinguish one logical continuation from repeated transport attempts.</p></article>
+  </div>
+</section>
+
+<section id="requirements" class="card">
+  <h2>Core Requirements</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td class="req-id">R1</td><td><b>Transparent entry points.</b> Existing <code>maister:*</code> workflows remain the only user entry points; no new command, prompt convention, or UI.</td><td class="priority"><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R2</td><td><b>Eligibility before automation.</b> Run automatically only for configured <code>fully_automatic</code>, configurable, non-denylisted, capability-eligible gates; protected gates stay explicit.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R3</td><td><b>Stable gate identity and reuse.</b> Derive identity from exact phase, type, question, and ordered options; reuse terminal state before roles, UI, or dispatch.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R4</td><td><b>Exact gate context.</b> Accept only stable identity, ordered options, recommendation, safety, phase, and read-only workflow context; reject unknown, malformed, duplicate, or unsafe data.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R5</td><td><b>Durable pending and attempts.</b> Persist one envelope pending→terminal with role identities/models, attempts, responses/errors, exhaustion, and timestamps before dependent effects.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R6</td><td><b>Strict role response.</b> Require exactly four fields, a legal option, and configured bounded retry/backoff for invalid or transient responses.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R7</td><td><b>Agreement.</b> Matching recommendations produce <code>final_actor: advisor</code>, Advisor once, Arbiter zero, user gate zero, then automatic continuation.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R8</td><td><b>Disagreement.</b> Create exactly one logical Arbiter; all retries use it, Advisor is not repeated, and a valid result ends with actor <code>arbiter</code>.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R9</td><td><b>Arbiter boundary.</b> Supply the two competing choices/rationales; permit only one of them or escalation, never mutation or scope growth.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R10</td><td><b>Fail closed.</b> Manual, unsafe, unsupported, invalid, low-confidence, escalated, exhausted, conflicting, or failed paths return only safe <code>user_gate</code>/<code>blocked</code> and advance nothing.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R11</td><td><b>Persistence ordering.</b> Commit the complete terminal record before projections, applied selection, phase/cursor changes, outbox, or dispatch; projections never drive resume.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R12</td><td><b>Schema v2.</b> Enforce the normative field placement, enums, nullability, timestamps, invariants, and gate/work/dispatch transitions below; exactly one <code>current_phase</code> is in progress.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R13</td><td><b>Safe migration.</b> Migrate only the matrix's supported shapes in one locked commit to revision 1; preserve complete or explicitly legacy non-authorizing provenance and reject every named ambiguity before mutation.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R14</td><td><b>Transactional repository.</b> Follow the platform-bounded owner-token lock, CAS, symlink, atomic replacement, mode/safe-ownership, stale-lock, timeout, and cleanup rules below.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R15</td><td><b>Runner responsibility.</b> Re-read and verify the terminal record and legal transition; recover projections/commit, but never call roles, synthesize provenance, route domain work, or dispatch.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R16</td><td><b>Same-phase continuation.</b> Use stable inventory/work IDs; idempotently complete the source, preserve its choice/gate, identify next ready work, and create deterministic dispatch.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R17</td><td><b>Next-phase continuation.</b> Commit the forward transition and a phase-entry dispatch; require an observable target checkpoint beyond phase state or stdout.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R18</td><td><b>Logical dispatch.</b> Use <code>pending → claimed → acknowledged|blocked</code>; atomically establish target checkpoint and acknowledgement as the sole logical start effect, and return stored acknowledgement on retry.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R19</td><td><b>Active-turn directive.</b> Binding returns only <code>continue | user_gate | blocked</code>; <code>continue</code> immediately starts acknowledged work in the same turn without final response or question.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R20</td><td><b>Equivalent phase-entry proof.</b> Accept explicit user evidence or matching terminal auto decision + applied transition + receipt + checkpoint; never apply equivalence to protected gates.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R21</td><td><b>Resume and dedupe.</b> Never duplicate terminal history, completed Advisor, logical Arbiter, applied choice, logical dispatch, or ack; reconcile pending attempts by retry rules.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R22</td><td><b>Compatibility.</b> Follow normative manual/advisor/override/fallback/<code>user_pending</code> transitions while preserving denylist, forward-only, report recovery, immutable choice, and fallback semantics.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R23</td><td><b>Canonical ownership.</b> Shared runtime under <code>plugins/maister/</code>, Codex mechanics under <code>platforms/codex-cli/</code>, generated trees only via deterministic build; contracts stay equivalent.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R24</td><td><b>Capability evidence.</b> A non-packaged native-E2E bootstrap bypasses only declaration eligibility; first prove real native exit 0 while unsupported, then separately set supported and rerun normal matrix eligibility. Unavailable stays 77.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R25</td><td><b>Security.</b> Keep roles read-only, model output as data, paths inside task root, reject symlink/traversal, and retain provenance without secrets or unnecessary prompts.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R26</td><td><b>Gate envelope completeness.</b> Require every named identity, policy, safety, role, selection, actor, provenance, continuation, and timestamp field; terminal decisions are immutable except idempotent completion.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R27</td><td><b>Dispatch claim recovery.</b> Claim atomically with owner token/lease; start no target while merely claimed; safely reclaim expired claims with the same ID; post-ack crash returns stored ack.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R28</td><td><b>Mixed-policy records.</b> Manual has no roles; Advisor mode persists agreement/disagreement analysis before user pending; user commits actor user and exact override; unsupported automatic records manual fallback.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R29</td><td><b>Evidence-bootstrap isolation.</b> Test-harness only, excluded from generated/installable plugins, no environment/CLI/config/workflow switch, real Codex entrypoint, and no safety bypass.</td><td><span class="sev critical">Must</span></td></tr>
+      <tr><td class="req-id">R30</td><td><b>Platform-bounded filesystem behavior.</b> Define lock/symlink/mode/safe-ownership/timeout/stale-owner/cleanup/durability on macOS/Linux without privileged ownership assumptions or uncertain lock breaking.</td><td><span class="sev critical">Must</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="components">
+  <h2>Reusable Components</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Existing element</th><th>Leverage</th></tr></thead>
+      <tbody>
+        <tr><td><code>plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs</code></td><td>Retain strict transport, allowlists, parser, hashing, denylist, report recovery, transition guards, and stdout contract; verify full records through the repository.</td></tr>
+        <tr><td><code>.../references/gate-decision-engine.md</code></td><td>Synchronize the normative human-readable policy with the executable evaluator.</td></tr>
+        <tr><td><code>.../references/orchestrator-patterns.md</code></td><td>Extend canonical state, phase, gate, dashboard, safety, and phase-entry conventions.</td></tr>
+        <tr><td><code>plugins/maister/skills/init/bin/reconcile-advisor-config.sh</code></td><td>Reuse transactional guarantees and tests, not its config-specific parser or two-file transaction.</td></tr>
+        <tr><td><code>plugins/maister/skills/research/SKILL.md</code></td><td>First stable-inventory, same-phase tracer.</td></tr>
+        <tr><td><code>development/SKILL.md</code>, <code>migration/SKILL.md</code>, <code>performance/SKILL.md</code></td><td>Consume shared terminal/dispatch evidence while retaining domain routing.</td></tr>
+        <tr><td><code>product-design/SKILL.md</code></td><td>Adopt forward continuation evidence; exclude backward refinement.</td></tr>
+        <tr><td><code>platforms/codex-cli/templates/advisor.toml</code></td><td>Preserve read-only roles and exact four-field response; align host-port wording and Arbiter identity.</td></tr>
+        <tr><td><code>platforms/codex-cli/build.sh</code></td><td>Project shared runtime and thin binding; never patch generated output.</td></tr>
+        <tr><td><code>Makefile</code>, <code>tests/host-capability-matrix.test.sh</code></td><td>Extend source/generated matrices and preserve native-evidence distinction including exit 77.</td></tr>
+        <tr><td><code>tests/phase-continue-contract.test.sh</code>, <code>tests/fully-automatic-phase-continue.test.sh</code></td><td>Migrate full-record/schema fixtures while preserving runner regressions.</td></tr>
+        <tr><td><code>tests/advisor-config-reconciliation.test.sh</code>, <code>tests/advisor-init-lifecycle.test.sh</code></td><td>Reuse byte, mode, topology, rollback, and injection assertions.</td></tr>
+        <tr><td><code>tests/codex-fully-automatic-workflow-loop.test.sh</code></td><td>Make the failing agreement/disagreement and durable-dispatch tracer pass through production.</td></tr>
+        <tr><td><code>platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh</code></td><td>Use only as the real Codex entrypoint evidence target, never a shared-runtime surrogate.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>New Components Required</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Component</th><th>Why new</th></tr></thead>
+      <tbody>
+        <tr><td><b>Shared executable gate evaluator</b></td><td>Policy is prose-only and the runner starts after selection; this directly called FSM owns role calls, agreement, one logical Arbiter, retry/resume, and provenance.</td></tr>
+        <tr><td><b>Narrow schema-v2 state repository and migrator</b></td><td>No existing shared writer supplies lock, CAS, complete invariants, durable metadata-preserving replacement, and legacy migration for evaluator and runner.</td></tr>
+        <tr><td><b>Workflow continuation inventory/outbox contract</b></td><td>No current structure identifies same-phase work, binds a choice to its next target, or records durable acknowledgement; shared shape remains separate from domain routing.</td></tr>
+        <tr><td><b>Thin Codex automatic-gate binding and receiver seam</b></td><td>No executable active-turn consumer connects native roles, shared runtime, target dispatch, UI-free directive, and dedupe. It contains host mechanics only.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="technical">
+  <h2>Technical Approach</h2>
+  <details class="card" open>
+    <summary>Component boundaries and flow</summary>
+    <p>A workflow invokes the shared evaluator through a Codex-supplied read-only role port. The evaluator creates or resumes one envelope, calls Advisor, and commits agreement or advances that envelope to one logical Arbiter. The runner verifies the terminal record and commits projections/forward transition. The workflow applies the choice and creates the next target/outbox entry; the Codex binding dispatches it. The receiver records checkpoint and acknowledgement before <code>continue</code> returns to the workflow loop.</p>
+    <p>The evaluator selects; repository commits; runner projects and performs forward phase commits; workflow routes; binding invokes host roles and dispatches. No boundary absorbs another's policy or domain responsibilities.</p>
+  </details>
+  <details class="card">
+    <summary>State and recovery model</summary>
+    <p>One YAML snapshot adds schema version, revision, initial and current phase, full gate provenance, stable inventory, and typed outbox. One gate key identifies one updated envelope; one Arbiter ID spans retries; one dispatch ID binds one source to one target.</p>
+    <p>Each change is a short commit. Locks are released for model calls and dispatch; callers then reacquire, compare revision, reread on conflict, and resolve by idempotency. Recovery independently completes projections, selection, outbox, dispatch, or acknowledgement without rolling back terminal decisions or replaying completed roles.</p>
+  </details>
+  <details class="card">
+    <summary>Normative schema-v2 contract</summary>
+    <p>The root has exactly one <code>orchestrator</code>, <code>task</code>, and ordered <code>phases</code>. Orchestrator requires schema version 2, non-negative revision, immutable initial phase, canonical current phase, unique completed/failed IDs, gate history, work, and outbox. Current phase names exactly one <code>in_progress</code> phase; every phase-list ID exists and matches status.</p>
+    <p>Every gate requires schema/key/phase/type/question/ordered options/recommendation, configured and effective policy, safety, status, selection, actor, rationale, confidence, escalation, override, error, Advisor, Arbiter, continuation, provenance kind, legacy record, and created/updated/decided timestamps. Policies: <code>manual | advisor | fully_automatic</code>; statuses: <code>advisor_pending | arbiter_pending | user_pending | decided | blocked</code>; actors: <code>system | advisor | arbiter | user</code>; confidence: <code>high | medium | low | null</code>. New timestamps are UTC RFC 3339; selection is null before decided and then exactly one option; pending/blocked actor is system.</p>
+    <p>Advisor and Arbiter mappings always exist with nullable logical ID/agent/model/response plus attempts and exhausted. Responses have exactly four fields. Attempts use <code>started | completed | failed | interrupted</code>, positive unique number, started timestamp, and terminal completion timestamp. One Arbiter ID spans all retries and activates only after completed Advisor disagreement.</p>
+    <p>Native records use complete provenance and null legacy record. Migrated narrow terminal records use legacy provenance, preserve the exact old mapping, and may support audit/report/exact lookup but cannot authorize a new effect. Inventory items use stable ID/ordinal and only <code>ready → in_progress → completed|blocked</code>, with idempotent self-reuse; completion requires terminal source gate and legal applied selection.</p>
+  </details>
+  <details class="card">
+    <summary>Supported legacy migration matrix</summary>
+    <table>
+      <thead><tr><th>Input</th><th>Mapping</th><th>Reject when</th></tr></thead>
+      <tbody>
+        <tr><td>Already v2</td><td>Validate exactly; no migration/revision change.</td><td>Unknown schema, invalid revision/field/enum/invariant/identity.</td></tr>
+        <tr><td>Legacy with current phase</td><td>Require sole in-progress match; initial from valid started phase else first ordered phase; remove started phase; revision 1.</td><td>Absent/multiple in-progress, mismatch, invalid started phase.</td></tr>
+        <tr><td>Legacy with started but no current</td><td>Derive current only from sole in-progress; started becomes immutable initial; revision 1.</td><td>Current cannot be unique or started is invalid.</td></tr>
+        <tr><td>Empty history</td><td>Create empty v2 history, work, and outbox.</td><td>Misplaced/duplicate anchors.</td></tr>
+        <tr><td>Rich legacy gate</td><td>Preserve choices, actor, policy, roles, models, attempts, rationale/errors; derive missing stable role IDs; complete only with complete actor provenance.</td><td>Actor/response conflict, illegal option, duplicate key, ambiguous unfinished attempt.</td></tr>
+        <tr><td>Narrow terminal gate</td><td>Preserve exact mapping as legacy/non-authorizing audit record.</td><td>Nonterminal, illegal/changed selection, incomplete identity.</td></tr>
+        <tr><td>Complete user-pending gate</td><td>Preserve policy/recommendation/analysis, normalize null terminal fields, resume same user gate.</td><td>Preselected option, terminal actor, conflicting pending override.</td></tr>
+      </tbody>
+    </table>
+    <p>Migration is one locked atomic commit to schema 2/revision 1. Duplicate YAML, unsupported features, unknown shapes, phase conflicts, duplicate IDs, invalid timestamps, unsafe paths, or lossy mapping fail before mutation. No model response, rationale, user choice, or completed attempt is fabricated.</p>
+  </details>
+  <details class="card">
+    <summary>Normative policy transitions</summary>
+    <table>
+      <thead><tr><th>Condition</th><th>Required behavior</th></tr></thead>
+      <tbody>
+        <tr><td>Manual</td><td>Create/reuse user pending with no roles and null selection; user commits decided/actor user.</td></tr>
+        <tr><td>Advisor agreement</td><td>Advisor pending → user pending; persist and present original/Advisor recommendations; user decides.</td></tr>
+        <tr><td>Advisor disagreement</td><td>Advisor pending → one Arbiter pending → user pending; persist/present all analysis; user decides.</td></tr>
+        <tr><td>User override</td><td>True exactly when user differs from latest valid machine recommendation: Arbiter, else Advisor, else original.</td></tr>
+        <tr><td>Unsupported automatic</td><td>Keep configured fully automatic, set effective manual, record fallback, enter user pending, never dispatch.</td></tr>
+        <tr><td>Resume user pending</td><td>Reuse identity/analysis without repeating completed roles; commit one user decision or stay pending.</td></tr>
+      </tbody>
+    </table>
+  </details>
+  <details class="card">
+    <summary>Dispatch claim, checkpoint, and acknowledgement</summary>
+    <p>Outbox requires dispatch/source/kind/phase/target/status/attempts, claim token/time/lease, checkpoint, acknowledgement time, and error. Forward states are only <code>pending → claimed → acknowledged|blocked</code>; unchanged retries are idempotent.</p>
+    <p>Claim is an atomic commit with unpredictable token and bounded lease and starts no work. The sole logical start effect is one atomic commit that establishes target <code>in_progress</code> checkpoint and acknowledged outbox status together. Only then may binding return continue and execute the body. Crash while claimed has no effect and may reclaim after safely classified expiry using the same ID. Crash after acknowledgement commit but before observation returns the stored acknowledgement—never a second checkpoint/start. Blocked is pre-ack only; identities remain immutable; unexpired claims cannot be stolen.</p>
+  </details>
+  <details class="card">
+    <summary>Platform-bounded repository contract</summary>
+    <p>The lock is an atomically created sibling directory with random token, PID, host, acquisition time, and expiry. Acquisition has a bounded timeout. Release/cleanup require the token. Reclaim requires an expired, valid owner record and proof that its same-host process is dead; live, foreign, malformed, or uncertain locks are never broken, and cleanup cannot remove a successor lock.</p>
+    <p>Canonicalize task/state/lock/report paths, all existing parents, and targets; reject symlinks and require a regular state file. Stage in the state directory. Preserve mode exactly; preserve ownership only when already held or safely settable on the staged file, otherwise abort before replace—never unconditional privileged chown. Flush file before rename and directory where supported by Node on macOS/Linux, documenting unsupported durability evidence. Clean only token-owned lock/temp artifacts.</p>
+  </details>
+  <details class="card">
+    <summary>Native evidence bootstrap and two-step activation</summary>
+    <p>The bootstrap lives only under <code>platforms/codex-cli/tests/</code>, is excluded from build/install, and calls the real Codex plugin/skill entrypoint with a private test eligibility provider. No production CLI option, environment flag, config key, or workflow instruction selects it. It changes only declaration eligibility; denylist, policy, validation, roles, confidence/escalation, persistence, dispatch, and no-UI checks remain production-identical.</p>
+    <p>Step 1: while declared unsupported, run the native target directly through the bootstrap; real evidence exits 0 and unavailable exits 77. Step 2: separately declare supported, disable the grant for normal execution, and rerun native target plus matrix through ordinary eligibility. Any failure leaves/restores unsupported; fake/shared tests never substitute.</p>
+  </details>
+  <details class="card">
+    <summary>Compatibility and rollout</summary>
+    <p>Introduce schema and shared contracts before workflow adoption; use research decision areas as the first same-phase tracer; migrate remaining workflows without changing entry points. Rebuild committed variants and keep source/generated matrices green.</p>
+    <p>Integrate fake-port Codex tests while capability remains <code>unsupported</code>. Change the declaration only after native evidence. If the D1 active-turn spike fails, pause for a scope decision before MCP.</p>
+  </details>
+  <details class="card">
+    <summary>Safety</summary>
+    <p>Evaluator and runner both enforce denylist and exact option/actor/confidence contracts. Roles receive read-only context and no mutable handles; paths stay in the task root; model output is data; retry is bounded; low confidence/escalation cannot be suppressed; protected gates never dispatch automatically.</p>
+  </details>
+</section>
+
+<section id="guidance">
+  <h2>Implementation Guidance</h2>
+  <details class="card" open>
+    <summary>Testing approach</summary>
+    <ul class="checklist">
+      <li>Approximately six groups: evaluator; repository/migration; runner; workflow dispatch; Codex binding/build; native evidence.</li>
+      <li>Add <b>2–8 behavior-focused tests per implementation step group</b>; run only new/directly affected tests during the group, then the full matrix at integration/final verification.</li>
+      <li>Preserve the red tracer and assert role counts, actors, state, receipts, checkpoints, and zero user gates.</li>
+      <li>Cover role retry/resume and failures plus manual, Advisor agreement/disagreement, user override, fallback, and user-pending resume.</li>
+      <li>Exercise every migration row/rejection; for rejected/injected writes assert byte-exact state/reports, modes, permissions, and topology.</li>
+      <li>Cover timeout, live/expired/malformed/foreign locks, token cleanup, symlinks, mode/safe ownership, stale revision, and platform directory durability.</li>
+      <li>Inject post-checkpoint/ack commit but pre-observation failure: retry returns stored ack with one checkpoint/start; also test claimed-only crash and same-ID lease reclaim.</li>
+      <li>Prove evidence bootstrap absent from built/installed plugin and unreachable by environment/config/CLI/workflow; run unsupported-evidence then supported-matrix activation.</li>
+      <li>Validate canonical/generated runtimes after a clean double build; keep native E2E distinct and preserve exit 77 when unavailable.</li>
+    </ul>
+  </details>
+  <details class="card">
+    <summary>Standards compliance</summary>
+    <ul>
+      <li><code>.maister/docs/standards/global/build-pipeline.md</code>: canonical/adapter edits, regenerated variants, deterministic validation.</li>
+      <li><code>coding-style.md</code>, <code>commenting.md</code>, <code>minimal-implementation.md</code>: focused names/functions, timeless sparse comments, no speculative components.</li>
+      <li><code>error-handling.md</code>, <code>validation.md</code>: early exact allowlists, actionable errors, bounded backoff, cleanup, fail-closed handling.</li>
+      <li><code>conventions.md</code>: minimal dependencies, documented behavior, unsupported capability posture until proof.</li>
+      <li><code>testing/test-writing.md</code>: visible behavior and byte/mode/permission/topology guarantees for rejected transactions.</li>
+    </ul>
+  </details>
+</section>
+
+<section id="scope" class="card">
+  <h2>Out of Scope</h2>
+  <ul>
+    <li>Product-design backward refinement, backward transitions, or a general reset protocol.</li>
+    <li>Automation of implementation approval, final handoff, rollback, production, scope expansion, data-integrity halt, unresolved verification, failure-recovery skip, or other protected gates.</li>
+    <li>A new command, UI, dashboard authority, or changed journey beyond removing unnecessary auto-gate prompts.</li>
+    <li>A daemon, service, database, event store, generalized persistence, or MCP unless D1 is disproved and separately approved.</li>
+    <li>Codex-only evaluation, duplicated policy, or direct generated edits.</li>
+    <li>Support claims from shared tests, fake integration, smoke, file presence, or runner success.</li>
+    <li>Unrelated workflow redesign or a generic work-item SDK beyond immediate callers.</li>
+  </ul>
+</section>
+
+<section id="success" class="card">
+  <h2>Success Criteria</h2>
+  <ul class="checklist">
+    <li>Agreement: actor Advisor, Advisor once, Arbiter zero, user gate zero, acknowledged next checkpoint.</li>
+    <li>Disagreement: one logical Arbiter across retries, no repeated Advisor, legal competing option, zero UI, acknowledged target.</li>
+    <li>Full terminal provenance exists before projections or continuation.</li>
+    <li>Same-phase source completes and stable next work begins in the same active turn.</li>
+    <li>Next-phase flow establishes a real target checkpoint beyond state/stdout.</li>
+    <li>Resume duplicates no gate, completed role, Arbiter identity, applied choice, dispatch effect, checkpoint, or ack; post-commit retry returns stored ack.</li>
+    <li>All unsafe/failing paths advance nothing and return only safe user-gate or blocked directives.</li>
+    <li>Schema v2 enforces every required field, enum, nullability/timestamp, actor/provenance invariant, and gate/work/dispatch transition.</li>
+    <li>Every supported matrix shape migrates once to revision 1 without loss; named ambiguities preserve bytes, modes, permissions, reports, and topology.</li>
+    <li>Manual, both Advisor paths, override, fallback, and user-pending resume create exact v2 records without duplicate role/user decisions.</li>
+    <li>Stale writers cannot overwrite; uncertain locks time out unchanged; owner tokens protect successor locks; each legal commit increments once.</li>
+    <li>Symlinks reject, mode stays exact, safe ownership is preserved, and impossible metadata restoration fails before replace on macOS/Linux.</li>
+    <li>Runner recovers projections/transitions from full terminal state without roles or reconstructed provenance.</li>
+    <li>Manual/advisor policies, override, denylist, forward-only, report recovery, and immutable terminal choice remain green.</li>
+    <li>Build projects runtime/binding deterministically; second clean build and source/generated matrices pass.</li>
+    <li>Evidence provider is absent from built/installed plugins, unreachable normally, bypasses declaration only, and retains all safety.</li>
+    <li>Codex is unsupported for the first native exit 0; separate activation sets supported and reruns native target/matrix normally; unavailable stays 77.</li>
+    <li>Native E2E observes real Codex, both decision paths, one Arbiter, same/next targets, zero UI, resume, dedupe, and checkpoints.</li>
+    <li>No new command, UI, service, database, speculative abstraction, or direct generated edit.</li>
+  </ul>
+</section>
+</main>
+</body>
+</html>

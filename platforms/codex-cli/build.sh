@@ -145,6 +145,7 @@ copy_skill() {
   if [ "$stem" = "init" ]; then
     mkdir -p "$destination/bin"
     cp "$PLATFORM/templates/advisor.toml" "$destination/bin/advisor.toml"
+    cp "$PLATFORM/templates/arbiter.toml" "$destination/bin/arbiter.toml"
     sed -e 's/authoritative `codex` or `non-codex` signal/authoritative `codex` signal/' \
       "$destination/SKILL.md" > "$destination/SKILL.md.tmp"
     mv "$destination/SKILL.md.tmp" "$destination/SKILL.md"
@@ -167,6 +168,12 @@ for source in "$CORE/skills"/*; do
   [ -d "$source" ] || continue
   copy_skill "$source"
 done
+
+# The Codex binding is host-specific, while the evaluator, repository, runner,
+# and workflow receiver beside it remain byte-identical canonical projections.
+cp "$PLATFORM/bin/fully-automatic-gate.mjs" \
+  "$OUT/skills/orchestrator-framework/bin/fully-automatic-gate.mjs"
+chmod +x "$OUT/skills/orchestrator-framework/bin/fully-automatic-gate.mjs"
 
 # Codex has no command component. Each source command becomes an explicit
 # skill entrypoint, preserving the existing shortcut while using native skill

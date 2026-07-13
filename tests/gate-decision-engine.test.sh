@@ -86,7 +86,7 @@ test_contract_and_fixture_files_exist() {
 }
 
 test_fixture_catalog_is_complete() {
-  test "$(grep -c '^  - id:' "$FIXTURES")" -eq 19 && \
+  test "$(grep -c '^  - id:' "$FIXTURES")" -eq 24 && \
     fixture_contains advisor-agrees advisor_agrees decided advisor && \
     fixture_contains advisor-disagrees-arbiter-original advisor_disagrees_arbiter_selects_original decided arbiter && \
     fixture_contains advisor-disagrees-arbiter-advisor advisor_disagrees_arbiter_selects_advisor decided arbiter && \
@@ -106,7 +106,24 @@ test_fixture_catalog_is_complete() {
     fixture_contains report-failed failed_terminal_outcome failed system && \
     fixture_contains read-only-advisor advisor_attempts_file_edit blocked system && \
     fixture_contains fully-automatic-phase-continue valid_advisor_result_non_denylisted decided advisor && \
+    fixture_contains executable-v2-agreement gate_evaluator_advisor_agrees decided advisor && \
+    fixture_contains executable-v2-one-logical-arbiter gate_evaluator_arbiter_retry decided arbiter && \
+    fixture_contains executable-v2-unsafe-fallback gate_evaluator_invalid_low_or_escalated user_pending system && \
+    fixture_contains executable-v2-policy-compatibility gate_evaluator_manual_advisor_override_or_unsupported decided user && \
+    fixture_contains executable-v2-resume-reuse gate_evaluator_terminal_or_pending_resume decided advisor && \
     contains 'expected_continuation: phase_continue' "$FIXTURES"
+}
+
+test_executable_v2_evaluator_contract_is_bound() {
+  local evaluator="$ROOT/plugins/maister/skills/orchestrator-framework/bin/gate-evaluator.mjs"
+  test -f "$evaluator" && \
+    node --check "$evaluator" && \
+    contains 'bin/gate-evaluator.mjs' "$ENGINE" && \
+    contains 'continue | user_gate | blocked' "$ENGINE" && \
+    contains 'advisor_pending | arbiter_pending | user_pending | decided | blocked' "$ENGINE" && \
+    contains 'readState' "$evaluator" && \
+    contains 'commitState' "$evaluator" && \
+    contains 'logical_role_id' "$evaluator"
 }
 
 test_normalized_result_schema_is_complete() {
@@ -371,6 +388,7 @@ test_make_validate_wires_final_checks() {
 echo "=== Gate decision engine deterministic contract tests ==="
 assert "contract and fixture files exist" test_contract_and_fixture_files_exist
 assert "fixture catalog covers all required deterministic scenarios" test_fixture_catalog_is_complete
+assert "schema-v2 executable evaluator is bound to the shared repository" test_executable_v2_evaluator_contract_is_bound
 assert "normalized result schema is complete" test_normalized_result_schema_is_complete
 assert "exact option validation rejects malformed decisions" test_exact_option_validation_is_strict
 assert "safety denylist is non-overridable" test_denylist_is_non_overridable

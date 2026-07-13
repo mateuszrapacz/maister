@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Decision Summary — Issue Tracker Research</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#141b2d; --text:#e8edf7; --muted:#9ba8bd; --accent:#7dd3fc; --warn:#fbbf24; --line:#2a3650; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:16px/1.55 ui-sans-serif,system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); }
+    main { width:min(920px,calc(100% - 32px)); margin:40px auto 72px; }
+    h1 { font-size:clamp(2rem,5vw,3.4rem); line-height:1.05; margin:0 0 24px; }
+    h2 { margin-top:36px; font-size:1.25rem; color:var(--accent); }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:22px; margin:18px 0; }
+    .badge { display:inline-block; border:1px solid var(--warn); color:var(--warn); border-radius:999px; padding:4px 10px; font-size:.82rem; }
+    dl { display:grid; grid-template-columns:minmax(150px,220px) 1fr; gap:8px 18px; }
+    dt { color:var(--muted); } dd { margin:0; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:10px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top; }
+    code { color:#bae6fd; } a { color:var(--accent); }
+    @media (max-width:640px) { dl { grid-template-columns:1fr; } dt { margin-top:10px; } }
+  </style>
+</head>
+<body><main>
+  <span class="badge">Workflow completed</span>
+  <h1>Decision Summary</h1>
+  <div class="card">
+    <h2>TL;DR</h2>
+    <p>Wszystkie wyniki badania i high-level design z sześcioma ADR-ami są kompletne. Użytkownik zatwierdził finalny handoff i zakończenie workflowu.</p>
+  </div>
+  <h2>Gate record</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?</dd>
+    <dt>Options</dt><dd>Continue to brainstorming evaluation; Pause workflow</dd>
+    <dt>Original recommendation</dt><dd>Continue to brainstorming evaluation</dd>
+    <dt>Selected option</dt><dd><strong>Pause workflow</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Confidence</dt><dd>high</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Advisor attempts</h2>
+  <div class="card"><table><thead><tr><th>Attempt</th><th>Outcome</th><th>Backoff</th></tr></thead><tbody>
+    <tr><td>1</td><td><code>inherit</code> unsupported with ChatGPT account</td><td>1000 ms</td></tr>
+    <tr><td>2</td><td>same host error</td><td>2000 ms</td></tr>
+    <tr><td>3</td><td>same host error; exhausted</td><td>—</td></tr>
+  </tbody></table><p>No advisor recommendation was produced. The arbiter was not invoked.</p></div>
+  <h2>Brainstorming selection</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>Multiple viable architectures and competing trade-offs make brainstorming valuable. Would you like to explore solution alternatives?</dd>
+    <dt>Options</dt><dd>Yes, explore alternatives; No, skip brainstorming</dd>
+    <dt>Original recommendation</dt><dd>Yes, explore alternatives</dd>
+    <dt>Advisor recommendation</dt><dd><strong>Yes, explore alternatives</strong> (high confidence)</dd>
+    <dt>Selected option</dt><dd><strong>Yes, explore alternatives</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Phase 3 exit</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>Continue to solution convergence?</dd>
+    <dt>Selected option</dt><dd><strong>Continue to solution convergence</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Convergence area 1</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>Which provider execution boundary should Maister use?</dd>
+    <dt>Selected option</dt><dd><strong>1C — Node ESM helper + CapabilitySet</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Convergence area 2</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>Where should canonical source_issue provenance be anchored?</dd>
+    <dt>Selected option</dt><dd><strong>2A — root source_issue in orchestrator-state.yml</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Convergence area 3</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>How should quick-plan provenance persist across hosts?</dd>
+    <dt>Selected option</dt><dd><strong>3B — shared .maister/plans/*.md plus native UI</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Convergence area 4</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>Which tracker mutation surface should v1 expose?</dd>
+    <dt>Selected option</dt><dd><strong>4A — explicit capture/create only</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Convergence area 5</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>Which persistence protocol should Local Markdown use?</dd>
+    <dt>Selected option</dt><dd><strong>5A — UUID + lock + CAS + atomic replace</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Convergence area 6</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>In what order should v1 deliver tracker providers?</dd>
+    <dt>Selected option</dt><dd><strong>6B — Local Markdown first, then GitHub</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Phase 4 exit</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>Brainstorming complete. Continue to high-level design?</dd>
+    <dt>Selected option</dt><dd><strong>Pause workflow</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Phase 5 design clarification</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>The six convergence decisions establish the design direction. Should the high-level design proceed with those assumptions unchanged?</dd>
+    <dt>Options</dt><dd>Confirm assumptions; Correct assumptions; Provide more context</dd>
+    <dt>Original recommendation</dt><dd>Confirm assumptions</dd>
+    <dt>Advisor recommendation</dt><dd><strong>Confirm assumptions</strong> (high confidence)</dd>
+    <dt>Automatic continuation</dt><dd>Unsupported for Codex; interactive fallback used</dd>
+    <dt>Selected option</dt><dd><strong>Confirm assumptions</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Phase 5 exit</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>Design complete. Continue to output generation?</dd>
+    <dt>Options</dt><dd>Continue to output generation; Pause workflow</dd>
+    <dt>Original recommendation</dt><dd>Continue to output generation</dd>
+    <dt>Advisor recommendation</dt><dd><strong>Continue to output generation</strong> (high confidence)</dd>
+    <dt>Automatic continuation</dt><dd>Unsupported for Codex; interactive fallback used</dd>
+    <dt>Selected option</dt><dd><strong>Continue to output generation</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Final handoff approval</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>Research outputs are complete. Approve the final handoff?</dd>
+    <dt>Options</dt><dd>Complete workflow; Keep workflow open</dd>
+    <dt>Safety</dt><dd>Denylisted; always user-controlled</dd>
+    <dt>Selected option</dt><dd><strong>Complete workflow</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+    <dt>Workflow status</dt><dd><strong>completed</strong></dd>
+  </dl></div>
+  <h2>Artifacts</h2>
+  <h2>High-level design selection</h2>
+  <div class="card"><dl>
+    <dt>Question</dt><dd>The research identifies architectural decisions that would directly feed development. Would you like to generate a high-level design?</dd>
+    <dt>Original recommendation</dt><dd>Yes, generate design</dd>
+    <dt>Advisor recommendation</dt><dd><strong>Yes, generate design</strong> (high confidence)</dd>
+    <dt>Selected option</dt><dd><strong>Yes, generate design</strong></dd>
+    <dt>Final actor</dt><dd>user</dd>
+    <dt>Status</dt><dd>decided</dd>
+  </dl></div>
+  <h2>Artifacts</h2>
+  <div class="card"><p><a href="research-report.html">Research report</a> · <a href="../analysis/synthesis.md">Synthesis</a> · <a href="../orchestrator-state.yml">Workflow state</a> · <a href="../dashboard.html">Dashboard</a></p></div>
+</main></body></html>

@@ -81,6 +81,20 @@ truth; these skills do not create a second session-state mechanism.
 artifacts, and resume. Codex Goals or native planning can improve the session
 experience, but do not replace the Maister state graph.
 
+### Fully automatic continuation
+
+Codex supports fully automatic continuation for configurable gates. A terminal
+Advisor or Arbiter decision is committed before the workflow acknowledges and
+starts the same-phase work item or next phase in the active Codex turn. Manual
+and protected gates still require the user, and unsafe or incomplete evidence
+fails closed without advancing the workflow.
+
+Capability activation is backed by the repository-owned native Codex E2E target
+at `platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh`. Its private
+eligibility bootstrap exists only beside that test and is not copied into the
+generated plugin or exposed through production CLI, environment, configuration,
+or workflow inputs.
+
 ## Models and subagents
 
 The plugin does not pin a model or reasoning effort. Codex chooses the active

@@ -136,6 +136,28 @@ When a phase ends with `→ **AUTO-CONTINUE**`:
 - Do NOT wait for user input
 - After any summary, proceed immediately to the next phase
 
+### Executable continuation ordering
+
+Automatic continuation is established by durable evidence, not by omitting a
+question. The evaluator first commits one complete, non-denylisted terminal
+gate. The workflow then uses `bin/workflow-continuation.mjs` to apply that
+selection to its stable inventory and create one deterministic outbox record.
+Claiming the record does not start work. The receiver atomically establishes
+the target's `in_progress` checkpoint and acknowledges the same `dispatch_id`;
+only then may the host return `continue` and execute the target body.
+
+A phase-entry guard accepts either an explicit user-gate call or the complete
+automatic evidence chain: matching terminal gate, applied selection,
+acknowledged outbox entry, and target checkpoint. Claimed, expired, missing,
+or mismatched records do not authorize entry. Retry after acknowledgement
+returns the stored checkpoint and never starts a second target. Protected and
+denylisted gates are excluded from automatic evidence and always retain the
+explicit user boundary.
+
+`bin/phase-continue.mjs` remains a verifier/report/legacy-forward-transition
+runner. It re-reads evaluator-owned state and never invokes roles, creates
+provenance, chooses workflow targets, claims dispatch, or starts target work.
+
 **Common mistake**: Outputting a summary and then stopping/ending the turn. The summary is fine — stopping is not.
 
 ### Anti-Patterns

@@ -129,23 +129,33 @@ input. A missing or unsafe continuation falls back to the user gate or persists 
 fresh state read proves `orchestrator.implementation_approval.status:
 approved`.
 
-### JSON continuation runner contract
+### Durable continuation and phase-entry evidence
 
-The host remains responsible for evaluating the gate and selecting the option. For a valid non-denylisted `fully_automatic` result, the call site constructs one JSON object for `skills/orchestrator-framework/bin/phase-continue.mjs`. The payload has exactly these fields:
+The evaluator owns policy, role invocation, and the complete terminal gate envelope. For a valid non-denylisted `fully_automatic` result, pass the exact persisted identity, selection, actor, and confidence to `skills/orchestrator-framework/bin/phase-continue.mjs`. Its JSON payload remains:
 
 - Required: `state`, `phase_id`, `gate_type`, `question`, `options`, `selected_option`, `actor`, and `confidence`.
 - Optional: `next_phase`, `report_md`, and `report_html`.
 
-`actor` is `advisor` or `arbiter`, and `confidence` is `high` or `medium`. The host preserves the ordered options and exact selected option; low-confidence or escalated results remain outside automatic execution. Advisor/arbiter selection and policy are unchanged, and the runner accepts only this validated JSON payload.
+The runner is a verifier and recovery boundary only. It re-reads schema-v2 state, requires one matching `decided` record with `provenance_kind: complete`, checks the exact option, actor, confidence, denylist, and legal forward transition, then projects reports and performs only the requested legacy forward-phase commit. It never invokes roles, synthesizes provenance, chooses domain work, creates dispatches, or starts targets. Use stdin or exactly `--input-file PATH`; stdout is compact JSON and actionable errors use stderr.
 
-Transport is a hard cutover: with no arguments, pass the complete JSON object on stdin; alternatively invoke the runner with exactly `--input-file PATH`. This is the only accepted CLI argument; additional command-line arguments are invalid.
+Workflow-owned routing uses `workflow-continuation.mjs`. Materialize a stable ordered inventory, atomically apply the terminal selection to the source item and create one deterministic outbox record, claim it with a bounded lease, then atomically establish the receiver's target `in_progress` checkpoint and acknowledge that same `dispatch_id`. A retry after acknowledgement returns the stored checkpoint; it never starts the target twice. Research convergence materializes decision-area IDs and artifact order first; other workflows keep target selection in their own phase logic.
 
-Before invoking the runner, read canonical state and reuse a validated terminal record for the same idempotency key. The runner performs canonical-state preflight, evaluates denylist and idempotency on every attempt, and rejects changed selections without appending or overwriting. A denylisted gate remains blocked and cannot continue automatically.
+At every phase entry, accept either (a) the explicit user-gate call evidence required by the existing checkpoint, or (b) matching automatic evidence: a complete non-denylisted terminal gate, its legal applied selection, one acknowledged outbox record, and the target's matching durable `in_progress` checkpoint. State flags or a claimed-but-unacknowledged dispatch are insufficient. Protected and denylisted gates always require explicit user evidence.
 
-Persist the terminal record and requested reports.
-Only after durable state and reports does the runner continue. Phase continuation happens only after that durable work succeeds. Reports project persisted `orchestrator.gate_history`. stdout contains only the compact JSON result; actionable errors go to stderr. A non-zero runner exit stops continuation and falls back to the user gate or persists blocked; it never advances the phase.
+Terminal persistence precedes report projection, selection application, outbox creation, claim, checkpoint, and acknowledgement. Report or transition retries reuse the terminal gate and never append another decision or change its selection.
 
-Retry from the validated terminal state after an interrupted report or transition: it regenerates missing reports, applies a pending phase transition exactly once, and must not append another history entry or downgrade a blocked or terminal selection. No low-confidence automatic execution is added.
+#### JSON continuation runner contract
+
+The host sends one JSON object with exactly these fields: `state`, `phase_id`,
+`gate_type`, `question`, `options`, `selected_option`, `actor`, `confidence`,
+`next_phase`, `report_md`, and `report_html`. The runner reads a complete object
+from stdin, or from a file when passed exactly `--input-file PATH`; this is the
+only accepted CLI argument and additional command-line arguments are invalid.
+
+Persist the terminal record and requested reports. stdout contains only the compact JSON result.
+Phase continuation happens only after durable persistence and report generation. A non-zero runner exit stops continuation and falls back to the user gate or persists blocked; low-confidence results never enter the automatic executor path.
+
+Retry from the validated terminal state regenerates missing reports, applies a pending phase transition exactly once, and must not append another history entry.
 
 Stable call-site inventory (the literal option order is part of the gate's
 idempotency key): `phase-1-clarification` uses
@@ -292,7 +302,7 @@ Empty `decisions_needed` skips step 1 only. Step 2 is unconditional. There is no
 
 ### Phase 3: TDD Red Gate (Conditional)
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from Phase 2 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Write a failing test that reproduces the defect
 **Execute**: Direct - write test, verify it FAILS
@@ -311,7 +321,7 @@ Invoke the engine as `phase-3-exit` with question "TDD red gate complete. Contin
 
 ### Phase 4: UI Mockup Generation (Conditional)
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Generate ASCII mockups showing UI integration
 **Execute**: native subagent delegation - `maister:ui-mockup-generator` subagent
@@ -332,7 +342,7 @@ Invoke the engine as `phase-4-exit` with question "UI mockups complete. Continue
 
 ### Phase 5: Technical Approach, Requirements & Specification
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **⛔ ROUTING GUARD**: Read `task_context.task_characteristics` from `orchestrator-state.yml`. If `has_reproducible_defect` is true and Phase 3 is NOT in `completed_phases` → STOP, execute Phase 3 first. If `ui_heavy` is true and Phase 4 is NOT in `completed_phases` → STOP, execute Phase 4 first.
 
@@ -391,7 +401,7 @@ Invoke the engine as `phase-5-exit` with question "Continue to specification aud
 
 ### Phase 6: Specification Audit (Recommended)
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from Phase 5 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Independent review of specification before implementation
 **Execute**: native subagent delegation - `maister:spec-auditor` subagent
@@ -410,7 +420,7 @@ Invoke the engine as `phase-6-exit` with question "Continue to implementation pl
 
 ### Phase 7: Implementation Planning
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from Phase 6 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Break specification into implementation steps
 
@@ -437,7 +447,7 @@ Invoke the engine as `phase-7-exit` with question "Continue to implementation ap
 
 ### Phase 8: Implementation
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from Phase 7 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Execute the implementation plan
 
@@ -469,7 +479,7 @@ Invoke the engine as `phase-8-exit` with question "Continue to verification?", o
 
 ### Phase 9: TDD Green Gate (Conditional)
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from Phase 8 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Verify the failing test now passes
 **Execute**: Direct - run the test written in Phase 3
@@ -488,7 +498,7 @@ Invoke the engine as `phase-9-exit` with question "TDD gate passed. Continue to 
 
 ### Phase 10: Verification Options Prompt
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Determine which verification checks to run using tiered decision matrix
 **Execute**: Direct - build the complete `verification-options` gate context and invoke the shared engine; `plain-text user question` is only the adapter.
@@ -529,7 +539,7 @@ Options: "Code review (Recommended)", "Pragmatic review (Recommended)", "Reality
 
 ### Phase 11: Verification & Issue Resolution
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from Phase 10 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Comprehensive implementation verification with fix-then-reverify cycles
 **Output**: `verification/implementation-verification.md`, optional code-review/pragmatic/reality reports, updated `implementation/work-log.md`
@@ -589,7 +599,7 @@ Invoke the engine as `phase-11-exit` with question "Continue to Phase 12?", opti
 
 ### Phase 12: E2E Testing (Optional)
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from Phase 11 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 > **⚠ Serialization rule**: Phases 12 and 13 share the Playwright MCP browser instance. They MUST run strictly sequentially. Do NOT dispatch the Phase 12 Task call and the Phase 13 Task call in the same assistant message, even when both are enabled. Wait for Phase 12 to return, honor the `→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `plain-text user question` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).` / `plain-text user question` gate below, then start Phase 13. Concurrent dispatch will corrupt both browser sessions.
 
@@ -609,7 +619,7 @@ Invoke the engine as `phase-12-exit` with question "E2E complete. Continue to Ph
 
 ### Phase 13: User Documentation (Optional)
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 > **⚠ Serialization rule**: Phases 12 and 13 share the Playwright MCP browser instance — see the same rule on Phase 12. Phase 13 MUST NOT be dispatched in the same assistant message as Phase 12, regardless of how the user answered the gate.
 
@@ -631,7 +641,7 @@ Invoke the engine as `phase-13-exit` with question "Documentation complete. Cont
 
 ### Phase 14: Finalization
 
-> **Phase entry self-check**: Before executing this phase, locate the `plain-text user question` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `phase entries in orchestrator-state.yml`) without a corresponding `plain-text user question` call are protocol violations — never paper over a missed gate by updating state.
+> **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Complete workflow and provide next steps
 **Execute**: Direct - create summary, update state, guide commit

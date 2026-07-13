@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automatic Codex workflow continuation</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, system-ui, sans-serif; }
+    body { max-width: 880px; margin: 0 auto; padding: 32px; color: #1f2937; background: #f8fafc; line-height: 1.6; }
+    main { background: #fff; border: 1px solid #dbe3ee; border-radius: 14px; padding: 28px; }
+    h1 { margin-top: 0; } h2 { margin-top: 28px; color: #1e3a8a; }
+    code { background: #eef2ff; padding: 2px 5px; border-radius: 4px; }
+    li { margin: 6px 0; }
+    .note { background: #eff6ff; border-left: 4px solid #2563eb; padding: 10px 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Automatic Codex workflow continuation</h1>
+  <p class="note">Maister can continue safe workflow decisions automatically when the main agent and Advisor agree.</p>
+  <h2>What this changes</h2>
+  <p>Eligible workflows continue without an extra question. If recommendations differ, one Arbiter resolves the difference. The complete decision is saved before continuation, so retries do not repeat work.</p>
+  <h2>Who should use this</h2>
+  <p>Users running existing <code>maister:*</code> workflows in Codex with the fully automatic policy enabled. No new command or UI setup is required.</p>
+  <h2>What happens</h2>
+  <ol>
+    <li>Maister evaluates and records the current gate.</li>
+    <li>Agreement records the Advisor decision and continues.</li>
+    <li>Disagreement invokes one logical Arbiter with the same context.</li>
+    <li>The terminal decision and reports are persisted.</li>
+    <li>The workflow advances using the saved selection.</li>
+  </ol>
+  <h2>Protected decisions</h2>
+  <p>Implementation approval, rollback, unresolved critical findings, production go/no-go, and final handoff always require an explicit user decision.</p>
+  <h2>Interrupted workflows</h2>
+  <p>Resume the same task. Maister reuses the terminal decision, regenerates missing reports, and applies a pending transition once without duplicate history or duplicate target starts.</p>
+  <h2>Fail-closed behavior</h2>
+  <p>Invalid, denied, low-confidence, or non-zero runner results return to a user gate or persist a blocked state. Maister never advances the phase silently.</p>
+  <h2>Troubleshooting</h2>
+  <ul>
+    <li>If a question appears, it may be a protected or manual gate; answer it normally.</li>
+    <li>If the task is blocked, read the latest gate and verification report, resolve it, and resume.</li>
+    <li>If a report is missing, resume again so it can be projected from durable history.</li>
+  </ul>
+  <h2>Related artifacts</h2>
+  <ul>
+    <li><a href="../verification/implementation-verification.md">Implementation verification</a></li>
+    <li><a href="../outputs/decision-summary.md">Workflow decision summary</a></li>
+    <li><a href="../implementation/spec.md">Implementation specification</a></li>
+  </ul>
+</main>
+</body>
+</html>

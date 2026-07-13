@@ -1,0 +1,79 @@
+orchestrator:
+  schema_version: 2
+  revision: 0
+  initial_phase: "phase-1"
+  current_phase: "phase-1"
+  completed_phases: []
+  failed_phases: []
+  gate_history:
+    - schema_version: 2
+      idempotency_key: "sha256:terminal-gate"
+      phase_id: "phase-1"
+      gate_type: "research-convergence"
+      question: "Choose the next decision area"
+      options:
+        - "Continue"
+        - "Pause"
+      original_recommendation: "Continue"
+      configured_policy: "fully_automatic"
+      policy: "fully_automatic"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Continue"
+      final_actor: "advisor"
+      rationale: "The recommendation is safe"
+      confidence: "high"
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: "advisor:terminal-gate"
+        agent: "advisor"
+        model: "test-model"
+        response:
+          selected_option: "Continue"
+          rationale: "The recommendation is safe"
+          confidence: "high"
+          escalate_to_user: false
+        attempts:
+          - number: 1
+            status: "completed"
+            started_at: "2026-07-13T00:00:00Z"
+            completed_at: "2026-07-13T00:00:01Z"
+            error: null
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-13T00:00:00Z"
+      updated_at: "2026-07-13T00:00:01Z"
+      decided_at: "2026-07-13T00:00:01Z"
+  work:
+    phase-1:
+      inventory_version: "sha256:research-v1"
+      items:
+        - id: "decision-area:source"
+          ordinal: 1
+          status: "in_progress"
+          source_gate_key: null
+          selected_option: null
+        - id: "decision-area:target"
+          ordinal: 2
+          status: "ready"
+          source_gate_key: null
+          selected_option: null
+  dispatch_outbox: []
+task:
+  status: "in_progress"
+phases:
+  - id: "phase-1"
+    status: "in_progress"
+  - id: "phase-2"
+    status: "pending"

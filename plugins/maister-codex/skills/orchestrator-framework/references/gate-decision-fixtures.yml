@@ -78,3 +78,23 @@ fixtures:
     expected_status: decided
     expected_actor: advisor
     expected_continuation: phase_continue
+  - id: executable-v2-agreement
+    input: gate_evaluator_advisor_agrees
+    expected_status: decided
+    expected_actor: advisor
+  - id: executable-v2-one-logical-arbiter
+    input: gate_evaluator_arbiter_retry
+    expected_status: decided
+    expected_actor: arbiter
+  - id: executable-v2-unsafe-fallback
+    input: gate_evaluator_invalid_low_or_escalated
+    expected_status: user_pending
+    expected_actor: system
+  - id: executable-v2-policy-compatibility
+    input: gate_evaluator_manual_advisor_override_or_unsupported
+    expected_status: decided
+    expected_actor: user
+  - id: executable-v2-resume-reuse
+    input: gate_evaluator_terminal_or_pending_resume
+    expected_status: decided
+    expected_actor: advisor

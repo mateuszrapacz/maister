@@ -1,0 +1,911 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: [phase-1, phase-2, phase-3, phase-4, phase-5, phase-6]
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    html_output: true
+    brainstorming_enabled: true
+    design_enabled: true
+    advisor:
+      enabled: true
+      gate_policies:
+        phase-exit: fully_automatic
+        optional-phase: fully_automatic
+        clarify: fully_automatic
+        convergence: fully_automatic
+        verify-matrix: fully_automatic
+      advisor_agent: advisor
+      advisor_model: gpt-5.6-sol
+      arbiter_agent: arbiter
+      arbiter_model: gpt-5.6-sol
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
+  created: "2026-07-13T13:53:40Z"
+  updated: "2026-07-13T16:16:12Z"
+  task_path: .maister/tasks/research/2026-07-13-issue-tracker-workflow
+  task_ids:
+    phase-1: research-phase-1
+    phase-2: research-phase-2
+    phase-3: research-phase-3
+    phase-4: research-phase-4
+    phase-5: research-phase-5
+    phase-6: research-phase-6
+  gate_history:
+    - schema_version: 1
+      idempotency_key: sha256:8dc80ac772693c815f0dfac96f7baa45a3cded3e406f16c6f5a42756f1e157d4
+      phase_id: phase-1
+      gate_type: phase-1-exit
+      question: Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?
+      options:
+        - Continue to brainstorming evaluation
+        - Pause workflow
+      policy: advisor
+      safety_classification: configurable
+      status: decided
+      selected_option: Pause workflow
+      final_actor: user
+      original_recommendation: Continue to brainstorming evaluation
+      advisor:
+        agent: advisor
+        model: null
+        response: null
+        attempts:
+          - actor: advisor
+            attempt: 1
+            started_at: "2026-07-13T14:31:56Z"
+            finished_at: "2026-07-13T14:33:12Z"
+            status: unavailable
+            raw_response: "The 'inherit' model is not supported when using Codex with a ChatGPT account."
+            validation_errors:
+              - Advisor role could not start with the configured inherited model.
+            backoff:
+              strategy: exponential
+              delay_ms: 1000
+              scheduled_at: "2026-07-13T14:33:12Z"
+              completed_at: "2026-07-13T14:33:13Z"
+          - actor: advisor
+            attempt: 2
+            started_at: "2026-07-13T14:33:13Z"
+            finished_at: "2026-07-13T14:33:52Z"
+            status: unavailable
+            raw_response: "The 'inherit' model is not supported when using Codex with a ChatGPT account."
+            validation_errors:
+              - Advisor role could not start with the configured inherited model.
+            backoff:
+              strategy: exponential
+              delay_ms: 2000
+              scheduled_at: "2026-07-13T14:33:52Z"
+              completed_at: "2026-07-13T14:33:54Z"
+          - actor: advisor
+            attempt: 3
+            started_at: "2026-07-13T14:33:54Z"
+            finished_at: "2026-07-13T14:34:29Z"
+            status: unavailable
+            raw_response: "The 'inherit' model is not supported when using Codex with a ChatGPT account."
+            validation_errors:
+              - Advisor role could not start with the configured inherited model.
+            backoff:
+              strategy: exponential
+              delay_ms: 0
+              scheduled_at: null
+              completed_at: null
+        exhausted: true
+      arbiter:
+        agent: advisor
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User explicitly chose to pause after reviewing the completed research foundation.
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:ef97f9b46a7c28e4c418e8abf667877f80fd953dacc6d142349fdfd47b1e72e6
+      phase_id: phase-2
+      gate_type: optional-phase-selection
+      question: Multiple viable architectures and competing trade-offs make brainstorming valuable. Would you like to explore solution alternatives?
+      options:
+        - Yes, explore alternatives
+        - No, skip brainstorming
+      policy: advisor
+      safety_classification: configurable
+      status: decided
+      selected_option: Yes, explore alternatives
+      final_actor: user
+      original_recommendation: Yes, explore alternatives
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response:
+          selected_option: Yes, explore alternatives
+          rationale: The research identifies multiple architectural seams and unresolved trade-offs—including state-schema compatibility, host-specific persistence, mutation scope, and filesystem concurrency—so comparing alternatives is likely to materially improve the recommendation before implementation.
+          confidence: high
+          escalate_to_user: false
+        attempts:
+          - actor: advisor
+            attempt: 1
+            started_at: "2026-07-13T14:59:02Z"
+            finished_at: "2026-07-13T15:00:02Z"
+            status: valid
+            raw_response: |-
+              selected_option: "Yes, explore alternatives"
+              rationale: "The research identifies multiple architectural seams and unresolved trade-offs—including state-schema compatibility, host-specific persistence, mutation scope, and filesystem concurrency—so comparing alternatives is likely to materially improve the recommendation before implementation."
+              confidence: high
+              escalate_to_user: false
+            validation_errors: []
+            backoff:
+              strategy: exponential
+              delay_ms: 0
+              scheduled_at: null
+              completed_at: null
+        exhausted: false
+      arbiter:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User accepted the recommendation to explore alternatives because the research contains material competing architectural trade-offs.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:b44cce49b270e039db9825c224697b82b1f7ac236d4a1a361cd36e21a6e3cd13
+      phase_id: phase-3
+      gate_type: phase-3-exit
+      question: Continue to solution convergence?
+      options:
+        - Continue to solution convergence
+        - Pause workflow
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to solution convergence
+      final_actor: user
+      original_recommendation: Continue to solution convergence
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User chose to continue from solution generation to sequential convergence.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:8b8e6268eadeea8e9075d04f18884ea11c39055775dd1d52df2849b6bd0c2af6
+      phase_id: phase-4
+      gate_type: research-convergence
+      question: Which provider execution boundary should Maister use?
+      options:
+        - 1A — instrukcje prose i bezpośrednie narzędzia hosta
+        - 1B — deklaratywne command templates wykonywane przez host
+        - 1C — mały helper Node ESM i deklaratywny CapabilitySet (Recommended)
+        - Need more info
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: 1C — mały helper Node ESM i deklaratywny CapabilitySet (Recommended)
+      final_actor: user
+      original_recommendation: 1C — mały helper Node ESM i deklaratywny CapabilitySet (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User selected the executable Node ESM helper and declarative CapabilitySet as the shared provider execution boundary.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:1405b0df3ba973ffe77cf109cf542cc3b69b3d0c709d74780c3d6c6c2206be62
+      phase_id: phase-4
+      gate_type: research-convergence
+      question: Where should canonical source_issue provenance be anchored?
+      options:
+        - 2A — korzeniowy source_issue w orchestrator-state.yml (Recommended)
+        - 2B — authoritative intake manifest poza state
+        - 2C — workflow-specific source fields
+        - Need more info
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: 2A — korzeniowy source_issue w orchestrator-state.yml (Recommended)
+      final_actor: user
+      original_recommendation: 2A — korzeniowy source_issue w orchestrator-state.yml (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User selected a root source_issue provenance pointer in orchestrator-state.yml, contingent on unifying and fixture-testing the canonical state schema.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:6420d393ee515436120df4c9fc4ee3237a536c22f59202bc3af214652b88006b
+      phase_id: phase-4
+      gate_type: research-convergence
+      question: How should quick-plan provenance persist across hosts?
+      options:
+        - 3A — tylko native plan hosta
+        - 3B — wspólny .maister/plans/*.md plus native UI (Recommended)
+        - 3C — centralny registry proweniencji bez trwałego planu
+        - Need more info
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: 3B — wspólny .maister/plans/*.md plus native UI (Recommended)
+      final_actor: user
+      original_recommendation: 3B — wspólny .maister/plans/*.md plus native UI (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User selected a durable cross-host .maister/plans/*.md artifact as the canonical quick-plan handoff, with native UI as a projection.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:2d424dd21881954ddefce454a09a7a06999e6b8804b6a11a5464d25f1abcaad2
+      phase_id: phase-4
+      gate_type: research-convergence
+      question: Which tracker mutation surface should v1 expose?
+      options:
+        - 4A — tylko jawne capture/create (Recommended)
+        - 4B — capture plus comment/claim/transition za approval
+        - 4C — pełna synchronizacja statusu workflow ↔ tracker
+        - Need more info
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: 4A — tylko jawne capture/create (Recommended)
+      final_actor: user
+      original_recommendation: 4A — tylko jawne capture/create (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User limited v1 tracker mutations to explicit capture/create; handoff, resume, and read flows remain non-mutating.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:eaaf8832a0e880c6b34925b886e016307a54722d2672df5fd5e37f6ee2f43863
+      phase_id: phase-4
+      gate_type: research-convergence
+      question: Which persistence protocol should Local Markdown use?
+      options:
+        - 5A — rekord per UUID, per-record lock, CAS i atomic replace (Recommended)
+        - 5B — append-only journal z materializowaną projekcją
+        - 5C — Git-only optimistic concurrency
+        - Need more info
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: 5A — rekord per UUID, per-record lock, CAS i atomic replace (Recommended)
+      final_actor: user
+      original_recommendation: 5A — rekord per UUID, per-record lock, CAS i atomic replace (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User selected per-UUID records with per-record locking, CAS, and atomic replace, bounded to ordinary local filesystems.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:2e2af5cd201403e231f02eb0b77f59014f873fb8d3539b80647f50fb1615a7f6
+      phase_id: phase-4
+      gate_type: research-convergence
+      question: In what order should v1 deliver tracker providers?
+      options:
+        - 6A — Local Markdown i GitHub w jednym release
+        - 6B — Local Markdown tracer, następnie GitHub (Recommended)
+        - 6C — uniwersalny provider SDK przed konkretnymi providerami
+        - Need more info
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: 6B — Local Markdown tracer, następnie GitHub (Recommended)
+      final_actor: user
+      original_recommendation: 6B — Local Markdown tracer, następnie GitHub (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User selected an incremental delivery sequence with Local Markdown as the first tracer and GitHub as the second tracer over the same conformance contract.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:deff7dc9407e4bf7bd8e9827eea83f0943d11d5daa1793b43db636eb584db001
+      phase_id: phase-4
+      gate_type: phase-4-exit
+      question: Brainstorming complete. Continue to high-level design?
+      options:
+        - Continue to high-level design
+        - Pause workflow
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Pause workflow
+      final_actor: user
+      original_recommendation: Continue to high-level design
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User chose to pause after completing all six convergence decisions and before high-level design.
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:571789075d8fe42ced95941597dca774808f00995f22ba6b6bf6ea6a477cf575
+      phase_id: phase-2
+      gate_type: optional-phase-selection
+      question: The research identifies architectural decisions that would directly feed development. Would you like to generate a high-level design?
+      options:
+        - Yes, generate design
+        - No, skip design
+      policy: advisor
+      safety_classification: configurable
+      status: decided
+      selected_option: Yes, generate design
+      final_actor: user
+      original_recommendation: Yes, generate design
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response:
+          selected_option: Yes, generate design
+          rationale: The research has established a concrete direction but leaves important interface, state-management, provider-boundary, and concurrency decisions unresolved; a high-level design will convert those findings and the enabled alternatives analysis into development-ready architectural guidance.
+          confidence: high
+          escalate_to_user: false
+        attempts:
+          - actor: advisor
+            attempt: 1
+            started_at: "2026-07-13T15:02:56Z"
+            finished_at: "2026-07-13T15:03:48Z"
+            status: valid
+            raw_response: |-
+              selected_option: "Yes, generate design"
+              rationale: "The research has established a concrete direction but leaves important interface, state-management, provider-boundary, and concurrency decisions unresolved; a high-level design will convert those findings and the enabled alternatives analysis into development-ready architectural guidance."
+              confidence: high
+              escalate_to_user: false
+            validation_errors: []
+            backoff:
+              strategy: exponential
+              delay_ms: 0
+              scheduled_at: null
+              completed_at: null
+        exhausted: false
+      arbiter:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User authorized following advisor recommendations that agree with the original recommendation, confirming generation of the high-level design.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:d2d155b8dc6dc759724bbddbe3f5de77683741a654c0091310ef6e2f95fa31d6
+      phase_id: phase-5
+      gate_type: research-clarification
+      question: The six convergence decisions establish the design direction. Should the high-level design proceed with those assumptions unchanged?
+      options:
+        - Confirm assumptions
+        - Correct assumptions
+        - Provide more context
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Confirm assumptions
+      final_actor: user
+      original_recommendation: Confirm assumptions
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response:
+          selected_option: Confirm assumptions
+          rationale: The six decisions are mutually consistent, respect the stated architectural constraints, keep orchestrator-state.yml authoritative, avoid provider coupling, and define a bounded v1 with explicit filesystem and platform limitations. The high-level design can proceed unchanged.
+          confidence: high
+          escalate_to_user: false
+        attempts:
+          - actor: advisor
+            attempt: 1
+            started_at: "2026-07-13T15:55:19Z"
+            finished_at: "2026-07-13T15:56:25Z"
+            status: valid
+            raw_response: |-
+              selected_option: "Confirm assumptions"
+              rationale: "The six decisions are mutually consistent, respect the stated architectural constraints, keep orchestrator-state.yml authoritative, avoid provider coupling, and define a bounded v1 with explicit filesystem and platform limitations. The high-level design can proceed unchanged."
+              confidence: high
+              escalate_to_user: false
+            validation_errors: []
+            backoff:
+              strategy: exponential
+              delay_ms: 0
+              scheduled_at: null
+              completed_at: null
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User confirmed that the high-level design should proceed with the six converged assumptions unchanged.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:6bdf08499f5ea52adcb109887df08612b87fed5c1a2a6ba779d4fc70c9cb160e
+      phase_id: phase-5
+      gate_type: phase-5-exit
+      question: Design complete. Continue to output generation?
+      options:
+        - Continue to output generation
+        - Pause workflow
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to output generation
+      final_actor: user
+      original_recommendation: Continue to output generation
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response:
+          selected_option: Continue to output generation
+          rationale: Phase 5 completed successfully, required design artifacts and checks are present, known risks and prerequisites are explicitly preserved, and Phase 6 only packages the validated findings into final outputs.
+          confidence: high
+          escalate_to_user: false
+        attempts:
+          - actor: advisor
+            attempt: 1
+            started_at: "2026-07-13T16:08:21Z"
+            finished_at: "2026-07-13T16:09:46Z"
+            status: valid
+            raw_response: |-
+              selected_option: "Continue to output generation"
+              rationale: "Phase 5 completed successfully, required design artifacts and checks are present, known risks and prerequisites are explicitly preserved, and Phase 6 only packages the validated findings into final outputs."
+              confidence: high
+              escalate_to_user: false
+            validation_errors: []
+            backoff:
+              strategy: exponential
+              delay_ms: 0
+              scheduled_at: null
+              completed_at: null
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User chose to continue from the verified high-level design to final output generation.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:283ebe0a6247edeaaddef3b7647f654d966aa190da4ee71b2f961b3dd18d2825
+      phase_id: phase-6
+      gate_type: final-handoff-approval
+      question: Research outputs are complete. Approve the final handoff?
+      options:
+        - Complete workflow
+        - Keep workflow open
+      policy: manual
+      safety_classification: denylisted
+      status: decided
+      selected_option: Complete workflow
+      final_actor: user
+      original_recommendation: Complete workflow
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: User approved the final research handoff and completion of the workflow.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+  implementation_approval:
+    status: not_required
+    approved_by: null
+    approved_at: null
+    approved_scope: []
+  phases:
+    - id: phase-1
+      name: Research foundation
+      status: completed
+      active_form: Executing research foundation
+      icon_hint: analysis
+      blocked_by: []
+      started: "2026-07-13T13:53:40Z"
+      completed: "2026-07-13T14:38:08Z"
+      gate:
+        question: Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?
+        answer: Pause workflow
+        status: decided
+    - id: phase-2
+      name: Evaluate brainstorming value
+      status: completed
+      active_form: Evaluating brainstorming value
+      icon_hint: plan
+      blocked_by: [phase-1]
+      started: "2026-07-13T14:59:02Z"
+      completed: "2026-07-13T15:05:17Z"
+      gate:
+        question: The research identifies architectural decisions that would directly feed development. Would you like to generate a high-level design?
+        answer: Yes, generate design
+        status: decided
+    - id: phase-3
+      name: Generate solution alternatives
+      status: completed
+      active_form: Generating solution alternatives
+      icon_hint: spec
+      blocked_by: [phase-2]
+      started: "2026-07-13T15:05:17Z"
+      completed: "2026-07-13T15:17:32Z"
+      gate:
+        question: Continue to solution convergence?
+        answer: Continue to solution convergence
+        status: decided
+    - id: phase-4
+      name: Evaluate brainstorming alternatives
+      status: completed
+      active_form: Evaluating brainstorming alternatives
+      icon_hint: plan
+      blocked_by: [phase-3]
+      started: "2026-07-13T15:17:32Z"
+      completed: "2026-07-13T15:51:06Z"
+      gate:
+        question: Brainstorming complete. Continue to high-level design?
+        answer: Pause workflow
+        status: decided
+    - id: phase-5
+      name: Design high-level architecture
+      status: completed
+      active_form: Designing high-level architecture
+      icon_hint: spec
+      blocked_by: [phase-2, phase-4]
+      started: "2026-07-13T15:55:19Z"
+      completed: "2026-07-13T16:11:56Z"
+      gate:
+        question: Design complete. Continue to output generation?
+        answer: Continue to output generation
+        status: decided
+    - id: phase-6
+      name: Summarize research and suggest next steps
+      status: completed
+      active_form: Completing research
+      icon_hint: done
+      blocked_by: [phase-2, phase-3, phase-4, phase-5]
+      started: "2026-07-13T16:11:56Z"
+      completed: "2026-07-13T16:16:12Z"
+      gate:
+        question: Research outputs are complete. Approve the final handoff?
+        answer: Complete workflow
+        status: decided
+
+task:
+  title: Issue tracker workflow for Maister
+  description: >-
+    Research the best way to add selectable issue-tracker support (local Markdown,
+    GitHub, and extensible providers), quick task capture, and handoff from a saved
+    issue into normal Maister research, planning, and development workflows. Treat
+    the installed mattpocock/skills implementation as a reference.
+  status: completed
+  tags: [research, issue-tracker, workflow, integration]
+  priority: null
+
+research_context:
+  research_type: mixed
+  research_question: >-
+    How should Maister add configurable issue-tracker providers, fast task capture,
+    and issue-to-workflow handoff while reusing good ideas from mattpocock/skills?
+  scope:
+    included:
+      - Existing Maister architecture, commands, task state, and platform adapters
+      - Installed mattpocock/skills tracker conventions and ticket workflows
+      - Local Markdown, GitHub Issues, and an extensible provider seam
+      - User experience for capture, listing, selection, and workflow handoff
+      - Compatibility with research, quick-plan, and development workflows
+      - Testing, migration, security, and multi-platform concerns
+    excluded:
+      - Implementing the feature during this research workflow
+      - Selecting a tracker for the current repository
+      - Building a hosted issue-tracking service
+    constraints:
+      - Preserve orchestrator-state.yml as the source of truth for workflow phase state
+      - Keep canonical edits under plugins/maister and generate platform variants
+      - Avoid coupling core workflows to a single external tracker
+  methodology:
+    - Technical iterative deepening
+    - Requirements extraction
+    - Comparative literature review
+    - Multi-source triangulation
+  sources:
+    - Maister canonical plugin, adapters, tests, and project documentation
+    - Installed mattpocock/skills files and tracker templates
+    - Current official GitHub, GitLab, Jira Cloud, Linear, and OWASP documentation
+  confidence_level: medium
+  gathering_strategy:
+    categories:
+      - maister-internals
+      - mattpocock-skills
+      - tracker-providers
+      - product-quality-tradeoffs
+    count: 4
+    source: planner
+  project_doc_paths:
+    - .maister/docs/project/vision.md
+    - .maister/docs/project/roadmap.md
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/project/architecture.md
+  phase_summaries:
+    phase-1:
+      summary: Research recommends a canonical issue-tracker skill backed by a small executable provider helper, with Local Markdown and GitHub in v1 and immutable issue snapshots handed into existing workflows.
+      steps_completed: [initialize, plan, gather, synthesize]
+      decisions:
+        - decision: Wybrać helper wykonywalny + deklaratywne capabilities, nie prose-as-provider-API.
+          rationale: Zapewnia jeden walidowany kontrakt i ogranicza różnice między hostami.
+        - decision: Utrwalać maister-issue://...; przyjmować krótsze aliasy wyłącznie, gdy rozstrzygają się jednoznacznie.
+          rationale: Referencje pozostają stabilne i jednoznaczne między providerami oraz repozytoriami.
+        - decision: Rozwiązać i zsnapshotować issue przed utworzeniem workflow state; późniejszy drift tylko sygnalizować.
+          rationale: Workflow pozostaje odtwarzalny, a tracker zachowuje własność nad żywym backlogiem.
+        - decision: W v1 wdrożyć Local Markdown i GitHub; zostawić GitLab/Jira/Linear za tym samym kontraktem, bez pustych stubów.
+          rationale: Ogranicza zakres i respektuje standard minimalnej implementacji.
+      risks:
+        - Sprzeczny schemat orchestrator-state.yml blokuje wybór jednego kanonicznego miejsca dla source_issue.
+        - quick-plan ma różną trwałość na hostach; rekomendowany wspólny artifact proweniencji wymaga decyzji produktowej.
+        - Nie jest zatwierdzone, czy v1 ma udostępniać tracker mutations poza create; raport rekomenduje osobny późniejszy etap.
+        - Local locks/atomic replace wymagają jasno zadeklarowanego wsparcia zwykłych lokalnych filesystemów; konflikty Git pozostają manualne.
+      artifacts:
+        - path: planning/research-brief.md
+          label: Research Brief
+          html: null
+        - path: planning/research-plan.md
+          label: Research Plan
+          html: null
+        - path: planning/sources.md
+          label: Source Register
+          html: null
+        - path: analysis/findings/01-maister-internals.md
+          label: Maister Internals
+          html: null
+        - path: analysis/findings/02-mattpocock-skills.md
+          label: mattpocock/skills Prior Art
+          html: null
+        - path: analysis/findings/03-tracker-providers.md
+          label: Tracker Provider Contracts
+          html: null
+        - path: analysis/findings/04-product-quality-tradeoffs.md
+          label: Product Quality Trade-offs
+          html: null
+        - path: analysis/synthesis.md
+          label: Research Synthesis
+          html: null
+        - path: outputs/research-report.md
+          label: Research Report
+          html: outputs/research-report.html
+        - path: outputs/decision-summary.md
+          label: Decision Summary
+          html: outputs/decision-summary.html
+    phase-3:
+      summary: Six sequential decision areas compare 18 alternatives; the recommended direction uses an executable Node ESM helper, root source_issue provenance, durable cross-host quick-plan artifacts, capture-only v1 mutations, transactional Local Markdown, and Local-first delivery.
+      decisions:
+        - decision: "Granica providerów: wykonywalny helper Node ESM z exact JSON i deklaratywnym CapabilitySet."
+          rationale: Zapewnia parytet hostów, fail-closed validation i testowalność.
+        - decision: "Proweniencja: korzeniowy source_issue wskazuje niezmienny snapshot, ale nie przejmuje własności backlogu."
+          rationale: Oddziela żywy tracker od odtwarzalnego wejścia workflowu.
+        - decision: "Quick-plan: wspólny .maister/plans/*.md na wszystkich hostach, także z native plan UI."
+          rationale: Daje jeden trwały handoff artifact.
+        - decision: "v1 mutations: wyłącznie capture/create."
+          rationale: Ogranicza ryzyko i utrzymuje handoff read-only.
+        - decision: "Dostarczanie: Local Markdown jako tracer, potem GitHub za tym samym conformance contract."
+          rationale: Najpierw stabilizuje kontrakt i transakcyjność lokalną.
+      risks:
+        - Sprzeczne warianty schema state muszą zostać ujednolicone przed dodaniem source_issue.
+        - Założenia o rename, fsync i lockach nie obejmują network filesystems.
+        - GitHub write path może zakończyć się ambiguous_commit po timeout po dispatch.
+        - Trwały artifact quick-plan wymaga testów parytetu hostów.
+      artifacts:
+        - path: outputs/solution-exploration.md
+          label: Solution Exploration
+          html: outputs/solution-exploration.html
+    phase-4:
+      summary: "All six convergence areas are resolved into an incremental architecture: executable helper, root provenance pointer, durable plans, capture-only mutations, transactional Local Markdown, then GitHub as the second tracer."
+      decisions:
+        - decision: Choose a small Node ESM helper with exact JSON and a declarative CapabilitySet.
+          rationale: It provides the strongest host parity, fail-closed validation, and testability without a general provider framework.
+        - decision: Anchor canonical source_issue provenance at the root of orchestrator-state.yml after state schema unification.
+          rationale: It preserves one resume/audit source of truth without duplicating snapshot content or tracker ownership.
+        - decision: Persist quick-plan as a canonical .maister/plans/*.md artifact on every host, with native UI as a projection.
+          rationale: It provides a portable, Git-reviewable handoff to development.
+        - decision: Limit v1 tracker mutations to explicit capture/create; keep handoff and resume read-only.
+          rationale: It bounds side effects and defers lifecycle operations until concrete callers and conformance tests exist.
+        - decision: Use per-UUID Local Markdown records with per-record locks, CAS, and atomic replace on ordinary local filesystems.
+          rationale: It prevents lost updates while preserving readable files and byte-exact transactional rejection.
+        - decision: Deliver Local Markdown as the first tracer and GitHub second over the same conformance contract.
+          rationale: It creates small verifiable increments and isolates local contract issues before hosted failure modes.
+      risks:
+        - Codex fully_automatic pozostaje unsupported z powodu braku host-native adaptera/E2E oraz rozjazdu state schema; pełna diagnoza jest zapisana jako osobny artefakt.
+      artifacts:
+        - path: analysis/codex-fully-automatic-diagnosis.md
+          label: Codex Fully Automatic Diagnosis
+          html: null
+      decision_areas:
+        - area: Granica wykonawcza providerów
+          alternatives_count: 3
+          chosen_approach: 1C — mały helper Node ESM i deklaratywny CapabilitySet
+        - area: Kanoniczna kotwica source_issue
+          alternatives_count: 3
+          chosen_approach: 2A — korzeniowy source_issue w orchestrator-state.yml
+        - area: Proweniencja quick-plan między hostami
+          alternatives_count: 3
+          chosen_approach: 3B — wspólny .maister/plans/*.md plus native UI
+        - area: Mutation surface w v1
+          alternatives_count: 3
+          chosen_approach: 4A — tylko jawne capture/create
+        - area: Trwałość i współbieżność Local Markdown
+          alternatives_count: 3
+          chosen_approach: 5A — rekord per UUID, per-record lock, CAS i atomic replace
+        - area: Kolejność providerów i rozszerzalność
+          alternatives_count: 3
+          chosen_approach: 6B — Local Markdown tracer, następnie GitHub
+      deferred_ideas:
+        - Comment/claim/close with receipts after concrete callers and reconciliation tests exist.
+        - GitLab, Jira, and Linear providers after the Local+GitHub conformance suite stabilizes.
+        - A public provider SDK only after at least three stable providers and real external authors exist.
+        - Semantic local merge and hosted offline mutation queues remain out of scope.
+    phase-5:
+      summary: A layered provider boundary with immutable handoff snapshots separates live tracker ownership from reproducible workflow input. Six ADRs define the executable boundary, provenance, portable plans, bounded mutations, local transactions, and sequential provider delivery.
+      decisions:
+        - decision: Use one executable provider boundary instead of prose-only adapters or a command-template DSL.
+          rationale: This centralizes validation, redaction, and cross-host semantics (ADR-001).
+        - decision: Keep tracker data and workflow execution state under separate ownership, with root source_issue provenance after state-schema unification.
+          rationale: This preserves tracker and workflow authority boundaries (ADR-002).
+        - decision: Persist quick plans as portable Markdown artifacts on every host and treat native plan UI as a projection.
+          rationale: This produces one durable cross-host handoff (ADR-003).
+        - decision: Limit v1 mutations to explicit capture/create; handoff, resume, and drift checks remain read-only.
+          rationale: This bounds side effects and operational risk (ADR-004).
+        - decision: Give Local Markdown per-UUID records, per-record locks, compare-and-swap, and atomic replace only on ordinary local filesystems.
+          rationale: This prevents lost updates within the supported filesystem boundary (ADR-005).
+        - decision: Deliver Local Markdown first and GitHub second under the same conformance contract.
+          rationale: This stabilizes the provider seam incrementally (ADR-006).
+      risks:
+        - The competing workflow-state schemas must be unified and fixture-tested before adding the root source_issue field; dual-read behavior is not part of this design.
+        - Local filesystem guarantees do not extend to network or distributed filesystems; unsupported environments must fail preflight with an actionable diagnostic.
+        - A GitHub create timeout after dispatch may remain ambiguous_commit; v1 must not blindly retry or switch transport.
+        - Cross-host fixtures must prove that canonical quick-plan content and native UI projections cannot silently diverge.
+        - Fully automatic Codex continuation remains unsupported until a host-native adapter, unified state schema, and end-to-end verification exist.
+      artifacts:
+        - path: outputs/high-level-design.md
+          label: High-Level Design
+          html: outputs/high-level-design.html
+        - path: outputs/decision-log.md
+          label: Decision Log
+          html: outputs/decision-log.html
+      architecture_style: layered provider boundary with immutable handoff snapshots
+      decisions_count: 6
+    phase-6:
+      summary: Research, alternatives, convergence, and high-level design are complete. The final package recommends a provider-neutral executable boundary, immutable issue handoff, portable plans, capture-only v1 mutations, and Local Markdown then GitHub delivery.
+      decisions: []
+      risks:
+        - Workflow-state schema unification remains a prerequisite for root source_issue provenance.
+        - Codex automatic continuation remains unsupported until host-native end-to-end validation passes.
+      artifacts:
+        - path: outputs/research-report.md
+          label: Research Report
+          html: outputs/research-report.html
+        - path: outputs/solution-exploration.md
+          label: Solution Exploration
+          html: outputs/solution-exploration.html
+        - path: outputs/high-level-design.md
+          label: High-Level Design
+          html: outputs/high-level-design.html
+        - path: outputs/decision-log.md
+          label: Decision Log
+          html: outputs/decision-log.html
+        - path: outputs/decision-summary.md
+          label: Decision Summary
+          html: outputs/decision-summary.html

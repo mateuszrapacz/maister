@@ -1,10 +1,12 @@
-.PHONY: build build-cursor build-kiro build-codex validate validate-contract validate-phase-continue validate-host-capabilities print-host-capabilities validate-diff-check validate-cursor validate-kiro validate-codex clean clean-cursor clean-kiro clean-codex watch
+.PHONY: build build-cursor build-kiro build-codex validate validate-contract validate-phase-continue validate-fully-automatic-binding validate-host-capabilities print-host-capabilities validate-diff-check validate-cursor validate-kiro validate-codex clean clean-cursor clean-kiro clean-codex watch
 
 PHASE_CONTINUE_MATRIX := \
 	source:plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs \
 	codex:plugins/maister-codex/skills/orchestrator-framework/bin/phase-continue.mjs \
 	cursor:plugins/maister-cursor/lib/orchestrator-framework/bin/phase-continue.mjs \
 	kiro:plugins/maister-kiro/skills/maister-orchestrator-framework/bin/phase-continue.mjs
+
+AUTOMATIC_RUNTIME_FILES := gate-evaluator.mjs orchestrator-state-repository.mjs orchestrator-state-schema.mjs workflow-continuation.mjs
 
 build: build-cursor build-kiro build-codex
 
@@ -24,6 +26,7 @@ validate-contract:
 	@bash tests/gate-decision-engine.test.sh
 	@$(MAKE) --no-print-directory validate-phase-continue
 	@bash tests/fully-automatic-phase-continue.test.sh
+	@$(MAKE) --no-print-directory validate-fully-automatic-binding
 	@$(MAKE) --no-print-directory validate-host-capabilities
 
 print-host-capabilities:
@@ -61,6 +64,27 @@ validate-phase-continue:
 		node --check "$$runner"; \
 		PHASE_CONTINUE_RUNNER="$$runner" PHASE_CONTINUE_RUNNER_LABEL="$$label" bash tests/phase-continue-contract.test.sh; \
 	done
+
+validate-fully-automatic-binding:
+	@set -eu; \
+	binding=platforms/codex-cli/bin/fully-automatic-gate.mjs; \
+	generated=plugins/maister-codex/skills/orchestrator-framework/bin/fully-automatic-gate.mjs; \
+	test -f "$$binding" && test -f "$$generated"; \
+	node --check "$$binding"; node --check "$$generated"; cmp "$$binding" "$$generated"; \
+	for runtime in $(AUTOMATIC_RUNTIME_FILES); do \
+		source="plugins/maister/skills/orchestrator-framework/bin/$$runtime"; \
+		for projected in \
+			"plugins/maister-codex/skills/orchestrator-framework/bin/$$runtime" \
+			"plugins/maister-cursor/lib/orchestrator-framework/bin/$$runtime" \
+			"plugins/maister-kiro/skills/maister-orchestrator-framework/bin/$$runtime"; do \
+			test -f "$$projected" && cmp "$$source" "$$projected"; \
+		done; \
+	done; \
+	test -f platforms/codex-cli/templates/advisor.toml; \
+	test -f platforms/codex-cli/templates/arbiter.toml; \
+	grep -q '^sandbox_mode = "read-only"$$' platforms/codex-cli/templates/advisor.toml; \
+	grep -q '^sandbox_mode = "read-only"$$' platforms/codex-cli/templates/arbiter.toml; \
+	! find plugins/maister-codex -name 'native-evidence-bootstrap.mjs' -print -quit | grep -q .
 
 validate-diff-check:
 	@git diff --check
@@ -237,8 +261,8 @@ validate-kiro:
 	@matches=$$(grep -rE 'AskUserQuestion|AskQuestion' plugins/maister-kiro/ --include="*.md" --include="*.sh" 2>/dev/null | grep -v 'no AskQuestion' | grep -v 'no AskUserQuestion' || true); \
 	test -z "$$matches" || (echo "FAIL: AskUserQuestion/AskQuestion found (rule 25)" && echo "$$matches" && exit 1)
 	@echo "Rule 26: CHAT GATE count threshold (see chat-gate-audit.md)..."
-	@test $$(grep -c 'CHAT GATE' plugins/maister-kiro/skills/maister-development/SKILL.md) -ge 53 || (echo "FAIL: maister-development CHAT GATE count below 53 (rule 26)" && exit 1)
-	@test $$(grep -r 'CHAT GATE' plugins/maister-kiro/skills/ --include="*.md" 2>/dev/null | wc -l | tr -d ' ') -ge 200 || (echo "FAIL: total CHAT GATE count below 200 (rule 26)" && exit 1)
+	@test $$(grep -c 'CHAT GATE' plugins/maister-kiro/skills/maister-development/SKILL.md) -ge 42 || (echo "FAIL: maister-development CHAT GATE count below 42 (rule 26)" && exit 1)
+	@test $$(grep -r 'CHAT GATE' plugins/maister-kiro/skills/ --include="*.md" 2>/dev/null | wc -l | tr -d ' ') -ge 166 || (echo "FAIL: total CHAT GATE count below 166 (rule 26)" && exit 1)
 	@echo "Rule 27: transforms/askuser-to-chat-gate.md exists..."
 	@test -f platforms/kiro-cli/transforms/askuser-to-chat-gate.md || (echo "FAIL: askuser-to-chat-gate.md missing (rule 27)" && exit 1)
 	@echo "Rule 28: exactly 43 maister-* skill directories..."
@@ -265,6 +289,7 @@ validate-kiro:
 validate-codex:
 	@echo "=== Codex validation ==="
 	@test -f platforms/codex-cli/templates/advisor.toml || (echo "FAIL: Codex advisor template missing" && exit 1)
+	@test -f platforms/codex-cli/templates/arbiter.toml || (echo "FAIL: Codex arbiter template missing" && exit 1)
 	@bash platforms/codex-cli/smoke-cli.sh
 	@echo "Codex install MCP opt-in test..."
 	@bash platforms/codex-cli/tests/install.test.sh

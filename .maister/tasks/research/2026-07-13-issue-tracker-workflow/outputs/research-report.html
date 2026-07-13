@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Issue tracker workflow dla Maistera — raport badawczy</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+h3 { font-size:14px; margin-top:20px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+pre { overflow:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
+pre code { background:transparent; padding:0; }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { border-left:4px solid var(--accent); }
+.risk { border-left:4px solid var(--warn); }
+.recommended { border:2px solid var(--accent); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+.toc { font-size:12px; color:var(--dim); padding:10px 0; line-height:1.9; }
+.flow { display:flex; align-items:stretch; gap:8px; flex-wrap:wrap; }
+.flow .step { flex:1 1 150px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px; }
+.arrow { align-self:center; color:var(--accent); font-size:18px; }
+.muted { color:var(--dim); }
+ul,ol { padding-left:22px; }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <span class="here">Report</span>
+  <a href="research-report.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <span class="badge">Research report</span>
+  <h1>Issue tracker workflow dla Maistera</h1>
+  <p class="muted">Wygenerowano 2026-07-13T14:22:18Z · mixed research · Phase 1 / Step 4</p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>4</b><span>strumienie badań</span></div>
+  <div class="tile"><b>3</b><span>opcje architektury</span></div>
+  <div class="tile"><b>2</b><span>providery v1</span></div>
+  <div class="tile"><b>87%</b><span>pewność</span></div>
+  <div class="tile"><b>6</b><span>otwarte decyzje</span></div>
+</div>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Zaimplementować kanoniczny skill <code>issue-tracker</code> i mały helper Node ESM z providerami Local Markdown i GitHub. Tracker zachowuje żywe issue; workflow zapisuje pełny <code>IssueRef</code>, niezmienny snapshot i rewizję, a swój stan prowadzi wyłącznie w <code>orchestrator-state.yml</code>. v1 obejmuje configure, capture, bounded list, show/select i jawny start research/quick-plan/development — bez automatycznego close/comment/claim.</p>
+  <h3>Key Decisions</h3>
+  <ul>
+    <li>Helper wykonywalny + deklaratywne capabilities, nie prose-as-provider-API.</li>
+    <li>Persisted identity to <code>maister-issue://...</code>; skróty są tylko aliasami wejściowymi.</li>
+    <li>Resolve i snapshot następują przed utworzeniem workflow state; drift jest tylko sygnalizowany.</li>
+    <li>v1: Local Markdown + GitHub; GitLab/Jira/Linear korzystają później z tego samego kontraktu.</li>
+    <li>Direct prompts i istniejące resume pozostają kompatybilne.</li>
+  </ul>
+</section>
+
+<section class="card risk">
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li><span class="sev critical">critical</span>Sprzeczny workflow-state schema blokuje kanoniczne miejsce dla <code>source_issue</code>.</li>
+    <li><span class="sev warning">warning</span><code>quick-plan</code> ma różną trwałość na hostach.</li>
+    <li><span class="sev warning">warning</span>Mutation scope poza create nie został zatwierdzony dla v1.</li>
+    <li><span class="sev info">info</span>Local atomicity zakłada zwykły lokalny filesystem; konflikty Git są manualne.</li>
+  </ul>
+</section>
+
+<nav class="toc">
+  Contents:
+  <a href="#recommendation">Rekomendacja</a> ·
+  <a href="#ownership">Własność</a> ·
+  <a href="#architecture">Architektura</a> ·
+  <a href="#config">Konfiguracja</a> ·
+  <a href="#contract">Kontrakt</a> ·
+  <a href="#ref">IssueRef</a> ·
+  <a href="#ux">UX</a> ·
+  <a href="#local">Local Markdown</a> ·
+  <a href="#github">GitHub</a> ·
+  <a href="#reuse">Reuse</a> ·
+  <a href="#journeys">Journeys</a> ·
+  <a href="#phases">Fazy</a> ·
+  <a href="#tests">Testy</a> ·
+  <a href="#decisions">Decyzje</a>
+</nav>
+
+<main>
+<section id="recommendation">
+  <h2>1. Executive recommendation</h2>
+  <div class="card recommended">
+    <p><span class="badge">Recommended · 87%</span></p>
+    <p>Jeden kanoniczny skill zarządza UX, zgodą i handoffem; jeden helper zarządza ref parserem, target validation, Local transactions, API/CLI transportem, exact JSON, typed errors i capability discovery. W v1 implementowane są tylko operacje mające callerów: <code>capabilities</code>, <code>resolve</code>, <code>create</code>, <code>read</code> i bounded <code>list</code>.</p>
+  </div>
+  <table>
+    <thead><tr><th>Opcja</th><th>Walidacja</th><th>Testowalność</th><th>Host parity</th><th>Werdykt</th></tr></thead>
+    <tbody>
+      <tr><td>A. Prose/config</td><td>1/5</td><td>1/5</td><td>2/5</td><td>Dokumentacja, nie boundary</td></tr>
+      <tr><td>B. Deklaratywny kontrakt wykonywany przez host</td><td>3/5</td><td>3/5</td><td>3/5</td><td>Config, nie write engine</td></tr>
+      <tr class="recommended"><td><b>C. Helper + capabilities</b></td><td>5/5</td><td>5/5</td><td>5/5</td><td><b>Wybrać</b></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="ownership">
+  <h2>2. Model domeny i strict ownership</h2>
+  <table>
+    <thead><tr><th>Concern</th><th>Tracker</th><th>Snapshot/workflow</th></tr></thead>
+    <tbody>
+      <tr><td>Live title/body/comments/labels/assignees/dependencies</td><td class="pass">Właściciel</td><td>Wartość as-of capture</td></tr>
+      <tr><td>Tracker status</td><td class="pass">Właściciel</td><td>Informacyjny snapshot</td></tr>
+      <tr><td>Identity i URL</td><td>Provider authority</td><td>Canonical ref + użyty URL</td></tr>
+      <tr><td>Fazy/gates/attempts/verification/resume</td><td>—</td><td class="pass"><code>orchestrator-state.yml</code></td></tr>
+      <tr><td>Comment/close/claim</td><td>Jawna provider operation</td><td>Receipt, nigdy mirror statusu</td></tr>
+    </tbody>
+  </table>
+  <p><b>Handoff</b> = resolve + read + immutable snapshot + initialization. <b>Drift</b> = live revision różni się od snapshot revision; nie ma silent merge.</p>
+</section>
+
+<section id="architecture">
+  <h2>3. Architektura i seam locations</h2>
+  <pre><code>plugins/maister/skills/issue-tracker/
+├── SKILL.md
+├── bin/issue-tracker.mjs
+├── providers/{local,github}.mjs
+└── references/{provider-contract,issue-ref}.md</code></pre>
+  <table>
+    <thead><tr><th>Concern</th><th>Canonical seam</th></tr></thead>
+    <tbody>
+      <tr><td>Config/setup</td><td><code>.maister/config.yml</code> + <code>plugins/maister/skills/init/SKILL.md</code></td></tr>
+      <tr><td>Public UX/execution</td><td><code>plugins/maister/skills/issue-tracker/</code></td></tr>
+      <tr><td>Unified routing</td><td><code>plugins/maister/commands/work.md</code> + <code>agents/task-classifier.md</code></td></tr>
+      <tr><td>Workflow handoff</td><td><code>research/SKILL.md</code>, <code>quick-plan/SKILL.md</code>, <code>development/SKILL.md</code></td></tr>
+      <tr><td>Shared provenance</td><td><code>orchestrator-patterns.md</code> po naprawie schema</td></tr>
+      <tr><td>Host parity</td><td><code>platforms/{codex-cli,cursor,kiro-cli}/build.sh</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="config">
+  <h2>4. Proponowana konfiguracja</h2>
+  <pre><code>tracker:
+  schema_version: 1
+  default_provider: local
+  providers:
+    local:
+      kind: local-markdown
+      root: .maister/issues
+    github:
+      kind: github
+      host: github.com
+      repository: openai/codex
+      transport: auto
+      api_version: "2026-03-10"
+      token_env: GITHUB_TOKEN
+  policy:
+    max_list_items: 100
+    require_write_confirmation: true
+    allow_stale_snapshot_handoff: false</code></pre>
+  <p>Credentials pozostają poza repo. Precedence: pełny ref → explicit override → project default → jedyny provider → interactive choice → fail. Git remote jest tylko setup suggestion.</p>
+</section>
+
+<section id="contract">
+  <h2>5. Provider contract i errors</h2>
+  <div class="grid">
+    <div class="card"><h3>v1 call surface</h3><p><code>capabilities</code><br><code>resolve</code><br><code>create</code><br><code>read</code><br><code>list</code></p></div>
+    <div class="card"><h3>Later, capability-gated</h3><p><code>update</code><br><code>comment</code><br><code>setLabels</code><br><code>transition</code></p></div>
+    <div class="card"><h3>Capability status</h3><p><code>native</code><br><code>emulated</code><br><code>unsupported</code><br><code>unknown</code></p></div>
+  </div>
+  <p>Errors: <code>invalid_ref</code>, <code>ambiguous_ref</code>, <code>unauthenticated</code>, <code>forbidden</code>, <code>not_found</code>, <code>validation</code>, <code>conflict</code>, <code>unsupported</code>, <code>rate_limited</code>, <code>unavailable</code>, <code>offline</code>, <code>precondition_failed</code>, <code>ambiguous_commit</code>, <code>provider_error</code>.</p>
+  <ul>
+    <li>Jedna operacja wybiera jeden transport przed dispatch.</li>
+    <li>Read fallback tylko po pewnym non-dispatch failure.</li>
+    <li>Write po nieznanym dispatch nie retryuje się automatycznie.</li>
+    <li>Hosted offline snapshot może być użyty tylko jawnie i z <code>stale=true</code>; brak queued writes w v1.</li>
+  </ul>
+</section>
+
+<section id="ref">
+  <h2>6. Canonical IssueRef i aliasy</h2>
+  <pre><code>maister-issue://&lt;provider&gt;/&lt;authority&gt;/&lt;container...&gt;/&lt;kind&gt;/&lt;native-id&gt;
+
+maister-issue://github/github.com/openai/codex/issue/123
+maister-issue://local/workspace/issues/issue/&lt;uuid&gt;</code></pre>
+  <p>Aliasy: <code>gh:OWNER/REPO#123</code>, <code>gl:GROUP/PROJECT#123</code>, <code>jira:SITE/PROJ-123</code>, <code>lin:WORKSPACE/ENG-123</code>, <code>local:&lt;uuid&gt;</code>. Bare <code>#123</code> tylko przy jednym jednoznacznym provider/container/kind.</p>
+</section>
+
+<section id="ux">
+  <h2>7. Command/skill UX</h2>
+  <pre><code>$maister:issue-tracker configure --provider local --root .maister/issues
+$maister:issue-tracker capture "Krótki tytuł" --body "..."
+$maister:issue-tracker list --status open --limit 20
+$maister:issue-tracker show gh:OWNER/REPO#123
+$maister:issue-tracker select --provider local --status open
+
+$maister:research --issue gh:OWNER/REPO#123
+$maister:quick-plan --issue maister-issue://local/workspace/issues/issue/&lt;uuid&gt;
+$maister:development --issue https://github.com/OWNER/REPO/issues/123
+$maister:work gh:OWNER/REPO#123</code></pre>
+  <p>Capture nie uruchamia workflowu. Select/cancel jest read-only. Noninteractive JSON nie promptuje. Start workflowu nie implikuje claim/comment/close.</p>
+</section>
+
+<section id="local">
+  <h2>8. Local Markdown</h2>
+  <div class="flow">
+    <div class="step"><b>Validate</b><br>schema, bounds, containment, symlinks</div><span class="arrow">→</span>
+    <div class="step"><b>Stage</b><br>UUID, exclusive same-directory temp</div><span class="arrow">→</span>
+    <div class="step"><b>Publish</b><br>fsync + atomic rename</div><span class="arrow">→</span>
+    <div class="step"><b>Audit</b><br>canonical ref/revision/digest</div>
+  </div>
+  <p>Layout: <code>.maister/issues/&lt;uuid&gt;.md</code> i <code>.maister/issues/.locks/&lt;uuid&gt;.lock/</code>. Update używa owner-token lock, expected revision/digest, full candidate i atomic replace. v1 nie kradnie stale locks i nie auto-merguje konfliktów Git.</p>
+</section>
+
+<section id="github">
+  <h2>9. GitHub v1 i rozszerzenia</h2>
+  <div class="card">
+    <p><span class="badge">GitHub REST 2026-03-10</span></p>
+    <p>Guaranteed: resolve URL/alias/ref, create title/body, read issue z PR rejection, bounded repository list, auth/repository/capability preflight, canonical metadata. <code>gh</code> jest convenience/auth transportem; MCP opcjonalnym host adapterem.</p>
+  </div>
+  <table>
+    <thead><tr><th>Provider</th><th>Przyszła adaptacja</th></tr></thead>
+    <tbody>
+      <tr><td>GitLab</td><td>host + pełny project path + IID; tiered links jako extension</td></tr>
+      <tr><td>Jira Cloud</td><td>site/project/key, create metadata, ADF, native transition IDs</td></tr>
+      <tr><td>Linear</td><td>workspace/team/identifier, GraphQL cursors, team-specific states</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="reuse">
+  <h2>10. `mattpocock/skills`: reuse / adapt / avoid</h2>
+  <div class="grid">
+    <div class="card"><h3 class="pass">Reuse</h3><ul><li>Repo-local reviewable config</li><li>Neutral verbs i human titles</li><li>Durable briefs</li><li>Explicit publication approval</li><li>Create-first/wire-second</li><li>Frontier i one-ticket handoff</li></ul></div>
+    <div class="card"><h3>Adapt</h3><ul><li>Prose → typed contract + docs</li><li>Native fallback → recorded capability choice</li><li>Readiness → tracker-owned policy</li><li>Claim/resolve → explicit receipted operations</li><li>Local layout → UUID + lock/CAS</li></ul></div>
+    <div class="card"><h3 class="fail">Avoid</h3><ul><li>Prose jako sole API</li><li>Free-form provider bez preflight</li><li>Bare numbers jako identity</li><li>Sprzeczne local layouts/status</li><li>Sequential IDs/edit-in-place</li><li>Implicit close/comment/commit</li><li>Credentials w config/log</li></ul></div>
+  </div>
+</section>
+
+<section id="journeys">
+  <h2>11. End-to-end journeys</h2>
+  <details class="card" open><summary>Local capture → research</summary><p>Configure local → capture atomically → canonical ref → user wybiera research → protected re-read → snapshot/ref metadata → normalny research state → optional drift warning.</p></details>
+  <details class="card"><summary>GitHub capture/select → quick-plan</summary><p>Repo/auth preflight → one create lub bounded list/select → fetch once → trwały source block/snapshot → plan approval pozostaje mechanizmem quick-plan.</p></details>
+  <details class="card"><summary>Existing issue → development</summary><p>Validate full ref/URL → read/snapshot bez mutation → normalne analysis/spec/approval/implementation/verification → resume z task state → drift bez silent rewrite → completion mutation osobno.</p></details>
+</section>
+
+<section id="phases">
+  <h2>12. Incremental implementation</h2>
+  <ol>
+    <li><b>Prerequisites:</b> naprawić state schema; zatwierdzić quick-plan artifact i v1 mutation scope.</li>
+    <li><b>Contract + Local:</b> ref/errors/capabilities/config + atomic Local create/read/list.</li>
+    <li><b>Handoff:</b> source snapshot + research/quick-plan/development/work + drift.</li>
+    <li><b>GitHub:</b> REST/gh transport, mocks, pagination, PR rejection, ambiguous commit.</li>
+    <li><b>Adapters/build/docs:</b> canonical/platform edits, generated rebuild, full validation.</li>
+    <li><b>Later:</b> mutations i GitLab/Jira/Linear po conformance suite.</li>
+  </ol>
+</section>
+
+<section id="tests">
+  <h2>13. Risk-based tests i cross-platform impact</h2>
+  <table>
+    <thead><tr><th>Priorytet</th><th>Obszar</th><th>Kluczowy assertion</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sev critical">critical</span></td><td>Contract/config/local security</td><td>Exact schema, fail closed, byte/mode/topology unchanged</td></tr>
+      <tr><td><span class="sev critical">critical</span></td><td>Concurrent local writes</td><td>Jedna rewizja wygrywa; brak overwrite/temp leaks</td></tr>
+      <tr><td><span class="sev critical">critical</span></td><td>Three workflow handoffs</td><td>Jeden task na success, zero task/state na precommit failure</td></tr>
+      <tr><td><span class="sev critical">critical</span></td><td>External write security</td><td>Fixed argv/API, target allowlist, no secret leakage, ambiguous commit</td></tr>
+      <tr><td><span class="sev warning">high</span></td><td>Generated hosts</td><td>Deterministic build, arguments/resources/prompts preserved</td></tr>
+      <tr><td><span class="sev info">medium</span></td><td>UX/Git/resilience</td><td>Bounded output, no prompt in JSON mode, manual conflict behavior</td></tr>
+    </tbody>
+  </table>
+  <p>Claude używa canonical skill; Codex kopiuje resources i transformuje commands; Cursor wymaga command-collapse/quick-plan override coverage; Kiro wymaga argument allowlist i bezpiecznych chat gates. Release gate: <code>make build &amp;&amp; make validate</code>.</p>
+</section>
+
+<section id="decisions">
+  <h2>14. Unresolved decisions i handoff</h2>
+  <ol>
+    <li><b>Blocker:</b> wybrać jeden state schema; nie implementować dual-read w providerze.</li>
+    <li>Zatwierdzić wspólny <code>.maister/plans/*.md</code> provenance artifact dla quick-plan.</li>
+    <li>Potwierdzić brak comment/close/claim UX w v1.</li>
+    <li>Wybrać one-step interactive Local setup lub obowiązkowy configure flow.</li>
+    <li>Ograniczyć support do ordinary local filesystems.</li>
+    <li>Odłożyć archived snapshot refresh; v1 tylko read-only drift.</li>
+  </ol>
+  <div class="card recommended">
+    <h3>Proponowany implementation handoff</h3>
+    <pre><code>$maister:development --research=.maister/tasks/research/2026-07-13-issue-tracker-workflow</code></pre>
+    <p>Pierwszy scope: prerequisites + contract/Local + handoff. GitHub jako osobny tracer-bullet po conformance suite.</p>
+  </div>
+</section>
+
+<section>
+  <h2>15. Evidence i confidence</h2>
+  <p><b>Całościowa pewność: 87% (średnio-wysoka).</b> Granice własności, canonical locations, GitHub semantics i build ownership mają wysokie potwierdzenie. Wynik obniżają state schema, quick-plan provenance, mutation scope i brak realnych write tests.</p>
+  <p>Pełne cytowania i rozumowanie: <a href="../analysis/synthesis.md" target="_blank" rel="noopener">analysis/synthesis.md</a> oraz <a href="research-report.md" target="_blank" rel="noopener">research-report.md</a>.</p>
+  <p>Wybrane źródła oficjalne: <a href="https://docs.github.com/en/rest/issues/issues?apiVersion=2026-03-10">GitHub REST Issues</a>, <a href="https://docs.gitlab.com/api/issues/">GitLab Issues API</a>, <a href="https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issues/">Jira Cloud Issues</a>, <a href="https://linear.app/developers/graphql">Linear GraphQL</a>.</p>
+</section>
+</main>
+</body>
+</html>

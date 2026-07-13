@@ -90,7 +90,10 @@ test_chat_gate_count_threshold() {
   local dev_count total
   dev_count=$(grep -c 'CHAT GATE' "$OUT/skills/maister-development/SKILL.md" || true)
   total=$(grep -r 'CHAT GATE' "$OUT/skills" --include='*.md' 2>/dev/null | wc -l | tr -d ' ')
-  test "$dev_count" -ge 53 && test "$total" -ge 200
+  # Schema-v2 phase-entry evidence replaces the legacy per-phase AskUserQuestion
+  # reminders. The transformed canonical tree therefore has 42 development
+  # markers and 166 total markers as its documented minimum.
+  test "$dev_count" -ge 42 && test "$total" -ge 166
 }
 
 # 8. Rules 21–22 pass; rules 23–24 skip or pass when artifacts present

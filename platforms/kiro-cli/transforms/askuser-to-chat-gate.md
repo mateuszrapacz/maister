@@ -61,7 +61,7 @@ Init Phase 3 standards selection and development verification Q1 are primary 3C 
 | Rule | Check |
 |------|-------|
 | 25 | Zero `AskUserQuestion`, `AskQuestion` in output `*.md` (and `hooks/*.sh` when present) |
-| 26 | Orchestrator skills contain `CHAT GATE` where source had gates (count ≥ source minus documented exceptions) |
+| 26 | Orchestrator skills contain `CHAT GATE` where source had gates (the current schema-v2 projection minimum is 42 markers in `maister-development` and 166 across all skills) |
 | 27 | This file exists at `platforms/kiro-cli/transforms/askuser-to-chat-gate.md` |
 
 ## Documented exceptions (grep audit)

@@ -3,10 +3,11 @@
 ## TL;DR
 
 This is the normative, host-neutral contract for evaluating every Maister
-orchestrator gate. It is a Markdown protocol executed by the host orchestrator:
-the host adapter supplies advisor, persistence, reporting, and
-`phase_continue(selected_option)` primitives, while the orchestrator records
-every state transition in `orchestrator-state.yml`.
+orchestrator gate. The executable state machine is
+`bin/gate-evaluator.mjs`; this document defines its human-readable policy and
+host-port contract. The host adapter supplies read-only Advisor, Arbiter, and
+user-gate primitives. The evaluator owns the complete schema-v2 gate envelope,
+while workflow code owns reporting, work selection, and dispatch.
 
 ## Key Decisions
 
@@ -24,6 +25,9 @@ every state transition in `orchestrator-state.yml`.
   other unsafe outcomes fail closed to a user gate or persisted `blocked`
   state. A supported host continues from the normalized result without
   synthesizing UI input.
+- Every executable transition uses `readState` and `commitState` from the
+  shared repository. Role calls happen outside its lock, after a durable
+  `started` attempt and before a revision-checked outcome commit.
 
 ## Open Questions & Risks
 
@@ -57,6 +61,48 @@ The only engine operation is:
 evaluate_gate(gate_context, persisted_state, host_adapter)
   -> normalized_gate_result
 ```
+
+The executable JavaScript binding is:
+
+```js
+evaluateGate({
+  statePath,
+  gateContext,
+  roleConfig,
+  rolePort,
+  userPort,
+  automaticContinuationSupported,
+  interactive,
+}) -> { directive, gate, state }
+```
+
+`directive` is exactly `continue | user_gate | blocked`. The evaluator never
+creates work items, outbox entries, dispatch receipts, reports, or phase
+transitions. A `continue` directive only means a complete terminal gate is
+durable and eligible for the separate continuation runner.
+
+### Executable schema-v2 record
+
+The evaluator persists the exact schema-v2 envelope defined by
+`orchestrator-state-schema.mjs`. Executable statuses are
+`advisor_pending | arbiter_pending | user_pending | decided | blocked`.
+Pending and blocked records have a null selection and `final_actor: system`;
+`decided` records have one exact option and the actual terminal actor. The
+older normalized-result examples below describe the host protocol vocabulary;
+they do not add a `failed` status or alternate persisted shape to schema v2.
+
+Each role has one stable `logical_role_id`, its configured agent/model, one
+optional exact four-field response, ordered attempts, and exhaustion state.
+An attempt is exactly `{number, status, started_at, completed_at, error}` with
+status `started | completed | failed | interrupted`. The evaluator commits a
+`started` attempt before calling a role, then commits its completion/failure
+before retry, fallback, arbitration, or terminal selection. Exponential wait
+uses the configured base delay; every consumed retry slot and error is already
+durable before the wait or next call.
+
+On a repository revision conflict, the evaluator re-reads canonical state and
+reconciles by idempotency. A matching terminal record wins unchanged. It never
+holds the repository lock during a role or user call.
 
 ### 1.1 `gate_context`
 

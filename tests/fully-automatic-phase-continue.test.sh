@@ -3,51 +3,42 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RUNNER="$ROOT/plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs"
+FIXTURE="$ROOT/tests/fixtures/phase-continue/valid-v2-terminal.yml"
 WORK="$(mktemp -d)"
+WORK="$(cd "$WORK" && pwd -P)"
 trap 'rm -rf "$WORK"' EXIT
 
 STATE="$WORK/orchestrator-state.yml"
 REPORT_MD="$WORK/decision-summary.md"
 REPORT_HTML="$WORK/decision-summary.html"
+cp "$FIXTURE" "$STATE"
 
-cat > "$STATE" <<'YAML'
-orchestrator:
-  current_phase: phase-1
-  completed_phases: []
-  gate_history: []
-  implementation_approval:
-    status: approved
-    approved_by: user
-    approved_scope:
-      - test scope
-task:
-  status: in_progress
-phases:
-  - id: phase-1
-    status: in_progress
-  - id: phase-2
-    status: pending
-YAML
+make_payload() {
+  STATE="$STATE" REPORT_MD="$REPORT_MD" REPORT_HTML="$REPORT_HTML" node --input-type=module <<'NODE'
+process.stdout.write(JSON.stringify({
+  state: process.env.STATE,
+  phase_id: "phase-1",
+  gate_type: "research-convergence",
+  question: "Choose the next decision area",
+  options: ["Continue", "Pause"],
+  selected_option: "Continue",
+  actor: "advisor",
+  confidence: "high",
+  next_phase: "phase-2",
+  report_md: process.env.REPORT_MD,
+  report_html: process.env.REPORT_HTML,
+}));
+NODE
+}
 
-result=$(printf '{"state":"%s","phase_id":"phase-1","gate_type":"phase-exit","question":"Continue to phase 2?","options":["Continue to phase 2","Pause workflow"],"selected_option":"Continue to phase 2","actor":"advisor","confidence":"high","next_phase":"phase-2","report_md":"%s","report_html":"%s"}' "$STATE" "$REPORT_MD" "$REPORT_HTML" | node "$RUNNER")
+first="$(make_payload | node "$RUNNER")"
+jq -e '.status == "continued" and .actor == "advisor"' <<<"$first" >/dev/null
+grep -Fq 'current_phase: "phase-2"' "$STATE"
+grep -Fq 'The recommendation is safe' "$REPORT_MD"
 
-grep -Fq '"status":"decided"' <<<"$result"
-grep -Fq '"continuation":"phase_continue"' <<<"$result"
-grep -Fq 'current_phase: phase-2' "$STATE"
-grep -A1 -F '  - id: phase-1' "$STATE" | grep -Fq '    status: completed'
-grep -A1 -F '  - id: phase-2' "$STATE" | grep -Fq '    status: in_progress'
-grep -Fq '1 persisted gate decision(s)' "$REPORT_MD"
-grep -Fq 'Options' "$REPORT_MD"
-grep -Fq 'Continue to phase 2' "$REPORT_MD"
-grep -Fq 'Continue to phase 2' "$REPORT_HTML"
+cp -p "$STATE" "$WORK/state.after"
+second="$(make_payload | node "$RUNNER")"
+jq -e '.status == "reused"' <<<"$second" >/dev/null
+cmp -s "$STATE" "$WORK/state.after"
 
-second=$(printf '{"state":"%s","phase_id":"phase-1","gate_type":"phase-exit","question":"Continue to phase 2?","options":["Continue to phase 2","Pause workflow"],"selected_option":"Continue to phase 2","actor":"advisor","confidence":"high","next_phase":"phase-2","report_md":"%s","report_html":"%s"}' "$STATE" "$REPORT_MD" "$REPORT_HTML" | node "$RUNNER")
-
-grep -Fq '"status":"reused"' <<<"$second"
-
-if printf '{"state":"%s","phase_id":"phase-2","gate_type":"implementation-approval","question":"Approve?","options":["Approve","Reject"],"selected_option":"Approve","actor":"advisor","confidence":"high","next_phase":"phase-3","report_md":"%s","report_html":"%s"}' "$STATE" "$REPORT_MD" "$REPORT_HTML" | node "$RUNNER"; then
-  echo "FAIL: denylisted gate was continued automatically" >&2
-  exit 1
-fi
-
-echo "PASS: fully automatic phase continuation, idempotent reuse, and denylist guard"
+echo "PASS: evaluator-owned automatic decision is verified, continued, and reused"

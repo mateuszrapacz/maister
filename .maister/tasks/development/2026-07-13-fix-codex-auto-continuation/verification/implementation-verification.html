@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Implementation Verification</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, system-ui, sans-serif; }
+    body { max-width: 920px; margin: 0 auto; padding: 32px; color: #1f2937; background: #f8fafc; line-height: 1.55; }
+    .card { background: white; border: 1px solid #dbe3ee; border-radius: 14px; padding: 24px; margin: 18px 0; box-shadow: 0 4px 14px #0f172a0b; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #dcfce7; color: #166534; font-weight: 700; }
+    code { background: #eef2ff; padding: 2px 5px; border-radius: 4px; }
+    li { margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <section class="card">
+    <span class="badge">PASSED</span>
+    <h1>Implementation Verification</h1>
+    <p>The selected fixes resolved source-contract parity and Kiro validation drift. Full repository validation is green.</p>
+  </section>
+  <section class="card">
+    <h2>Fixes applied</h2>
+    <ol>
+      <li>Added the canonical JSON continuation runner contract to all five source workflow skills.</li>
+      <li>Rebuilt Codex, Cursor, and Kiro projections.</li>
+      <li>Updated and documented the schema-v2 Kiro CHAT GATE floor at 42/166.</li>
+    </ol>
+    <h2>Passing checks</h2>
+    <ul>
+      <li><code>tests/gate-decision-engine.test.sh</code>: 29/29.</li>
+      <li><code>make validate</code>: exit 0.</li>
+      <li>Phase-continue matrix: 24/24 across four runtimes.</li>
+      <li>Workflow-loop: 4/4; host capability matrix: 6/6.</li>
+      <li>Native Codex evidence: 3/3 before and after activation.</li>
+      <li>YAML, dashboard JavaScript, and diff checks passed.</li>
+    </ul>
+  </section>
+  <section class="card">
+    <h2>Conclusion</h2>
+    <p>The implementation is verified and ready for the Phase 11 exit decision.</p>
+  </section>
+</body>
+</html>

@@ -12,15 +12,15 @@ html_output: true
 advisor:
   enabled: true
   gate_policies:
-    phase-exit: advisor
-    optional-phase: advisor
-    clarify: advisor
-    convergence: advisor
-    verify-matrix: advisor
+    phase-exit: fully_automatic
+    optional-phase: fully_automatic
+    clarify: fully_automatic
+    convergence: fully_automatic
+    verify-matrix: fully_automatic
   advisor_agent: advisor
-  advisor_model: null
-  arbiter_agent: advisor
-  arbiter_model: null
+  advisor_model: gpt-5.6-sol
+  arbiter_agent: arbiter
+  arbiter_model: gpt-5.6-sol
   arbiter_enabled_on_disagreement: true
   retry:
     advisor_attempts: 3

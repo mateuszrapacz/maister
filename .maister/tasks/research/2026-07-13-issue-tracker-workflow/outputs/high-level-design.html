@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High-Level Design — issue-tracker-workflow</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { border-left:4px solid var(--accent); }
+.risks { border-left:4px solid var(--warn); }
+.toc { margin:18px 0; color:var(--dim); font-size:13px; }
+pre { overflow:auto; padding:16px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+header p { color:var(--dim); }
+ul, ol { padding-left:22px; }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a><a href="research-report.html">Report</a><a href="solution-exploration.html">Exploration</a><span class="here">Design</span><a href="decision-log.html">Decision Log</a><a href="high-level-design.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+<header><span class="badge">High-Level Design</span><h1>Configurable Issue Tracker Workflow</h1><p>Issue-to-workflow architecture for Maister · 2026-07-13</p></header>
+<div class="tiles"><div class="tile"><b>7</b><span>components</span></div><div class="tile"><b>6</b><span>decisions</span></div><div class="tile"><b>Layered</b><span>architecture style</span></div><div class="tile"><b>2</b><span>provider tracers</span></div></div>
+<section class="card tldr"><h2>TL;DR</h2><p>Maister adds a provider-neutral issue boundary as a small Node ESM helper with exact JSON, typed errors, and a declarative <code>CapabilitySet</code>.<br>Issues remain live in their tracker; workflows consume immutable snapshots and retain only a root <code>source_issue</code> provenance pointer in the unified workflow state.<br>Local Markdown is the first tracer, GitHub the second; v1 mutates trackers only through explicit capture/create.<br>Portable <code>.maister/plans/*.md</code> files are canonical quick-plan handoff artifacts, while host-native plan UI is a projection.</p>
+<h2>Key Decisions</h2><ul>
+<li>Use one executable provider boundary instead of prose-only adapters or a command-template DSL — this centralizes validation, redaction, and cross-host semantics (<a href="decision-log.html#adr-001">ADR-001</a>).</li>
+<li>Keep tracker data and workflow execution state under separate ownership, with root <code>source_issue</code> provenance after state-schema unification (<a href="decision-log.html#adr-002">ADR-002</a>).</li>
+<li>Persist quick plans as portable Markdown artifacts on every host and treat native plan UI as a projection (<a href="decision-log.html#adr-003">ADR-003</a>).</li>
+<li>Limit v1 mutations to explicit capture/create; handoff, resume, and drift checks remain read-only (<a href="decision-log.html#adr-004">ADR-004</a>).</li>
+<li>Give Local Markdown per-UUID records, per-record locks, compare-and-swap, and atomic replace only on ordinary local filesystems (<a href="decision-log.html#adr-005">ADR-005</a>).</li>
+<li>Deliver Local Markdown first and GitHub second under the same conformance contract (<a href="decision-log.html#adr-006">ADR-006</a>).</li></ul></section>
+<section class="card risks"><h2>Open Questions / Risks</h2><ul>
+<li>The competing workflow-state schemas must be unified and fixture-tested before adding the root <code>source_issue</code> field; dual-read behavior is not part of this design.</li>
+<li>Local filesystem guarantees do not extend to network or distributed filesystems; unsupported environments must fail preflight with an actionable diagnostic.</li>
+<li>A GitHub create timeout after dispatch may remain <code>ambiguous_commit</code>; v1 must not blindly retry or switch transport.</li>
+<li>Cross-host fixtures must prove that canonical quick-plan content and native UI projections cannot silently diverge.</li>
+<li>Fully automatic Codex continuation remains unsupported until a host-native adapter, unified state schema, and end-to-end verification exist.</li></ul></section>
+<nav class="toc">Contents: <a href="#overview">Overview</a> · <a href="#architecture">Architecture</a> · <a href="#components">Components</a> · <a href="#data-flow">Data Flow</a> · <a href="#integrations">Integrations</a> · <a href="#decisions">Decisions</a> · <a href="#examples">Examples</a> · <a href="#scope">Scope</a> · <a href="#success">Success</a></nav>
+<main>
+<section id="overview"><h2>Design Overview</h2><div class="card"><p>Maister users need to capture work quickly and start research, planning, or development from an issue without turning workflow state into a second backlog. The design gives all supported hosts one auditable handoff model while preserving existing direct-text invocation and task-path resume.</p><p>The chosen architecture is a <strong>layered provider boundary with immutable handoff snapshots</strong>. A thin host-facing workflow delegates reference parsing, capability discovery, provider dispatch, exact JSON validation, error normalization, and redaction to a small <strong>Node ESM boundary</strong>. The live tracker remains authoritative for issue content and lifecycle, while Maister owns the captured input, phase decisions, and resume state. Provider support grows through sequential vertical tracers and a shared conformance contract rather than a speculative public SDK.</p><p><strong>Key decisions:</strong></p><ul><li>Provider differences are represented explicitly as <code>native</code>, <code>emulated</code>, <code>unsupported</code>, or <code>unknown</code>, with transport, permission, and constraint metadata.</li><li>Handoff resolves and reads an issue once, persists an immutable snapshot before task initialization, and reports later drift without rewriting history.</li><li>External writes require an explicit capture/create action; workflow start, resume, and completion have no implicit tracker side effects.</li><li>Canonical plugin behavior is transformed into generated host variants; generated outputs remain projections rather than edit targets.</li></ul></div></section>
+<section id="architecture"><h2>Architecture</h2><h3>System Context (C4 Level 1)</h3><pre>[Software practitioner]
+    | capture/select/start workflow through host-native skill UX
+    v
+[Maister Issue-to-Workflow System]
+    | read/create through provider contract       | persist workflow provenance, snapshots, plans
+    +--------------------------------------------&gt; [Configured Issue Tracker]
+    |                                              (Local Markdown or GitHub)
+    |
+    | execute research / quick-plan / development with immutable input
+    v
+[Maister Workflow Engine]
+    | host-native invocation and presentation
+    v
+[Claude Code | Codex | Cursor | Kiro]</pre><p>The practitioner invokes a host-native Maister skill, but the issue contract and handoff semantics are host-independent. Trackers own live issues; the workflow engine owns execution state and derived artifacts. Host surfaces render the same canonical behavior within their native constraints.</p>
+<h3>Container Overview (C4 Level 2)</h3><pre>[Host UX / Workflow Skills]
+    | exact request envelope
+    v
+[Provider Boundary: Node ESM]
+    | parse/refine ref  | capabilities  | typed result/error
+    +-------------------+---------------+
+    |                                   |
+    v                                   v
+[Local Markdown Provider]          [GitHub Provider]
+    | locked CAS + atomic replace       | preselected REST/CLI transport
+    v                                   v
+[Local Issue Record Store]         [GitHub Issues API]
+
+[Provider Boundary]
+    | immutable normalized snapshot before initialization
+    v
+[Handoff Coordinator]
+    | root source_issue pointer         | durable source block
+    v                                   v
+[Workflow State + Intake Artifacts] [Quick-Plan Artifact]
+    |                                     |
+    +--------------- resume/handoff ------+
+                    v
+             [Workflow Engine]
+
+[Canonical Plugin + Platform Adapters] -- deterministic build --&gt; [Host-Native Variants]</pre>
+<div class="grid"><div class="card"><strong>Host UX / Workflow Skills</strong><p>Expose configure, capture, list, show, select, and start-from-issue behavior with explicit user intent.</p></div><div class="card"><strong>Provider Boundary</strong><p>Enforce exact contracts, normalize capabilities and errors, choose transport before dispatch, and redact secrets.</p></div><div class="card"><strong>Provider Adapters</strong><p>Translate the common contract to Local Markdown or GitHub without leaking vendor semantics into workflows.</p></div><div class="card"><strong>Handoff Coordinator</strong><p>Freeze the exact issue input, then initialize a workflow or durable plan transactionally.</p></div><div class="card"><strong>Workflow Persistence</strong><p>Retain provenance, snapshots, phase state, gates, and portable plan artifacts without mirroring tracker lifecycle.</p></div><div class="card"><strong>Build Pipeline</strong><p>Generate host-native projections from canonical behavior and validate semantic parity.</p></div></div></section>
+<section id="components"><h2>Key Components</h2><div class="card"><table><thead><tr><th>Component</th><th>Purpose</th><th>Responsibilities</th><th>Key Interfaces</th><th>Dependencies</th></tr></thead><tbody>
+<tr><td>Issue Tracker Skill UX</td><td>Provides a consistent, explicit user journey across hosts.</td><td>Configure and preflight providers.<br>Capture exactly one issue.<br>List, show, and select bounded results.<br>Start a workflow from a selected issue.</td><td>Host-native invocation; exact request envelopes.</td><td>Canonical plugin model; host adapters; Provider Boundary.</td></tr>
+<tr><td>Provider Boundary</td><td>Creates one fail-closed execution seam.</td><td>Parse refs and aliases.<br>Validate exact JSON.<br>Discover capabilities and preselect transport.<br>Normalize errors and redact secrets.</td><td><code>resolve</code>, <code>create</code>, <code>read</code>, bounded <code>list</code>, <code>capabilities</code>.</td><td>Node.js; validated configuration; provider adapters.</td></tr>
+<tr><td>Local Markdown Provider</td><td>Supplies an offline, reviewable first tracer.</td><td>Manage UUID records.<br>Validate containment, metadata, and symlinks.<br>Use locks and CAS.<br>Publish atomically.</td><td>Common provider operations and normalized envelopes.</td><td>Ordinary local filesystem; Local Issue Record Store.</td></tr>
+<tr><td>GitHub Provider</td><td>Proves the seam against hosted/network failures.</td><td>Resolve refs and URLs.<br>Create/read/list with PR guards.<br>Honor auth, pagination, rate, and version constraints.<br>Return <code>ambiguous_commit</code>.</td><td>Common operations over one preselected REST or CLI transport.</td><td>GitHub Issues; external credentials.</td></tr>
+<tr><td>Handoff Coordinator</td><td>Converts a live issue into deterministic workflow input.</td><td>Re-read and normalize issue.<br>Persist ref, revision, digest, snapshot.<br>Initialize exactly one workflow or plan.<br>Report drift read-only.</td><td>Provider Boundary; workflow initialization; snapshot contracts.</td><td>Unified state schema; Workflow Persistence.</td></tr>
+<tr><td>Workflow Persistence</td><td>Separates execution truth from tracker truth.</td><td>Store root <code>source_issue</code> pointer.<br>Keep snapshots immutable.<br>Retain phase/gate/resume state.<br>Persist quick-plan artifacts.</td><td>State, snapshot, and plan handoff contracts.</td><td>Project filesystem; Handoff Coordinator; Workflow Engine.</td></tr>
+<tr><td>Platform Build and Conformance</td><td>Preserves one product across four hosts.</td><td>Generate variants.<br>Package resources and adapters.<br>Run contract and parity checks.<br>Reject drift.</td><td>Deterministic build and validation pipeline.</td><td>Canonical plugin; adapters; fixtures.</td></tr>
+</tbody></table></div></section>
+<section id="data-flow"><h2>Data Flow</h2><div class="card"><h3>Capture flow</h3><ol><li>The user explicitly invokes capture and selects or confirms a configured provider and target.</li><li>The skill sends one exact request to the Provider Boundary; preflight validates configuration, target, capability, permissions, and transport before dispatch.</li><li>Local Markdown publishes a new UUID record transactionally, or GitHub performs one create through the preselected transport.</li><li>The provider returns a normalized result with a canonical <code>IssueRef</code>; uncertain hosted outcomes return <code>ambiguous_commit</code> and are not retried automatically.</li><li>Capture ends after reporting the result. It does not start a workflow or mutate tracker lifecycle metadata.</li></ol></div>
+<h3>Issue-to-workflow handoff flow</h3><pre>Issue alias / canonical ref
+    -&gt; resolve and validate
+    -&gt; read live issue once at SourceRevision
+    -&gt; normalize untrusted content as data
+    -&gt; write immutable snapshot + ref/revision/digest
+    -&gt; commit root source_issue pointer or plan source block
+    -&gt; initialize research, quick-plan, development, or work classification
+    -&gt; later resume from workflow state; optional drift read only</pre><p>If resolution, read, validation, or snapshot persistence fails before commit, no workflow task or state is created. For research and development, the unified workflow state is the sole resume authority and points to the captured artifacts. For quick-plan, the durable Markdown plan carries the source block and remains portable across hosts; native plan UI renders that artifact rather than becoming a second authority.</p>
+<div class="card"><h3>Local update flow</h3><p>Although public v1 exposes only create, the Local persistence protocol establishes safe record evolution: acquire the record lock, verify owner token and expected revision/digest, construct a full candidate, write and flush a same-directory temporary file, re-check ownership and CAS, atomically replace, then release only the owned lock. Rejection leaves bytes, permissions, and directory topology unchanged.</p></div></section>
+<section id="integrations"><h2>Integration Points</h2><div class="card"><table><thead><tr><th>Integration</th><th>Direction</th><th>Contract and boundary behavior</th></tr></thead><tbody>
+<tr><td>Host-native skill surfaces</td><td>Inbound</td><td>Host syntax maps to the same semantics; interactive decisions stay explicit.</td></tr><tr><td>Project configuration</td><td>Inbound</td><td>Non-secret configuration is validated with clear precedence; credentials remain outside files and logs.</td></tr><tr><td>Local filesystem</td><td>Outbound</td><td>UUID identity, strict metadata, containment, locks, CAS, and atomic replace on supported filesystems.</td></tr><tr><td>GitHub Issues</td><td>Outbound</td><td>Versioned REST or selected CLI; pagination, rate limits, auth, PR exclusion, and uncertain dispatch are normalized.</td></tr><tr><td>Workflow engine and state</td><td>Internal</td><td>Snapshot-before-init feeds workflows; <code>source_issue</code> records provenance while state remains resume truth.</td></tr><tr><td>Quick-plan workflow</td><td>Internal</td><td>Every host produces one canonical Markdown plan; host UI is a projection.</td></tr><tr><td>Build and validation pipeline</td><td>Internal</td><td>Canonical behavior generates host variants; conformance and drift tests protect parity.</td></tr>
+</tbody></table></div></section>
+<section id="decisions"><h2>Design Decisions</h2><div class="card"><table><thead><tr><th>ADR</th><th>Decision</th><th>Architectural effect</th></tr></thead><tbody>
+<tr><td><a href="decision-log.html#adr-001">ADR-001</a></td><td>Use an executable provider boundary.</td><td>Centralizes schema enforcement, capabilities, errors, redaction, and dispatch.</td></tr><tr><td><a href="decision-log.html#adr-002">ADR-002</a></td><td>Anchor source provenance in unified workflow state.</td><td>Keeps one resume/audit anchor while snapshots and trackers retain their ownership.</td></tr><tr><td><a href="decision-log.html#adr-003">ADR-003</a></td><td>Use portable quick-plan artifacts.</td><td>Makes plans auditable and transferable across hosts.</td></tr><tr><td><a href="decision-log.html#adr-004">ADR-004</a></td><td>Bound v1 mutations to capture/create.</td><td>Prevents hidden handoff and resume side effects.</td></tr><tr><td><a href="decision-log.html#adr-005">ADR-005</a></td><td>Use transactional Local Markdown records.</td><td>Prevents lost updates and partial publication.</td></tr><tr><td><a href="decision-log.html#adr-006">ADR-006</a></td><td>Deliver providers as sequential tracers.</td><td>Stabilizes the common seam before hosted failures.</td></tr>
+</tbody></table></div></section>
+<section id="examples"><h2>Concrete Examples</h2><div class="grid"><article class="card"><h3>1 · Local capture starts research</h3><p><strong>Given</strong> Local Markdown is configured on a supported local filesystem, <strong>when</strong> a user captures “Research cache strategy” and starts research from the returned canonical ref, <strong>then</strong> exactly one UUID issue record is published, an immutable snapshot is committed before research initialization, root <code>source_issue</code> points to it, and the live issue is not claimed, commented on, or closed.</p></article><article class="card"><h3>2 · GitHub issue becomes a portable quick plan</h3><p><strong>Given</strong> GitHub preflight confirms repository access and read capability, <strong>when</strong> a user selects an issue and invokes quick-plan, <strong>then</strong> it is read once at a recorded revision, one canonical Markdown plan with provenance is produced, each host may project it in native UI, and no tracker mutation occurs.</p></article><article class="card"><h3>3 · Concurrent Local update is rejected safely</h3><p><strong>Given</strong> two agents read the same Local issue revision, <strong>when</strong> the first publishes and the second uses the stale revision, <strong>then</strong> the second receives a typed conflict, the first record remains byte-exact and valid, and no temporary file or foreign lock is removed.</p></article></div></section>
+<section id="scope"><h2>Out of Scope</h2><div class="card"><ul><li>Comment, claim, close, label, transition, and completion receipts until a concrete caller, approval policy, and reconciliation tests exist.</li><li>Bidirectional synchronization between tracker lifecycle and workflow phases.</li><li>GitLab, Jira, and Linear providers until the Local and GitHub conformance contract stabilizes.</li><li>A public or dynamic provider SDK before at least three providers and real external authors establish stable extension needs.</li><li>Semantic merging of Local Markdown records, automated stale-lock theft, and distributed/network filesystem locking guarantees.</li><li>Hosted offline mutation queues or silent transport fallback after write dispatch.</li><li>Automatic snapshot refresh or silent merging of upstream issue changes.</li><li>Fully automatic Codex continuation until host-native continuation and end-to-end state behavior are verified.</li></ul></div></section>
+<section id="success"><h2>Success Criteria</h2><div class="card"><ul><li>The same conformance suite validates exact envelopes, capabilities, typed errors, and bounded lists for Local Markdown and GitHub.</li><li>A failed handoff before commit creates zero workflow tasks and leaves state and artifacts byte-exactly unchanged.</li><li>Successful research and development handoffs persist one immutable snapshot and one root <code>source_issue</code> pointer; resume uses only unified state.</li><li>Every host produces a semantically identical canonical quick-plan artifact, and projections pass parity fixtures.</li><li>Concurrent Local updates commit one revision-consistent result or return a typed conflict without partial writes, leaked temporary files, or unauthorized lock removal.</li><li>Existing direct-text invocation, task-path resume, and repositories without tracker configuration behave unchanged.</li><li>Canonical changes generate all host variants deterministically, and build plus validation reports no drift.</li></ul></div></section>
+</main>
+</body></html>

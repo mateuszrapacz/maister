@@ -1,0 +1,17 @@
+orchestrator:
+  schema_version: 2
+  revision: 0
+  initial_phase: "phase-1"
+  current_phase: "phase-1"
+  completed_phases: []
+  failed_phases: []
+  gate_history: []
+  work: {}
+  dispatch_outbox: []
+task:
+  status: "in_progress"
+phases:
+  - id: "phase-1"
+    status: "in_progress"
+  - id: "phase-2"
+    status: "pending"

@@ -34,9 +34,10 @@ matrix_has_canonical_rows() {
 projection_reports_each_host_outcome() {
   local output host
   output=$(make -s -C "$ROOT" print-host-capabilities)
-  for host in claude cursor kiro codex; do
+  for host in claude cursor kiro; do
     test "$(grep -c "^HOST_CAPABILITY host=$host declared=unsupported projected=unsupported evidence=unavailable " <<<"$output")" -eq 1 || return 1
   done
+  test "$(grep -c '^HOST_CAPABILITY host=codex declared=supported projected=supported evidence=passed ' <<<"$output")" -eq 1 || return 1
   test "$(grep -c '^HOST_CAPABILITY ' <<<"$output")" -eq 4
 }
 
@@ -48,9 +49,10 @@ matrix_fails_closed_for_bad_outcomes() {
   local outcome output host
   for outcome in missing skipped unavailable inconclusive failed; do
     output=$(HOST_CAPABILITY_TEST_OUTCOME="$outcome" make -s -C "$ROOT" print-host-capabilities) || return 1
-    for host in claude cursor kiro codex; do
+    for host in claude cursor kiro; do
       grep -q "^HOST_CAPABILITY host=$host declared=unsupported projected=unsupported evidence=$outcome " <<<"$output" || return 1
     done
+    grep -q "^HOST_CAPABILITY host=codex declared=supported projected=unsupported evidence=$outcome " <<<"$output" || return 1
   done
 }
 

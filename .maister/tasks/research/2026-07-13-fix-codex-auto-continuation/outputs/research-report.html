@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automatyczna kontynuacja Codex — raport badawczy</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+h3 { font-size:14px; margin-top:20px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+pre { overflow:auto; background:var(--accent-soft); border-radius:var(--radius); padding:14px; font-size:12px; }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { border-left:4px solid var(--accent); }
+.answer { border:2px solid var(--ok); background:var(--ok-soft); }
+.warning { border-left:4px solid var(--warn); }
+.toc { margin:16px 0; color:var(--dim); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; }
+.flow { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; white-space:pre-wrap; }
+ul,ol { padding-left:21px; }
+.compact li { margin:4px 0; }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <span class="here">Report</span>
+  <span>Exploration</span><span>Design</span><span>Decision Log</span>
+  <a class="md" href="research-report.md" target="_blank" rel="noopener">md twin ↗</a>
+</nav>
+
+<header>
+  <span class="badge">Research report</span>
+  <h1>Jak naprawić automatyczną kontynuację Codex</h1>
+  <p>Techniczne badanie control flow, canonical state, adaptera hosta, dispatchu i dowodów capability.</p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>4</b><span>strumienie findings</span></div>
+  <div class="tile"><b>18</b><span>scenariuszy testowych</span></div>
+  <div class="tile"><b>High</b><span>confidence root cause</span></div>
+  <div class="tile"><b>77</b><span>obecny Codex E2E</span></div>
+</div>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>To powinno działać automatycznie: zgodność kończy gate decyzją advisora; rozbieżność uruchamia dokładnie jednego logicznego arbitra; poprawny wynik jest trwale commitowany i od razu przekazywany do następnego problemu lub fazy bez kliknięcia.</p>
+  <p>Brakuje wykonywalnego łańcucha <code>evaluator → runner → adapter Codex → workflow loop</code>. <strong>Runner commit nie jest dispatcherem.</strong> Po sukcesie adapter musi zwrócić sterowanie do workflow loop bez kończenia tury.</p>
+  <h3>Key Decisions</h3>
+  <ul class="compact">
+    <li>Wspólny executable evaluator dla agreement, arbitration, retry i denylisty.</li>
+    <li>Canonical <code>current_phase</code>, pełny <code>gate_history</code>, trwały work-item cursor i receipt.</li>
+    <li>Evaluator wybiera, runner utrwala, adapter transportuje, workflow loop routuje.</li>
+    <li>Dowód obejmuje next problem w tej samej fazie oraz body następnej fazy.</li>
+    <li>Capability flip dopiero po realnym Codex E2E.</li>
+  </ul>
+  <h3>Open Questions / Risks</h3>
+  <ul class="compact">
+    <li>Headless entrypoint Codex i fake-role injection wymagają krótkiego spike'a.</li>
+    <li>Schema musi być jedno dla prose, runtime i fixtures.</li>
+    <li>Exactly-once oznacza logiczny efekt z <code>dispatch_id</code>, nie brak fizycznych retry.</li>
+    <li>Backward refinement wymaga osobnego reset protocol.</li>
+  </ul>
+</section>
+
+<nav class="toc">Contents:
+  <a href="#answer">Odpowiedź</a> · <a href="#failure">Failure chain</a> ·
+  <a href="#algorithm">Algorytm</a> · <a href="#state">State</a> ·
+  <a href="#ownership">Ownership</a> · <a href="#continuation">Continuation</a> ·
+  <a href="#files">Pliki</a> · <a href="#order">Kolejność</a> ·
+  <a href="#tests">Testy</a> · <a href="#acceptance">Akceptacja</a> ·
+  <a href="#rollout">Rollout</a> · <a href="#risks">Ryzyka</a>
+</nav>
+
+<main>
+<section id="answer" class="card answer">
+  <h2>1. Odpowiedź: docelowe zachowanie</h2>
+  <ol>
+    <li>Główny agent tworzy stabilny gate context z dokładnymi opcjami i rekomendacją.</li>
+    <li>Evaluator utrwala <code>advisor_pending</code> i próbę <code>started</code>, potem wywołuje read-only advisora.</li>
+    <li>Agreement + high/medium + brak eskalacji kończy gate aktorem <code>advisor</code>; bez arbitra i UI.</li>
+    <li>Disagreement tworzy jeden logical arbiter; wszystkie retry należą do jego <code>attempts[]</code>.</li>
+    <li>Arbiter wybiera tylko original albo advisor; poprawny wynik kończy gate aktorem <code>arbiter</code>.</li>
+    <li>Pełny terminal record jest trwały przed raportami i continuation.</li>
+    <li>Runner weryfikuje record, odtwarza raporty i opcjonalnie przełącza fazę.</li>
+    <li>Adapter zwraca <code>continue</code>, nie kończy tury i nie pyta użytkownika.</li>
+    <li>Workflow loop aplikuje wybór, przesuwa cursor i od razu dispatchuje następną pracę.</li>
+    <li>Automatyczny ciąg kończy dopiero brak pracy albo zawsze-user-controlled final gate.</li>
+  </ol>
+</section>
+
+<section id="failure">
+  <h2>2. Obecny łańcuch awarii</h2>
+  <div class="card flow">workflow gate call site
+  → instrukcje agreement/arbitration w Markdown
+  → profil advisora w advisor.toml
+  → <span class="fail">BRAK executable evaluatora/adaptera</span>
+  → phase-continue.mjs (jeżeli wywołany)
+      ├─ terminal commit
+      ├─ raporty
+      ├─ opcjonalny current_phase transition
+      └─ stdout JSON + process exit
+  → <span class="fail">BRAK consumer → effect → cursor → dispatch</span></div>
+  <div class="grid">
+    <div class="card"><span class="sev warning">Prompt only</span><p><code>advisor.toml</code> opisuje zachowanie, ale nie wykonuje go.</p></div>
+    <div class="card"><span class="sev warning">Smoke only</span><p><code>smoke-cli.sh</code> sprawdza frazy, nie role/runner/dispatch.</p></div>
+    <div class="card"><span class="sev critical">Unavailable</span><p>Codex E2E zawsze zwraca <code>77</code>.</p></div>
+    <div class="card"><span class="sev info">Commit only</span><p><code>phase-continue.mjs</code> kończy się po stdout; nie uruchamia workflow.</p></div>
+  </div>
+  <p><span class="sev info">High confidence</span> Shared runner i contract tests są zielone; native Codex continuation nie ma dowodu.</p>
+</section>
+
+<section id="algorithm">
+  <h2>3. Jednoznaczny algorytm</h2>
+  <div class="grid">
+    <article class="card">
+      <h3>Agreement</h3>
+      <p>Wymaga: non-denylisted, <code>fully_automatic</code>, supported capability, exact four-field output, exact option membership, exact equality z original, high/medium i brak eskalacji.</p>
+      <p class="pass">Efekt: 1 terminal record, actor advisor, arbiter 0, UI 0.</p>
+    </article>
+    <article class="card">
+      <h3>Disagreement</h3>
+      <p>Najpierw trwały advisor result, potem jedna mapa i jeden <code>logical_arbiter_id</code>. Retry dopisują attempts. Arbiter może wybrać tylko dwie konkurujące rekomendacje.</p>
+      <p class="pass">Efekt: actor arbiter, bez powrotu do advisora i bez UI.</p>
+    </article>
+  </div>
+  <table>
+    <thead><tr><th>Warunek</th><th>Zachowanie</th><th>Zakaz</th></tr></thead>
+    <tbody>
+      <tr><td>Hard denylist</td><td>user_pending / blocked</td><td>advisor, arbiter, runner, dispatch</td></tr>
+      <tr><td>Low confidence / escalation</td><td>manual / blocked</td><td>automatic selection</td></tr>
+      <tr><td>Retry exhaustion</td><td>manual / blocked</td><td>infinite retry / approval</td></tr>
+      <tr><td>Invalid schema/option</td><td>bounded retry, potem fallback</td><td>selection commit</td></tr>
+      <tr><td>Unsupported capability</td><td>manual / blocked</td><td>udawana kontynuacja</td></tr>
+      <tr><td>Persistence/runner error</td><td>stop + resumable state</td><td>cursor/phase advance</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="state">
+  <h2>4. Canonical state, history i durability</h2>
+  <div class="card">
+    <ul>
+      <li><code>orchestrator.current_phase</code> wskazuje dokładnie jedną fazę <code>in_progress</code>.</li>
+      <li><code>started_phase</code> znika albo staje się niemutowalnym <code>initial_phase</code>.</li>
+      <li>Jeden idempotency key = jeden gate record aktualizowany pending → terminal.</li>
+      <li>Pełny record zawiera context, policy/safety, ordered options, original, advisor/arbiter responses i attempts, actor, confidence i continuation.</li>
+      <li>Runner weryfikuje persisted record; nie rekonstruuje original/rationale.</li>
+    </ul>
+  </div>
+  <details class="card">
+    <summary>Przykładowy pełny envelope</summary>
+<pre>schema_version: 1
+idempotency_key: sha256:...
+phase_id: phase-4
+gate_type: research-convergence
+options: [A, B, "Need more info"]
+original_recommendation: A
+policy: fully_automatic
+safety_classification: configurable
+status: decided
+selected_option: B
+final_actor: arbiter
+advisor: {agent: advisor, model: "...", response: {...}, attempts: [], exhausted: false}
+arbiter: {logical_arbiter_id: sha256:..., agent: arbiter, response: {...}, attempts: []}
+continuation: {kind: same_phase_work_item, target: decision-area:persistence-boundary, status: pending}</pre>
+  </details>
+  <details class="card">
+    <summary>Stable same-phase inventory</summary>
+<pre>decision_areas:
+  - {id: execution-owner, ordinal: 1, status: completed, gate_key: sha256:..., chosen_approach: host-workflow-loop}
+  - {id: persistence-boundary, ordinal: 2, status: ready, gate_key: null, chosen_approach: null}</pre>
+    <p>Target niesie <code>work_item_id</code>, <code>source_gate_key</code>, <code>dispatch_id</code> i status. Ordinal nie jest identity.</p>
+  </details>
+  <div class="card flow">1 pending + attempt started
+→ 2 role result
+→ 3 full terminal gate + continuation pending
+→ 4 reports/dashboard from persisted state
+→ 5 apply selection + cursor/transition intent
+→ 6 dispatch(target, dispatch_id)
+→ 7 applied/completed receipt</div>
+  <p>Report failure nie cofa terminalnej decyzji; retry regeneruje. Odrzucenie przed legalnym commitem zachowuje byte-exact state, raporty, modes i topology.</p>
+</section>
+
+<section id="ownership">
+  <h2>5. Ownership split</h2>
+  <table>
+    <thead><tr><th>Warstwa</th><th>Odpowiada za</th><th>Nie odpowiada za</th></tr></thead>
+    <tbody>
+      <tr><td>Evaluator</td><td>policy, denylist, roles, validation, agreement, one arbiter, retry, terminal record</td><td>domenowy routing</td></tr>
+      <tr><td>Runner</td><td>preflight, terminal reuse/verification, raporty, forward transition</td><td>modele, decision areas, host turn</td></tr>
+      <tr><td>Codex adapter</td><td>native delegation port, exact transport, stdout validation, continue/user_gate/blocked</td><td>własny schema/cursor/routing</td></tr>
+      <tr><td>Workflow loop</td><td>gate effect, cursor, next target, immediate dispatch</td><td>ponowna implementacja safety</td></tr>
+    </tbody>
+  </table>
+  <div class="card answer"><strong>Kontrakt krytyczny:</strong> successful adapter execution returns control to the workflow loop without ending the turn.</div>
+</section>
+
+<section id="continuation">
+  <h2>6. Same-phase vs next-phase continuation</h2>
+  <div class="grid">
+    <article class="card">
+      <h3>Same phase</h3>
+      <ol>
+        <li>Commit gate area N.</li><li>Zapisz choice/gate key/completed.</li>
+        <li>Ponownie wylicz area N+1.</li><li>Ustaw ready + dispatch_id.</li>
+        <li>Adapter → continue; loop startuje N+1 w tej samej turze.</li>
+      </ol>
+      <p>Nie używać <code>next_phase</code> i nie pre-renderować zależnych areas.</p>
+    </article>
+    <article class="card">
+      <h3>Next phase</h3>
+      <ol>
+        <li>Runner ustawia source completed.</li><li>Target in_progress.</li>
+        <li><code>current_phase=target</code>.</li><li>Adapter → continue.</li>
+        <li>Loop uruchamia body i zapisuje pierwszy checkpoint.</li>
+      </ol>
+      <p>Sama zmiana statusu nie jest dowodem dispatchu.</p>
+    </article>
+  </div>
+</section>
+
+<section id="files">
+  <h2>7. File-by-file change map</h2>
+  <table>
+    <thead><tr><th>Plik / grupa</th><th>Zmiana</th></tr></thead>
+    <tbody>
+      <tr><td><code>.../bin/gate-evaluate.mjs</code> (new)</td><td>Executable agreement/arbitration/retry/resume + pełny record.</td></tr>
+      <tr><td><code>.../bin/phase-continue.mjs</code></td><td>Weryfikacja terminal recordu, shared schema, current_phase, receipt, strict stdout; bez domenowego dispatchu.</td></tr>
+      <tr><td><code>gate-decision-engine.md</code></td><td>Schema zgodne z runtime, ownership i recovery.</td></tr>
+      <tr><td><code>orchestrator-patterns.md</code></td><td>current_phase, cursor/dispatch, auto entry proof, do-not-end-turn.</td></tr>
+      <tr><td><code>gate-decision-fixtures.yml</code></td><td>Executable inputs, expected state i call counts.</td></tr>
+      <tr><td><code>host-capabilities.yml</code></td><td>Flip dopiero po native E2E.</td></tr>
+      <tr><td><code>research/SKILL.md</code></td><td>Terminal result, stable area cursor, return to loop, auto self-check.</td></tr>
+      <tr><td><code>product-design/SKILL.md</code></td><td>Shared loop + osobny backward reset.</td></tr>
+      <tr><td><code>development/SKILL.md</code></td><td>Scope work items, runner consumer, auto entry proof.</td></tr>
+      <tr><td>Pozostałe orchestratory</td><td>Inventory migration started_phase → current_phase i pełny gate envelope.</td></tr>
+      <tr><td><code>platforms/codex-cli/</code> binding</td><td>Native role port, evaluator, runner transport, stdout validation, continue without UI/end-turn.</td></tr>
+      <tr><td><code>advisor.toml</code></td><td>Read-only profile wskazujący real adapter.</td></tr>
+      <tr><td><code>build.sh</code> / <code>smoke-cli.sh</code></td><td>Copy i executable wiring assertions.</td></tr>
+      <tr><td>Codex E2E</td><td>Real host test; 77 tylko gdy runtime faktycznie niedostępny.</td></tr>
+      <tr><td>Evaluator/runner/loop tests + fixtures</td><td>Full state, failure injection, call/UI/dispatch counters i byte-exact assertions.</td></tr>
+      <tr><td><code>Makefile</code></td><td>Fast suites, bez osłabienia native capability proof.</td></tr>
+    </tbody>
+  </table>
+  <div class="card warning"><strong>Generated effects:</strong> <code>plugins/maister-{codex,cursor,kiro}/</code> powstają przez <code>make build</code>. Nie edytować ich bezpośrednio.</div>
+</section>
+
+<section id="order">
+  <h2>8. Implementation order</h2>
+  <ol>
+    <li>Schema + real-state fixtures.</li>
+    <li>Executable evaluator.</li>
+    <li>Runner contract consuming persisted result.</li>
+    <li>Workflow-loop tracer bullet: dwa same-phase items.</li>
+    <li>Codex adapter integration z fake ports.</li>
+    <li>Call-site migration i self-check fix.</li>
+    <li>Build projection.</li>
+    <li>Native Codex E2E.</li>
+    <li>Capability flip.</li>
+  </ol>
+</section>
+
+<section id="tests">
+  <h2>9. Executable test matrix</h2>
+  <table>
+    <thead><tr><th>Scenariusz</th><th>Pozytywne asercje</th><th>Safety asercje</th></tr></thead>
+    <tbody>
+      <tr><td>Advisor agrees</td><td>actor advisor; terminal; reports; next dispatch</td><td>arbiter 0; UI 0; no duplicates</td></tr>
+      <tr><td>Arbiter chooses original</td><td>1 logical arbiter; original; continuation</td><td>no advisor return; UI 0</td></tr>
+      <tr><td>Arbiter chooses advisor</td><td>1 logical arbiter; advisor; continuation</td><td>no third option; UI 0</td></tr>
+      <tr><td>Next decision area</td><td>N complete; N+1 started; same turn</td><td>no premature phase end/double dispatch</td></tr>
+      <tr><td>Next phase</td><td>transition + first target checkpoint</td><td>no stop after status only</td></tr>
+      <tr><td>Advisor retry</td><td>persisted attempts/backoff</td><td>bounded; no arbiter without disagreement</td></tr>
+      <tr><td>Arbiter retry</td><td>one logical record, many attempts</td><td>advisor not reinvoked</td></tr>
+      <tr><td>Resume pending</td><td>same key/role/budget</td><td>no reset/new role</td></tr>
+      <tr><td>Exhaustion</td><td>user_pending / blocked</td><td>runner/dispatch 0</td></tr>
+      <tr><td>Report failure</td><td>terminal durable; one recovery</td><td>no duplicate history</td></tr>
+      <tr><td>Transition failure</td><td>one resumed transition</td><td>no two active phases</td></tr>
+      <tr><td>Dispatch failure</td><td>same dispatch_id; idempotent effect</td><td>no new gate/effect</td></tr>
+      <tr><td>Denylist</td><td>manual / blocked</td><td>advisor/arbiter/runner/dispatch 0</td></tr>
+      <tr><td>Low/escalation</td><td>manual / blocked</td><td>no auto selection</td></tr>
+      <tr><td>Invalid output</td><td>bounded retry/fallback</td><td>no selection commit</td></tr>
+      <tr><td>Changed terminal selection</td><td>non-zero</td><td>byte-exact all artifacts/modes/topology</td></tr>
+      <tr><td>Build projection</td><td>binding present; second build no diff</td><td>no manual generated edits</td></tr>
+      <tr><td>Runtime unavailable</td><td>E2E 77</td><td>cannot project supported</td></tr>
+    </tbody>
+  </table>
+  <div class="card">
+    <h3>Deterministyczna obserwowalność</h3>
+    <p>Fake role używa tego samego portu co native Codex i loguje gate key, role, logical arbiter, attempt i input hash. Fake dispatcher deduplikuje po dispatch_id i loguje attempt/ack. UI spy failuje każde pytanie na pozytywnej ścieżce. Native E2E nadal uruchamia prawdziwy Codex entrypoint; fake zastępuje tylko model.</p>
+  </div>
+</section>
+
+<section id="acceptance">
+  <h2>10. Acceptance criteria</h2>
+  <div class="card">
+    <ul>
+      <li>Agreement: actor advisor, bez arbitra i UI.</li>
+      <li>Disagreement: jeden logical arbiter; oba wyniki executable-tested.</li>
+      <li>Pełny audyt i raporty trwałe przed continuation.</li>
+      <li>Następny problem faktycznie startuje w tej samej turze.</li>
+      <li>Next phase dowodzi body/checkpointu, nie tylko statusu.</li>
+      <li>Resume nie duplikuje gate, arbitra ani logicznego dispatchu.</li>
+      <li>Denylist/low/escalation/exhaustion/invalid/failure pozostają fail-closed.</li>
+      <li>Real workflow state przechodzi shared strict schema.</li>
+      <li><code>make build &amp;&amp; make validate</code> przechodzi bez driftu.</li>
+      <li>Native Codex E2E = 0; unavailable runtime = 77 + unsupported.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="rollout">
+  <h2>11. Rollout i capability flip</h2>
+  <div class="grid">
+    <div class="card"><span class="badge">Gate 1</span><h3>Shared contract</h3><p>Evaluator, runner, schema, fixtures i loop integration zielone. Codex nadal unsupported.</p></div>
+    <div class="card"><span class="badge">Gate 2</span><h3>Codex integration</h3><p>Fake-port adapter integration i reproducible build zielone. Codex nadal unsupported.</p></div>
+    <div class="card answer"><span class="badge">Gate 3</span><h3>Native evidence</h3><p>Real Codex E2E: agreement, arbiter, same/next phase, UI=0, resume. Dopiero wtedy supported.</p></div>
+  </div>
+  <p>Smoke frazy, manual override i shared runner tests nie zastępują Gate 3. Zachować Makefile fail-closed projection dla exit 0/77/failure.</p>
+</section>
+
+<section id="risks">
+  <h2>12. Risks, gaps i confidence</h2>
+  <table>
+    <thead><tr><th>Finding</th><th>Confidence</th><th>Ryzyko</th></tr></thead>
+    <tbody>
+      <tr><td>Brak executable Codex adaptera</td><td><span class="sev info">High</span></td><td>Brak stabilnego native harnessu</td></tr>
+      <tr><td>Runner commit ≠ dispatcher</td><td><span class="sev info">High</span></td><td>Stdout/transition może zostać mylnie uznany za continuation</td></tr>
+      <tr><td>Return to loop bez końca tury</td><td><span class="sev info">High</span></td><td>Zależność od host execution turn</td></tr>
+      <tr><td>Agreement/one-arbiter algorithm</td><td><span class="sev info">High</span></td><td>Dziś prose-tested</td></tr>
+      <tr><td>current_phase canonical</td><td><span class="sev info">High</span></td><td>Migracja istniejących states</td></tr>
+      <tr><td>Durable cursor/dispatch_id</td><td><span class="sev info">High</span></td><td>Finalna serializacja wymaga review</td></tr>
+      <tr><td>Native binding shape</td><td><span class="sev warning">Medium</span></td><td>Potrzebny headless spike</td></tr>
+      <tr><td>Exactly-once logical effect</td><td><span class="sev warning">Medium-high</span></td><td>Receiver musi deduplikować dispatch_id</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="sources">
+  <h2>13. Źródła</h2>
+  <div class="card">
+    <p>Źródła pierwszego rzędu: gate engine i orchestrator patterns, <code>phase-continue.mjs</code>, workflowy research/product-design/development, Codex advisor template/build/smoke/E2E, gate/runner contract tests oraz host capability matrix.</p>
+    <p>Pełne dowody cząstkowe:</p>
+    <ul>
+      <li><a href="../analysis/findings/01-gate-state-contract.md" target="_blank" rel="noopener">Gate/state contract ↗</a></li>
+      <li><a href="../analysis/findings/02-continuation-dispatch.md" target="_blank" rel="noopener">Continuation dispatch ↗</a></li>
+      <li><a href="../analysis/findings/03-codex-host-adapter.md" target="_blank" rel="noopener">Codex host adapter ↗</a></li>
+      <li><a href="../analysis/findings/04-verification-safety.md" target="_blank" rel="noopener">Verification and safety ↗</a></li>
+    </ul>
+  </div>
+</section>
+</main>
+</body>
+</html>
