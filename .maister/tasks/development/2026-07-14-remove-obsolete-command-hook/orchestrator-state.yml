@@ -1,0 +1,78 @@
+orchestrator:
+  started_phase: phase-1
+  current_phase: phase-14
+  completed_phases: [phase-1, phase-2, phase-5, phase-6, phase-7, phase-8, phase-10, phase-11, phase-14]
+  failed_phases: []
+  created: "2026-07-14T13:01:09Z"
+  updated: "2026-07-14T13:01:09Z"
+  task_path: .maister/tasks/development/2026-07-14-remove-obsolete-command-hook
+  task_context:
+    risk_level: medium
+    scope: Remove the obsolete command optimization hook, installer switches, generated wiring, and historical command prefixes from every project target.
+    clarifications_resolved: true
+  options:
+    html_output: true
+    spec_audit_enabled: true
+    e2e_enabled: false
+    user_docs_enabled: false
+    advisor:
+      enabled: true
+      gate_policies:
+        phase-exit: fully_automatic
+        optional-phase: fully_automatic
+        clarify: fully_automatic
+        convergence: fully_automatic
+        verify-matrix: fully_automatic
+  implementation_approval:
+    status: approved
+    final_actor: user
+    rationale: User explicitly confirmed removal across all platforms and requested automatic execution.
+    approved_scope: Complete removal from canonical sources, generated targets, install options, and repository documentation.
+  phase_summaries:
+    phase-1:
+      summary: The integration was limited to the Kiro adapter, its generated agent, two hook files, installer switches, and three historical research artifacts.
+      artifacts: []
+      decisions: []
+      risks: []
+    phase-2:
+      summary: Scope confirmed as source-first removal followed by deterministic regeneration and cross-platform validation.
+      artifacts: []
+      decisions: []
+      risks: []
+    phase-8:
+      summary: Removed the hook and its generated wiring, deleted installer enable/disable branches, and normalized historical command examples.
+      artifacts:
+        - platforms/kiro-cli/build.sh
+        - platforms/kiro-cli/smoke-install.sh
+        - plugins/maister-kiro/agents/maister.json
+      decisions: []
+      risks: []
+    phase-11:
+      summary: Full build and validation passed for all four target platforms; the Kiro smoke suite passed all 13 cases.
+      artifacts: []
+      decisions: []
+      risks: []
+    phase-14:
+      summary: Final repository audit found no remaining references, files, installer options, or generated hook wiring for the removed integration.
+      artifacts: []
+      decisions: []
+      risks: []
+  gate_history:
+    - schema_version: 1
+      phase_id: implementation-approval
+      gate_type: implementation-approval
+      question: Approve complete implementation scope?
+      options:
+        - Approve complete implementation scope
+        - Reject implementation scope
+        - Request scope changes
+      policy: manual
+      safety_classification: denylisted
+      status: decided
+      selected_option: Approve complete implementation scope
+      final_actor: user
+      original_recommendation: Approve complete implementation scope
+      rationale: User confirmation in the task request authorizes the complete removal scope.
+      confidence: high
+      escalate_to_user: false
+      user_override: false

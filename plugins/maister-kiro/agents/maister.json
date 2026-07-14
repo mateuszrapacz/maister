@@ -27,11 +27,6 @@
         "timeout_ms": 5000
       },
       {
-        "matcher": "shell",
-        "command": "~/.kiro-maister/hooks/rtk-rewrite.sh",
-        "timeout_ms": 5000
-      },
-      {
         "matcher": "subagent",
         "command": "~/.kiro-maister/hooks/subagent-spawn-tracker.sh",
         "timeout_ms": 5000

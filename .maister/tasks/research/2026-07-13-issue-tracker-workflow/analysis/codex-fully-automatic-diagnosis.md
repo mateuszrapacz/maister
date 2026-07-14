@@ -22,7 +22,7 @@ Naprawa wymaga najpierw ujednolicenia state contractu, następnie adaptera wykon
 Polecenie:
 
 ```bash
-rtk bash platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh
+bash platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh
 ```
 
 Wynik:
@@ -44,7 +44,7 @@ HOST_CAPABILITY host=codex declared=unsupported projected=unsupported evidence=u
 Wspólny runner nie jest przyczyną pierwotną. Polecenie:
 
 ```bash
-rtk bash tests/fully-automatic-phase-continue.test.sh
+bash tests/fully-automatic-phase-continue.test.sh
 ```
 
 przechodzi i potwierdza:
@@ -128,4 +128,3 @@ W efekcie samo podłączenie istniejącego runnera do obecnego stanu nie wystarc
 - `plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs`
 - `tests/fully-automatic-phase-continue.test.sh`
 - `Makefile` (`print-host-capabilities`, `validate-host-capabilities`)
-

@@ -23,11 +23,11 @@ Bezpieczeństwo wymaga byte-exact non-mutation dla odrzuceń przed commit oraz t
 
 | Polecenie | Exit | Wynik | Co faktycznie dowodzi |
 |---|---:|---|---|
-| `rtk bash tests/gate-decision-engine.test.sh` | 0 | 28 passed | Spójność normatywnego prose, katalog fixtures, wiring i syntax; nie wykonuje modelowego evaluator flow. |
-| `rtk bash tests/fully-automatic-phase-continue.test.sh` | 0 | PASS | Terminal decision, raport, phase-1 → phase-2, reuse i denylist dla shared runnera. |
-| `rtk bash tests/phase-continue-contract.test.sh` | 0 | 21 passed | Exact transport/schema, canonical-state validation, deterministic reports, non-mutation, recovery i phase transition dla source runnera. |
-| `rtk bash platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh` | 77 | UNAVAILABLE | Brak deterministycznego host-native Codex harnessu. |
-| `rtk make -s print-host-capabilities` | 0 | Codex declared/projected unsupported | Capability projection prawidłowo odpowiada niedostępnemu targetowi. |
+| `bash tests/gate-decision-engine.test.sh` | 0 | 28 passed | Spójność normatywnego prose, katalog fixtures, wiring i syntax; nie wykonuje modelowego evaluator flow. |
+| `bash tests/fully-automatic-phase-continue.test.sh` | 0 | PASS | Terminal decision, raport, phase-1 → phase-2, reuse i denylist dla shared runnera. |
+| `bash tests/phase-continue-contract.test.sh` | 0 | 21 passed | Exact transport/schema, canonical-state validation, deterministic reports, non-mutation, recovery i phase transition dla source runnera. |
+| `bash platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh` | 77 | UNAVAILABLE | Brak deterministycznego host-native Codex harnessu. |
+| `make -s print-host-capabilities` | 0 | Codex declared/projected unsupported | Capability projection prawidłowo odpowiada niedostępnemu targetowi. |
 
 Baseline był read-only względem źródeł. Exit `77` jest oczekiwanym fail-closed dowodem braku capability, nie niepowodzeniem shared runnera.
 

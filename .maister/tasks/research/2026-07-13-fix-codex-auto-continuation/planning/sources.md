@@ -237,11 +237,11 @@ Rola: realny przykład stanu wygenerowanego przez aktywny workflow; kluczowy do 
 Polecenia są diagnostyczne i nie zmieniają źródeł:
 
 ```bash
-rtk bash tests/gate-decision-engine.test.sh
-rtk bash tests/fully-automatic-phase-continue.test.sh
-rtk bash tests/phase-continue-contract.test.sh
-rtk bash platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh
-rtk make -s print-host-capabilities
+bash tests/gate-decision-engine.test.sh
+bash tests/fully-automatic-phase-continue.test.sh
+bash tests/phase-continue-contract.test.sh
+bash platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh
+make -s print-host-capabilities
 ```
 
 Oczekiwany baseline należy zapisać wraz z exit code. Kod `77` dla Codex E2E jest oczekiwanym dowodem obecnej niedostępności, nie sukcesem.
