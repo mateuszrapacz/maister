@@ -1,6 +1,7 @@
 #!/bin/bash
 # Reminder at end of agent turn — verify orchestrator-state.yml consistency (Kiro stop hook).
-# Kiro contract: {"decision":"block","reason":"..."} on STDOUT prevents stopping and feeds reason to the LLM.
+# Advisory mode: outputs {"additional_context":"..."} so the LLM sees the reminder
+# but the turn is allowed to end (prevents infinite block loops at CHAT GATEs).
 
 INPUT=$(cat)
 PROJECT_DIR=$(echo "$INPUT" | jq -r '.cwd // "."')
@@ -41,6 +42,6 @@ STATE_HINT=" Active workflow: $LATEST_STATE"
 
 MSG="Maister stop check: before ending this turn, verify orchestrator-state.yml matches work done (phase progress, completed_phases, task status, gate_history, pending advisor/arbiter/user gates, implementation_approval).$STATE_HINT Update state if you finished phase work or advanced gates. Never start implementation without explicit approval."
 
-jq -n --arg msg "$MSG" '{"decision": "block", "reason": $msg}'
+jq -n --arg msg "$MSG" '{"additional_context": $msg}'
 
 exit 0

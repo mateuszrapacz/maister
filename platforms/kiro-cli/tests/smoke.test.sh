@@ -163,7 +163,7 @@ current_phase: implementation
 completed_phases: []
 EOF
   stop_out=$(echo "{\"cwd\":\"$ws\"}" | "$ROOT/plugins/maister-kiro/hooks/stop-state-reminder-kiro.sh")
-  echo "$stop_out" | jq -e '.decision == "block" and (.reason | length > 0)' >/dev/null
+  echo "$stop_out" | jq -e '.additional_context | length > 0' >/dev/null
   rm -rf "$ws"
 }
 
