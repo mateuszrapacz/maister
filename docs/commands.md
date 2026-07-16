@@ -162,7 +162,7 @@ Initialize the Maister framework. Scans your codebase with a project-analyzer su
 
 - `.maister/docs/` with INDEX.md, project docs (vision, roadmap, tech-stack), and coding standards
 - `.maister/tasks/` directory structure
-- CLAUDE.md integration
+- Project-instructions integration
 
 | Flag | Description |
 |------|-------------|
@@ -206,7 +206,7 @@ Implement a task directly — exactly as the main agent normally would, no plann
 
 ### `/maister:quick-plan [task description]`
 
-Works exactly like Claude Code's built-in plan mode, with standards enforcement folded in. While planning, it reads INDEX.md and the specific matched standard files (INDEX.md alone is not enough), and the plan must reference the applicable standards and include a Standards Compliance Checklist (verified after implementation) before exiting plan mode.
+Works like the host's built-in plan mode, with standards enforcement folded in. While planning, it reads INDEX.md and the specific matched standard files (INDEX.md alone is not enough), and the plan must reference the applicable standards and include a Standards Compliance Checklist (verified after implementation) before exiting plan mode.
 
 ### `/maister:quick-bugfix [bug description]`
 

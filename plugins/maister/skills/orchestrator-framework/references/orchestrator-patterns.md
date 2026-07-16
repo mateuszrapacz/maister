@@ -65,7 +65,7 @@ All orchestrators pause at `→ Pause` transitions for user review and prompt fo
 
 ### Phase Gates Override Permission Modes
 
-Claude Code's `auto` permission mode instructs the model to execute immediately and minimize clarifying questions. The `→ Pause` gates in this framework are an explicit stated boundary that overrides that instruction.
+Some host `auto` permission modes instruct the model to execute immediately and minimize clarifying questions. The `→ Pause` gates in this framework are an explicit stated boundary that overrides that instruction.
 
 You MUST invoke `AskUserQuestion` at every `→ Pause` in every permission mode — `default`, `acceptEdits`, `auto`, `plan`, `bypassPermissions`. "Minimize clarifying questions" applies to the model's own discretionary asks; it does not override workflow checkpoints the orchestrator has been instructed to enforce.
 

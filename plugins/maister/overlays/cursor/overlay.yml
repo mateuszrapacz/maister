@@ -1,0 +1,142 @@
+schema_version: 1
+overlay_id: maister/cursor
+overlay_version: 1.0.0
+target:
+  id: cursor
+  host_version_constraint: ">=1.0.0"
+  discovery_roots:
+    - .cursor/plugins/local/maister
+layout:
+  - source: assets/skills
+    destination: skills
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+  - source: assets/agents
+    destination: agents
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+  - source: assets/rules
+    destination: rules
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+  - source: assets/plugin.json
+    destination: .cursor-plugin/plugin.json
+    kind: file
+    mode: "0644"
+    ownership: whole_file
+  - source: assets/hooks
+    destination: hooks
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+settings:
+  - path: .cursor/settings.json
+    format: json
+    ownership: managed_keys
+    managed_keys:
+      - plugins.maister
+    merge_policy: preserve_unmanaged_refuse_drift
+semantic_bindings:
+  user_gate:
+    adapter: cursor.chat_gate
+    capability: semantic
+    fail_closed: true
+  delegate_agent:
+    adapter: cursor.subagent
+    capability: delegation
+    fail_closed: true
+  track_progress:
+    adapter: cursor.checkpoint
+    capability: persistence
+    fail_closed: true
+  resolve_task_root:
+    adapter: cursor.workspace_root
+    capability: persistence
+    fail_closed: true
+  persist_state:
+    adapter: cursor.filesystem_state
+    capability: persistence
+    fail_closed: true
+  continue_workflow:
+    adapter: cursor.continue
+    capability: continuation
+    fail_closed: true
+inventory:
+  required:
+    - .cursor-plugin/plugin.json
+    - "skills/maister-*/SKILL.md"
+    - "agents/*.md"
+    - "rules/*.mdc"
+    - hooks/hooks.json
+  optional:
+    - "hooks/*.sh"
+  forbidden:
+    - ".codex-plugin/**"
+    - "skills/**/agents/openai.yaml"
+    - "steering/**"
+    - "agents/*.json"
+    - ".claude-plugin/**"
+    - "**/*claude*"
+validation:
+  forbidden_vocabulary:
+    - codex
+    - kiro
+    - claude
+    - anthropic
+    - .codex-plugin
+    - .claude-plugin
+  executable_paths:
+    - "hooks/*.sh"
+  syntax_checks:
+    - "json:.cursor-plugin/plugin.json"
+    - "json:hooks/hooks.json"
+    - "markdown:rules/*.mdc"
+capabilities:
+  semantic_bindings:
+    class: semantic
+    required_evidence:
+      - E1
+      - E3
+      - E5
+      - E6
+  safety_hooks:
+    class: safety
+    required_evidence:
+      - E1
+      - E2
+      - E4
+  state_persistence:
+    class: persistence
+    required_evidence:
+      - E1
+      - E2
+      - E4
+  rollback:
+    class: rollback
+    required_evidence:
+      - E1
+      - E2
+      - E4
+  native_discovery:
+    class: packaging
+    required_evidence:
+      - E1
+      - E2
+      - E5
+  native_runtime:
+    class: semantic
+    required_evidence:
+      - E3
+      - E6
+native_assets:
+  - source: assets/plugin.json
+    destination: .cursor-plugin/plugin.json
+    mode: "0644"
+    sha256: 8222d44532879c67f0d9b55bc0446e59cd64bd7f00e313527a8e192df1ee5539
+  - source: assets/hooks/hooks.json
+    destination: hooks/hooks.json
+    mode: "0644"
+    sha256: 9439e06b8f6156c304a5528ebdcfe56c4eac5d4197bb0fdfbdd0da31f68795db

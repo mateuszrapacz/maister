@@ -1,28 +1,15 @@
-## Validation
+# Validation
 
-### Server-Side Always
-Validate on the server; client-side validation alone is insufficient for security and data integrity.
+Validate inputs at the boundary and fail closed for semantic safety. Overlay schemas use allowlists for fields, targets, paths, ownership, inventories, modes, and vocabulary. The source resolver requires immutable full commits. The materializer validates containment, collisions, syntax, inventories, permissions, hashes, symlinks, and unresolved tokens before target mutation.
 
-### Client-Side for Feedback
-Use client-side validation for immediate user feedback, but duplicate checks server-side.
+Evidence records require target, capability, host version, scenario, timestamp, result, provenance, and expiry. `unavailable` is not a pass. Expired records are renewed when the expiry, host version, overlay version, source commit, or scenario version changes.
 
-### Validate Early
-Check inputs as early as possible and reject invalid data before processing.
+Shadow parity is classified through a checked-in, versioned target manifest. Every expected difference is a narrow exact path (or constrained pattern), with its observed category and rationale; unlisted, stale, overbroad, wrong-category, executable, and sensitive-file exceptions fail validation. The parity CLI must receive `--baseline` and reports unresolved differences separately from reviewed packaging or expected-deletion differences.
 
-### Specific Errors
-Provide clear, field-specific messages that help users correct their input.
+Installers validate drift and ownership before changing shared settings. On failure, journal recovery preserves unmanaged content and restores the complete prior filesystem state.
 
-### Allowlists Over Blocklists
-Define what's allowed rather than trying to block everything else.
+Installer concurrency is cooperative, not global. The target lock serializes Maister lifecycle processes for one target/state root but does not lock the host, editor, synchronization tools, direct shell writes, or malicious same-user/privileged processes. Operator documentation must require external writers to stop. Validation must re-check path identity and managed-state drift at mutation boundaries and fail closed when a race is observed; it must not claim atomicity against arbitrary external mutation.
 
-### Type and Format Checks
-Validate data types, formats, ranges, and required fields systematically.
+Release validation includes archive dependency closure and an extracted-artifact lifecycle, not only checkout tests. `test-parity-release` proves the three real materializations compare to an independently reviewed immutable Git-tree oracle from a clean checkout; dirty-local overrides are diagnostic only and cannot satisfy a release gate. `release-package.test.mjs` proves deterministic output, explicitly sorted archive entries, target isolation, embedded source-manifest and E3 integrity, and install/verify/uninstall for all three targets. Every published archive has a SHA-256 entry in `dist/SHA256SUMS`; `SBOM.cdx.json` and unsigned `PROVENANCE.json` bind artifact hashes, the embedded E3 canonical digest/bytes, source commit, source-date epoch, and parity report. Release actions are pinned to commit SHAs. These records do not authenticate the publisher, claim a signed attestation, or provide native E6. Validation publishes only artifacts generated in the same clean job; stale local `dist/` contents are never release inputs.
 
-### Input Sanitization
-Sanitize user input to prevent injection attacks (SQL, XSS, command injection).
-
-### Business Rules
-Validate business logic (sufficient balance, valid dates) at the appropriate layer.
-
-### Consistent Enforcement
-Apply validation uniformly across all entry points (forms, APIs, background jobs).
+The standalone CLI documents only source paths it can execute. The GitHub path is a concrete bounded checkout flow: it resolves a safe ref to one full commit, creates a detached clean checkout, verifies its content hash, and supplies the same checkout root for overlay selection and materialization. A source/overlay root mismatch must fail closed.

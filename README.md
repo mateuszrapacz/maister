@@ -1,350 +1,184 @@
-<div align="center">
-
 # Maister
 
-**Structured, standards-aware development workflows for Claude Code**
+Maister is a portable, auditable SDLC plugin. The repository contains one common source, three explicit host overlays, and one transactional installer. Host selection happens at installation time; maintainers do not independently maintain generated host trees. Cursor's checked-in compatibility projection is deterministically derived and drift-checked from the canonical source, with explicit hash-locked exceptions, and remains migration debt rather than a second source of truth.
 
-Describe what you want to build, and the plugin handles the rest - from specification through implementation to verification - while enforcing your project's coding standards at every step.
+## Supported hosts
 
-</div>
+- Codex
+- Cursor
+- Kiro CLI
 
-## What You Get
+### Migration boundary (historical)
 
-- **Guided workflows** for features, bug fixes, enhancements, performance, migrations, research, and product design
-- **Auto-discovered standards** from your codebase - config files, source patterns, and documentation are analyzed and enforced throughout every workflow
-- **Test-driven implementation** with automated planning, incremental verification, and full test suite runs before completion
-- **Pause and resume** any workflow - state is preserved across sessions
-- **Production readiness checks** including code review, reality assessment, and pragmatic over-engineering detection
+The old generated host trees, marketplace projections, and legacy host support were removed during the platform-independent distribution migration. They are retained only as migration history/parity context and are not supported installation targets.
 
-## Getting Started
+## Installation
 
-### Prerequisites
+The public installer supports a clean local Git checkout, a self-contained Maister archive, or a GitHub source. Production source must resolve to one full commit and must be free of untracked or ignored inputs. For `github:owner/repo`, the bounded resolver uses Git to resolve the requested safe ref, creates a temporary detached checkout at the resolved commit, verifies `HEAD`, status, and content hash, and removes the checkout after the transaction. The overlay is selected from that same checkout, so source and host contract cannot silently come from different revisions.
 
-- [Claude Code](https://claude.ai/code) CLI installed and configured
-
-### Installation
-
-```bash
-/plugin marketplace add SkillPanel/maister
-/plugin install maister@maister-plugins
+```sh
+SOURCE=/path/to/maister
+test -z "$(git -C "$SOURCE" status --porcelain --untracked-files=all --ignored=matching)"
+REF="$(git -C "$SOURCE" rev-parse HEAD)"
+node plugins/maister/bin/maister-install.mjs install \
+  --target codex \
+  --source "local:$SOURCE" \
+  --ref "$REF" \
+  --home "$HOME" \
+  --json
 ```
 
-After installing, restart Claude Code (`/exit` and relaunch) to ensure the plugin is fully loaded.
+For an immutable GitHub install, prefer the full commit SHA:
 
-### Initial project setup
-
-Initialize your project to auto-detect coding standards and generate project documentation:
-
-```bash
-/maister:init
+```sh
+node plugins/maister/bin/maister-install.mjs install \
+  --target codex \
+  --source github:SkillPanel/maister \
+  --ref 0123456789012345678901234567890123456789 \
+  --home "$HOME" \
+  --json
 ```
 
-This scans your codebase and creates `.maister/` with standards, docs, and task folders. May take a few minutes on larger projects.
+The resolver also accepts a safe branch or tag ref, but resolves it with `git ls-remote` and records the resulting full commit. Short SHAs, unsafe ref syntax, ambiguous refs, dirty checkouts, and Git operations exceeding the bounded timeout are rejected. Git operations default to 30 seconds; `MAISTER_GIT_TIMEOUT_MS` may explicitly set a value from 1 ms through 10 minutes.
 
-If you have another project already using Maister, you can reuse its standards as a starting point:
+For development-only work on an intentionally dirty checkout:
 
-```bash
-/maister:init --standards-from=/path/to/other-project
+```sh
+MAISTER_ALLOW_DIRTY_LOCAL=1 node plugins/maister/bin/maister-install.mjs install \
+  --target cursor \
+  --source local:/path/to/maister \
+  --home "$HOME" \
+  --json
 ```
 
-### First Workflow
+`MAISTER_ALLOW_DIRTY_LOCAL=1` is an explicit development escape hatch. It is not production provenance: do not use it for a release, support reproduction, or an operator runbook that claims immutable source.
 
-```bash
-/maister:development Add user profile page with avatar upload
+The lifecycle commands are `install`, `update`, `status`, `verify`, `uninstall`, `rollback`, and `recover`. Installation stages and validates the source and overlay before it changes a target home. Updates refuse unsafe drift, preserve unmanaged settings, and publish a receipt only after integrity verification.
+
+State is kept outside the plugin source:
+
+```text
+$XDG_STATE_HOME/maister/<target>/active-receipt.json
+$XDG_STATE_HOME/maister/<target>/receipts/
+$XDG_STATE_HOME/maister/<target>/journals/
+$XDG_STATE_HOME/maister/<target>/backups/
 ```
 
-Or just discuss your task with Claude and then run:
+If `XDG_STATE_HOME` is unset, the default is `~/.local/state`. State roots, journals, receipts, backups, staging directories, and lock files should be private to the operator (`0700` directories and `0600` files). A journal records transaction boundaries. Recovery and rollback are safety-sensitive operations; see the runbook below and preserve the state directory whenever a transaction does not complete.
 
-```bash
-/maister:development
+### Concurrency and ownership boundary
+
+The installer lock coordinates cooperating Maister lifecycle processes for one target and state root. It does not lock the host application, the user's editor, shell scripts, synchronization software, backup tools, or another process that writes the target tree or shared settings directly. Maister owns only the inventory and settings keys recorded in its receipt; all other content remains operator-owned. Path-identity revalidation, drift checks, staging, journals, and rollback reduce time-of-check/time-of-use risk, but they cannot make arbitrary external writers participate in the transaction.
+
+Before install, update, uninstall, rollback, or recovery, stop the host and any process that may write the selected target or settings. Do not manually edit managed files, receipts, journals, backups, or settings keys during a lifecycle operation. If an external writer races the installer, treat a drift, integrity, transaction, or recovery error as unresolved: stop all writers, preserve target and state data, then follow the recovery runbook. The threat model assumes the operator controls the local account and state directory; it does not defend against a malicious same-user process or privileged process that can replace files while the transaction runs.
+
+## Exit codes
+
+The JSON envelope includes the same numeric `code` as the process exit status:
+
+| Code | Meaning | Typical action |
+| ---: | --- | --- |
+| 0 | Completed successfully | Inspect the receipt for provenance and evidence. |
+| 2 | Usage or settings-format error | Correct arguments or the settings format; do not retry unchanged. |
+| 3 | Source or Git resolution error | Use a clean local checkout and a full commit; for GitHub, use a safe ref or preferably its full commit SHA and inspect the resolver details. |
+| 4 | Overlay, materialization, or settings validation error | Fix the source/overlay contract; no target mutation should be accepted. |
+| 5 | Managed-target or settings drift conflict | Review the reported unmanaged change before retrying. |
+| 6 | Target lock is busy | Confirm another installer is not running, then retry. |
+| 7 | Transaction, recovery, or rollback failure | Preserve state and journals; follow the recovery runbook. |
+| 8 | Integrity verification failure | Do not continue; inspect provenance and receipt/journal evidence. |
+
+## Locks, journals, recovery, and rollback failures
+
+1. Stop concurrent Maister operations for the affected target and preserve the complete target state directory.
+2. Check `$XDG_STATE_HOME/maister/<target>/install.lock` (or `~/.local/state/maister/<target>/install.lock`). Do not remove it while an installer process is alive. If the process is confirmed gone, preserve a copy of the lock and journals before any cleanup.
+3. Inspect `journals/`, `active-receipt.json`, `receipts/`, and `backups/`. These are audit and recovery inputs; do not hand-edit them.
+4. Run `recover --target <target> --home <home> --json` only after the process is stopped and the backup/journal paths are readable. Verify the returned journal path and receipt before retrying install/update.
+5. For a rollback failure, do not repeatedly invoke `rollback`. Preserve the failing journal and backup, copy the target-scoped state directory for support, and repair the underlying permission, missing-backup, or drift condition first.
+6. If recovery or rollback returns code 7, stop. A successful command exit is not evidence that the prior state was restored unless `verify` succeeds and the receipt/journal record the expected target.
+
+Recovery follows the durable journal and target-scoped backups. A code-7 result means the transaction or recovery boundary is unresolved: preserve the state, correct the underlying condition, run `recover`, and then run `verify`. Do not treat a successful recovery command as proof of correctness without the resulting receipt and integrity verification.
+
+## Packaged archive lifecycle and provenance
+
+`make package TARGET=<target>` creates a self-contained deterministic target tarball under `dist/`. It includes the distribution runtime, installer, canonical source, selected overlay, and `.maister-source.json` containing source commit, version, and content hash. Before an artifact is published or installed, inspect it and its checksum:
+
+```sh
+sha256sum dist/maister-<target>.tar.gz
+tar -tzf dist/maister-<target>.tar.gz
+cat dist/SHA256SUMS
 ```
 
-The plugin picks up context from your conversation - no arguments needed.
+Treat `dist/` as disposable local build output. Filenames and timestamps do not prove that an archive was produced by the current source: old flat-layout or partially generated archives may remain there after development. Before a manual release, remove or isolate prior output, regenerate all three archives in the same clean release run, and require each archive to contain `plugins/maister/bin/maister-install.mjs` plus only its selected overlay. Never publish a pre-existing `dist/` archive that did not pass the current run's extracted lifecycle, checksum, metadata, and strict parity gates.
 
-## How It Works
+The package test's default mode builds each target twice with a fixed source timestamp and verifies byte-for-byte deterministic output. The installer requires a passed portable-core E3 record for install/update. Generate the deterministic record only after the core gate, then pass the same bytes to every target package:
 
-1. You describe a task - either as an argument or just in conversation
-2. The plugin classifies it (feature, bug, enhancement, etc.) and proposes a workflow
-3. You confirm, and it guides you through phases: **requirements → spec → plan → implement → verify**
-4. At each phase, it asks for your input and decisions
-5. You get tested, verified code with a detailed work log
-
-All artifacts are saved in `.maister/tasks/` organized by type and date.
-
-### Context-Aware Commands
-
-Every workflow command works without arguments. The plugin reads your current conversation to extract the task description and auto-detect the task type:
-
-```
-You: "The login page throws a 500 error when the session expires"
-You: /maister:development
-→ Auto-detects: bug fix, extracts description from conversation
+```sh
+make test-core
+make generate-e3-attestation E3_OUTPUT=dist/e3-portable-core.json E3_RESULT=passed SOURCE_VERSION=2.2.1
+E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=codex SOURCE_VERSION=2.2.1
 ```
 
-```
-You: /maister:standards-update
-→ Scans conversation for patterns like "we always use..." or "prefer X over Y"
-```
+Release CI runs `make test-core`, generates one deterministic E3 record, embeds it in all three archives, and blocks publication unless the extracted archive smoke completes install, verify, and uninstall for every target. The E3 schema/digest binding remains owned by the portable-core evidence boundary; the release record is not a cryptographic signature.
 
-You can always be explicit when you prefer - arguments and flags simply override the auto-detection.
+To exercise an approved archive manually:
 
-## Supported Workflows
-
-| Command | Use When |
-|---------|----------|
-| `/maister:development` | Features, bug fixes, enhancements |
-| `/maister:research` | Research with synthesis and solution design |
-| `/maister:performance` | Optimizing speed or resource usage |
-| `/maister:migration` | Changing technologies or patterns |
-| `/maister:product-design` | Product and feature design |
-
-Task type (feature/bug/enhancement) is auto-detected from context. Override with `--type=feature|bug|enhancement` if needed. Or use `/maister:work` as a single entry point that routes to the right workflow.
-
-### Quick Commands
-
-For smaller tasks that don't need a full orchestrator workflow — quick plan/dev/bugfix plus **12 on-demand skills** (requirements critique, DDD modeling, architecture review, stakeholder communication). On-demand skills are invoked manually, not as phases of `/maister:development`.
-
-- **[On-Demand Skills Guide](docs/on-demand-skills.md)** — what each skill does, when to use it, and Bundle A–D chaining
-- **[Command Reference](docs/commands.md)** — slash command syntax for all commands
-
-## Standards-Aware Development
-
-This is the key differentiator. Maister doesn't just run workflows - it learns your project's conventions and enforces them:
-
-- **`/maister:init`** scans config files, source code, and documentation to auto-detect your coding standards
-- **Continuous checking** - standards are consulted before specification, during planning, and while coding (not just at the start)
-- **`/maister:standards-discover`** refreshes standards from your evolving codebase
-- **`/maister:standards-update`** lets you add or refine standards manually, or sync from another project with `--from=PATH`
-
-Standards live in `.maister/docs/standards/` and are indexed in `.maister/docs/INDEX.md`.
-
-**Important**: Run workflows with **auto-accept edits** enabled. Do not use Claude Code's plan mode with workflows (see [Best Practices](#best-practices) below).
-
-## Beta Channel
-
-Want to try experimental features before they hit stable? Install from the beta channel:
-
-```bash
-# Add the beta marketplace
-/plugin marketplace add SkillPanel/Maister#beta
-
-# Install the beta plugin
-/plugin install maister@maister-plugins-beta
+```sh
+EXTRACT="$(mktemp -d)"
+SANDBOX="$(mktemp -d)"
+HOME_DIR="$SANDBOX/home"
+STATE_DIR="$SANDBOX/state"
+mkdir -p "$HOME_DIR" "$STATE_DIR"
+tar -xzf dist/maister-codex.tar.gz -C "$EXTRACT"
+REF="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).source_commit)' "$EXTRACT/plugins/maister/.maister-source.json")"
+XDG_STATE_HOME="$STATE_DIR" node "$EXTRACT/plugins/maister/bin/maister-install.mjs" install --target codex --source "local:$EXTRACT" --ref "$REF" --home "$HOME_DIR" --json
+XDG_STATE_HOME="$STATE_DIR" node "$EXTRACT/plugins/maister/bin/maister-install.mjs" verify --target codex --source "local:$EXTRACT" --home "$HOME_DIR" --json
+XDG_STATE_HOME="$STATE_DIR" node "$EXTRACT/plugins/maister/bin/maister-install.mjs" uninstall --target codex --source "local:$EXTRACT" --home "$HOME_DIR" --json
+rm -rf "$EXTRACT" "$SANDBOX"
 ```
 
-If you already have the stable version installed, uninstall it first to avoid conflicts:
+Use an isolated home/state directory for destructive lifecycle checks. The release test performs this flow in temporary sandboxes for every target.
 
-```bash
-/plugin uninstall maister@maister-plugins
+The release workflow generates `dist/SHA256SUMS`, a CycloneDX artifact inventory at `dist/SBOM.cdx.json`, and an unsigned build provenance record at `dist/PROVENANCE.json`; it uploads these alongside the archives. Provenance and SBOM entries bind the embedded E3 canonical digest and attestation bytes as well as each archive hash. These files provide reproducibility and integrity only after they are obtained through a trusted release channel: they are not signatures, do not authenticate the publisher, and do not claim native E6. An attacker able to replace an archive can also replace unsigned checksums and metadata. Release actions are pinned to verified commit SHAs. Operators should retain the checksum, source commit, overlay/version identifier, parity report, E3 record, SBOM, and provenance record with the artifact.
+
+## Repository model
+
+```text
+plugins/maister/common/       portable primitives and common source
+plugins/maister/overlays/     codex, cursor, and kiro-cli contracts
+plugins/maister/lib/          resolver, materializer, evidence, and installer
+plugins/maister/bin/          validation, materialization, installation, parity
+tests/platform-independent/   core and target-seam tests
 ```
 
-To switch back to stable:
+Portable behavior is intended to have one owner. Codex and Kiro CLI consume the canonical common source; Cursor currently carries a behavior-bearing skills projection under its overlay, which is migration debt and must not be treated as an independent source of truth. An overlay should otherwise own only native manifests, layout, settings ownership, bindings, inventories, and forbidden vocabulary. The materializer produces a staging tree; the installer owns the target transaction.
 
-```bash
-/plugin uninstall maister@maister-plugins-beta
-/plugin install maister@maister-plugins
+## Compatibility evidence
+
+Evidence is recorded per target, capability, host version, scenario, timestamp, provenance, and expiry:
+
+- E1 — source, schema, and overlay validation
+- E2 — deterministic materialization and content validation
+- E3 — shared portable-core behavior
+- E4 — installer transaction, receipt, settings, drift, recovery, and rollback
+- E5 — host-native discovery and integration
+- E6 — host-native runtime scenarios
+
+`passed`, `failed`, and `unavailable` are distinct. E5 or E6 may be unavailable because the host executable, authentication, a safe probe adapter, or a versioned runtime scenario is absent. An unavailable record is never promoted to passed and does not prove host-native discovery or runtime semantics. Packaging may be reported as provisional under the selected policy when its structural and transactional evidence passes, but semantic support that requires unavailable E5/E6 remains unverified and must not be advertised as supported. Re-probe after the missing prerequisite is supplied or evidence expires.
+
+## Development
+
+```sh
+make test-core
+make test-overlay TARGET=codex
+make test-materializer TARGET=cursor
+make test-install TARGET=kiro-cli
+make test-evidence
+make test-parity-release
+make test-topology
+make validate
+make package TARGET=codex
 ```
 
-Beta versions may contain features that are not yet fully tested. Use at your own discretion.
+For migration parity, `make test-parity-release` reconstructs the three reviewed legacy trees directly from the immutable Git-tree oracle, materializes all three targets from the same checkout, and requires zero unresolved differences. It needs no external legacy root. A release candidate must run this command from a clean checkout; `E_SOURCE_DIRTY` is a release stop, not a warning. `PARITY_ALLOW_DIRTY_LOCAL=1` is available only for development diagnostics, and a passing dirty-local comparison is never release evidence. Release CI runs the strict command without that override. The CLI rejects a missing manifest and accepts only explicit, versioned path rules with immutable observations, category, and rationale; it does not auto-learn differences from the candidate output. Edit `plugins/maister/` and its overlays directly. Do not create generated target directories or marketplace entries. `make validate` validates every supported overlay, the common core, evidence policy, and repository topology before packaging.
 
-## Best Practices
-
-**Don't use plan mode when starting a workflow.** Planning is a built-in part of every workflow — the orchestrator creates specs, plans, and other files as it goes. Claude Code's plan mode restricts file creation, which conflicts with this. Let the workflow handle planning on its own.
-
-**Start workflows in a fresh session.** This is especially useful when chaining workflows (e.g., research → development). Research and product-design artifacts already contain all the context needed, so a clean session avoids noise from prior conversation.
-
-**Chain workflows by passing a task folder.** If you've completed a research or product-design workflow and want to build on those results, pass the task folder directly:
-
-```bash
-/maister:development .maister/tasks/research/2026-01-12-oauth-research
-```
-
-You can also append additional instructions to narrow scope or guide the workflow:
-
-```bash
-/maister:development .maister/tasks/product-design/2026-03-10-dashboard-redesign Implement only phase 1
-```
-
-## Known Issues
-
-**Orchestrator may stall after long phases.** After context compaction (which typically happens after lengthy phases like implementation), the main agent may stop progressing automatically. If you notice it's idle, just type something like "continue" or "proceed" — it will pick up where it left off. You can also re-invoke the workflow in resume mode to reload the orchestrator state:
-
-```bash
-/maister:development .maister/tasks/development/2026-03-24-my-feature
-```
-
-## Cursor Agent (CLI)
-
-Maister ships a **Cursor Agent** variant (`maister-cursor`) for the **`agent` CLI** (headless / terminal). No IDE required.
-
-### Prerequisites
-
-```bash
-agent status   # must be logged in
-make build-cursor
-```
-
-### Run workflows (CLI)
-
-```bash
-# From your project directory
-agent --plugin-dir /path/to/maister/plugins/maister-cursor \
-  --workspace . \
-  -p --trust --force \
-  "/maister-init"
-```
-
-Flags:
-- `--plugin-dir` — path to built plugin (repeatable)
-- `-p` / `--print` — non-interactive output (scripts/CI)
-- `--trust` — trust workspace without prompt (required with `-p`)
-- `--force` / `--yolo` — auto-approve shell commands (orchestrators need this headless)
-- `--approve-mcps` — for `--e2e` workflows after explicitly installing Playwright MCP
-
-### Local install (no `--plugin-dir` each run)
-
-Cursor CLI and IDE auto-discover plugins in `~/.cursor/plugins/local/`:
-
-```bash
-bash platforms/cursor/smoke-install.sh
-```
-
-The default install does not add Playwright MCP. Use
-`bash platforms/cursor/smoke-install.sh --with-mcp-playwright` only for
-workflows that need browser E2E.
-
-Manual equivalent:
-
-```bash
-make build-cursor
-cp -r plugins/maister-cursor ~/.cursor/plugins/local/maister-cursor
-```
-
-Re-run after `make build-cursor` when developing the plugin.
-
-Then **Developer → Reload Window** in Cursor IDE. CLI works without reload:
-
-```bash
-agent --workspace . -p --trust --force "/maister-init"
-```
-
-### Commands
-
-Prefix `maister-`: `/maister-init`, `/maister-development`, `/maister-quick-plan`, etc.
-
-### Smoke test (CLI)
-
-```bash
-bash platforms/cursor/smoke-cli.sh
-```
-
-### IDE (optional)
-
-If you also use Cursor IDE, install locally (see **Local install** above) then **Developer → Reload Window**. Hooks (`beforeShellExecution`, `preCompact`) are IDE-oriented; CLI relies on `--force` and orchestrator rules instead.
-
-## Kiro CLI
-
-Maister ships a **Kiro CLI** variant (`maister-kiro`) for the **`kiro-cli`** agent. Uses an isolated `KIRO_HOME` profile so your personal `~/.kiro/` is never modified.
-
-### Prerequisites
-
-```bash
-kiro-cli --version   # must be installed
-make build-kiro
-```
-
-### Run workflows (CLI)
-
-```bash
-# From your project directory
-maister-kiro chat --agent maister
-```
-
-In Kiro TUI, start workflows with **slash shortcut skills** (`/dev`, `/init`, `/grill-me`, `/grill-with-docs`, `/thermos`, `/quick-plan`, …). Each shortcut delegates to the matching `/maister-*` orchestrator skill. You can also invoke `/maister-*` directly. Do not use Kiro's built-in `/plan` for Maister quick-plan — use `/quick-plan`.
-
-### Local install
-
-```bash
-bash platforms/kiro-cli/smoke-install.sh
-```
-
-The default Kiro install sets `chat.defaultAgent=maister`, installs the
-`maister-kiro` and `mk` aliases, and omits Playwright MCP. Add
-`--with-mcp-playwright` to opt in.
-
-Manual equivalent:
-
-```bash
-make build-kiro
-cp -r plugins/maister-kiro ~/.kiro-maister
-```
-
-Uninstall:
-
-```bash
-bash platforms/kiro-cli/smoke-uninstall.sh
-```
-
-### Smoke test (CLI)
-
-```bash
-bash platforms/kiro-cli/smoke-cli.sh
-```
-
-### Hooks note
-
-Kiro has no `preCompact` hook equivalent. After context compaction, use `/status` / `/resume` or read `orchestrator-state.yml` manually. See `steering/maister-workflows.md` in the install profile.
-
-Full guide: [Kiro CLI Support](docs/kiro-cli-support.md) (install, daily use, E2E matrix, manual commit checkpoint).
-
-## Codex CLI and IDE
-
-Maister ships a native Codex plugin variant for Codex CLI and
-the Codex IDE extension. It packages the workflow as native skills, Codex
-hooks, and a repo marketplace entry. Claude/Cursor-style
-custom agent files are intentionally not bundled in the MVP; workflow roles use
-Codex's native subagent delegation instead.
-
-### Build and validate
-
-```bash
-make build-codex
-make validate-codex
-```
-
-### Local install
-
-```bash
-bash platforms/codex-cli/smoke-install.sh
-```
-
-The default install does not add Playwright MCP. Use
-`bash platforms/codex-cli/smoke-install.sh --with-mcp-playwright` only for
-workflows that need browser E2E.
-
-Manual equivalent:
-
-```bash
-make build-codex
-codex plugin marketplace add .
-codex plugin add maister@maister-local
-```
-
-Start a new Codex session after installation or rebuilding so bundled skills
-are rediscovered. Invoke workflows with `$maister:development` or the other
-`maister:*` skills. Review and trust plugin hooks with `/hooks` before relying
-on their defense-in-depth checks.
-
-Models and reasoning effort remain host/session settings. The plugin keeps
-`orchestrator-state.yml` as the source of truth for workflow phases and resume;
-Codex Goals and native planning are optional UX aids.
-
-Full guide: [Codex Support](docs/codex-support.md).
-
-## Learn More
-
-- [Documentation Hub](docs/README.md) - start here for all user documentation
-- [Workflow Details](docs/workflows.md) - phases, examples, and task structure for each workflow type
-- [Full Command Reference](docs/commands.md) - all workflow, review, utility, and quick commands
-- [Cursor Agent Support](docs/cursor-agent-support.md) - architecture and platform decisions
-- [Kiro CLI Support](docs/kiro-cli-support.md) - Kiro install, workflows, and E2E verification
+More operator detail is in [docs/README.md](docs/README.md).

@@ -1,0 +1,91 @@
+schema_version: 1
+overlay_id: maister/codex
+overlay_version: 1.0.0
+target:
+  id: codex
+  host_version_constraint: ">=1.0.0"
+  discovery_roots:
+    - .codex/plugins/local/maister
+layout:
+  - source: common/skills
+    destination: skills
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+  - source: common/agents/fixture-agent.yaml
+    destination: skills/orchestrator-framework/agents/openai.yaml
+    kind: file
+    mode: "0755"
+    ownership: whole_file
+  - source: assets/plugin.json
+    destination: .codex-plugin/plugin.json
+    kind: file
+    mode: "0644"
+    ownership: whole_file
+  - source: assets/hooks
+    destination: hooks
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+settings: []
+semantic_bindings:
+  user_gate:
+    adapter: codex.chat_gate
+    capability: semantic
+    fail_closed: true
+  delegate_agent:
+    adapter: codex.subagent
+    capability: delegation
+    fail_closed: true
+  track_progress:
+    adapter: codex.progress
+    capability: persistence
+    fail_closed: true
+  resolve_task_root:
+    adapter: codex.cwd
+    capability: persistence
+    fail_closed: true
+  persist_state:
+    adapter: codex.filesystem_state
+    capability: persistence
+    fail_closed: true
+  continue_workflow:
+    adapter: codex.resume
+    capability: continuation
+    fail_closed: true
+inventory:
+  required:
+    - .codex-plugin/plugin.json
+    - "skills/**/SKILL.md"
+    - "skills/**/agents/openai.yaml"
+    - hooks/hooks.json
+  optional: []
+  forbidden:
+    - ".cursor-plugin/**"
+    - ".claude-plugin/**"
+    - "**/*claude*"
+validation:
+  forbidden_vocabulary:
+    - cursor
+    - claude
+    - anthropic
+  executable_paths:
+    - "hooks/*.sh"
+  syntax_checks:
+    - "json:.codex-plugin/plugin.json"
+    - "json:hooks/hooks.json"
+    - "yaml:skills/**/agents/openai.yaml"
+capabilities:
+  semantic_bindings:
+    class: semantic
+    required_evidence:
+      - E1
+native_assets:
+  - source: assets/plugin.json
+    destination: .codex-plugin/plugin.json
+    mode: "0644"
+    sha256: d53fa315258ef7992afa8223494e94e07a4530a73259169b8c1755f4117579cf
+  - source: assets/hooks/hooks.json
+    destination: hooks/hooks.json
+    mode: "0644"
+    sha256: 6949634eed451b203fa79feeff4135084ea3c25613752545a257dd630938e327

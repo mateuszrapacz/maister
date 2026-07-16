@@ -54,7 +54,7 @@ For each selected standard:
 ### SYNC STEP 4: Update INDEX.md
 
 Invoke `docs-operator` subagent via Task tool (subagent_type: `maister:docs-operator`):
-> "Regenerate INDEX.md to include all newly added/updated standards. Verify CLAUDE.md integration."
+> "Regenerate INDEX.md to include all newly added/updated standards. Verify project-instruction integration."
 
 Wait for docs-operator to complete, then immediately proceed to SYNC STEP 5.
 
@@ -131,7 +131,7 @@ For **updates**:
 > "Update documentation file: standards/[category]/[name].md. Current content: [content]. Add/change: [new conventions]. Integrate new practices, maintain markdown formatting, organize logically, preserve existing unless conflicts. Update INDEX.md entry with practice-specific description (enumerate actual practices, not generic category)."
 
 For **creates**:
-> "Create documentation file: standards/[category]/[name].md. Category: [category]. Content: [conventions]. Create with proper markdown, organized sections, code examples. Add to INDEX.md with practice-specific description. Verify CLAUDE.md integration."
+> "Create documentation file: standards/[category]/[name].md. Category: [category]. Content: [conventions]. Create with proper markdown, organized sections, code examples. Add to INDEX.md with practice-specific description. Verify project-instruction integration."
 
 Wait for docs-operator to complete, then immediately proceed to Phase 5.
 
@@ -141,7 +141,7 @@ Wait for docs-operator to complete, then immediately proceed to Phase 5.
 
 1. Verify standard file exists and has content
 2. Verify INDEX.md references the standard with practice-specific description (not generic)
-3. Verify CLAUDE.md integration
+3. Verify project-instruction integration
 4. Display summary: what was updated/created, practices added, next steps (review, commit, share with team)
 
 ---

@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maister.local/schemas/overlay-v1.schema.json",
+  "title": "Maister host overlay v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "overlay_id",
+    "overlay_version",
+    "target",
+    "layout",
+    "settings",
+    "semantic_bindings",
+    "inventory",
+    "validation",
+    "capabilities",
+    "native_assets"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "overlay_id": { "type": "string", "pattern": "^maister/(codex|cursor|kiro-cli)$" },
+    "overlay_version": { "$ref": "#/$defs/semver" },
+    "target": { "$ref": "#/$defs/target" },
+    "layout": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/layoutEntry" },
+      "minItems": 1
+    },
+    "settings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/setting" },
+      "minItems": 1
+    },
+    "semantic_bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_gate",
+        "delegate_agent",
+        "track_progress",
+        "resolve_task_root",
+        "persist_state",
+        "continue_workflow"
+      ],
+      "properties": {
+        "user_gate": { "$ref": "#/$defs/binding" },
+        "delegate_agent": { "$ref": "#/$defs/binding" },
+        "track_progress": { "$ref": "#/$defs/binding" },
+        "resolve_task_root": { "$ref": "#/$defs/binding" },
+        "persist_state": { "$ref": "#/$defs/binding" },
+        "continue_workflow": { "$ref": "#/$defs/binding" }
+      }
+    },
+    "inventory": { "$ref": "#/$defs/inventory" },
+    "validation": { "$ref": "#/$defs/validation" },
+    "capabilities": {
+      "type": "object",
+      "minProperties": 1,
+      "patternProperties": {
+        "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/capability" }
+      },
+      "additionalProperties": false
+    },
+    "native_assets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nativeAsset" }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!~)(?![A-Za-z]:[\\\\/])(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
+    },
+    "inventoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!~)(?![A-Za-z]:[\\\\/])(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$"
+    },
+    "mode": {
+      "type": "string",
+      "pattern": "^0[0-7]{3,4}$"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "host_version_constraint", "discovery_roots"],
+      "properties": {
+        "id": { "enum": ["codex", "cursor", "kiro-cli"] },
+        "host_version_constraint": { "type": "string", "minLength": 1 },
+        "discovery_roots": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/relativePath" }
+        }
+      }
+    },
+    "layoutEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "destination", "kind", "mode", "ownership"],
+      "properties": {
+        "source": { "$ref": "#/$defs/relativePath" },
+        "destination": { "$ref": "#/$defs/relativePath" },
+        "kind": { "enum": ["file", "tree", "template"] },
+        "mode": { "$ref": "#/$defs/mode" },
+        "ownership": { "enum": ["whole_file", "managed_keys"] }
+      }
+    },
+    "setting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "format", "ownership", "managed_keys", "merge_policy"],
+      "properties": {
+        "path": { "$ref": "#/$defs/relativePath" },
+        "format": { "enum": ["json", "toml", "yaml", "shell"] },
+        "ownership": { "enum": ["whole_file", "managed_keys"] },
+        "managed_keys": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/relativePath" }
+        },
+        "merge_policy": { "const": "preserve_unmanaged_refuse_drift" }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter", "capability", "fail_closed"],
+      "properties": {
+        "adapter": { "type": "string", "minLength": 1 },
+        "capability": { "type": "string", "minLength": 1 },
+        "fail_closed": { "const": true }
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "optional", "forbidden"],
+      "properties": {
+        "required": { "$ref": "#/$defs/pathList" },
+        "optional": { "$ref": "#/$defs/pathList" },
+        "forbidden": { "$ref": "#/$defs/pathList" }
+      }
+    },
+    "pathList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/inventoryPath" }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["forbidden_vocabulary", "executable_paths", "syntax_checks"],
+      "properties": {
+        "forbidden_vocabulary": { "$ref": "#/$defs/pathList" },
+        "executable_paths": { "$ref": "#/$defs/pathList" },
+        "syntax_checks": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z]+:[^\\s].*$" }
+        }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "required_evidence"],
+      "properties": {
+        "class": { "enum": ["semantic", "safety", "persistence", "rollback", "packaging"] },
+        "required_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["E1", "E2", "E3", "E4", "E5", "E6"] }
+        }
+      }
+    },
+    "nativeAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "destination", "mode", "sha256"],
+      "properties": {
+        "source": { "$ref": "#/$defs/relativePath" },
+        "destination": { "$ref": "#/$defs/relativePath" },
+        "mode": { "$ref": "#/$defs/mode" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

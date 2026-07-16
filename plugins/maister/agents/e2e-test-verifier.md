@@ -469,7 +469,7 @@ After the markdown reports and screenshots are finalized, write operator-facing 
 
 Detect unavailable tools and provide setup instructions:
 - Install playwright-mcp
-- Configure MCP server in Claude Code
+- Configure the MCP server in the selected host
 - Restart and retry
 
 ### Application Not Running

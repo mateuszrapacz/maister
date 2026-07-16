@@ -1,76 +1,47 @@
-# Weekly Cursor Agent CLI parity check for maister-cursor.
-# Non-blocking: does not run on PRs/pushes — only schedule + manual dispatch.
-# Requires repository secret CURSOR_API_KEY (see https://cursor.com/docs/cli/github-actions).
-name: Cursor CLI Smoke
+name: Cursor CLI Evidence (provisional)
 
 on:
   schedule:
-    # Monday 06:00 UTC — catches Cursor CLI regressions without blocking main CI
-    - cron: '0 6 * * 1'
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 concurrency:
-  group: cursor-cli-smoke
+  group: cursor-cli-evidence
   cancel-in-progress: true
 
 jobs:
-  smoke:
+  evidence:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Build maister-cursor variant
-        run: make build-cursor
-
-      - name: Install Cursor Agent CLI
-        id: install-cli
-        continue-on-error: true
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Validate Cursor overlay
+        run: make test-overlay TARGET=cursor
+      - name: Probe preinstalled Cursor Agent CLI
         run: |
-          set +e
-          curl https://cursor.com/install -fsS | bash
-          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          set -euo pipefail
           export PATH="$HOME/.cursor/bin:$HOME/.local/bin:$PATH"
-
-          # Install script may expose cursor-agent only; smoke-cli.sh expects `agent`.
-          if ! command -v agent >/dev/null 2>&1 && command -v cursor-agent >/dev/null 2>&1; then
-            mkdir -p "$HOME/.local/bin"
-            ln -sf "$(command -v cursor-agent)" "$HOME/.local/bin/agent"
+          node --input-type=module <<'EOF' | tee cursor-evidence.json
+          import { probeCursor } from './plugins/maister/lib/distribution/host-probes/cursor.mjs';
+          const result = probeCursor();
+          process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+          EOF
+          if grep -q '"result": "unavailable"' cursor-evidence.json; then
+            echo "::notice title=Cursor evidence unavailable::No preinstalled Cursor Agent CLI was found; this run is packaging/provisional evidence only."
+          else
+            echo "::notice title=Cursor evidence collected::Native evidence was collected from the preinstalled runtime; review the artifact before making a support claim."
           fi
-
-          if command -v agent >/dev/null 2>&1; then
-            echo "installed=true" >> "$GITHUB_OUTPUT"
-            agent --version 2>/dev/null || cursor-agent --version 2>/dev/null || true
-            exit 0
-          fi
-
-          echo "::warning::Cursor Agent CLI install failed or binary not on PATH"
-          echo "installed=false" >> "$GITHUB_OUTPUT"
-          exit 1
-
-      - name: Skip smoke — CLI unavailable
-        if: steps.install-cli.outputs.installed != 'true'
-        run: |
-          echo "::notice title=Smoke skipped::Cursor Agent CLI could not be installed on this runner."
-          echo "Install method: curl https://cursor.com/install -fsS | bash"
-          echo "Known CI limitations: occasional CDN 403 for latest CLI packages, network egress restrictions."
-          echo "Re-run manually via workflow_dispatch after CLI install is healthy."
-
-      - name: Run smoke-cli.sh
-        if: steps.install-cli.outputs.installed == 'true'
-        env:
-          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-        run: |
-          if [ -z "${CURSOR_API_KEY:-}" ]; then
-            echo "::notice title=Smoke skipped::Repository secret CURSOR_API_KEY is not configured."
-            echo "Add a Cursor API key to enable weekly parity monitoring:"
-            echo "  gh secret set CURSOR_API_KEY --repo ${{ github.repository }}"
-            echo "Docs: https://cursor.com/docs/cli/github-actions"
-            exit 0
-          fi
-          export PATH="$HOME/.cursor/bin:$HOME/.local/bin:$PATH"
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          bash platforms/cursor/smoke-cli.sh
+      - name: Validate evidence contract
+        run: make test-evidence
+      - name: Upload Cursor evidence record
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cursor-cli-evidence-${{ github.run_id }}
+          path: cursor-evidence.json
+          if-no-files-found: warn

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Specification — Platform-independent Maister distribution</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+h3 { font-size:14px; margin-top:20px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase; padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); } .sev.warning { background:var(--warn-soft); color:var(--warn); }
+.sev.info { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; } th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+details > summary { cursor:pointer; font-weight:600; } .crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); } .crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; } .tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; } .tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; } .story { border-left:3px solid var(--accent); padding:10px 14px; background:var(--surface); border-radius:0 var(--radius) var(--radius) 0; }
+.in { border-top:3px solid var(--ok); } .out { border-top:3px solid var(--warn); } .req-id { color:var(--dim); font-family:ui-monospace,monospace; }
+</style>
+</head>
+<body>
+<nav class="crumbs"><a href="../dashboard.html">← Dashboard</a><span class="here">Spec</span><a href="spec.md" target="_blank" rel="noopener" class="md">md twin ↗</a></nav>
+<header><span class="badge">Specification</span><h1>Platform-independent Maister distribution</h1><p class="muted">Technical approach and requirements for one portable source with install-time target selection.</p></header>
+
+<div class="tiles"><div class="tile"><b>17</b><span>requirements</span></div><div class="tile"><b>10</b><span>reusable patterns</span></div><div class="tile"><b>7</b><span>new boundaries</span></div><div class="tile"><b>High</b><span>risk level</span></div></div>
+
+<section class="card tldr"><h2>TL;DR</h2><p>Maister will have one portable common source, explicit Codex/Cursor/Kiro CLI overlays, and one target-aware installer that selects the host at installation time.</p><p>The installer will resolve immutable source provenance, validate an overlay, stage the result, commit transactionally, and publish receipt-backed ownership with exact rollback.</p><p>Common runtime behavior will be tested once; host overlays, materialization, installation, settings ownership, and available native evidence will retain targeted tests.</p><p>Claude support and committed generated trees are migration-only and are removed after zero-unresolved-difference shadow parity.</p><h2>Key Decisions</h2><ul><li>Portable common layer plus explicit host overlays.</li><li>Minimal typed semantic primitives, not a workflow DSL.</li><li>Installer as transaction manager with journal, receipt, recovery, and rollback.</li><li>Hybrid whole-file and managed-key settings ownership.</li><li>Capability-sensitive compatibility with semantic fail-closed behavior.</li><li>Codex, Cursor, and Kiro CLI only; Claude is removed after migration parity.</li></ul><h2>Open Questions / Risks</h2><ul><li>Cursor and Kiro native E5/E6 evidence may remain unavailable and must never pass.</li><li>Host discovery roots and inventories must be frozen in versioned overlays.</li><li>Shared settings require journal recovery and byte-exact failure tests.</li><li>Scenario evidence is required because textual parity can hide semantic drift.</li><li>Legacy deletion must wait for parity and failure-injection exit criteria.</li></ul></section>
+
+<p>Contents: <a href="#scope">Scope</a> · <a href="#requirements">Requirements</a> · <a href="#compatibility">Compatibility</a> · <a href="#reuse">Reuse</a> · <a href="#approach">Technical Approach</a> · <a href="#testing">Testing</a> · <a href="#success">Success Criteria</a></p>
+
+<section id="scope"><h2>Goal and Scope</h2><div class="grid"><div class="card in"><h3>In scope</h3><ul><li>Portable common source and runtime ownership.</li><li>Codex, Cursor, and Kiro CLI overlays.</li><li>Target-aware source resolution, materialization, installation, update, status/verify, uninstall, rollback, and recovery.</li><li>Receipt, journal, settings, evidence, schema, parity, CI, release, and documentation migration.</li><li>Removal of Claude support and committed generated infrastructure.</li></ul></div><div class="card out"><h3>Out of scope</h3><ul><li>Re-adding Claude support.</li><li>A full workflow DSL or prompt compiler.</li><li>Native evidence that cannot run in the current environment.</li><li>New GUI surfaces or visual design.</li><li>Unrelated feature redesign.</li></ul></div></div></section>
+
+<section id="stories"><h2>User Stories</h2><div class="grid"><div class="story">As a maintainer, I want to edit common behavior once and host behavior in a visible overlay so synchronized generated trees are unnecessary.</div><div class="story">As an installer operator, I want to select a target and local or immutable GitHub source so the correct host layout is assembled safely.</div><div class="story">As a user, I want update, uninstall, rollback, and recovery to respect my files and settings.</div><div class="story">As a host integrator, I want capability evidence per host and capability so missing native behavior cannot look green.</div><div class="story">As a release owner, I want one core suite and focused host seams so CI validates behavior without committed projections.</div></div></section>
+
+<section id="requirements"><h2>Core Requirements</h2><table><thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead><tbody>
+<tr><td class="req-id">R1</td><td>One neutral common layer for portable skills, references, assets, runtime, and primitives.</td><td>Critical</td></tr>
+<tr><td class="req-id">R2</td><td>Versioned Codex, Cursor, and Kiro CLI overlays with inventories, bindings, paths, settings, and forbidden vocabulary.</td><td>Critical</td></tr>
+<tr><td class="req-id">R3</td><td>One maintained portable orchestrator runtime, without generated copies.</td><td>Critical</td></tr>
+<tr><td class="req-id">R4</td><td>Immutable local/GitHub source and ref provenance in every installation.</td><td>Critical</td></tr>
+<tr><td class="req-id">R5</td><td>Shared install, update, status/verify, uninstall, rollback, and recovery lifecycle.</td><td>Critical</td></tr>
+<tr><td class="req-id">R6</td><td>Pre-mutation staging and validation for schema, containment, collisions, inventory, syntax, modes, hashes, and symlinks.</td><td>Critical</td></tr>
+<tr><td class="req-id">R7</td><td>Locks, journal, backups, atomic commit, cleanup, recovery, and exact failure restoration.</td><td>Critical</td></tr>
+<tr><td class="req-id">R8</td><td>Receipt with managed inventory, provenance, target/overlay identity, settings ownership, evidence, hashes, and rollback metadata.</td><td>Critical</td></tr>
+<tr><td class="req-id">R9</td><td>Hybrid whole-file and allowlisted managed-key settings ownership.</td><td>Critical</td></tr>
+<tr><td class="req-id">R10</td><td>Drift/conflict detection that preserves unmanaged content and refuses unsafe destructive changes.</td><td>Critical</td></tr>
+<tr><td class="req-id">R11</td><td>Per-capability compatibility records with semantic fail-closed behavior and packaging-only provisional status.</td><td>Critical</td></tr>
+<tr><td class="req-id">R12</td><td>E1/E2/E4 plus shared E3 for each host; E5/E6 unavailable is explicit and never passing.</td><td>Critical</td></tr>
+<tr><td class="req-id">R13</td><td>Per-capability evidence expiry and re-probe metadata.</td><td>High</td></tr>
+<tr><td class="req-id">R14</td><td>Common-core-once testing plus focused host overlay, materializer, installer, settings, topology, and native evidence tests.</td><td>Critical</td></tr>
+<tr><td class="req-id">R15</td><td>Shadow parity with zero unresolved semantic, inventory, reference, hook, permission, and topology differences before deletion.</td><td>Critical</td></tr>
+<tr><td class="req-id">R16</td><td>Remove Claude, generated trees, old builders, marketplace paths, and generated-tree drift CI.</td><td>Critical</td></tr>
+<tr><td class="req-id">R17</td><td>Align README, docs, standards, Make, CI, release, and support matrices with the three-host model.</td><td>High</td></tr>
+</tbody></table></section>
+
+<section id="compatibility"><h2>Compatibility, Evidence, and Rollback</h2><div class="card"><p><strong>Supported targets:</strong> Codex, Cursor, and Kiro CLI. Semantic, safety, persistence, delegation, continuation, and rollback capabilities fail closed. Packaging-only differences may be provisional after structural and transactional evidence.</p><p><strong>Evidence:</strong> E1 schema/overlay validation; E2 deterministic materialization; E3 shared core; E4 installer/settings/rollback; E5 host-native discovery; E6 host-native runtime scenarios. Every record includes target, capability, host version, scenario, timestamp, result, provenance, and expiry. <code>unavailable</code> is distinct from <code>passed</code>.</p><p><strong>Rollback:</strong> A separate journal and receipt govern installation state. The installer stages and validates before snapshotting and atomic commit. Recovery restores the previous receipt, exact bytes/modes/symlinks/topology, owned settings, and removes temporary artifacts without deleting unmanaged user content.</p></div></section>
+
+<section id="legacy"><h2>Legacy Deletion Exit Criteria</h2><div class="card"><ol><li>Baseline manifest covers common behavior, host assets, hooks, settings, permissions, references, and generated inventory.</li><li>Three-host shadow materialization has zero unresolved differences.</li><li>Core, overlay, materializer, installer, settings, rollback, recovery, and available-native tests pass.</li><li>Clean install, verify, update, uninstall, rollback, and recovery succeed for every target.</li><li>User changes and settings drift are preserved.</li><li>Make, CI, release, docs, manifests, evidence, and tests use the new boundaries.</li><li>No active references remain to generated trees, Claude, marketplace installation, or legacy builders.</li></ol></div></section>
+
+<section id="reuse"><h2>Reusable Components</h2><table><thead><tr><th>Existing path</th><th>Reuse</th></tr></thead><tbody><tr><td><code>orchestrator-state-repository.mjs</code></td><td>Locks, CAS/revisions, safe paths, fsync, atomic replacement, metadata, cleanup.</td></tr><tr><td><code>orchestrator-state-schema.mjs</code></td><td>Strict validation, canonical serialization, legal transitions.</td></tr><tr><td><code>gate-evaluator.mjs</code></td><td>Gate validation, idempotency, attempts, terminal outcomes.</td></tr><tr><td><code>workflow-continuation.mjs</code></td><td>Durable inventory, claims, leases, checkpoints, acknowledgements.</td></tr><tr><td><code>reconcile-advisor-config.sh</code></td><td>Candidate staging, backup, atomic rename, modes, rollback diagnostics.</td></tr><tr><td>Existing transactional tests</td><td><code>phase-continue-contract</code>, advisor lifecycle/reconciliation, repository, and Kiro reproducibility tests provide failure-injection and exact-state assertions.</td></tr></tbody></table><p><strong>New boundaries:</strong> neutral common source, three overlay schemas, deterministic materializer/source resolver, transaction manager, evidence/freshness schema, and migration topology/parity checks.</p></section>
+
+<section id="approach"><h2>Technical Approach</h2><div class="card"><p>The common layer expresses portable intent and runtime behavior. Overlays own only host-native layout, assets, bindings, settings policy, and capability claims. The materializer combines one immutable source with one validated overlay into a deterministic staging tree and does not apply arbitrary global prose rewrites.</p><p>The installer resolves source/ref, probes the host, classifies capabilities, stages and validates output, snapshots state, commits atomically, publishes a receipt, and recovers from failure. Workflow state remains in <code>orchestrator-state.yml</code>; installation receipts and journals use separate schemas.</p><p>Legacy outputs remain read-only shadow oracles until every difference is classified and all deletion criteria pass.</p></div></section>
+
+<section id="testing"><h2>Implementation Guidance and Testing</h2><p>Each implementation step group contains 2-8 focused tests and runs new tests first. Common behavior is covered once; per-target tests cover only host seams.</p><table><thead><tr><th>Group</th><th>Focus</th><th>Tests</th></tr></thead><tbody><tr><td>Common source/primitives</td><td>Schema, vocabulary, runtime, binding completeness</td><td>4-8</td></tr><tr><td>Overlay/materializer</td><td>Validation, containment, collisions, inventory, syntax, modes, hashes</td><td>5-8 per host</td></tr><tr><td>Resolver/transaction</td><td>Provenance, locks, staging, receipts, journal recovery, rollback</td><td>6-8 per host</td></tr><tr><td>Settings ownership</td><td>Whole-file, managed keys, drift, conflicts, exact restore</td><td>4-8</td></tr><tr><td>Capability evidence</td><td>E1-E6, unavailable, expiry, renewal, fail-closed policy</td><td>4-8</td></tr><tr><td>Migration/topology</td><td>Shadow parity, deletion, negative topology, Make/CI/release</td><td>4-8</td></tr></tbody></table><h3>Standards Compliance</h3><ul><li><code>minimal-implementation.md</code>: proven seams, no speculative DSL.</li><li><code>error-handling.md</code> and <code>validation.md</code>: fail closed, validate before mutation, structured evidence.</li><li><code>build-pipeline.md</code>: deterministic common/overlay/materializer checks.</li><li><code>test-writing.md</code>: bytes, modes, existence, topology, symlinks, and rollback—not exit codes alone.</li><li><code>coding-style.md</code> and <code>conventions.md</code>: project language and file-boundary conventions.</li></ul></section>
+
+<section id="success"><h2>Success Criteria</h2><div class="card"><ul><li>One common source and three explicit overlays are the only maintained distribution inputs.</li><li>One installer handles local/immutable GitHub sources and safe lifecycle operations.</li><li>No supported install path mutates destructively before validation.</li><li>Core behavior is tested once and host seams have focused tests.</li><li>Evidence has provenance and expiry; unavailable never passes.</li><li>Shadow parity has zero unresolved differences before legacy deletion.</li><li>Claude, generated trees, old builders, marketplace paths, generated drift CI, and stale documentation are absent.</li><li>Docs, standards, Make, CI, release, and support matrices describe the same architecture.</li></ul></div></section>
+</body>
+</html>

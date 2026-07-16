@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Implementation Plan · Platform-independent Maister distribution</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #121a2f;
+      --panel-2: #18233d;
+      --text: #e7edf8;
+      --muted: #a9b5cb;
+      --line: #2a395c;
+      --blue: #72a7ff;
+      --cyan: #63d7e6;
+      --green: #66d19e;
+      --amber: #f0bd68;
+      --red: #ff8294;
+      --code: #0a1327;
+      --shadow: 0 18px 44px rgba(0, 0, 0, .28);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% -10%, rgba(99, 215, 230, .13), transparent 34rem),
+        radial-gradient(circle at 90% 0%, rgba(114, 167, 255, .13), transparent 32rem),
+        var(--bg);
+    }
+    a { color: var(--cyan); text-underline-offset: 3px; }
+    code { padding: .12rem .35rem; border: 1px solid var(--line); border-radius: .35rem; color: #c9dcff; background: var(--code); }
+    pre { overflow-x: auto; padding: 1rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--code); }
+    pre code { padding: 0; border: 0; background: none; }
+    .wrap { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: 1.25rem 0 4rem; }
+    .breadcrumbs { margin-bottom: 1rem; color: var(--muted); font-size: .9rem; }
+    .hero, .card, .group {
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      background: linear-gradient(145deg, rgba(24, 35, 61, .96), rgba(18, 26, 47, .96));
+      box-shadow: var(--shadow);
+    }
+    .hero { padding: clamp(1.25rem, 4vw, 2.4rem); }
+    .eyebrow { margin: 0 0 .55rem; color: var(--cyan); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: .78rem; }
+    h1 { max-width: 20ch; margin: 0; font-size: clamp(2rem, 5vw, 3.8rem); line-height: 1.03; letter-spacing: -.035em; }
+    h2 { margin: 2.1rem 0 .8rem; font-size: 1.45rem; }
+    h3 { margin: 0; font-size: 1.16rem; }
+    h4 { margin: 1.1rem 0 .5rem; color: var(--cyan); }
+    .lede { max-width: 78ch; margin: 1rem 0 0; color: var(--muted); font-size: 1.04rem; }
+    .navlinks { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.2rem; }
+    .navlinks a { padding: .55rem .75rem; border: 1px solid var(--line); border-radius: .55rem; background: rgba(10, 19, 39, .6); text-decoration: none; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin: 1rem 0 0; }
+    .stat { padding: .9rem 1rem; border: 1px solid var(--line); border-radius: .75rem; background: rgba(10, 19, 39, .62); }
+    .stat strong { display: block; color: var(--blue); font-size: 1.5rem; line-height: 1.1; }
+    .stat span { color: var(--muted); font-size: .83rem; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .card { padding: 1.1rem 1.2rem; }
+    .card ul, .group ul { padding-left: 1.25rem; }
+    .risk { border-left: 4px solid var(--amber); }
+    .decision { border-left: 4px solid var(--blue); }
+    .contract { border-left: 4px solid var(--cyan); }
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: 1rem 0; }
+    .flow span { padding: .5rem .72rem; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); }
+    .flow b { color: var(--cyan); }
+    .group { margin: 1rem 0; overflow: hidden; }
+    .group-head { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; padding: 1.1rem 1.2rem; border-bottom: 1px solid var(--line); }
+    .group-body { padding: 1rem 1.2rem 1.25rem; }
+    .meta { margin: .35rem 0 0; color: var(--muted); font-size: .88rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin: .75rem 0; }
+    .chips code { font-size: .78rem; }
+    .step { margin: .55rem 0; color: var(--text); }
+    .step::marker { color: var(--muted); }
+    .step.todo::before { content: "○"; color: var(--muted); margin-right: .55rem; }
+    .step.done::before { content: "✓"; color: var(--green); margin-right: .55rem; }
+    .step { list-style: none; }
+    .group.todo .group-status::before { content: "Planned"; color: var(--amber); }
+    .group.done .group-status::before { content: "Complete"; color: var(--green); }
+    .criteria { margin-top: 1rem; padding: .85rem 1rem; border: 1px solid rgba(102, 209, 158, .35); border-radius: .7rem; background: rgba(102, 209, 158, .06); }
+    .criteria strong { color: var(--green); }
+    table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--line); border-radius: .75rem; }
+    th, td { padding: .7rem .8rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--cyan); background: var(--panel-2); }
+    tr:last-child td { border-bottom: 0; }
+    .small { color: var(--muted); font-size: .88rem; }
+    footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); }
+    @media (max-width: 760px) {
+      .stats, .grid { grid-template-columns: 1fr; }
+      .group-head { display: block; }
+      h1 { max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <nav class="breadcrumbs"><a href="../dashboard.html">Development dashboard</a> / Implementation plan</nav>
+
+    <header class="hero">
+      <p class="eyebrow">Phase 7 · Implementation planning</p>
+      <h1>Platform-independent Maister distribution</h1>
+      <p class="lede">Four serialized implementation groups freeze the overlay, materializer, installer, and migration boundaries; a fifth group reviews feature-test coverage. Claude support and committed generated trees are removed only after parity and transaction evidence are green.</p>
+      <div class="stats" aria-label="Plan summary">
+        <div class="stat"><strong>5</strong><span>task groups</span></div>
+        <div class="stat"><strong>39</strong><span>tracked steps</span></div>
+        <div class="stat"><strong>26–34</strong><span>focused tests</span></div>
+        <div class="stat"><strong>17/17</strong><span>requirements mapped</span></div>
+      </div>
+      <div class="navlinks">
+        <a href="implementation-plan.md">Markdown source</a>
+        <a href="spec.md">Specification</a>
+        <a href="../verification/spec-audit.md">Specification audit</a>
+      </div>
+    </header>
+
+    <section>
+      <h2>Execution shape</h2>
+      <div class="flow" aria-label="Dependency chain">
+        <span>1 · Overlay v1</span><b>→</b><span>2 · Materializer</span><b>→</b><span>3 · Installer</span><b>→</b><span>4 · Evidence &amp; migration</span><b>→</b><span>5 · Test review</span>
+      </div>
+      <div class="grid">
+        <article class="card decision">
+          <h3>Key decisions</h3>
+          <ul>
+            <li><code>plugins/maister/</code> remains the single maintained common source.</li>
+            <li>Overlay v1 is frozen before materialization work begins.</li>
+            <li>One Node ESM CLI owns all lifecycle commands and machine-readable outcomes.</li>
+            <li>Receipts and journals live in target-scoped state, separate from workflow state.</li>
+            <li>Legacy projections are read-only parity fixtures until Group 4.</li>
+          </ul>
+        </article>
+        <article class="card risk">
+          <h3>Open questions / risks</h3>
+          <ul>
+            <li>Cursor/Kiro E5/E6 may be unavailable and must never appear as passed.</li>
+            <li>Real GitHub smoke evidence depends on network availability; unit tests inject the resolver boundary.</li>
+            <li>Shared settings require journaled multi-file recovery despite atomic managed-tree replacement.</li>
+            <li>No release timing threshold is added; determinism remains mandatory.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Frozen implementation contracts</h2>
+      <div class="grid">
+        <article class="card contract">
+          <h3>Overlay v1</h3>
+          <p>The strict schema rejects unknown fields and freezes:</p>
+          <ul>
+            <li><code>schema_version</code>, <code>overlay_id</code>, <code>overlay_version</code>, and target identity/version/discovery roots.</li>
+            <li>Ordered layout entries with source, destination, kind, mode, and ownership.</li>
+            <li>Settings path/format/ownership/managed keys and <code>preserve_unmanaged_refuse_drift</code>.</li>
+            <li>Exactly six semantic bindings: user gate, delegation, progress, task root, persistence, and continuation.</li>
+            <li>Required/optional/forbidden inventory, validation rules, capability evidence, and hashed native assets.</li>
+          </ul>
+          <p class="small">Per-host inventory is explicit: Codex owns its plugin manifest and OpenAI metadata; Cursor owns its plugin manifest, rules, Markdown agents, and hooks; Kiro owns steering, JSON agents, hooks, and agent-tools.</p>
+        </article>
+        <article class="card contract">
+          <h3>Installer v1</h3>
+          <pre><code>node plugins/maister/bin/maister-install.mjs
+  &lt;install|update|status|verify|uninstall|rollback|recover&gt;
+  --target &lt;codex|cursor|kiro-cli&gt;
+  [--source &lt;path|github:owner/repo&gt;] [--ref &lt;ref&gt;]
+  [--home &lt;path&gt;] [--json]</code></pre>
+          <p>Stable exit codes: <code>0</code> success, <code>2</code> usage/schema, <code>3</code> provenance, <code>4</code> validation, <code>5</code> drift, <code>6</code> lock, <code>7</code> transaction, <code>8</code> integrity.</p>
+          <p>JSON output freezes schema version, command, target, code, message, structured error, receipt/journal paths, and evidence.</p>
+        </article>
+        <article class="card contract">
+          <h3>Receipt v1</h3>
+          <p>Identity/status, target/overlay/host, immutable source provenance, active root, managed inventory, settings ownership and hashes, capability evidence, and journal/backup/previous-receipt metadata.</p>
+        </article>
+        <article class="card contract">
+          <h3>Journal v1</h3>
+          <p>Transaction identity, command/target, stage and destination roots, prior/candidate receipts, lock, failure, and durable steps. States: prepared → staged → snapshotted → committing → committed → verified, with rolled-back, recovered, and failed terminals.</p>
+          <p class="small">State root: <code>${XDG_STATE_HOME:-$HOME/.local/state}/maister/&lt;target&gt;/</code>.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Requirement coverage</h2>
+      <table>
+        <thead><tr><th>Requirements</th><th>Primary group</th><th>Boundary</th></tr></thead>
+        <tbody>
+          <tr><td>R1–R3</td><td>Group 1</td><td>Common source, primitives, portable runtime</td></tr>
+          <tr><td>R2</td><td>Group 1</td><td>Host overlays and inventories</td></tr>
+          <tr><td>R4</td><td>Group 2</td><td>Immutable source provenance</td></tr>
+          <tr><td>R5–R6</td><td>Groups 2–3</td><td>Lifecycle, staging, validation, path/symlink safety</td></tr>
+          <tr><td>R7–R10</td><td>Group 3</td><td>Transactions, receipts, settings ownership, drift</td></tr>
+          <tr><td>R11–R13</td><td>Group 4</td><td>Capability evidence and freshness</td></tr>
+          <tr><td>R14</td><td>Groups 1–5</td><td>Core-once and per-host seam tests</td></tr>
+          <tr><td>R15–R17</td><td>Group 4</td><td>Parity, deletion, docs, Make, CI, release</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Task groups</h2>
+
+      <section data-group="1" class="group done">
+        <div class="group-head">
+          <div><h3>Group 1 · Portable core and overlay v1 contracts</h3><p class="meta">Dependencies: None · 7 steps · 6 tests</p></div>
+          <strong class="group-status" aria-label="group status"></strong>
+        </div>
+        <div class="group-body">
+          <div class="chips"><code>plugins/maister/common/primitives.yml</code><code>plugins/maister/overlays/**</code><code>overlay-loader.mjs</code><code>validate-overlay.mjs</code><code>overlay-contract.test.mjs</code></div>
+          <ul>
+            <li data-step="1.0" class="step done"><strong>1.0</strong> Complete the portable-core and overlay-contract layer.</li>
+            <li data-step="1.1" class="step done"><strong>1.1</strong> Write 6 tests: three valid hosts plus unknown/missing fields, path/ownership/collision failures, and forbidden vocabulary.</li>
+            <li data-step="1.2" class="step done"><strong>1.2</strong> Define six primitives and map them to the five single-source orchestrator ESM modules.</li>
+            <li data-step="1.3" class="step done"><strong>1.3</strong> Add strict overlay v1 schema and stable <code>E_OVERLAY_*</code> errors.</li>
+            <li data-step="1.4" class="step done"><strong>1.4</strong> Create explicit Codex, Cursor, and Kiro CLI overlays and inventory fixtures.</li>
+            <li data-step="1.5" class="step done"><strong>1.5</strong> Extract only host-native assets; retain legacy outputs as read-only oracle.</li>
+            <li data-step="1.6" class="step done"><strong>1.6</strong> Run only the 6 overlay contract tests.</li>
+          </ul>
+          <div class="criteria"><strong>Acceptance:</strong> All targets validate; every primitive binds once; portable runtime remains single-source; unsafe paths, ownership, bindings, and vocabulary fail structurally.</div>
+        </div>
+      </section>
+
+      <section data-group="2" class="group done">
+        <div class="group-head">
+          <div><h3>Group 2 · Immutable source resolution and deterministic materialization</h3><p class="meta">Dependencies: Group 1 · 8 steps · 6 tests</p></div>
+          <strong class="group-status" aria-label="group status"></strong>
+        </div>
+        <div class="group-body">
+          <div class="chips"><code>source-resolver.mjs</code><code>provenance.mjs</code><code>materializer.mjs</code><code>hash-tree.mjs</code><code>path-safety.mjs</code><code>source-materializer.test.mjs</code></div>
+          <ul>
+            <li data-step="2.0" class="step done"><strong>2.0</strong> Complete source resolution and materialization.</li>
+            <li data-step="2.1" class="step done"><strong>2.1</strong> Write 6 tests for local/GitHub provenance, determinism, containment/symlinks, collisions, and full stage validation.</li>
+            <li data-step="2.2" class="step done"><strong>2.2</strong> Resolve local and GitHub sources to immutable provenance and full commit identity.</li>
+            <li data-step="2.3" class="step done"><strong>2.3</strong> Freeze dirty-worktree, missing/ambiguous ref, escaping submodule/worktree, unsupported scheme, and symlink-cycle behavior.</li>
+            <li data-step="2.4" class="step done"><strong>2.4</strong> Build a normalized, sorted assembly plan and reject case-fold/duplicate collisions.</li>
+            <li data-step="2.5" class="step done"><strong>2.5</strong> Materialize common plus native assets into caller-provided same-filesystem staging.</li>
+            <li data-step="2.6" class="step done"><strong>2.6</strong> Validate inventory, references, syntax, modes, hashes, and symlinks.</li>
+            <li data-step="2.7" class="step done"><strong>2.7</strong> Run only the 6 source/materializer tests.</li>
+          </ul>
+          <div class="criteria"><strong>Acceptance:</strong> Identical source plus overlay is byte-deterministic; provenance is immutable; unsafe or invalid inputs fail before destination mutation; no unresolved templates or foreign vocabulary remain.</div>
+        </div>
+      </section>
+
+      <section data-group="3" class="group done">
+        <div class="group-head">
+          <div><h3>Group 3 · Transactional installer, ownership, receipt, and recovery</h3><p class="meta">Dependencies: Group 2 · 10 steps · 8 tests</p></div>
+          <strong class="group-status" aria-label="group status"></strong>
+        </div>
+        <div class="group-body">
+          <div class="chips"><code>maister-install.mjs</code><code>transaction-manager.mjs</code><code>receipt-schema.mjs</code><code>journal-schema.mjs</code><code>settings-owner.mjs</code><code>recovery.mjs</code><code>installer-transaction.test.mjs</code></div>
+          <ul>
+            <li data-step="3.0" class="step done"><strong>3.0</strong> Complete the shared installer lifecycle and transaction layer.</li>
+            <li data-step="3.1" class="step done"><strong>3.1</strong> Write 8 lifecycle, drift, lock, failure-injection, recovery, and exact-topology tests.</li>
+            <li data-step="3.2" class="step done"><strong>3.2</strong> Implement the frozen lifecycle CLI, JSON envelope, error kinds, and exit codes.</li>
+            <li data-step="3.3" class="step done"><strong>3.3</strong> Resolve target paths and enforce same-filesystem staging with sandboxable home/state roots.</li>
+            <li data-step="3.4" class="step done"><strong>3.4</strong> Add locks, durable journals, exact backups, atomic tree replacement, integrity verification, and receipt publication.</li>
+            <li data-step="3.5" class="step done"><strong>3.5</strong> Implement and validate receipt v1 and journal v1 exactly.</li>
+            <li data-step="3.6" class="step done"><strong>3.6</strong> Add whole-file and allowlisted managed-key ownership while preserving unmanaged content.</li>
+            <li data-step="3.7" class="step done"><strong>3.7</strong> Add gated failure injection and idempotent recovery for every durable state.</li>
+            <li data-step="3.8" class="step done"><strong>3.8</strong> Enforce drift-aware update, uninstall, and rollback with <code>E_DRIFT_CONFLICT</code>.</li>
+            <li data-step="3.9" class="step done"><strong>3.9</strong> Run only the 8 installer transaction tests.</li>
+          </ul>
+          <div class="criteria"><strong>Acceptance:</strong> The frozen command/receipt/journal contracts hold; no pre-validation mutation exists; every injected failure restores bytes, modes, symlinks, existence, settings, and topology without deleting unmanaged content.</div>
+        </div>
+      </section>
+
+      <section data-group="4" class="group done">
+        <div class="group-head">
+          <div><h3>Group 4 · Capability evidence, shadow parity, topology migration, and release/docs</h3><p class="meta">Dependencies: Groups 1–3 · 9 steps · 6 tests</p></div>
+          <strong class="group-status" aria-label="group status"></strong>
+        </div>
+        <div class="group-body">
+          <div class="chips"><code>evidence-schema.mjs</code><code>host-probes/*.mjs</code><code>shadow-parity.mjs</code><code>Makefile</code><code>.github/workflows/**</code><code>README.md</code><code>.maister/docs/**</code><code>legacy trees/builders (delete last)</code></div>
+          <ul>
+            <li data-step="4.0" class="step done"><strong>4.0</strong> Complete compatibility evidence and legacy-removal migration.</li>
+            <li data-step="4.1" class="step done"><strong>4.1</strong> Write 6 tests for E1-E6, unavailable semantics, freshness, fail-closed policy, parity, and final topology.</li>
+            <li data-step="4.2" class="step done"><strong>4.2</strong> Implement evidence schema/policy with E1/E2/E4 per host, shared E3, and explicit E5/E6 availability.</li>
+            <li data-step="4.3" class="step done"><strong>4.3</strong> Implement host probes and expiry on time, host, overlay, source, or scenario change.</li>
+            <li data-step="4.4" class="step done"><strong>4.4</strong> Compare semantic, inventory, references, hooks, permissions, symlinks, and topology against legacy fixtures.</li>
+            <li data-step="4.5" class="step done"><strong>4.5</strong> Capture clean-checkout lifecycle, failure, drift, and available native evidence for all targets.</li>
+            <li data-step="4.6" class="step done"><strong>4.6</strong> Replace Make/CI/release generated-tree paths with core and target-seam entry points.</li>
+            <li data-step="4.7" class="step done"><strong>4.7</strong> Update all operator, project, standards, support, migration, and recovery documentation.</li>
+            <li data-step="4.8" class="step done"><strong>4.8</strong> Only after green parity/recovery: delete Claude, marketplaces, builders, committed projections, and stale references; rerun the 6 tests.</li>
+          </ul>
+          <div class="criteria"><strong>Acceptance:</strong> Evidence is provenance- and expiry-aware; unavailable never passes; parity is zero-unresolved before deletion; generated trees/builders/Claude/marketplaces are absent; Make, CI, release, docs, and support matrices agree.</div>
+        </div>
+      </section>
+
+      <section data-group="5" class="group done">
+        <div class="group-head">
+          <div><h3>Group 5 · Test review and gap analysis</h3><p class="meta">Dependencies: Groups 1–4 · 5 steps · up to 8 additional tests</p></div>
+          <strong class="group-status" aria-label="group status"></strong>
+        </div>
+        <div class="group-body">
+          <div class="chips"><code>tests/platform-independent/*.test.mjs</code><code>tests/fixtures/platform-independent/**</code><code>Makefile</code></div>
+          <ul>
+            <li data-step="5.0" class="step done"><strong>5.0</strong> Review and fill critical feature-test gaps.</li>
+            <li data-step="5.1" class="step done"><strong>5.1</strong> Map the 26 tests to all 17 requirements and every deletion criterion.</li>
+            <li data-step="5.2" class="step done"><strong>5.2</strong> Audit negative source/path, binding, ownership, recovery, freshness, and topology boundaries.</li>
+            <li data-step="5.3" class="step done"><strong>5.3</strong> Add no more than 8 strategic tests; cap the feature suite at 34.</li>
+            <li data-step="5.4" class="step done"><strong>5.4</strong> Run only the platform-independent feature suite and record its inventory.</li>
+          </ul>
+          <div class="criteria"><strong>Acceptance:</strong> All 26–34 tests pass; every requirement and deletion criterion is asserted; core behavior runs once and host parameterization covers only true seams.</div>
+        </div>
+      </section>
+    </section>
+
+    <section>
+      <h2>Standards and operating rules</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>Standards</h3>
+          <ul>
+            <li>Minimal implementation: six primitives, no general workflow DSL.</li>
+            <li>Error handling: structured fail-closed outcomes with recovery diagnostics.</li>
+            <li>Validation: source through receipt validation before mutation/publication.</li>
+            <li>Build pipeline: deterministic common/overlay/materializer/install boundaries.</li>
+            <li>Testing: assert bytes, modes, symlinks, existence, topology, and rollback.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Execution rules</h3>
+          <ul>
+            <li>Start every implementation group with its 2–8 tests.</li>
+            <li>Run only group tests until the final focused feature-suite review.</li>
+            <li>Reuse proven runtime and transaction patterns.</li>
+            <li>Keep Markdown checkboxes and HTML progress markers synchronized.</li>
+            <li>Delete legacy artifacts last, after parity and recovery evidence.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <footer>Generated for the Phase 7 implementation-approval checkpoint. This report is self-contained and uses relative task links only.</footer>
+  </main>
+</body>
+</html>

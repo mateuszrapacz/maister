@@ -1,17 +1,72 @@
 name: Release
+
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
 
 jobs:
-  release:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Validate source, overlays, evidence, and topology
+        run: make validate
+      - name: Run reviewed three-target parity release gate
+        run: |
+          mkdir -p dist
+          make test-parity-release PARITY_REPORT=dist/parity-release.json
+      - name: Run portable core tests before generating E3
+        run: make test-core
+      - name: Generate deterministic portable-core E3 attestation
+        run: |
+          make generate-e3-attestation \
+            E3_OUTPUT=dist/e3-portable-core.json \
+            E3_RESULT=passed \
+            E3_TEST_COMMAND="make test-core" \
+            SOURCE_COMMIT="$GITHUB_SHA" \
+            SOURCE_VERSION="${GITHUB_REF_NAME#v}" \
+            SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+      - name: Package target overlays
+        run: |
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=codex SOURCE_COMMIT="$GITHUB_SHA" SOURCE_VERSION="${GITHUB_REF_NAME#v}"
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=cursor SOURCE_COMMIT="$GITHUB_SHA" SOURCE_VERSION="${GITHUB_REF_NAME#v}"
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=kiro-cli SOURCE_COMMIT="$GITHUB_SHA" SOURCE_VERSION="${GITHUB_REF_NAME#v}"
+      - name: Smoke extracted target archives
+        env:
+          MAISTER_PACKAGE_DIR: dist
+        run: node --test tests/platform-independent/release-package.test.mjs
+      - name: Generate package checksums
+        run: (cd dist && sha256sum maister-*.tar.gz > SHA256SUMS)
+      - name: Generate release provenance and SBOM metadata
+        run: |
+          node plugins/maister/bin/release-metadata.mjs \
+            --archive-dir dist \
+            --output-dir dist \
+            --source-commit "$GITHUB_SHA" \
+            --source-version "${GITHUB_REF_NAME#v}" \
+            --parity-report dist/parity-release.json \
+            --source-date-epoch "$(git log -1 --format=%ct)"
+      - name: Verify release metadata
+        run: node plugins/maister/bin/release-metadata.mjs --archive-dir dist --output-dir dist --check
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: maister-target-packages
+          path: dist/*
 
-      - name: Build and validate
-        run: make build && make validate
-
-      - uses: softprops/action-gh-release@v2
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: maister-target-packages
+          path: dist
+      - uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           generate_release_notes: true
+          files: dist/*

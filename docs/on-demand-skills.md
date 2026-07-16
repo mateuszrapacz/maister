@@ -28,7 +28,7 @@ On-demand skills require an **explicit request**:
 - **Natural language** — ask the agent directly (e.g. "grill me on this plan" or "run a thermos review on this branch")
 - **Cursor hyphen form** — `/maister-quick-problem-classifier` (see §2)
 
-Skills marked **"Explicit request only"** in the agent catalog (`plugins/maister/CLAUDE.md`) will not auto-run during unrelated work. The `disable-model-invocation` frontmatter flag means the model cannot silently attach the skill — you must ask.
+Skills marked **"Explicit request only"** in the agent catalog under `plugins/maister/skills/` will not auto-run during unrelated work. The `disable-model-invocation` frontmatter flag means the model cannot silently attach the skill — you must ask.
 
 ### ADR-008: soft suggestions (never auto-invoked)
 
@@ -45,7 +45,7 @@ All other on-demand skills: **no orchestrator suggestion, no auto-invocation**.
 
 ## 2. How to invoke
 
-### Claude Code (primary)
+### Colon-style invocation
 
 ```
 /maister:<command-name>
@@ -65,9 +65,9 @@ Examples: `/maister-quick-requirements-critic`, `/maister-modeling-context-disti
 
 ### Kiro CLI
 
-Kiro uses a different invocation model. See [Kiro CLI Support](kiro-cli-support.md) for platform-specific details.
+Kiro uses a different invocation model; see the supported-target installation and evidence notes in [the documentation hub](README.md).
 
-### Explicit-request skills (no reliable Claude Code slash)
+### Explicit-request skills
 
 `grill-me`, `grill-with-docs`, and `thermos` do not have standard command wrappers. Invoke them by **asking explicitly**:
 
@@ -257,7 +257,7 @@ Each entry: 2–4 sentences + when/when-not + invocation + output type + suggest
 
 **When not to use:** When you want vocabulary or decisions captured in project docs during grilling (use `grill-with-docs` instead); for automated reports (use review skills); as a replacement for product-design orchestrator.
 
-**Invocation:** Ask explicitly in natural language (e.g. "grill me on this plan"). Cursor: `/maister-grill-me`. Do not rely on a Claude Code slash command.
+**Invocation:** Ask explicitly in natural language (e.g. "grill me on this plan"). Cursor: `/maister-grill-me`. Do not rely on automatic slash invocation.
 
 **Output type:** Interactive session (read-only)
 
@@ -277,7 +277,7 @@ Each entry: 2–4 sentences + when/when-not + invocation + output type + suggest
 
 **When not to use:** For read-only stress-testing without doc edits (use `grill-me`); for strategic bounded-context discovery (use `context-distiller`); for aggregate/locking design (use `aggregate-designer`); for read-only boundary audits of existing docs (use `linguistic-boundary-verifier`).
 
-**Invocation:** Ask explicitly in natural language (e.g. "grill this plan and update language.md"). Cursor: `/maister-grill-with-docs`. Do not rely on a Claude Code slash command.
+**Invocation:** Ask explicitly in natural language (e.g. "grill this plan and update language.md"). Cursor: `/maister-grill-with-docs`. Do not rely on automatic slash invocation.
 
 **Output type:** Interactive session with confirmed `language.md` and ADR edits
 
@@ -309,7 +309,7 @@ Each entry: 2–4 sentences + when/when-not + invocation + output type + suggest
 
 **When not to use:** For routine small changes; when you only need linguistic boundaries (use `linguistic-boundary-verifier` alone).
 
-**Invocation:** Ask explicitly (e.g. "run a thermos review on this branch"). Cursor: `/maister-thermos`. Do not rely on a Claude Code slash command.
+**Invocation:** Ask explicitly (e.g. "run a thermos review on this branch"). Cursor: `/maister-thermos`. Do not rely on automatic slash invocation.
 
 **Output type:** Report (synthesized from parallel sub-reviews)
 
@@ -454,7 +454,6 @@ Each entry: 2–4 sentences + when/when-not + invocation + output type + suggest
 | [Workflows](workflows.md) | Orchestrator phases and internal skills |
 | [Command Reference](commands.md) | Slash command syntax for all commands |
 | [language.md Convention](../.maister/docs/standards/global/language-md-convention.md) | Bounded-context language files (Bundle C) |
-| [Cursor Agent Support](cursor-agent-support.md) | Cursor-specific invocation |
-| [Kiro CLI Support](kiro-cli-support.md) | Kiro-specific invocation |
+| [Documentation Hub](README.md) | Target-aware installation, evidence, parity, and recovery |
 
-For agent-oriented skill catalog and bundle definitions, see `plugins/maister/CLAUDE.md` (contributors).
+For the agent-oriented skill catalog and bundle definitions, inspect `plugins/maister/skills/` and the explicit target overlays.

@@ -6,7 +6,7 @@ argument-hint: "[task description]"
 
 # Quick Plan — Plan Mode with Standards Enforcement
 
-This works exactly like Claude Code's built-in plan mode, with one addition: the resulting plan must discover and enforce the project's coding standards from `.maister/docs/`.
+This follows the host's built-in plan mode, with one addition: the resulting plan must discover and enforce the project's coding standards from `.maister/docs/`.
 
 ## Workflow
 

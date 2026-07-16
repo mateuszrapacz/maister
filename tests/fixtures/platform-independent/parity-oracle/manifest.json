@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "oracle_version": "2026-07-14.legacy-tree-v1",
+  "commit": "8034fb4bc08f62eb715afb7913d1b27642bb4788",
+  "review_status": "reviewed-pre-deletion-immutable-git-tree",
+  "targets": {
+    "codex": {
+      "legacy_path": "plugins/maister-codex",
+      "tree": "cadc8513457fea044caa128ce1c95f359ce444d2"
+    },
+    "cursor": {
+      "legacy_path": "plugins/maister-cursor",
+      "tree": "44b511cc9f8b8de13f7ab8d5a61dfca41ed57fed"
+    },
+    "kiro-cli": {
+      "legacy_path": "plugins/maister-kiro",
+      "tree": "52ba8c24a0837a35bdc5487536192a2d6fce4484"
+    }
+  }
+}

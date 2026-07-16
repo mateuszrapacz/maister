@@ -1,0 +1,8 @@
+name: fixture-orchestrator-agent
+description: Deterministic fixture agent contract.
+interface:
+  display_name: "Maister orchestrator-framework"
+  short_description: "Internal Maister workflow capability."
+
+policy:
+  allow_implicit_invocation: false

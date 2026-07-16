@@ -1,21 +1,25 @@
-## Build Pipeline
+# Build pipeline
 
-### Canonical Source and Reproducible Generated Variants
-Treat `plugins/maister/` as the canonical editable plugin and put host-specific behavior in `platforms/`. Never directly edit `plugins/maister-cursor/`, `plugins/maister-kiro/`, or `plugins/maister-codex/`.
+`plugins/maister/common/`, canonical portable skills, and `plugins/maister/overlays/` are distribution inputs. There are no independently maintained generated target trees and no host builder that rewrites a second source of truth. Cursor's checked-in compatibility projection is a deterministic, drift-checked migration exception; its source mappings, transformations, exclusions, and preserved exception hashes must remain explicit until the projection is removed.
 
-After changing canonical sources or adapters, run `make build`, inspect and validate the generated changes, and commit the matching generated variants. CI rebuilds the variants and applies `git diff --exit-code` to them, so any diff means the committed outputs do not reproduce from their sources. This preserves deterministic cross-host parity and prevents silent generated drift.
+Use the target-aware entry points:
 
-**Preferred:** Edit `plugins/maister/` and/or `platforms/`, run `make build`, inspect the generated diff, validate it, and commit the source, adapter, and generated outputs together.
+```sh
+make test-core
+make test-overlay TARGET=codex
+make test-materializer TARGET=cursor
+make test-install TARGET=kiro-cli
+make test-evidence
+make test-parity-release
+make test-topology
+make validate
+make package TARGET=codex
+```
 
-**Avoid:** Patching a generated target directly; the next build will overwrite it and leave the canonical source inconsistent.
+`make validate` loops over `codex`, `cursor`, and `kiro-cli` before running the common core, evidence, and topology checks. Use the explicit `make test-overlay TARGET=<target>` entry point when diagnosing one overlay.
 
-**Evidence:** `platforms/codex-cli/build.sh`, `platforms/cursor/build.sh`, `platforms/kiro-cli/build.sh`, `.github/workflows/validate-generated-variants.yml`, `CLAUDE.md`, `docs/codex-support.md`, and `docs/kiro-cli-support.md`.
+`test-parity-release` is the reproducible migration/release check: it reconstructs each legacy tree from the reviewed full-commit Git-tree oracle under `tests/fixtures/platform-independent/parity-oracle/manifest.json`, materializes Codex, Cursor, and Kiro CLI from the current checkout, and compares each target with its versioned baseline. No external legacy root is accepted. Rules contain exact paths (or a constrained pattern), immutable side observations, an observed category, and a rationale; the CLI never learns exceptions from its current output. Executable and sensitive permission differences cannot be waived. The release gate must run from a clean checkout; `E_SOURCE_DIRTY` blocks publication. `PARITY_ALLOW_DIRTY_LOCAL=1` is a development-only diagnostic option, is not used by release CI, and can never substitute for the strict result.
 
-### Build and Validate Every Platform Before Release
-Before creating or pushing any `v*` release tag, run a fresh `make build && make validate` successfully. The aggregate build and validation gates must cover Cursor, Kiro, Codex, and shared contracts before GitHub Release creation. This prevents publishing stale, divergent, or invalid platform artifacts.
+Before release, validate the common core, every overlay, evidence policy, topology, the strict three-target parity gate, package contents, and a clean extracted-archive lifecycle for Codex, Cursor, and Kiro CLI. Run `make test-core`, then `make generate-e3-attestation E3_RESULT=passed` with an explicit source version and deterministic source-date epoch. Pass the generated file as `E3_ATTESTATION` to all three `make package` invocations; the package validator checks its schema, freshness, commit/version binding, and portable-core digest before embedding it at `plugins/maister/.maister-e3-attestation.json`. Archive input paths are explicitly sorted. The release-package test compares two builds per target; release CI invokes the test against all three produced archives, generates `dist/SHA256SUMS`, `dist/SBOM.cdx.json`, and unsigned `dist/PROVENANCE.json`, binds the E3 digest/bytes in the metadata, and blocks publication if the E3-backed lifecycle is not green. Unsigned sidecars do not authenticate the publisher and are trustworthy only through a trusted release channel. E5/E6 may be unavailable because a runtime, authentication, safe adapter, or scenario is missing; this permits only explicitly provisional claims and never a native semantic pass.
 
-**Preferred:** Run `make build && make validate`, inspect the resulting outputs, and only then push the release tag.
-
-**Avoid:** Creating or pushing a release tag after only a platform-specific build or test.
-
-**Evidence:** `.github/workflows/release.yml`, `Makefile`, `docs/kiro-cli-support.md`, and `README.md`.
+Treat `dist/` as disposable output. A release job starts from an empty or isolated output directory and publishes only artifacts generated and verified in that same job. Existing archives, even with expected names, must not be reused; confirm the `plugins/maister/**` package shape, target isolation, extracted lifecycle, checksums, SBOM, provenance, and strict parity before upload.

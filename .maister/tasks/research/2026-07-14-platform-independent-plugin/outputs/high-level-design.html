@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High-level design — platformowo niezależny Maister</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { border-left:4px solid var(--accent); }
+.toc { font-size:12px; padding:10px 0; color:var(--dim); }
+pre { background:#171a21; color:#e8ebf0; border-radius:var(--radius); padding:16px; overflow:auto; line-height:1.35; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+.flow { border-left:3px solid var(--accent); padding-left:15px; }
+.decision { border-top:3px solid var(--accent); }
+.risk { background:var(--warn-soft); }
+ul { padding-left:20px; } .small { color:var(--dim); font-size:12px; }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="research-report.html">Report</a>
+  <a href="solution-exploration.html">Exploration</a>
+  <span class="here">Design</span>
+  <a href="decision-log.html">Decision Log</a>
+  <a href="high-level-design.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+<header>
+  <span class="badge">High-level design</span>
+  <h1>Platformowo niezależny Maister</h1>
+  <p>Portable documentation core + jawne host overlays + transakcyjny custom installer</p>
+</header>
+<div class="tiles">
+  <div class="tile"><b>3</b><span>wspierane hosty</span></div>
+  <div class="tile"><b>10</b><span>komponentów</span></div>
+  <div class="tile"><b>7</b><span>ADR</span></div>
+  <div class="tile"><b>5</b><span>faz migracji</span></div>
+  <div class="tile"><b>E1–E6</b><span>evidence ladder</span></div>
+</div>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Wspólne skille są kopiowane bez zmian. Codex, Cursor i Kiro CLI mają jawne repozytoryjne overlays dla agents, commands, hooks, manifests, settings i semantycznych bindings. Installer wykonuje deterministyczne copy/merge, staging, validation i transakcyjny commit. Legacy generated trees oraz Claude Code znikają przed zamknięciem zadania.</p>
+  <h3>Key Decisions</h3>
+  <ul>
+    <li>Portable documentation core, bez pełnego workflow DSL i bez prompt rewrite.</li>
+    <li>Harness wybiera ordinary tools; explicit bindings chronią control flow, safety, persistence i capability claims.</li>
+    <li>Jedna kopia common + jawne <code>hosts/codex</code>, <code>hosts/cursor</code>, <code>hosts/kiro-cli</code>.</li>
+    <li>Custom installer z local/GitHub source, receipt, journalem i byte-exact rollbackiem.</li>
+    <li>Semantic unknown fail-closed; packaging-only może być <code>provisional</code>.</li>
+    <li>Legacy i Claude zostają usunięte w tym samym zadaniu po parity gate.</li>
+  </ul>
+  <h3>Open Questions / Risks</h3>
+  <ul>
+    <li>Aktualne discovery paths i settings formats hostów wymagają potwierdzenia w testach.</li>
+    <li>Shared settings potrzebują journalu, backupu i recovery zamiast pozornej wieloplikowej atomowości.</li>
+    <li>Neutralna proza może zacząć przemycać host vocabulary.</li>
+    <li>Błędna klasyfikacja packaging/semantic może przepuścić niezgodność.</li>
+    <li>Task-scoped deletion wymaga kompletnego parity i failure-injection gate.</li>
+  </ul>
+</section>
+
+<nav class="toc">Contents: <a href="#architecture">Architecture</a> · <a href="#tree">Repo tree</a> · <a href="#components">Components</a> · <a href="#primitives">Primitives</a> · <a href="#overlay">Overlay Contract</a> · <a href="#installer">Installer</a> · <a href="#settings">Settings</a> · <a href="#compatibility">Compatibility</a> · <a href="#tests">Tests</a> · <a href="#migration">Migration</a> · <a href="#dod">Definition of Done</a></nav>
+
+<main>
+<section id="architecture">
+  <h2>1. Architektura i przepływ</h2>
+  <div class="card">
+    <p><b>Styl:</b> modular monolith dystrybuowany jako repozytoryjny bundle, z portable documentation core, deklaratywnymi Host Overlay Contracts i transakcyjnym adapterem instalacyjnym.</p>
+<pre>Maintainer edits
+      |
+      v
++-------------------+       +-------------------------+
+| common/           |       | hosts/&lt;target&gt;/          |
+| skills + runtime  |       | explicit native overlay |
++-------------------+       +-------------------------+
+          \                         /
+           v                       v
+             +-------------------+
+             | custom installer  |
+             | copy + merge only |
+             +-------------------+
+                       |
+                stage -&gt; validate
+                       |
+                  atomic commit
+                       v
+             host-native managed tree</pre>
+    <p>Common definiuje <b>co</b> ma się wydarzyć, overlay <b>jak harness reprezentuje integracje</b>, a installer <b>jak bezpiecznie dostarczyć oba moduły</b>. Installer nie interpretuje promptów.</p>
+  </div>
+  <div class="grid">
+    <div class="card"><b>In scope</b><ul><li>Codex, Cursor, Kiro CLI</li><li>local/GitHub source</li><li>common skills/runtime</li><li>explicit native overlays</li></ul></div>
+    <div class="card"><b>Out of scope</b><ul><li>marketplace</li><li>Claude Code</li><li>jeden identyczny installed tree</li><li>pełny IR/DSL</li><li>host assets generowane z promptów</li></ul></div>
+  </div>
+</section>
+
+<section id="tree">
+  <h2>2. Proponowane repo</h2>
+  <div class="card"><pre>maister/
+├── common/
+│   ├── skills/        # jedna kopia generic SKILL.md
+│   ├── runtime/       # state, gates, continuation
+│   ├── references/    # wspólne kontrakty
+│   ├── assets/        # dashboard/report assets
+│   └── primitives.yml
+├── hosts/
+│   ├── codex/{overlay.yml,agents,commands,hooks,manifests,settings,tests}
+│   ├── cursor/{overlay.yml,agents,commands,hooks,manifests,settings,tests}
+│   └── kiro-cli/{overlay.yml,agents,commands,hooks,manifests,settings,tests}
+├── installer/{bin,lib}
+├── schemas/{host-overlay,primitive,receipt,evidence}.schema.json
+├── tests/{core,overlay-contract,installer,host-runtime,fixtures}
+└── docs/{installation,host-support,adding-a-host}.md</pre>
+  <p class="small">Obecne <code>plugins/maister/skills</code> może być przejściowym ownerem, ale końcowa struktura nie może pozostać Claude pluginem bez deklarowanego supportu.</p></div>
+</section>
+
+<section id="components">
+  <h2>3. Głębokie komponenty</h2>
+  <div class="card"><table>
+    <thead><tr><th>Komponent</th><th>Publiczny kontrakt</th><th>Nie odpowiada za</th></tr></thead>
+    <tbody>
+      <tr><td>Portable core</td><td>skills, runtime, primitive ids, E3 contracts</td><td>layout/tool names/settings hosta</td></tr>
+      <tr><td>Primitive registry</td><td>id, class, required effect, failure policy</td><td>workflow DSL/AST</td></tr>
+      <tr><td>Host overlay</td><td><code>overlay.yml</code> + native assets</td><td>kopie generic skills i proza transforms</td></tr>
+      <tr><td>Source resolver</td><td>local/GitHub → immutable source SHA</td><td>instalacja i mutacje</td></tr>
+      <tr><td>Assembler</td><td><code>assemble(source, overlay, staging)</code></td><td>generowanie agents/hooks z promptów</td></tr>
+      <tr><td>Validator</td><td>schema, inventory, paths, compatibility</td><td>automatyczna naprawa</td></tr>
+      <tr><td>Settings merge</td><td>plan/read/apply/restore managed keys</td><td>niezarządzane klucze</td></tr>
+      <tr><td>Transaction manager</td><td>prepare → commit → finalize / rollback</td><td>częściowy sukces</td></tr>
+      <tr><td>Receipt store</td><td>immutable receipts + active pointer</td><td>workflow state</td></tr>
+      <tr><td>Evidence harness</td><td>E1–E6 per capability/scenario</td><td>mapowanie unavailable na pass</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="primitives">
+  <h2>4. Granica semantic primitives</h2>
+  <div class="grid">
+    <div class="card"><span class="badge">Harness-owned</span><h3>Ordinary operations</h3><ul><li>wyszukaj pliki/symbole — rg, grep, index, Explore</li><li>przeczytaj kod — native read, shell, index</li><li>uruchom test — host process runner</li><li>sformatuj — repo formatter</li><li>zbierz read-only context — inline lub helper</li></ul><p>Generic prompt opisuje intencję, nie nazwę toola.</p></div>
+    <div class="card decision"><span class="badge">Explicit binding</span><h3>Semantic invariants</h3><ul><li><code>present_user_gate</code></li><li><code>delegate_role</code>, gdy delegacja jest wymagana</li><li><code>persist_before_continue</code></li><li><code>continue_phase</code></li><li><code>enforce_safety_hook</code></li><li><code>resolve_project_instructions</code></li></ul><p>Błędna realizacja zmienia control flow, safety, persistence lub capability claim.</p></div>
+  </div>
+  <div class="card"><pre>- id: present_user_gate
+  class: control-flow
+  required_effect: block_until_one_exact_option_is_selected
+  failure_policy: fail_closed
+- id: search_repository
+  class: ordinary
+  binding: harness_owned</pre><p>Primitive dodajemy tylko po powtarzalnej różnicy semantycznej albo dla safety/persistence invariant.</p></div>
+</section>
+
+<section id="overlay">
+  <h2>5. Host Overlay Contract</h2>
+  <div class="card"><pre>schema_version: 1
+host_id: codex
+overlay_version: 1
+layout:
+  managed_root: ".codex/plugins/maister"
+  copy_common: [{from: common/skills, to: skills}]
+  overlay_assets: [{from: hosts/codex/agents, to: agents}]
+capabilities:
+  present_user_gate:
+    class: semantic
+    binding: hooks/user-gate.md
+    evidence_required: E5
+  plugin_layout:
+    class: packaging
+    binding: manifests/plugin.json
+    evidence_required: E2
+settings:
+  - {id: advisor_agent, format: toml, ownership: whole_file}
+validation:
+  forbidden_vocabulary: ["AskUserQuestion", "Task tool"]</pre></div>
+  <div class="card"><b>Obowiązkowe invariants</b><ul><li>allowlisted paths i path containment;</li><li>brak niejawnych common/overlay collisions;</li><li>binding albo jawny unsupported dla każdego required primitive;</li><li>class semantic/packaging i evidence target;</li><li>pełne inventory native assets;</li><li>repo-owned host contract tests.</li></ul></div>
+</section>
+
+<section id="installer">
+  <h2>6. Custom installer i lifecycle</h2>
+  <div class="card"><pre>maister install   --target codex|cursor|kiro-cli [--source PATH|GH_URL] [--ref TAG_OR_SHA]
+                  [--scope user|project] [--dest PATH] [--host-version VERSION]
+                  [--dry-run] [--json]
+maister update    --target HOST [...]
+maister uninstall --target HOST [--dry-run]
+maister rollback  --target HOST [--to RECEIPT_ID]
+maister verify    --target HOST [--native]
+maister status    [--target HOST] [--json]</pre></div>
+  <div class="card flow"><b>Transaction flow</b><p>resolve → probe → compatibility → lock → plan → stage → validate → backup → commit tree → commit settings → receipt → active pointer</p><p class="fail">Failure: restore bytes, modes, symlinks and topology; keep previous receipt active.</p></div>
+  <div class="grid">
+    <div class="card"><b>Install</b><p>Pełny staging przed pierwszą mutacją. Jeden active receipt albo pełny rollback.</p></div>
+    <div class="card"><b>Update</b><p>Nowy staging od zera, integrity/drift check, poprzedni receipt jako rollback target.</p></div>
+    <div class="card"><b>Uninstall</b><p>Usuwa tylko managed paths/keys; zachowuje user drift i niepuste parent dirs.</p></div>
+    <div class="card"><b>Rollback</b><p>Odtwarza snapshot starego receipt, nie rekonstruuje go z bieżącego source.</p></div>
+  </div>
+  <details class="card"><summary>Receipt i crash recovery</summary><p>Receipt zapisuje target, scope, immutable source commit, Maister/overlay/host versions, compatibility status, pełny managed inventory z hashami/modes, settings ownership, previous receipt i evidence. Journal przechowuje <code>prepared</code>, <code>committing</code>, <code>rolling_back</code>. Recovery zawsze poprzedza nową operację.</p></details>
+</section>
+
+<section id="settings">
+  <h2>7. Własność settings</h2>
+  <div class="card"><table><thead><tr><th>Policy</th><th>Semantyka</th><th>Uninstall</th></tr></thead><tbody>
+    <tr><td><code>whole_file</code></td><td>dedykowany plik wyłącznie Maister, atomic replace</td><td>usuń, jeśli hash nadal odpowiada receipt</td></tr>
+    <tr><td><code>managed_keys</code></td><td>jawne JSON/TOML/YAML paths we współdzielonym pliku</td><td>usuń tylko nadal zarządzane wartości; zachowaj drift</td></tr>
+  </tbody></table><p>Brak deep merge i <code>sed</code>. Parse → validate → allowlisted mutate → deterministic temp write → atomic rename. Backup zachowuje bytes, mode i topology.</p></div>
+</section>
+
+<section id="compatibility">
+  <h2>8. Compatibility i evidence</h2>
+  <div class="card"><table><thead><tr><th>Stan</th><th>Semantic/safety</th><th>Packaging-only</th></tr></thead><tbody>
+    <tr><td>known + required evidence</td><td class="pass">supported</td><td class="pass">supported</td></tr>
+    <tr><td>unknown version, unchanged fingerprint</td><td>tylko jeśli kontrakt jawnie dopuszcza fingerprint</td><td><span class="sev warning">provisional</span> po E1/E2/E4</td></tr>
+    <tr><td>changed fingerprint / missing binding</td><td class="fail">fail-closed</td><td>fail lub provisional po pełnej walidacji</td></tr>
+    <tr><td>runtime unavailable</td><td><span class="sev warning">unavailable</span>, nigdy pass</td><td>nie podnosi ponad E4</td></tr>
+  </tbody></table><p>Nie ma globalnego <code>--force</code> dla safety invariants. Record zawiera host, capability, class, host/overlay version, fingerprint, evidence level, status, scenario, timestamp i target.</p></div>
+</section>
+
+<section id="tests">
+  <h2>9. Macierz testów</h2>
+  <div class="card"><table><thead><tr><th>Target</th><th>Zakres</th><th>Frequency</th><th>Evidence</th></tr></thead><tbody>
+    <tr><td><code>test-core</code></td><td>state/gates/continuation/failure injection</td><td>każdy PR, raz</td><td>E3</td></tr>
+    <tr><td><code>test-generic-skills</code></td><td>inventory, links, neutral vocabulary</td><td>każdy PR</td><td>E1/E3</td></tr>
+    <tr><td><code>test-overlay HOST</code></td><td>schema/native assets/bindings</td><td>każdy PR ×3</td><td>E1</td></tr>
+    <tr><td><code>test-assembly HOST</code></td><td>determinism, hashes, installed canary</td><td>każdy PR ×3</td><td>E2/E3</td></tr>
+    <tr><td><code>test-installer HOST</code></td><td>lifecycle + injected rollback</td><td>każdy PR ×3</td><td>E4</td></tr>
+    <tr><td><code>test-host-smoke HOST</code></td><td>discovery + sentinel</td><td>gdy runtime dostępny</td><td>E5</td></tr>
+    <tr><td><code>test-host-e2e</code></td><td>gate/delegation/continuation scenario</td><td>release/scheduled</td><td>E6</td></tr>
+  </tbody></table><p><code>exit 77</code> to unavailable, nie passing skip. Claim supportu jest per capability/scenario.</p></div>
+</section>
+
+<section id="migration">
+  <h2>10. Migracja w jednym zadaniu</h2>
+  <div class="grid">
+    <div class="card"><span class="badge">M0</span><h3>Baseline</h3><p>Inventory legacy, semantic manifests, obecne build/validate.</p></div>
+    <div class="card"><span class="badge">M1</span><h3>Neutral common</h3><p>Przenieś common, usuń Claude vocabulary, dodaj primitives/core tests.</p></div>
+    <div class="card"><span class="badge">M2</span><h3>Overlays</h3><p>Codex/Cursor/Kiro native assets, schema i contract harness.</p></div>
+    <div class="card"><span class="badge">M3</span><h3>Installer</h3><p>Local/GitHub, transaction lifecycle, E4 i canaries.</p></div>
+    <div class="card"><span class="badge">M4</span><h3>Shadow comparison</h3><p>Zero niewyjaśnionych różnic w semantics/inventory/hooks.</p></div>
+    <div class="card decision"><span class="badge">M5</span><h3>Delete before completion</h3><p>Usuń generated trees, build adapters, Claude, drift jobs; przepnij CI/docs.</p></div>
+  </div>
+</section>
+
+<section id="dod">
+  <h2>11. Definition of Done</h2>
+  <div class="card"><ol>
+    <li>Jedna byte-identical kopia generic skills dla trzech hostów.</li>
+    <li>Generic layer nie zawiera Claude/foreign-host tool vocabulary.</li>
+    <li>Każdy required semantic primitive ma binding lub validated unsupported fallback.</li>
+    <li>Trzy overlays zawierają pełne native assets i contract tests.</li>
+    <li>Installer działa z local/GitHub SHA, bez marketplace i runtime generation.</li>
+    <li>Fresh/update/uninstall/rollback przechodzą dla każdego hosta.</li>
+    <li>Failures dowodzą byte-exact bytes/modes/symlinks/topology rollback.</li>
+    <li>Settings merge dotyka wyłącznie managed keys i zachowuje user drift.</li>
+    <li>Compatibility ma semantic fail-closed i audytowalne packaging provisional.</li>
+    <li>Core E3 raz; host E1/E2/E4 i dostępne E5/E6 emitują records.</li>
+    <li>Shadow comparison ma zero niewyjaśnionych różnic.</li>
+    <li>Legacy adapters, transforms, drift jobs i generated trees nie istnieją.</li>
+    <li>Claude nie istnieje w targets, installerze, overlays, assets, tests, matrix, docs ani vocabulary.</li>
+    <li>Project docs opisują nową architekturę i trzy hosty.</li>
+    <li>Clean checkout instaluje/verify/uninstall bez brudzenia repo.</li>
+  </ol></div>
+</section>
+
+<section>
+  <h2>12. Ryzyka i obserwowalność</h2>
+  <div class="card risk"><table><thead><tr><th>Ryzyko</th><th>Mitigacja</th><th>Sygnał</th></tr></thead><tbody>
+    <tr><td>semantic drift w prozie</td><td>vocabulary + primitive/scenario review</td><td>failed canary/inventory diff</td></tr>
+    <tr><td>partial install</td><td>staging, journal, backup, injected failures</td><td>transaction/recovery status</td></tr>
+    <tr><td>host contract drift</td><td>fingerprints + fail-closed</td><td>per-capability decision</td></tr>
+    <tr><td>utrata user config</td><td>receipt ownership + drift check</td><td>conflict report</td></tr>
+    <tr><td>legacy zostaje</td><td>M5 + repository inventory gate</td><td>forbidden path failure</td></tr>
+    <tr><td>false-green native tests</td><td>E0–E6 records, 77=unavailable</td><td>status/freshness dashboard</td></tr>
+  </tbody></table></div>
+  <p>Pełny ślad siedmiu decyzji: <a href="decision-log.html">Decision Log</a>. Dowody źródłowe: <a href="../analysis/findings/canonical-core-boundary.md" target="_blank" rel="noopener">canonical boundary</a>, <a href="../analysis/findings/host-contracts-installation.md" target="_blank" rel="noopener">host contracts</a>, <a href="../analysis/findings/test-assurance-runtime-gap.md" target="_blank" rel="noopener">test assurance</a>.</p>
+</section>
+</main>
+</body>
+</html>

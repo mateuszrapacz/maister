@@ -1,0 +1,94 @@
+[
+  {
+    "target": "codex",
+    "capability": "E1",
+    "host_version": "1.2.3",
+    "scenario": "overlay-contract-v1",
+    "timestamp": "2026-07-14T19:00:00.000Z",
+    "result": "passed",
+    "provenance": {
+      "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_version": "2.2.1",
+      "overlay_version": "1.0.0",
+      "scenario_version": "1.0.0"
+    },
+    "expires_at": "2026-07-15T19:00:00.000Z"
+  },
+  {
+    "target": "codex",
+    "capability": "E2",
+    "host_version": "1.2.3",
+    "scenario": "materialize-v1",
+    "timestamp": "2026-07-14T19:00:00.000Z",
+    "result": "passed",
+    "provenance": {
+      "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_version": "2.2.1",
+      "overlay_version": "1.0.0",
+      "scenario_version": "1.0.0"
+    },
+    "expires_at": "2026-07-15T19:00:00.000Z"
+  },
+  {
+    "target": "codex",
+    "capability": "E3",
+    "host_version": "1.2.3",
+    "scenario": "portable-core-v1",
+    "timestamp": "2026-07-14T19:00:00.000Z",
+    "result": "passed",
+    "provenance": {
+      "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_version": "2.2.1",
+      "overlay_version": "1.0.0",
+      "scenario_version": "1.0.0"
+    },
+    "expires_at": "2026-07-15T19:00:00.000Z"
+  },
+  {
+    "target": "codex",
+    "capability": "E4",
+    "host_version": "1.2.3",
+    "scenario": "installer-transaction-v1",
+    "timestamp": "2026-07-14T19:00:00.000Z",
+    "result": "passed",
+    "provenance": {
+      "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_version": "2.2.1",
+      "overlay_version": "1.0.0",
+      "scenario_version": "1.0.0"
+    },
+    "expires_at": "2026-07-15T19:00:00.000Z"
+  },
+  {
+    "target": "cursor",
+    "capability": "E5",
+    "host_version": "unknown",
+    "scenario": "native-discovery-v1",
+    "timestamp": "2026-07-14T19:00:00.000Z",
+    "result": "unavailable",
+    "provenance": {
+      "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_version": "2.2.1",
+      "overlay_version": "1.0.0",
+      "scenario_version": "1.0.0",
+      "reason": "runtime-not-installed"
+    },
+    "expires_at": "2026-07-15T19:00:00.000Z"
+  },
+  {
+    "target": "kiro-cli",
+    "capability": "E6",
+    "host_version": "unknown",
+    "scenario": "native-runtime-v1",
+    "timestamp": "2026-07-14T19:00:00.000Z",
+    "result": "unavailable",
+    "provenance": {
+      "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_version": "2.2.1",
+      "overlay_version": "1.0.0",
+      "scenario_version": "1.0.0",
+      "reason": "runtime-not-installed"
+    },
+    "expires_at": "2026-07-15T19:00:00.000Z"
+  }
+]

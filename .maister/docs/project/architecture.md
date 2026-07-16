@@ -1,103 +1,29 @@
-# System Architecture
+# Architecture
 
-## Overview
+## Source and overlays
 
-Maister is one cohesive, multi-platform product implemented as a single canonical plugin plus deterministic platform adapters. Workflow behavior is primarily documentation-as-code: skills, agents, commands, references, standards, and YAML state contracts describe how an AI coding host should execute structured software-delivery work.
+`plugins/maister/common/` owns portable primitives and common assets, while canonical portable skills/agents remain under the common source tree consumed by Codex and Kiro CLI. Each directory under `plugins/maister/overlays/` is a strict versioned contract for one supported target. An overlay owns native layout, manifests, settings destinations, semantic bindings, required inventory, forbidden vocabulary, and native hashes. Cursor currently carries a behavior-bearing skills projection in its overlay; that is migration debt, not a second intended source of truth.
 
-## Architecture Pattern
+The public installer resolves a clean local Git checkout, a self-contained archive, or `github:owner/repo`. GitHub resolution uses bounded Git commands to resolve a safe ref to one full commit, creates a temporary detached checkout, verifies `HEAD`, status, and content hash, and selects the target overlay from that same checkout. The materializer validates the selected source and overlay, rejects unsafe paths and collisions, and creates a deterministic same-filesystem staging tree with provenance.
 
-**Pattern**: Single-source, multi-target plugin transformation and distribution pipeline
+## Installation transaction
 
-The canonical Claude-oriented plugin under `plugins/maister/` is the source of truth. Adapter scripts translate that source into committed Cursor, Kiro, and Codex variants. The generated trees are distribution artifacts and must not be edited directly. Host-specific differences are made explicit in `platforms/`, where tool vocabulary, naming, manifests, hooks, instructions, agent representation, and continuation behavior are adapted to native contracts.
+The installer acquires a target lock, writes a durable journal, snapshots managed files and settings, commits through staging, verifies integrity, and publishes a receipt. Whole-file ownership is used for dedicated Maister files. Shared settings use narrowly allowlisted managed keys with drift detection. Rollback and recovery restore bytes, modes, symlinks, existence, and topology while preserving unmanaged content. A code-7 result remains an unresolved operational state: preserve the journal and backups, use the recovery command after the competing process has stopped, and verify the resulting receipt before continuing.
 
-## System Structure
+The lock serializes cooperating Maister lifecycle processes for the same target and state root; it does not serialize the host application or arbitrary external writers. Receipt-listed inventory and managed settings keys are Maister-owned, while all unlisted content is operator-owned. The transaction assumes the operator stops host/editor/synchronization processes that can mutate those paths and protects the state directory from untrusted same-user or privileged writers. Identity revalidation and drift checks fail supported races closed, but no filesystem protocol can guarantee rollback against a malicious process that replaces files concurrently.
 
-### Canonical Plugin
+State is separate from workflow state at `$XDG_STATE_HOME/maister/<target>` or `~/.local/state/maister/<target>`.
 
-- **Location**: `plugins/maister/`
-- **Purpose**: Defines skills, agents, thin commands, hooks, MCP configuration, references, and canonical plugin metadata
-- **Key files**: `plugins/maister/CLAUDE.md`, `plugins/maister/.claude-plugin/plugin.json`, `plugins/maister/skills/*/SKILL.md`
+State contains `active-receipt.json`, `receipts/`, `journals/`, `backups/`, `staging/`, and `install.lock`. Operators should keep directories at `0700` and receipts, lock metadata, journals, and settings snapshots at `0600`. A code-7 recovery or rollback failure requires preserving this state for diagnosis; it is not resolved by deleting the lock or repeatedly retrying rollback.
 
-### Platform Adapters
+## Evidence
 
-- **Location**: `platforms/cursor/`, `platforms/kiro-cli/`, `platforms/codex-cli/`
-- **Purpose**: Transform the canonical plugin into host-native layouts and terminology
-- **Key files**: Each platform's `build.sh` plus its templates, rules, manifests, and validation helpers
+Compatibility is per capability. E1/E2/E4 are required for each target and E3 is shared. E5/E6 are recorded as `unavailable` when the native executable, authentication, safe probe adapter, or configured versioned scenario is absent. The installer attaches validated baseline and native records to the transaction receipt and evaluates them against the selected release policy. Structural and transactional evidence may permit provisional packaging, but an unavailable record never becomes a semantic pass or a host-native support claim. Evidence must be renewed when its prerequisite becomes available or its host/version/scenario/provenance binding changes.
 
-### Generated Variants
+## Release artifacts
 
-- **Location**: `plugins/maister-cursor/`, `plugins/maister-kiro/`, `plugins/maister-codex/`
-- **Purpose**: Committed, installable artifacts for their respective hosts
-- **Ownership rule**: Regenerate from canonical sources and adapters; never modify directly
+`make package TARGET=<target>` stages the runtime, installer, canonical source, selected overlay, `.maister-source.json`, and one validated E3 record at `plugins/maister/.maister-e3-attestation.json`, then emits a deterministically sorted archive with normalized timestamps and ownership. Release order is `make test-core`, `make generate-e3-attestation E3_RESULT=passed`, strict `make test-parity-release` from a clean checkout, package all targets with the same `E3_ATTESTATION`, and run the extracted lifecycle smoke. A dirty-local parity override is diagnostic only and cannot authorize publication. `tests/platform-independent/release-package.test.mjs` builds each target twice, checks deterministic hashes and target isolation, extracts the archives, and runs install/verify/uninstall. Release CI writes `dist/SHA256SUMS`, `dist/SBOM.cdx.json`, and unsigned `dist/PROVENANCE.json` using commit-pinned GitHub Actions; both SBOM and provenance bind the embedded E3 digest and bytes. These sidecars are reproducibility records, not signatures, publisher authentication, or native E6 evidence. Local `dist/` is disposable and may contain stale artifacts; only archives generated and verified in the same clean release job are publishable.
 
-### Orchestration Framework
+## Migration boundary
 
-- **Location**: `plugins/maister/skills/orchestrator-framework/`
-- **Purpose**: Defines shared phase, gate, state, continuation, dashboard, and safety behavior
-- **Key files**: `references/orchestrator-patterns.md`, `references/gate-decision-engine.md`, `bin/phase-continue.mjs`
-
-### Workflow Skills and Agents
-
-- **Location**: `plugins/maister/skills/`, `plugins/maister/agents/`, `plugins/maister/commands/`
-- **Purpose**: Implement user-invocable workflows, internal engines, read-only review roles, and thin command entry points
-- **Design rule**: Orchestration lives in `SKILL.md`; commands remain thin delegators
-
-### Build, Validation, and Release
-
-- **Location**: `Makefile`, `tests/`, `.github/workflows/`
-- **Purpose**: Generate variants, detect drift, run contract and smoke tests, validate manifests, and publish tagged releases
-
-## Data and Control Flow
-
-### Build Flow
-
-1. Maintainers edit `plugins/maister/` or a platform adapter under `platforms/`.
-2. `make build` runs platform-specific transformations.
-3. Generated Cursor, Kiro, and Codex trees are replaced with native artifacts.
-4. `make validate` and CI compare committed outputs with fresh builds and run structural/contract checks.
-5. Synchronized semantic versions are released through marketplace and tag automation.
-
-### Workflow Execution Flow
-
-1. A user invokes a Maister workflow skill on a supported host.
-2. The orchestrator classifies the task and creates phase records in `orchestrator-state.yml`.
-3. Skills and agents perform bounded phase work using project standards from `.maister/docs/`.
-4. Gate decisions are persisted immediately; protected decisions remain explicit user gates.
-5. Markdown reports and optional dashboards are generated as projections of authoritative state.
-6. Host continuation capabilities may resume eligible phases without changing the safety policy.
-
-### Advisor and Arbiter Flow
-
-1. A gate policy determines whether the decision is manual, Advisor-assisted, or fully automatic.
-2. The read-only Advisor analyzes the gate context with bounded retry behavior.
-3. If configured and disagreement occurs, one logical read-only Arbiter resolves the decision.
-4. Hard-denylisted gates cannot be automated by configuration.
-5. The final decision and provenance are written to `orchestrator-state.yml` before continuation.
-
-## External Integrations
-
-- Claude Code plugin and marketplace APIs
-- Codex CLI/IDE plugin, skills, agents, and local marketplace conventions
-- Cursor Agent plugin/CLI and MDC rules
-- Kiro CLI custom agents and skills
-- GitHub Actions and GitHub Releases
-- Optional Playwright MCP for browser verification
-
-## Persistence Model
-
-There is no database. Consumer projects store workflow state and task artifacts under `.maister/tasks/`. `orchestrator-state.yml` is the only resume source of truth; dashboards and reports must never be used as authoritative state.
-
-## Configuration
-
-- `.maister/config.yml` controls project-local output and Advisor policies.
-- Host-specific manifests and MCP configuration live in canonical or generated plugin layouts.
-- Codex Advisor configuration is reconciled into `.codex/agents/advisor.toml` as an atomic companion to project configuration.
-- Safety-sensitive configuration is allowlisted, canonicalized, and rejected on ambiguity.
-
-## Deployment Architecture
-
-Maister is distributed as plugin files rather than a hosted service. Platform-specific build outputs are installed locally or delivered through their host marketplace mechanisms. GitHub Actions validates generated artifacts and creates tagged release assets. No container or cloud runtime is required.
-
----
-
-*Based on codebase analysis performed 2026-07-13.*
+Legacy generated trees and old builders were shadow oracles only. The parity classifier compares semantic bindings, inventory, references, hooks, permissions, symlinks, and topology, and requires zero unresolved differences before cleanup. Legacy host manifests, hooks, marketplace paths, generated projections, and support rows are migration-era history, not part of the current architecture.

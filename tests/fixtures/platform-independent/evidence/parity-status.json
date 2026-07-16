@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "baseline_version": "2026-07-14.1",
+  "status": "passed",
+  "policy": "Every accepted difference is an exact path in the reviewed target manifest; no runtime output is learned into the baseline.",
+  "targets": {
+    "codex": {
+      "status": "passed",
+      "manifest": "plugins/maister/overlays/codex/parity-baseline.json",
+      "classified_paths": 148,
+      "content_mismatches": [
+        "skills/init/SKILL.md",
+        "skills/orchestrator-framework/references/host-capabilities.yml"
+      ],
+      "permission_paths": 74,
+      "reason": "72 exact legacy inventory/deletion paths, 74 ordinary non-executable mode normalizations, and 2 reviewed host-packaging content paths are accounted for."
+    },
+    "cursor": {
+      "status": "passed",
+      "manifest": "plugins/maister/overlays/cursor/parity-baseline.json",
+      "classified_paths": 71,
+      "content_mismatches": [
+        "skills/maister-init/SKILL.md",
+        "skills/maister-init/bin/reconcile-advisor-config.sh",
+        "skills/maister-migration/references/migration-strategies.md",
+        "skills/maister-migration/references/migration-types.md",
+        "skills/maister-standards-discover/references/docs-extractor-prompt.md"
+      ],
+      "reason": "66 exact legacy inventory/deletion paths and 5 reviewed host-packaging vocabulary projections are accounted for."
+    },
+    "kiro-cli": {
+      "status": "passed",
+      "manifest": "plugins/maister/overlays/kiro-cli/parity-baseline.json",
+      "classified_paths": 354,
+      "content_mismatches": [
+        "skills/grill-me/SKILL.md",
+        "skills/grill-with-docs/SKILL.md",
+        "skills/init/SKILL.md",
+        "skills/migration/SKILL.md",
+        "skills/performance/SKILL.md",
+        "skills/quick-bugfix/SKILL.md",
+        "skills/quick-dev/SKILL.md",
+        "skills/quick-plan/SKILL.md",
+        "skills/research/SKILL.md",
+        "skills/standards-discover/SKILL.md",
+        "skills/standards-update/SKILL.md",
+        "skills/thermos/SKILL.md"
+      ],
+      "hook_mismatches": [
+        "hooks/.gitkeep",
+        "hooks/post-compact-reminder-stub.sh"
+      ],
+      "reason": "340 exact legacy inventory/deletion paths, 12 reviewed shortcut-to-canonical skill migrations, and 2 reviewed hook packaging paths are accounted for."
+    }
+  },
+  "verification": {
+    "focused_suite": "26/26 passed",
+    "failure_injection": "8/8 passed",
+    "materialization": {
+      "codex": {"plan_entries": 217, "validation": "inventory/syntax/modes/hashes/content passed"},
+      "cursor": {"plan_entries": 143, "validation": "inventory/syntax/modes/hashes/content passed"},
+      "kiro-cli": {"plan_entries": 178, "validation": "inventory/syntax/modes/hashes/content passed"}
+    },
+    "shadow_parity": {
+      "codex": {"expected": 148, "unresolved": 0},
+      "cursor": {"expected": 71, "unresolved": 0},
+      "kiro-cli": {"expected": 354, "unresolved": 0}
+    },
+    "topology": {"violations": 0}
+  },
+  "deletion_allowed": true
+}

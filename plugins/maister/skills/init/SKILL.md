@@ -212,7 +212,7 @@ Write each file to `.maister/docs/project/`.
 
 **Step 1**: Invoke `docs-operator` subagent via Task tool (subagent_type: `maister:docs-operator`) with prompt:
 
-> "Regenerate INDEX.md to include all newly created project documentation. Then verify CLAUDE.md is properly integrated with .maister/docs/ documentation."
+> "Regenerate INDEX.md to include all newly created project documentation. Then verify project instructions are properly integrated with `.maister/docs/` documentation."
 
 Wait for docs-operator to complete, then immediately continue with Step 2.
 
@@ -221,7 +221,7 @@ Wait for docs-operator to complete, then immediately continue with Step 2.
 - Verify tech-stack.md exists (required)
 - Verify selected docs exist
 - Verify selected standards directories exist
-- Verify CLAUDE.md integration
+- Verify project-instruction integration
 
 **Step 3**: Display comprehensive summary:
 - Project analysis results (type, language, framework, architecture)

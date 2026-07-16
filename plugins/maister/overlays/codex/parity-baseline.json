@@ -1,0 +1,1515 @@
+{
+  "schema_version": 2,
+  "baseline_version": "2026-07-15.2",
+  "target": "codex",
+  "rules": [
+    {
+      "id": "codex-legacy-inventory-deletions",
+      "category": "expected-deletion",
+      "observed_category": "inventory",
+      "rationale": "These exact paths belong only to the read-only generated target tree: aliases, host builder output, migration-only support files, or old generated layout. Their planned removal is an expected deletion, not a portable behavior claim.",
+      "paths": [
+        "README.md",
+        "skills/bye",
+        "skills/bye/SKILL.md",
+        "skills/dev",
+        "skills/dev/SKILL.md",
+        "skills/docs-manager/references/claude-md-template.md",
+        "skills/init/bin/advisor.toml",
+        "skills/init/bin/arbiter.toml",
+        "skills/modeling-aggregate-designer",
+        "skills/modeling-aggregate-designer/SKILL.md",
+        "skills/modeling-context-distiller",
+        "skills/modeling-context-distiller/SKILL.md",
+        "skills/next",
+        "skills/next/SKILL.md",
+        "skills/orchestrator-framework/bin/fully-automatic-gate.mjs",
+        "skills/quick-metaprogram-classifier",
+        "skills/quick-metaprogram-classifier/SKILL.md",
+        "skills/quick-problem-classifier",
+        "skills/quick-problem-classifier/SKILL.md",
+        "skills/quick-requirements-critic",
+        "skills/quick-requirements-critic/SKILL.md",
+        "skills/quick-transcript-critic",
+        "skills/quick-transcript-critic/SKILL.md",
+        "skills/resume",
+        "skills/resume/SKILL.md",
+        "skills/reviews-code",
+        "skills/reviews-code/SKILL.md",
+        "skills/reviews-linguistic-boundaries",
+        "skills/reviews-linguistic-boundaries/SKILL.md",
+        "skills/reviews-pragmatic",
+        "skills/reviews-pragmatic/SKILL.md",
+        "skills/reviews-production-readiness",
+        "skills/reviews-production-readiness/SKILL.md",
+        "skills/reviews-reality-check",
+        "skills/reviews-reality-check/SKILL.md",
+        "skills/reviews-spec-audit",
+        "skills/reviews-spec-audit/SKILL.md",
+        "skills/reviews-test-strategy",
+        "skills/reviews-test-strategy/SKILL.md",
+        "skills/status",
+        "skills/status/SKILL.md",
+        "skills/work",
+        "skills/work/SKILL.md"
+      ],
+      "observations": {
+        "README.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5bc06abb97afa1631d61f1ca4965b83085205588f3c4088be5311d25ba0a5d80"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/bye": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/bye/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "132f0e19cea0282fec71fbf139cbe9da1109ed65430f47be18cee17c1ee51f53"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/dev": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/dev/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5c748cb1775cfe334974bdec8f5e0e3b886c72e017a1df86006d0011ea7b8455"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/docs-manager/references/claude-md-template.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ca26acc9c33e507db7b747e0887ad27ed23f713573b3007369b6d93f558d18b4"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/init/bin/advisor.toml": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d7c8cdb2b5e06fa58380b4fd6bf3d54b96113db882e56090c92fbf2d64e00394"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/init/bin/arbiter.toml": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3d0a7527c84d76bc4952a6f6a22a8fcc26a958789fbc0af992095bd5f9743102"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/modeling-aggregate-designer": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/modeling-aggregate-designer/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "093e4aaf20d4528174e252db9dbc2d4d85ca90ed43c946b961edff2310c9cf55"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/modeling-context-distiller": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/modeling-context-distiller/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "7e83a02d013b70a01b9c33713485c717c86dbe8b2efc122cd99642dc958b9c8b"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/next": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/next/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b5fc0e5e5a17d13a501e1bca95a4be83f564ef445c3c0940ace2a74c0c83be49"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/orchestrator-framework/bin/fully-automatic-gate.mjs": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0755",
+            "sha256": "d7a2098ed018b1b045fc7cd8fa0400cc25b88efc06069907ca2c96ca2e47d881"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/quick-metaprogram-classifier": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/quick-metaprogram-classifier/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "bc7ed257519573098f04d7bd2abbcaadebcd6ae956eeda6a0d5e1b53c8c0da3c"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/quick-problem-classifier": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/quick-problem-classifier/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "7ff715b8b26044abae6df8c3f5c18d2b690d902ed7ce03955c82a582825e9598"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/quick-requirements-critic": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/quick-requirements-critic/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "9fe9cbd6e0e678d31bd861484f21fc9b77294234e14b558382965415e9fd7c10"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/quick-transcript-critic": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/quick-transcript-critic/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "48886c3140290c285adbd3c7b2772e37c815b932f1025d2996d18c8b22ad4915"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/resume": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/resume/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "20e138f1fa88de21d84a6cf4c53161dda12076ab2ae3af9c4334edee47232b95"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-code": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-code/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "304111269a647ea0e9840300164e6855d2e9754c0627dc14c46253d73643b639"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-linguistic-boundaries": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-linguistic-boundaries/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ba516c65dc8e440335d26af04b9da8d69968d680d2cbc4ab1b88aa0eb750a1f4"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-pragmatic": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-pragmatic/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "701e50941069e9ac178e3421635754a1fc7ba65391d49a65155b612b20428c54"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-production-readiness": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-production-readiness/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3cc0687c6bcf208385694ccc220b78f4d92a626d6ceac6c562c723154ec60ee8"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-reality-check": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-reality-check/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "7f0f480233fc6630845361a4a1d565ea6fc2d21c7cfe5706932ea595ff27ceea"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-spec-audit": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-spec-audit/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8b92c1e6e5f9d14f5fa0cf9b721351df7093c29ad458d40970bce0fcdc77ed4e"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-test-strategy": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/reviews-test-strategy/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "9d9e21880488d1ecced92f89b83f5418d75b9eaf85fb65c24756c8988196a327"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/status": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/status/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "88aee991ffe54b48a2f0aef275bc807c62f71da21abb4a44e0d98615a5e3868c"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/work": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "skills/work/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "71f9fa4e62f83bfdf9262c1d112820ee22d4e2b2262af9235a44637f498c0aa0"
+          },
+          "materialized": {
+            "present": false
+          }
+        }
+      }
+    },
+    {
+      "id": "codex-common-source-semantic-migration",
+      "category": "packaging",
+      "observed_category": "semantic",
+      "rationale": "The common source deliberately replaces the pre-migration Codex wording and frontmatter with host-independent skill content; these exact content changes are reviewed packaging differences, while ordinary mode-only differences are normalized by the immutable Git oracle.",
+      "paths": [
+        "skills/aggregate-designer/SKILL.md",
+        "skills/codebase-analyzer/SKILL.md",
+        "skills/context-distiller/SKILL.md",
+        "skills/development/SKILL.md",
+        "skills/docs-manager/SKILL.md",
+        "skills/docs-manager/docs/INDEX.md",
+        "skills/docs-manager/docs/standards/global/language-md-convention.md",
+        "skills/grill-me/SKILL.md",
+        "skills/grill-with-docs/SKILL.md",
+        "skills/implementation-plan-executor/SKILL.md",
+        "skills/implementation-verifier/SKILL.md",
+        "skills/linguistic-boundary-verifier/SKILL.md",
+        "skills/metaprogram-classifier/SKILL.md",
+        "skills/migration/SKILL.md",
+        "skills/migration/references/migration-strategies.md",
+        "skills/migration/references/migration-types.md",
+        "skills/orchestrator-framework/SKILL.md",
+        "skills/orchestrator-framework/references/gate-decision-engine.md",
+        "skills/orchestrator-framework/references/orchestrator-creation-checklist.md",
+        "skills/orchestrator-framework/references/orchestrator-patterns.md",
+        "skills/performance/SKILL.md",
+        "skills/problem-classifier/SKILL.md",
+        "skills/product-design/SKILL.md",
+        "skills/product-design/references/interaction-patterns.md",
+        "skills/product-design/references/visual-companion.md",
+        "skills/quick-bugfix/SKILL.md",
+        "skills/quick-dev/SKILL.md",
+        "skills/quick-plan/SKILL.md",
+        "skills/requirements-critic/SKILL.md",
+        "skills/research/SKILL.md",
+        "skills/standards-discover/SKILL.md",
+        "skills/standards-discover/references/docs-extractor-prompt.md",
+        "skills/standards-update/SKILL.md",
+        "skills/test-strategy-reviewer/SKILL.md",
+        "skills/thermo-nuclear-code-quality-review/SKILL.md",
+        "skills/thermo-nuclear-review/SKILL.md",
+        "skills/thermos/SKILL.md",
+        "skills/transcript-critic/SKILL.md"
+      ],
+      "observations": {
+        "skills/aggregate-designer/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "050749b3498c96bf85c68678aba034bb1e1acefda0262de1c7efc0947641fade"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "adac890b928187465a7063436a9fcf61dd2402e5ba86a49c994a8cf42b698f50"
+          }
+        },
+        "skills/codebase-analyzer/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "99b334ea4b6f1f5841b892acf114149f2d9e1a59c2a739848ddfe561bcaa03c8"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "93b6184e3786429aa50149fd3c2d7b0f48c3c3d23b471addbe12864bd6881f33"
+          }
+        },
+        "skills/context-distiller/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ab1048d0c616cedc60a178a27f20e45b6cda63ed0f13346119a848af40e7aca6"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b8ca96cb1a743d8616af7237b5f60ecb7f18e084c0fecc23cd6f26e63d6dffba"
+          }
+        },
+        "skills/development/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "990064e88f8446c20cc1e74f6fdb89f51444efb744e59b95369138de91bbd9fd"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "bd743682cd5c2fa1a933e6e7126fbc3846f9f96825f767a98c9b61f930dd2f97"
+          }
+        },
+        "skills/docs-manager/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f44722c29932ada6be1d2cb6daf9da8c51a089f48c455fb7a2c039b2e65fbcc9"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3aef890c141d2304ae058de1c98efcce0ef872f73cb46dd0fe9866f0d87b5dd4"
+          }
+        },
+        "skills/docs-manager/docs/INDEX.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4bf10310518b3757194cace922398b63dae3a4bfa2244373291795e4f415c544"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c8216f86a7640eacc7fe8fea2fcf0188150845effc2c40ee9704a30faf967d61"
+          }
+        },
+        "skills/docs-manager/docs/standards/global/language-md-convention.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "03d35792996d5968ecda8ea2e03320412ea13a8d72db6269df66e1856eeb4b23"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f6362ffe1b96fb2e6154328c36bd06811e79d7baff0bf240167b02d861172a51"
+          }
+        },
+        "skills/grill-me/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "96c3e4f84883762a3bd8991c852bd4f94c8029fb9177f4de1af515f58ad1d1d7"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "bce096e2d54529dad9d4ab4bf0d127220d3168acd56997c5f4e9cea2142706a0"
+          }
+        },
+        "skills/grill-with-docs/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d5f3d442dc229b35eaf32b0052904585e2e90ae66f9d34ed89f48a7172c7513a"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0d5e2f384d1ea720f6f77e37fe19037d0c2785aa0ec359aeb6feb885a2b1e5b0"
+          }
+        },
+        "skills/implementation-plan-executor/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0931ecaf9311443e89b6f4c313e788bbcd33a8082dffb20615cbb90f9c0cb614"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8d6ff0cf59693b614850032062002f1a25887026d9dd7ad6ee640c3e92824935"
+          }
+        },
+        "skills/implementation-verifier/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b95a998ebf47ac779c8ec314bf06b19aa6d51a3b732833a2dae01e199d2df503"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "31f11f8e03c36c33ccd48d1d73d77c84d882e0287895a9698ef6afffbd1e1e26"
+          }
+        },
+        "skills/linguistic-boundary-verifier/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4fdb23764dd6484f3253f8698b3778ed5eb77444998c1f1d12772da5d020521a"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "dc76289f90c34903dfb5c5c2c9cfc579a3145c71976db5c934061051b81cbe64"
+          }
+        },
+        "skills/metaprogram-classifier/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "07a5e66150151c12a6de4c515c293f5388ad0eb3708d10af5268248f34f0b8e5"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "fa958dff65d78c17c81ccba88d478b41e3864956dfcdc2d10c59209bf72d0a26"
+          }
+        },
+        "skills/migration/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "eb6b60c0a5e04391941f7cc886e17345222b90566a2a074842c3faccc9af5d2e"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0ec061644a3e19575edd6b20b0b6b00af9ac40562d387fd02ff21d2bdabbd785"
+          }
+        },
+        "skills/migration/references/migration-strategies.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "faa30b98c8a087a82dd51e7832eda8b0d81855ea1c1a8e90ae4bd0ac70f74b01"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "46f1134fea20fb149d416d7db271ff1bb18cc17334bb2f347885b35b7a56a089"
+          }
+        },
+        "skills/migration/references/migration-types.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "517fc15676f757114086fd76911a1908b0b8385aefaad64e714ac60c6a3fffe6"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "9831f8505144fbf21a47da40d0b0742f84734c7d742ecfb99b5ef0d8ff2978a0"
+          }
+        },
+        "skills/orchestrator-framework/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "eeecc40cb708b1e529d339866adbc953fb618d55333918b21a59cd02041e2ce3"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "539445e7b185cc8c4b850cd808ceadcb0aac5ad34288bec1f7f0e68eed90dc17"
+          }
+        },
+        "skills/orchestrator-framework/references/gate-decision-engine.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4b637b29627ece5dff25e0f20243795cf83ce9782b4312bc942acf55219c0aa3"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "605148923d9975259d1b75e811aac59790453850a7315ba5b824c51191f07fb7"
+          }
+        },
+        "skills/orchestrator-framework/references/orchestrator-creation-checklist.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "9206f69af2f6c92506b71586a9a12501134ba9e79372d6700581840c309e7cc4"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f14c78f6427ebe48611e3b569228820b3578fac8ef6473a4c388ee7767e24a08"
+          }
+        },
+        "skills/orchestrator-framework/references/orchestrator-patterns.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c37c1ed843de57322ea3e3e06f41c6c9d8827e3b420bfd0c50b67fb30319bbeb"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "43d0626a0f8c7eae95f74d6f75d0d278bc56d20e0e0502194122c8879be9b21a"
+          }
+        },
+        "skills/performance/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c63a6ca0c58eacc08e4b387f9fa8f023d22f67d6911c71f0bd24b2c39d3c1d45"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "30ddc7a67541ad174ffba33ad6f5817aa780989cbfeacd51efe64de19e7b36a4"
+          }
+        },
+        "skills/problem-classifier/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2ec3e6e3977ca7ee63470f583c34b47b2729e155619e36e6c2b81ec8d9217822"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "adb1e2d5a5d67d316a21cb0be793cc3adde2d58b31c05b2e7bf18ee5b319731b"
+          }
+        },
+        "skills/product-design/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "380c9af3d0d2d467e8e408649ea860d985a3f853365cc9256cb7c72411c1056a"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "39f05a35afb3dd6dc68fb80f6085947ab4569766aaae2068c11590c199a60eda"
+          }
+        },
+        "skills/product-design/references/interaction-patterns.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5a2f2ec3d500a6eaaa84d3c92391beb55b5f138e9897422a035433bb7f96bbbf"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "678a2978c3065dca6fd8d4454201566bbfb0a17d931c2932a2dc53220be71263"
+          }
+        },
+        "skills/product-design/references/visual-companion.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "6184734a1ed7f6eb08b9c5b85e14905184572a7d5702f3e23b42c3c151342753"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e798a7a814d49f3053d54a1eb8341ae5400bd10033781785fcd9af11f5a188b5"
+          }
+        },
+        "skills/quick-bugfix/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "39f3af5dc3c99472d4fba571d1e41bebea85217e9548c9b0d37bca99bb08f0db"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "06b40422f513ac70f2fec26c01aabe32cf6244b3e67c44b5987bfc6c16087529"
+          }
+        },
+        "skills/quick-dev/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0b66fe3595dca3b2000e952736754c1ac5d261a57f7f1309a12af5aa253341ef"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4a6bcb912b2dd6f5c6f397bed8cb770f2c8341d3d281e70133d52dd31eeb62b2"
+          }
+        },
+        "skills/quick-plan/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "69bae1e4d166cc9b6f9b96b36574077ce57aaa98685546592a0722c2b490ea73"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4fee562dd2302bcb13b0d4184e23721250f9efa5c0fe59a20bf842b2fd8515f5"
+          }
+        },
+        "skills/requirements-critic/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b58300806862e3c85cc22301f53df87f654bab17d6bbc8cb46a84da86b987f61"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5691a0882199f8520a8f34f116820446d20c1d91b8ddaee314da97c4a8548dfc"
+          }
+        },
+        "skills/research/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d2bb1b4d15d96cce53d1d8460a5386bb0f57f92232b0815e61e7fddd89fc5963"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3015e2362cd9df2290e3ed8616bbee809282e21336c26b103513fecc7afb1117"
+          }
+        },
+        "skills/standards-discover/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "19aea955ea8826b897a85b9fcde969198b23cf839b15d6afde9a86b42251562b"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2da51b9040eb5af9e3c858e263ae5fca91714b8f895cac3f8c7ce2030f651afb"
+          }
+        },
+        "skills/standards-discover/references/docs-extractor-prompt.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c5582556afa5b43197e13724b27d08f0543628cf986545c1082e4b60660f32e6"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "1fc3f13f7c75afbc816c44b75721649e02c9716fcd45090ee808f8f5d50e64db"
+          }
+        },
+        "skills/standards-update/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "6f5f825331f3ab80b7414bb3eeb3b41945b0a9e2faa67b9155653545f3872201"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2740116824cc2cc5c4be196044402ffdf890a769b86f11d1d1bb3de7005a4ff2"
+          }
+        },
+        "skills/test-strategy-reviewer/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b47f85f4f6f7ccd0e5e514db0cd1f9b1338325a243a34a99eaa8b298b93d28cd"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "abc55f151f73a84cdf53293ba51261b3be7dba450a5c94cce6691ab13110c58e"
+          }
+        },
+        "skills/thermo-nuclear-code-quality-review/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "092859054500cbdb5151dfd2d6c56a80f6c5eaa18ab159945546b721c376dea4"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "fcc5ff2e24acd24bf5d088fb063eb4c257a9d416f6a2294a5748d1dbd43fa36b"
+          }
+        },
+        "skills/thermo-nuclear-review/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "60a93ff050ee80ecb05d55117bfb0bcbade24ac6d62aa7d03615cca47f466a18"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b95c1bf434c925a5e2323e2e0b05683116118f89a37ad34f8dcba113f4006542"
+          }
+        },
+        "skills/thermos/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "cb36cd9c43ed2f09a0285fb3e7b541bc675c9660c48a441ce80ddef573c2155c"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "898b4b4683e78bf1078312b6df96997a9219837a9ae327391055b3ab44ef6f04"
+          }
+        },
+        "skills/transcript-critic/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "24caad0238b293ade5246ef7d64aebed2c1a46ecd28e0b857cfb8b12347a2eea"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "97eae41b4342d2dbd7f40fc65afe377b60286e9666d7e284703bc0581ef25751"
+          }
+        }
+      }
+    },
+    {
+      "id": "codex-materialized-inventory-packaging",
+      "category": "packaging",
+      "observed_category": "inventory",
+      "rationale": "These exact paths are emitted by the reviewed common/overlay assembly and are absent from the old generated target tree. They are target packaging additions, not omitted portable behavior.",
+      "paths": [
+        "skills/docs-manager/references/project-instructions-template.md",
+        "skills/orchestrator-framework/agents/advisor.md",
+        "skills/orchestrator-framework/agents/bottleneck-analyzer.md",
+        "skills/orchestrator-framework/agents/code-quality-pragmatist.md",
+        "skills/orchestrator-framework/agents/code-reviewer.md",
+        "skills/orchestrator-framework/agents/codebase-analysis-reporter.md",
+        "skills/orchestrator-framework/agents/docs-operator.md",
+        "skills/orchestrator-framework/agents/e2e-test-verifier.md",
+        "skills/orchestrator-framework/agents/gap-analyzer.md",
+        "skills/orchestrator-framework/agents/html-companion-writer.md",
+        "skills/orchestrator-framework/agents/implementation-completeness-checker.md",
+        "skills/orchestrator-framework/agents/implementation-planner.md",
+        "skills/orchestrator-framework/agents/information-gatherer.md",
+        "skills/orchestrator-framework/agents/production-readiness-checker.md",
+        "skills/orchestrator-framework/agents/project-analyzer.md",
+        "skills/orchestrator-framework/agents/reality-assessor.md",
+        "skills/orchestrator-framework/agents/research-planner.md",
+        "skills/orchestrator-framework/agents/research-synthesizer.md",
+        "skills/orchestrator-framework/agents/solution-brainstormer.md",
+        "skills/orchestrator-framework/agents/solution-designer.md",
+        "skills/orchestrator-framework/agents/spec-auditor.md",
+        "skills/orchestrator-framework/agents/specification-creator.md",
+        "skills/orchestrator-framework/agents/task-classifier.md",
+        "skills/orchestrator-framework/agents/task-group-implementer.md",
+        "skills/orchestrator-framework/agents/test-suite-runner.md",
+        "skills/orchestrator-framework/agents/thermo-nuclear-code-quality-review-subagent.md",
+        "skills/orchestrator-framework/agents/thermo-nuclear-review-subagent.md",
+        "skills/orchestrator-framework/agents/ui-mockup-generator.md",
+        "skills/orchestrator-framework/agents/user-docs-generator.md"
+      ],
+      "observations": {
+        "skills/docs-manager/references/project-instructions-template.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a72f658d03d07912483a9e7b2d6ed73fd89276b36d545c46065c045111e5dd03"
+          }
+        },
+        "skills/orchestrator-framework/agents/advisor.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f1c8ea4da90d897fdda0e27145f9eb8d5b9266e8bdf69a58b1d9c778884ec0ed"
+          }
+        },
+        "skills/orchestrator-framework/agents/bottleneck-analyzer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a56bd6183bd2b7e1b918df8d4c9ca6f84f0d42a28252833f65761df5b61b09d4"
+          }
+        },
+        "skills/orchestrator-framework/agents/code-quality-pragmatist.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f43c8b5c88cfb1f13e79f05f743e8087be4be690941d02fcea663e5a545858e4"
+          }
+        },
+        "skills/orchestrator-framework/agents/code-reviewer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "56b14ed858cc0284b79e5793de01c973fc060d90493774c884ee755e9d63acb8"
+          }
+        },
+        "skills/orchestrator-framework/agents/codebase-analysis-reporter.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e0b8723676ed88688422680c0b1146edfdfca1c65e5f3d493ac8aa7df6fa30d5"
+          }
+        },
+        "skills/orchestrator-framework/agents/docs-operator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "797c07a089497ce92a6b578d67c34a4a4be89e4441f07dfd0ed8be579d944c17"
+          }
+        },
+        "skills/orchestrator-framework/agents/e2e-test-verifier.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "cbb5d0a2b00aef0bfe670d6d3f43f3aaa3f91b592de9c7fdd52af52a7118913b"
+          }
+        },
+        "skills/orchestrator-framework/agents/gap-analyzer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "aa95e8a98dfea21aa01ca22469dcb5c1951468df6a78d569c41efd787a4636cc"
+          }
+        },
+        "skills/orchestrator-framework/agents/html-companion-writer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "9123237fe602559fd2462a32ff5c62a87b6e53f852768004c707f0267084020e"
+          }
+        },
+        "skills/orchestrator-framework/agents/implementation-completeness-checker.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8efa95aa89904dd8d26bc1c299c2babfdc3aa31987aa2c561cc9a7a50ea06535"
+          }
+        },
+        "skills/orchestrator-framework/agents/implementation-planner.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5e46068ab69b71817e530c858bb4979f66fd0a92edca85437481a7fdcda8f593"
+          }
+        },
+        "skills/orchestrator-framework/agents/information-gatherer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "fd3fde81f77983f2a26d5f88a7d2ba728a951b7f3e9882aeaa6c31ee02e59e73"
+          }
+        },
+        "skills/orchestrator-framework/agents/production-readiness-checker.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "146d3db2467598dd264ccbc982bcf7ae69b9982ff4aeee05725911ac81b146a8"
+          }
+        },
+        "skills/orchestrator-framework/agents/project-analyzer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5ac1365114fae87c44d7df950218a653d631b4ede1d0bcd71738a3b897c4e172"
+          }
+        },
+        "skills/orchestrator-framework/agents/reality-assessor.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5eb54995a6bc9c91c669c86f3a8cb6345d0e2a62259fca1c6fadf8ff3fd84027"
+          }
+        },
+        "skills/orchestrator-framework/agents/research-planner.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c0a19f7f38d6c05af3fb9ead04f91bd41db015bfd0fa80a231f265ed63f791af"
+          }
+        },
+        "skills/orchestrator-framework/agents/research-synthesizer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c927b904a073500ed6b7383183770436de4bc7ce4cf28a11569f33c27daf529e"
+          }
+        },
+        "skills/orchestrator-framework/agents/solution-brainstormer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d3b0813a3cd4ff7cb6edbb37712e441f376db9a1ff75a49f78d84e6534a6ff8d"
+          }
+        },
+        "skills/orchestrator-framework/agents/solution-designer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "732800f080704cc7b0a474f4232a504058feb558447149058134dc0127afa701"
+          }
+        },
+        "skills/orchestrator-framework/agents/spec-auditor.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "41576a2e0e9b0f5e3ff0e9e16943e9851f3ec51da1d6fa854c699b0dc364204d"
+          }
+        },
+        "skills/orchestrator-framework/agents/specification-creator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3db8b2afa5a56c4cf10e232861312f8134abc3f346d283bb08d31d4a4756ba43"
+          }
+        },
+        "skills/orchestrator-framework/agents/task-classifier.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b74c9c9d608164c684c4141a57db26ab4f99f8d4be514e6e8093dfee86a8d0a8"
+          }
+        },
+        "skills/orchestrator-framework/agents/task-group-implementer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "6a80aaffa847c5829995c561957c7dd5935b329531a304534d08aee036f5cdd5"
+          }
+        },
+        "skills/orchestrator-framework/agents/test-suite-runner.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "cdcf4450d4de75398f70ed5ca93e26610c54f9d8a53685a1b38815f4a122973b"
+          }
+        },
+        "skills/orchestrator-framework/agents/thermo-nuclear-code-quality-review-subagent.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c965a6d7e1a549dd105f2763a2b5cc772895ef881b43b38122e17fca7dbac032"
+          }
+        },
+        "skills/orchestrator-framework/agents/thermo-nuclear-review-subagent.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8ffdeca72f5f3366c13e8aa51d742e50089c7f086f9254e2d75d7695683e2a3a"
+          }
+        },
+        "skills/orchestrator-framework/agents/ui-mockup-generator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a712cbefbc108f18fe61cdf9c8b4e34cdde0301059581d0bdff9d4c6bcab8102"
+          }
+        },
+        "skills/orchestrator-framework/agents/user-docs-generator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "84562b2b6779e048bf85eded5929cc6b4168f94a7f4f5879b2a61bc4352ad545"
+          }
+        }
+      }
+    },
+    {
+      "id": "codex-init-host-projection",
+      "category": "packaging",
+      "observed_category": "semantic",
+      "rationale": "The Codex legacy projection added host-specific frontmatter and invocation vocabulary to this portable skill. The canonical source keeps the shared implementation; the difference is a reviewed host packaging projection.",
+      "path": "skills/init/SKILL.md",
+      "observation": {
+        "legacy": {
+          "present": true,
+          "type": "file",
+          "mode": "0644",
+          "sha256": "cdd2ba90407f01f310aec53f0e4b7ade78190758b5fdd7e37cfbfd2a4741ef7e"
+        },
+        "materialized": {
+          "present": true,
+          "type": "file",
+          "mode": "0644",
+          "sha256": "ff1d823ae38e3983c87115c86a7071f24ae87a036156ef17be4939ed66caf954"
+        }
+      }
+    },
+    {
+      "id": "codex-dashboard-reference-syntax",
+      "category": "packaging",
+      "observed_category": "semantic",
+      "rationale": "The portable dashboard keeps identical runtime links while expressing dynamic attributes without literal static references that the materializer would treat as package files; this exact asset-only syntax adjustment is reviewed.",
+      "path": "skills/orchestrator-framework/assets/dashboard.html",
+      "observation": {
+        "legacy": {
+          "present": true,
+          "type": "file",
+          "mode": "0644",
+          "sha256": "929b7020dd23b4fe71a4b4f2c05ee0d6c7a487f1dffbf0992a8db5da5f5c3563"
+        },
+        "materialized": {
+          "present": true,
+          "type": "file",
+          "mode": "0644",
+          "sha256": "f31f61c06bfb47fb3a2ddf1d9cf8ebe87275f0e8d4f05abd7327b6bfff900b25"
+        }
+      }
+    },
+    {
+      "id": "codex-capability-policy-migration",
+      "category": "packaging",
+      "observed_category": "semantic",
+      "rationale": "The old generated capability table is replaced by the versioned E1-E6 evidence policy. This is metadata packaging, while runtime behavior remains covered by evidence tests.",
+      "path": "skills/orchestrator-framework/references/host-capabilities.yml",
+      "observation": {
+        "legacy": {
+          "present": true,
+          "type": "file",
+          "mode": "0644",
+          "sha256": "04a3fa65981d1d5da697effaaaaf0036e6ce1fe17787cea7a6bf95f93d371cee"
+        },
+        "materialized": {
+          "present": true,
+          "type": "file",
+          "mode": "0644",
+          "sha256": "15ae38bb65f3e8720a109a3bf907194393af50da4d66471973c114967a8e680c"
+        }
+      }
+    }
+  ]
+}

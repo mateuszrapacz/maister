@@ -1,0 +1,19 @@
+schema_version: 1
+target: codex
+overlay_version: 1.0.0
+required:
+  - .codex-plugin/plugin.json
+  - "skills/**/SKILL.md"
+  - "skills/**/agents/openai.yaml"
+  - hooks/hooks.json
+  - skills/orchestrator-framework/bin/gate-evaluator.mjs
+optional:
+  - "skills/**/agents/*.yaml"
+forbidden:
+  - ".cursor-plugin/**"
+  - "rules/**"
+  - "steering/**"
+  - "agents/*.md"
+  - "agents/*.json"
+  - ".claude-plugin/**"
+  - "**/*claude*"

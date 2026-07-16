@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raport badawczy — platformowo niezależny Maister</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { border-left:4px solid var(--accent); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+.recommended { border:2px solid var(--accent); }
+.toc { font-size:12px; color:var(--dim); margin:18px 0; }
+pre { overflow:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
+ul,ol { padding-left:20px; }
+.risk { background:var(--warn-soft); }
+</style>
+</head>
+<body>
+<nav class="crumbs"><a href="../dashboard.html">← Dashboard</a><span class="here">Report</span><a href="solution-exploration.html">Exploration</a><a href="high-level-design.html">Design</a><a href="decision-log.html">Decision Log</a><a class="md" href="research-report.md" target="_blank" rel="noopener">md twin ↗</a></nav>
+<header><span class="badge">Research report</span><h1>Jedno, platformowo niezależne rozwiązanie Maister</h1><p>Wygenerowano 2026-07-14 · badanie mieszane · evidence E0–E6</p></header>
+<div class="tiles"><div class="tile"><b>4</b><span>warianty</span></div><div class="tile"><b>3</b><span>strumienie źródeł</span></div><div class="tile"><b>4</b><span>hosty</span></div><div class="tile"><b>High</b><span>kierunek</span></div></div>
+<section class="card tldr"><h2>TL;DR</h2><p>Rekomenduję jedno źródło zachowania i jeden bundle, z którego <code>maister install --target &lt;host&gt;</code> tworzy natywny pakiet wybranego narzędzia. Rdzeń state/gates/continuation testujemy raz; per host zostają adapter, materializer, install i runtime probes. Nie rekomenduję jednego identycznego installed tree ani przeniesienia obecnych regex buildów 1:1 do instalatora. Claude bez runtime może dojść do E4, ale E5/E6 pozostają niezweryfikowane.</p>
+<h2>Key Decisions</h2><ul><li>Portable behavior/runtime core + typed host contracts + install-time materializer.</li><li>Jedno źródło, jeden testowalny core i jeden bundle — nie jeden host runtime.</li><li>Neutralny IR rozwijany ewolucyjnie dla gates/roles/hooks/capabilities.</li><li>Staging, validation, receipt, atomic swap i byte-exact rollback.</li><li>Generated target trees usuwane dopiero po parity i stabilnych release artifacts.</li></ul>
+<h2>Open Questions / Risks</h2><ul><li>Semantyczny dryf gate/delegation/progress ukryty w transformacjach prozy.</li><li>Ruchome contracts Cursor i Kiro CLI/IDE.</li><li>Ryzyko awarii install-time compilation na maszynie użytkownika.</li><li>Claude E5/E6 wymaga rzeczywistej binarki, auth, wersji i scenariusza.</li><li>Współistnienie common installera z native marketplaces.</li></ul></section>
+<nav class="toc">Contents: <a href="#answer">Odpowiedź</a> · <a href="#cost">Koszt</a> · <a href="#options">Warianty</a> · <a href="#architecture">Architektura</a> · <a href="#install">Instalacja</a> · <a href="#tests">Testy</a> · <a href="#claude">Claude</a> · <a href="#migration">Migracja</a> · <a href="#decisions">Decyzje</a></nav>
+
+<main>
+<section id="answer" class="card recommended"><h2>Odpowiedź wprost</h2><pre>jedno canonical behavior/runtime core
+              +
+małe, wersjonowane adaptery hostów
+              +
+jeden installer/materializer --target
+              =
+różne, natywne pakiety instalacyjne</pre><p>Hosty wymagają różnych manifestów, discovery, agents, hooks, MCP placement i interakcji. Niezależność powinna dotyczyć wspólnego zachowania i źródła, a nie identycznej integracji. Dowód: <code>analysis/findings/host-contracts-installation.md:29-63</code>.</p></section>
+
+<section id="cost"><h2>Dlaczego obecny model jest kosztowny</h2><div class="grid"><article class="card"><b>Claude-native canonical</b><p>Źródło nie jest neutralne; adaptery muszą przepisywać vocabulary i host primitives.</p><code>canonical-core-boundary.md:33-55</code></article><article class="card"><b>~320 substytucji</b><p>1 780 linii adapterów + 160 linii generatora Kiro; największe ryzyko leży w prozie.</p><code>canonical-core-boundary.md:101-112</code></article><article class="card"><b>610 plików projekcji</b><p>Około 5,08 MB wersjonowanego outputu bez niezależnego dowodu behavior.</p><code>canonical-core-boundary.md:125-133</code></article><article class="card"><b>Test matrix ≠ assurance</b><p>Byte-identical runner jest testowany cztery razy, PR CI nie wykonuje pełnego validate.</p><code>test-assurance-runtime-gap.md:48-58,125-134</code></article></div></section>
+
+<section id="options"><h2>Porównanie wariantów</h2><table><thead><tr><th>Wariant</th><th>Wynik</th><th>Zaleta</th><th>Problem</th><th>Werdykt</th></tr></thead><tbody><tr><td>Build-time variants</td><td>15/25</td><td>niski koszt przejścia, diff</td><td>duplikacja i regex coupling</td><td>baza migracji</td></tr><tr><td>Installer 1:1</td><td>13/25</td><td>prosty <code>--target</code></td><td>regexy trafiają do użytkownika</td><td class="fail">odrzucić</td></tr><tr class="recommended"><td><b>Portable core + typed adapters</b></td><td><b>23/25</b></td><td>test core raz, mała macierz hostów</td><td>nowy kontrakt</td><td class="pass">wybrać</td></tr><tr><td>Pełny neutralny IR</td><td>20/25</td><td>silna separacja</td><td>wysoki koszt, over-design</td><td>selektywnie</td></tr></tbody></table><details class="card"><summary>Podstawa scorecard</summary><p>Inventory transformacji: <code>analysis/findings/canonical-core-boundary.md:83-133</code>; host contracts: <code>analysis/findings/host-contracts-installation.md:29-158</code>; assurance: <code>analysis/findings/test-assurance-runtime-gap.md:150-250</code>.</p></details></section>
+
+<section id="architecture"><h2>Architektura docelowa</h2><pre>maister-dist/
+  core/
+    workflows/    # neutral behavior + primitives
+    runtime/      # state/gate/continuation ESM
+    roles/        # role intent
+    assets/
+  contracts/      # host + capability schemas
+  adapters/
+    claude/ codex/ cursor/ kiro-cli/
+  installer/
+    materialize validate commit rollback</pre><div class="grid"><article class="card"><b>Portable core</b><p>Fazy, durable state, gates, continuation, safety, artifacts i bodies skills. Pięć ESM modules jest już byte-identical i executable-tested.</p><code>canonical-core-boundary.md:57-81</code></article><article class="card"><b>Host Contract</b><p>Host/version/capabilities, layout, mappings, emitters, fallbacks i native evidence target. Nieznane capability: fail-closed.</p></article><article class="card"><b>Structural materializer</b><p>Generuje manifesty, layouts, agents, hooks, MCP i help z pól/templates — nie z dowolnej prozy.</p></article><article class="card"><b>Bundle + prebuilt</b><p>Jeden compiler path tworzy local install i CI marketplace artifacts.</p></article></div>
+<h2>Common vs adapter-required</h2><table><tr><th>Common</th><th>Adapter-required</th></tr><tr><td>workflow invariants, state, gate semantics</td><td>manifest, catalog, discovery</td></tr><tr><td>portable ESM helpers</td><td>invocation i command/skill mapping</td></tr><tr><td>skill bodies, assets, role intent</td><td>agents, trust, tools, user gates</td></tr><tr><td>neutral MCP/hook intent</td><td>hooks schema/env, MCP placement/security</td></tr></table><p>Źródła oficjalne: <a href="https://code.claude.com/docs/en/plugins-reference">Claude</a>, <a href="https://learn.chatgpt.com/docs/build-plugins">Codex</a>, <a href="https://cursor.com/changelog/2-5">Cursor</a>, <a href="https://kiro.dev/docs/cli/custom-agents/configuration-reference/">Kiro CLI</a>. Dokumentują kontrakty, nie runtime Maister.</p></section>
+
+<section id="install"><h2>Kontrakt <code>install --target</code></h2><pre>maister install --target claude|codex|cursor|kiro-cli
+  [--scope user|project|local] [--dest PATH]
+  [--with-mcp NAME] [--host-version VERSION] [--offline]</pre><ol><li><b>Resolve:</b> target jawny; autodetection tylko potwierdza.</li><li><b>Type-check:</b> descriptor/schema i compatibility policy.</li><li><b>Materialize:</b> pełne native tree w pustym staging.</li><li><b>Validate:</b> manifest, inventory, referencje, paths, permissions, forbidden vocabulary, semantic golden, canary.</li><li><b>Receipt:</b> source/adapter/contract/host version, options, destination, hashes.</li><li><b>Atomic commit:</b> swap managed tree i transakcyjne config mutations.</li><li><b>Rollback:</b> byte-exact tree, receipt, modes, symlinks i config.</li><li><b>Verify:</b> maszynowy evidence record bez sztucznego podnoszenia E4 do E5.</li></ol><aside class="card risk"><span class="sev warning">Risk</span> Cursor i Kiro obecnie czyszczą destination przed copy; nie zapewnia to transaction rollback. <code>test-assurance-runtime-gap.md:136-148</code></aside></section>
+
+<section id="tests"><h2>Testowanie</h2><div class="grid"><article class="card recommended"><b>Raz na core</b><ul><li>state schema/repository</li><li>gate policy/denylist</li><li>continuation/idempotency</li><li>reports/invariants</li><li>failure injection</li></ul></article><article class="card"><b>Per host</b><ul><li>E1 adapter contract</li><li>E2 materializer + golden</li><li>E4 install/rollback</li><li>E5 discovery sentinel</li><li>E6 scenario E2E</li></ul></article></div><table><tr><th>Target</th><th>Częstotliwość</th></tr><tr><td><code>test-core</code></td><td>każdy PR</td></tr><tr><td><code>test-materializer</code>, <code>test-adapter-contract HOST</code>, <code>test-install HOST</code></td><td>każdy PR</td></tr><tr><td><code>test-host-smoke HOST</code></td><td>nightly/manual</td></tr><tr><td><code>test-host-e2e HOST SCENARIO</code></td><td>scheduled/release</td></tr></table><p>Każdy wynik: <code>{host, capability, host_version, adapter_version, evidence_level, status, scenario, timestamp, target}</code>. <code>exit 77</code> oznacza unavailable, nie pass. Dowód: <code>test-assurance-runtime-gap.md:60-95,241-250</code>.</p></section>
+
+<section id="claude"><h2>Claude Code: evidence ceiling</h2><p>W badaniu nie było runtime <code>claude</code>. Oficjalny tryb <a href="https://code.claude.com/docs/en/headless">claude -p</a> jest kontraktem produktu, nie dowodem uruchomienia Maister.</p><table><tr><th>Dowód</th><th>Aktualnie</th><th>Bez runtime</th></tr><tr><td>E1 static/schema</td><td class="pass">tak</td><td>tak</td></tr><tr><td>E2 materialization</td><td>przyszły adapter</td><td>tak</td></tr><tr><td>E3 shared core</td><td class="pass">tak</td><td>tak</td></tr><tr><td>E4 install/rollback</td><td class="fail">brak</td><td><b>tak, cel</b></td></tr><tr><td>E5 discovery</td><td class="fail">brak</td><td>nie</td></tr><tr><td>E6 runtime scenario</td><td><span class="sev warning">unavailable 77</span></td><td>nie</td></tr></table><p>Uczciwy claim docelowy bez runtime: <code>Claude host-specific E4; shared-core E3; E5/E6 unavailable</code>. Nie „pełna parity”. <code>test-assurance-runtime-gap.md:150-175</code>.</p></section>
+
+<section id="migration"><h2>Migracja i rollback</h2><table><thead><tr><th>Etap</th><th>Exit criterion</th><th>Rollback</th></tr></thead><tbody><tr><td>M0 Baseline</td><td><code>test-core</code> w PR, evidence inventory</td><td>stare CI</td></tr><tr><td>M1 Host Contract v1</td><td>E1 dla 4 targetów, typed primitives</td><td>legacy text/builds</td></tr><tr><td>M2 Shadow materializer</td><td>deterministyczna semantic parity</td><td>wyłącz shadow</td></tr><tr><td>M3 Opt-in installer</td><td>E4 × 4, byte-exact injected rollback</td><td>legacy path + receipt</td></tr><tr><td>M4 Jedna release path</td><td>2 stabilne, odtwarzalne release</td><td>republish legacy artifact</td></tr><tr><td>M5 Usuń variants</td><td>offline rebuild, audit diff, E1–E4</td><td>odtwórz z tagu/bundle</td></tr></tbody></table></section>
+
+<section><h2>Explicit non-goals</h2><ul><li>Jeden identyczny installed tree lub wspólny host runtime.</li><li>Pełna parity bez host-native evidence.</li><li>Regexowe emulowanie brakujących capabilities.</li><li>Pełny DSL/IR jako warunek startu.</li><li>Usunięcie wszystkich testów per platform.</li></ul></section>
+
+<section id="decisions"><h2>Decyzje do konwergencji</h2><ol><li>Minimalne typed primitives + templates <b>(rekomendowane)</b> czy pełny IR od początku?</li><li>CI-prebuilt marketplace artifacts <b>(rekomendowane)</b> czy compiler zawsze u użytkownika?</li><li>Usunięcie generated trees po dwóch stabilnych release <b>(rekomendowane)</b> czy wcześniej?</li><li>Nieznana host version: fail dla semantic mapping i warning dla packaging-only <b>(rekomendowane)</b>?</li><li>Claude E4 jako release gate z jawnym E5/E6 unavailable <b>(rekomendowane)</b> czy blokada release?</li></ol></section>
+
+<section><h2>Confidence</h2><div class="grid"><article class="card"><span class="sev info">High</span><p>Portable core, różne installed outputs, jeden bundle + target materialization, Claude evidence ceiling.</p></article><article class="card"><span class="sev warning">Medium</span><p>Descriptor/IR API, marketplace atomicity, moment usunięcia generated trees.</p></article><article class="card risk"><span class="sev critical">Unknown</span><p>Pełna runtime parity Claude bez realnego E5/E6.</p></article></div></section>
+</main>
+</body>
+</html>

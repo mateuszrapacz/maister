@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Verification — Platform-independent Maister distribution</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.verdict { border-left:5px solid var(--ok); background:var(--ok-soft); }
+.publication { border-left:5px solid var(--warn); background:var(--warn-soft); }
+.tldr h2 { margin-top:0; }
+.muted { color:var(--dim); }
+.toc { margin:18px 0; color:var(--dim); font-size:13px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(245px,1fr)); gap:12px; }
+.review h3 { margin:0 0 6px; font-size:14px; }
+.review p { margin:0; }
+.checks { list-style:none; padding-left:0; }
+.checks li { margin:5px 0; }
+.checks li::before { content:"✓ "; color:var(--ok); font-weight:700; }
+.checks li.pending::before { content:"○ "; color:var(--warn); }
+.counts { display:flex; gap:10px; flex-wrap:wrap; }
+.count { flex:1; min-width:130px; text-align:center; }
+.count strong { display:block; font-size:24px; color:var(--ok); }
+@media (max-width:700px) { th,td { padding:6px; } .crumbs a.md { margin-left:0; } }
+</style>
+</head>
+<body>
+  <nav class="crumbs">
+    <a href="../dashboard.html">← Dashboard</a>
+    <a href="../implementation/spec.html">Spec</a>
+    <a href="../implementation/implementation-plan.html">Plan</a>
+    <span class="here">Verification</span>
+    <a href="implementation-verification.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+  </nav>
+
+  <header>
+    <span class="badge">Final Phase 11</span>
+    <h1>Implementation Verification</h1>
+    <p class="muted">Platform-independent Maister distribution · Generated 2026-07-15T22:26:39Z</p>
+  </header>
+
+  <div class="tiles">
+    <div class="tile"><b class="pass">Passed</b><span>implementation</span></div>
+    <div class="tile"><b>114/114</b><span>authoritative tests</span></div>
+    <div class="tile"><b>39/39</b><span>plan steps</span></div>
+    <div class="tile"><b>17/17</b><span>requirements</span></div>
+    <div class="tile"><b class="pass">0</b><span>open issues</span></div>
+  </div>
+
+  <section class="card verdict tldr">
+    <h2>✅ Passed — Phase 11 may advance</h2>
+    <p>The implementation is complete at <strong>39/39 plan steps</strong> and <strong>17/17 requirements</strong>. The authoritative suite passes <strong>114/114</strong>, focused evidence/topology passes <strong>20/20</strong>, <code>make validate</code> is green, package lifecycle passes <strong>4/4</strong>, and clean committed-clone strict parity passes for all three targets with zero unresolved differences.</p>
+    <p>Both former P1 defects, both stale test contracts, and the environment-coupled topology contract are resolved. There are <strong>0 critical, 0 warning, and 0 informational implementation findings</strong>.</p>
+    <h2>Key Decisions</h2>
+    <ul>
+      <li>Set the canonical implementation verdict to Passed and allow Phase 11 to advance.</li>
+      <li>Close the source-binding and Make target-expansion P1 findings.</li>
+      <li>Approve the Git-aware topology repair without an editor-specific exclusion.</li>
+      <li>Track exact-tag publication controls outside the implementation issue count.</li>
+    </ul>
+    <h2>Open Questions / Risks</h2>
+    <ul>
+      <li>Native E6 remains unavailable where no reviewed host runtime/scenario exists.</li>
+      <li>Unsigned sidecars require a trusted release channel.</li>
+      <li>Filesystem safety uses the documented cooperative-writer model.</li>
+      <li>Free-form GNU Make argv remains trusted executable input.</li>
+      <li>The exact tag must repeat the clean release sequence and publication controls.</li>
+    </ul>
+  </section>
+
+  <nav class="toc">Contents: <a href="#assessment">Assessment</a> ·
+  <a href="#completion">Completion</a> ·
+  <a href="#tests">Tests</a> ·
+  <a href="#reviews">Reviews</a> ·
+  <a href="#history">Fix history</a> ·
+  <a href="#findings">Findings</a> ·
+  <a href="#publication">Publication</a> ·
+  <a href="#checklist">Checklist</a>
+</nav>
+
+<main>
+<section id="assessment">
+  <h2>Overall Assessment</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Check</th><th>Final result</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td>Overall implementation</td><td class="pass">Passed</td><td>0 open implementation findings</td></tr>
+        <tr><td>Plan / specification</td><td class="pass">Passed</td><td>39/39 steps; 17/17 requirements</td></tr>
+        <tr><td>Authoritative suite</td><td class="pass">Passed</td><td>114/114; 100%</td></tr>
+        <tr><td>Integrated validation</td><td class="pass">Passed</td><td><code>make validate</code> exit 0</td></tr>
+        <tr><td>Evidence / topology</td><td class="pass">Passed</td><td>20/20; zero direct violations</td></tr>
+        <tr><td>Package lifecycle</td><td class="pass">Passed</td><td>4/4 extracted-package tests</td></tr>
+        <tr><td>Strict clean parity</td><td class="pass">Passed for release candidate</td><td>3/3 targets; zero unresolved</td></tr>
+        <tr><td>Syntax / patch hygiene</td><td class="pass">Passed</td><td>8/8 syntax; diff check clean</td></tr>
+        <tr><td>Code and security</td><td class="pass">Approved</td><td>Both P1s closed; 0 regressions</td></tr>
+        <tr><td>Production / reality</td><td class="pass">Implementation GO</td><td>Exact-tag publication conditional</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="completion">
+  <h2>Implementation Plan, Requirements, Standards, and Documentation</h2>
+  <div class="card">
+    <p>The approved plan is complete at <strong>39/39 steps across 5/5 groups</strong>, and all <strong>17/17 requirements</strong> map to implemented behavior and executable evidence. Phase 11 intentionally expanded the initial test estimate to cover trust boundaries discovered by independent review.</p>
+    <table>
+      <thead><tr><th>Task group</th><th>Completion</th><th>Assessment</th></tr></thead>
+      <tbody>
+        <tr><td>Portable core and overlay contracts</td><td>7/7</td><td class="pass">Complete</td></tr>
+        <tr><td>Source resolution and materialization</td><td>8/8</td><td class="pass">Complete</td></tr>
+        <tr><td>Transactional lifecycle</td><td>10/10</td><td class="pass">Complete</td></tr>
+        <tr><td>Evidence, parity, topology, release, docs</td><td>9/9</td><td class="pass">Complete</td></tr>
+        <tr><td>Test review and gaps</td><td>5/5</td><td class="pass">Complete; security regressions retained</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Standards:</strong> compliant. Build-pipeline, validation, error-handling, minimal-implementation, coding/commenting, conventions, and exact transactional testing rules are satisfied.</p>
+    <p><strong>Documentation:</strong> complete for implementation handoff. The common-source/three-overlay architecture and clean-source, ownership, recovery, evidence, and publication boundaries are documented. Workflow state and the work log receive their normal completion update after this verifier returns.</p>
+  </div>
+</section>
+
+<section id="tests">
+  <h2>Test and Release-Candidate Evidence</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Environment</th><th>Check</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td>Shared checkout</td><td><code>make test-platform-independent</code></td><td class="pass">114/114</td></tr>
+        <tr><td>Shared checkout</td><td><code>make validate</code></td><td class="pass">Passed</td></tr>
+        <tr><td>Shared checkout</td><td>Focused evidence/topology</td><td class="pass">20/20</td></tr>
+        <tr><td>Shared checkout</td><td>Direct topology</td><td class="pass">Zero violations</td></tr>
+        <tr><td>Shared checkout</td><td>Package lifecycle</td><td class="pass">4/4</td></tr>
+        <tr><td>Shared checkout</td><td>Syntax / diff hygiene</td><td class="pass">8/8 / passed</td></tr>
+        <tr><td>Clean committed clone</td><td>Strict parity</td><td class="pass">3/3; zero unresolved</td></tr>
+        <tr><td>Clean committed clone</td><td>Topology / cleanliness</td><td class="pass">Passed / clean</td></tr>
+        <tr><td>Clean committed clone</td><td>Isolated packages</td><td class="pass">Codex, Cursor, Kiro CLI</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">Strict parity continues to reject the dirty shared checkout with <code>E_SOURCE_DIRTY</code>. That is required fail-closed behavior, not a failing implementation check.</p>
+  </div>
+</section>
+
+<section id="reviews">
+  <h2>Independent Review Results</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Track</th><th>Status</th><th>Final conclusion</th></tr></thead>
+      <tbody>
+        <tr><td>Completeness</td><td class="pass">Passed</td><td>39/39 steps and 17/17 requirements; interim IDE warning superseded.</td></tr>
+        <tr><td>Code / security</td><td class="pass">Approved</td><td>Both P1s closed; repaired tests reach intended boundaries; no regression.</td></tr>
+        <tr><td>Pragmatic</td><td class="pass">Approved after repair</td><td>Complexity proportionate; recommended Git-aware topology contract implemented.</td></tr>
+        <tr><td>Production readiness</td><td class="pass">Implementation GO</td><td>Release-candidate ready; tag publication retains process conditions.</td></tr>
+        <tr><td>Reality</td><td class="pass">READY / GO</td><td>Functional and clean-clone evidence proves intended supported scope.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="history">
+  <h2>Fix &amp; Re-Verification History</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Cycle</th><th>Issue and fix</th><th>Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>Initial / fix 1</td><td>Target containment, archive closure, immutable source, recovery, and rollback/journal hardening.</td><td>60/60; four deeper blockers remained.</td></tr>
+        <tr><td>Reverify 1 / fix 2</td><td>Descriptor identity, backup manifests, recovery, E3/E4, parity, release metadata, and validation.</td><td>91/91; four trust-boundary blockers remained.</td></tr>
+        <tr><td>Reverify 2 / fix 3</td><td>No-follow state reads, source rebinding, same-root overlay, E3 binding, safe Make boundary, syntax/reference hardening.</td><td>109/109; two P1s remained.</td></tr>
+        <tr><td>Reverify 3</td><td>Confirmed split lifecycle/materializer source and pre-validation Make expansion.</td><td>2 P1s preserved when prior workflow stopped.</td></tr>
+        <tr><td>Resumed repair 1</td><td>One immutable source binding; Node-owned target registry and fixed Make delegation.</td><td class="pass">Both P1s resolved; 0 regressions.</td></tr>
+        <tr><td>Resumed repair 2</td><td>Updated Make/topology contract and source-bound overlay-negative fixture.</td><td class="pass">Both stale test contracts resolved.</td></tr>
+        <tr><td>Final topology repair</td><td>Git-aware repository candidates, raw fixture traversal, typed Git/read failures, adversarial coverage.</td><td class="pass">114/114; topology 20/20; validate green.</td></tr>
+        <tr><td>Clean release-candidate verification</td><td>Committed-clone strict parity, topology, cleanliness, isolated packages.</td><td class="pass">3/3, zero unresolved; all packages.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="findings">
+  <h2>Open Implementation Findings</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Severity</th><th>Count</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><span class="sev critical">Critical</span></td><td>0</td><td class="pass">None open</td></tr>
+        <tr><td><span class="sev warning">Warning</span></td><td>0</td><td class="pass">None open</td></tr>
+        <tr><td><span class="sev info">Info</span></td><td>0</td><td class="pass">None open</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="publication">
+  <h2>Exact-Tag Publication Conditions</h2>
+  <div class="card publication">
+    <p><strong>These are publication controls, not implementation findings.</strong> Before production publication, the release job must:</p>
+    <ol>
+      <li>Repeat 114/114, integrated validation, strict three-target parity, topology, package generation/lifecycle, checksums, SBOM, and provenance verification at the exact clean tag commit.</li>
+      <li>Declare <code>permissions: contents: write</code> explicitly for the release publisher.</li>
+      <li>Recreate an isolated output directory, reject unexpected files, and publish only an explicit same-job allowlist of three archives and named verified sidecars.</li>
+    </ol>
+    <p>Release claims must preserve E5/E6 availability, unsigned-provenance, trusted-channel, cooperative-writer, and trusted-Make-argv boundaries. A failed tag condition blocks publication but changes the Phase 11 verdict only if it exposes a new implementation defect.</p>
+  </div>
+</section>
+
+<section id="checklist">
+  <h2>Verification Checklist</h2>
+  <div class="card">
+    <ul class="checks">
+      <li class="done">Specification, plan, and work log present</li>
+      <li class="done">39/39 plan steps complete</li>
+      <li class="done">17/17 requirements covered</li>
+      <li class="done">Authoritative suite 114/114</li>
+      <li class="done"><code>make validate</code> passes</li>
+      <li class="done">Evidence/topology 20/20</li>
+      <li class="done">Direct topology zero violations</li>
+      <li class="done">Package lifecycle 4/4</li>
+      <li class="done">Clean strict parity 3/3</li>
+      <li class="done">All three clean packages generated</li>
+      <li class="done">Syntax and diff hygiene pass</li>
+      <li class="done">Both P1 findings resolved</li>
+      <li class="done">Both stale contracts resolved</li>
+      <li class="done">Topology repair approved</li>
+      <li class="done">No implementation issue remains</li>
+      <li class="pending">Exact-tag controls — release phase</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Recommendation</h2>
+  <div class="card verdict">
+    <p><strong>Advance Phase 11.</strong> Continue the orchestrator's configured Phase 12/13 routing. Add the three publication controls before the next production release, renew native E5/E6 only against reviewed scenarios, and repeat the clean-clone evidence at the exact tag.</p>
+  </div>
+</section>
+</main>
+</body>
+</html>

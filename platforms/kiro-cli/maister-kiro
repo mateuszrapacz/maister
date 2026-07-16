@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-# Maister Kiro CLI wrapper — isolated KIRO_HOME profile (ADR-015).
-KIRO_HOME="${KIRO_HOME:-$HOME/.kiro-maister}" exec kiro-cli "$@"

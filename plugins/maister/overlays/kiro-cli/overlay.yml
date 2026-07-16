@@ -1,0 +1,157 @@
+schema_version: 1
+overlay_id: maister/kiro-cli
+overlay_version: 1.0.0
+target:
+  id: kiro-cli
+  host_version_constraint: ">=1.0.0"
+  discovery_roots:
+    - .kiro-maister
+layout:
+  - source: common/skills
+    destination: skills
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+  - source: assets/agents
+    destination: agents
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+  - source: assets/steering
+    destination: steering
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+  - source: assets/hooks
+    destination: hooks
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+  - source: assets/agent-tools.json
+    destination: agent-tools.json
+    kind: file
+    mode: "0644"
+    ownership: whole_file
+  - source: assets/settings-mcp.json
+    destination: settings/mcp.json
+    kind: file
+    mode: "0644"
+    ownership: whole_file
+settings:
+  - path: settings/mcp.json
+    format: json
+    ownership: whole_file
+    managed_keys: []
+    merge_policy: preserve_unmanaged_refuse_drift
+  - path: settings/settings.json
+    format: json
+    ownership: managed_keys
+    managed_keys:
+      - chat.defaultAgent
+    merge_policy: preserve_unmanaged_refuse_drift
+semantic_bindings:
+  user_gate:
+    adapter: kiro-cli.chat_gate
+    capability: semantic
+    fail_closed: true
+  delegate_agent:
+    adapter: kiro-cli.subagent
+    capability: delegation
+    fail_closed: true
+  track_progress:
+    adapter: kiro-cli.checkpoint
+    capability: persistence
+    fail_closed: true
+  resolve_task_root:
+    adapter: kiro-cli.project_root
+    capability: persistence
+    fail_closed: true
+  persist_state:
+    adapter: kiro-cli.filesystem_state
+    capability: persistence
+    fail_closed: true
+  continue_workflow:
+    adapter: kiro-cli.continue
+    capability: continuation
+    fail_closed: true
+inventory:
+  required:
+    - "skills/**/SKILL.md"
+    - "agents/*.json"
+    - "steering/*.md"
+    - "hooks/*.sh"
+    - agent-tools.json
+  optional:
+    - settings/mcp.json
+  forbidden:
+    - ".codex-plugin/**"
+    - ".cursor-plugin/**"
+    - "rules/**"
+    - "agents/*.md"
+    - ".claude-plugin/**"
+    - "**/*claude*"
+validation:
+  forbidden_vocabulary:
+    - codex
+    - cursor
+    - claude
+    - anthropic
+    - .codex-plugin
+    - .cursor-plugin
+    - .claude-plugin
+  executable_paths:
+    - "hooks/*.sh"
+  syntax_checks:
+    - "json:agent-tools.json"
+    - "json:agents/*.json"
+    - "markdown:steering/*.md"
+capabilities:
+  semantic_bindings:
+    class: semantic
+    required_evidence:
+      - E1
+      - E3
+      - E5
+      - E6
+  safety_hooks:
+    class: safety
+    required_evidence:
+      - E1
+      - E2
+      - E4
+  state_persistence:
+    class: persistence
+    required_evidence:
+      - E1
+      - E2
+      - E4
+  rollback:
+    class: rollback
+    required_evidence:
+      - E1
+      - E2
+      - E4
+  native_discovery:
+    class: packaging
+    required_evidence:
+      - E1
+      - E2
+      - E5
+  native_runtime:
+    class: semantic
+    required_evidence:
+      - E3
+      - E6
+native_assets:
+  - source: assets/agent-tools.json
+    destination: agent-tools.json
+    mode: "0644"
+    sha256: 7d047aeb5ec09f2af49a12d89305690985b07af4ceb3b50953ba0a0c6873f08d
+  - source: assets/agents/maister.json
+    destination: agents/maister.json
+    mode: "0644"
+    sha256: b2fb856049443dc8d2e4b885eec1e0ea5407072898a6bcbb7f3ebb97dc75680a
+  - source: assets/settings-mcp.json
+    destination: settings/mcp.json
+    mode: "0644"
+    sha256: 77a711f0ed6c082ede0094fd212fe8a7d440bf72074150021a3b152f2683da04

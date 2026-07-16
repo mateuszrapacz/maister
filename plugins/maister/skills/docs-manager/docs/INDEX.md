@@ -143,7 +143,7 @@ Test naming conventions, test file organization, arrange-act-assert structure, m
 
 1. Edit the relevant documentation file directly
 2. Update INDEX.md if the file's purpose or description changes
-3. Ensure CLAUDE.md still references this INDEX.md
+3. Ensure the project-instructions file still references this INDEX.md
 4. Commit changes to version control
 5. Notify the team of significant documentation changes
 
@@ -155,7 +155,7 @@ Use the Documentation Manager skill to:
 - Update existing documentation
 - Validate documentation consistency
 - Manage INDEX.md automatically
-- Ensure CLAUDE.md integration
+- Ensure project-instructions integration
 
 ---
 

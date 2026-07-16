@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "kind": "maister/e3-portable-core",
+  "test_command": "node --test tests/platform-independent/portable-core.test.mjs",
+  "result": "passed",
+  "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_version": "2.2.1",
+  "portable_core_tree_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "scenario": "portable-core-v1",
+  "scenario_version": "1.0.0",
+  "tested_at": "2026-07-15T10:00:00.000Z",
+  "expires_at": "2026-07-16T10:00:00.000Z",
+  "artifact_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}

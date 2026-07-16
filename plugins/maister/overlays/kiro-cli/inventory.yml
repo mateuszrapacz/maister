@@ -1,0 +1,18 @@
+schema_version: 1
+target: kiro-cli
+overlay_version: 1.0.0
+required:
+  - "skills/**/SKILL.md"
+  - "agents/*.json"
+  - "steering/*.md"
+  - "hooks/*.sh"
+  - agent-tools.json
+optional:
+  - settings/mcp.json
+forbidden:
+  - ".codex-plugin/**"
+  - ".cursor-plugin/**"
+  - "rules/**"
+  - "agents/*.md"
+  - ".claude-plugin/**"
+  - "**/*claude*"

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision log — platformowo niezależny Maister</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { border-left:4px solid var(--accent); }
+.toc { font-size:12px; padding:10px 0; color:var(--dim); }
+.adr { border-top:3px solid var(--accent); }
+.accepted { background:var(--ok-soft); color:var(--ok); }
+.meta { display:flex; gap:9px; flex-wrap:wrap; color:var(--dim); font-size:12px; margin:8px 0 14px; }
+.cols { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+pre { background:#171a21; color:#e8ebf0; border-radius:var(--radius); padding:16px; overflow:auto; }
+ul,ol { padding-left:20px; } .small { color:var(--dim); font-size:12px; }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="research-report.html">Report</a>
+  <a href="solution-exploration.html">Exploration</a>
+  <a href="high-level-design.html">Design</a>
+  <span class="here">Decision Log</span>
+  <a href="decision-log.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+<header><span class="badge">MADR Decision Log</span><h1>Platformowo niezależny Maister</h1><p>Accepted architectural decisions from convergence 1A / 2D / 3D / 4C / 5D</p></header>
+<div class="tiles">
+  <div class="tile"><b>7</b><span>ADR</span></div>
+  <div class="tile"><b>7</b><span>accepted</span></div>
+  <div class="tile"><b>0</b><span>proposed</span></div>
+  <div class="tile"><b>0</b><span>superseded</span></div>
+  <div class="tile"><b>5</b><span>user choices</span></div>
+</div>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Przyjęto portable core, trzy jawne host overlays i własny transakcyjny installer. Harness wybiera ordinary tools; formalne bindings obejmują tylko semantic invariants. Legacy generated trees i Claude Code znikają przed zakończeniem zadania. Core E3 działa raz, a host evidence pozostaje per capability i scenario.</p>
+  <h3>Key Decisions</h3>
+  <ul>
+    <li>ADR-001 — minimalne semantic primitives, bez workflow DSL.</li>
+    <li>ADR-002 — common + repo-owned overlays + copy/merge installer.</li>
+    <li>ADR-003 — shadow tylko podczas implementacji, potem deletion.</li>
+    <li>ADR-004 — semantic fail-closed, packaging provisional.</li>
+    <li>ADR-005 — remove Claude Code, future return as new host task.</li>
+    <li>ADR-006 — managed ownership, journal, receipt, byte-exact rollback.</li>
+    <li>ADR-007 — core once; E1/E2/E4 and available E5/E6 per host.</li>
+  </ul>
+  <h3>Open Questions / Risks</h3>
+  <ul>
+    <li>Aktualne Codex/Cursor/Kiro contracts trzeba potwierdzić podczas implementacji.</li>
+    <li>Primitive registry może puchnąć bez rygoru promotion rule.</li>
+    <li>Shared settings transaction zależy od journalu i recovery tests.</li>
+    <li>Task-scoped removal wymaga mocnej parity bramki.</li>
+    <li>Native E5/E6 może być unavailable; brak dowodu nie jest sukcesem.</li>
+  </ul>
+</section>
+
+<nav class="toc">Decisions: <a href="#adr-001">001 Primitives</a> · <a href="#adr-002">002 Overlays</a> · <a href="#adr-003">003 Legacy</a> · <a href="#adr-004">004 Compatibility</a> · <a href="#adr-005">005 Claude</a> · <a href="#adr-006">006 Transactions</a> · <a href="#adr-007">007 Evidence</a></nav>
+
+<main>
+<article id="adr-001" class="card adr">
+  <span class="badge accepted">Accepted</span><h2>ADR-001 — Minimalne semantic primitives zamiast pełnego IR</h2>
+  <div class="meta"><span>2026-07-14</span><span>Convergence: 1A</span><span>User-confirmed</span></div>
+  <div class="cols"><div><h3>Context</h3><p>Setki tekstowych transformacji wiążą canonical source z host vocabulary. Pełny AST/DSL byłby spekulatywny, a documentation-as-code pozostaje wartościowe.</p><h3>Drivers</h3><ul><li>jedna kopia skills</li><li>brak regex rewrite</li><li>harness autonomy</li><li>formal safety/control-flow boundaries</li></ul></div><div><h3>Options</h3><ol><li><b>1A minimal primitives</b></li><li>pełny IR/DSL</li><li>Markdown + regex/golden</li></ol><h3>Outcome</h3><p>Intencje ordinary operations są neutralne; <code>rg</code>, grep, Explore/read pozostają wyborem harnessu. Explicit bindings obejmują gates, required delegation, safety hooks, persistence i continuation.</p></div></div>
+  <details><summary>Consequences</summary><ul><li>Nie powstaje prompt compiler.</li><li>Potrzebny mały primitive registry i completeness contract.</li><li>Forbidden vocabulary test chroni generic layer.</li><li>Nowy primitive wymaga repeated semantic divergence albo safety invariant.</li></ul></details>
+</article>
+
+<article id="adr-002" class="card adr">
+  <span class="badge accepted">Accepted</span><h2>ADR-002 — Repo-owned host overlays i custom installer</h2>
+  <div class="meta"><span>2026-07-14</span><span>Convergence: 2D</span><span>Marketplace excluded</span></div>
+  <div class="cols"><div><h3>Context</h3><p>Instalacja odbywa się z local/GitHub repo. Generic skills są wspólne, lecz agents, commands, hooks, manifests i settings są natywne. Runtime generation przeniosłoby złożoność adapterów do użytkownika.</p><h3>Drivers</h3><ul><li>jawny review różnic</li><li>deterministyczna instalacja</li><li>jeden common source</li><li>brak marketplace</li></ul></div><div><h3>Options</h3><ol><li><b>2D common + overlays + installer</b></li><li>runtime generation</li><li>pełne duplicated prebuilt trees</li><li>marketplace hybrid</li></ol><h3>Outcome</h3><p><code>common/</code> plus <code>hosts/codex|cursor|kiro-cli</code>. Installer kopiuje common byte-for-byte, dokłada native overlay, waliduje i transakcyjnie instaluje. GitHub ref zostaje zapisany jako commit SHA.</p></div></div>
+  <details><summary>Consequences</summary><ul><li>Host diffs są jawne.</li><li>Overlay schema/tests są obowiązkowe.</li><li>Mała świadoma duplikacja formatów jest akceptowalna.</li><li>Installer jest assemblerem, nie workflow compilerem.</li></ul></details>
+</article>
+
+<article id="adr-003" class="card adr">
+  <span class="badge accepted">Accepted</span><h2>ADR-003 — Legacy tylko jako migration oracle</h2>
+  <div class="meta"><span>2026-07-14</span><span>Convergence: 3D</span><span>Deletion before DoD</span></div>
+  <div class="cols"><div><h3>Context</h3><p>Generated trees pomagają porównać inventory, permissions, hooks i references, ale są źródłem duplikacji. Dual path nie może przetrwać zadania.</p><h3>Drivers</h3><ul><li>parity evidence</li><li>finalny brak generated trees</li><li>jednoznaczne DoD</li></ul></div><div><h3>Options</h3><ol><li>natychmiastowe deletion</li><li>dwa stabilne releases</li><li>stałe snapshots</li><li><b>3D shadow then delete in task</b></li></ol><h3>Outcome</h3><p>Legacy służy wyłącznie w branchu implementacyjnym. Po zero unexplained diffs i E1–E4 zostaje usunięte wraz z build adapters i drift jobs.</p></div></div>
+  <details><summary>Consequences</summary><ul><li>Czasowy dual path.</li><li>Semantic parity zamiast samego full-text diff.</li><li>Rollback po merge opiera się na Git/receipts.</li><li>Inventory test blokuje powrót generated trees.</li></ul></details>
+</article>
+
+<article id="adr-004" class="card adr">
+  <span class="badge accepted">Accepted</span><h2>ADR-004 — Capability-sensitive compatibility</h2>
+  <div class="meta"><span>2026-07-14</span><span>Convergence: 4C</span><span>Safety fail-closed</span></div>
+  <div class="cols"><div><h3>Context</h3><p>Host version nie odróżnia zmiany layoutu od zmiany gate/delegation semantics. Boolean capability ukrywa scenario, freshness i evidence level.</p><h3>Drivers</h3><ul><li>fail-closed safety</li><li>nie blokować packaging changes</li><li>audytowalne claims</li><li>brak global force</li></ul></div><div><h3>Options</h3><ol><li>global fail</li><li>global warning</li><li><b>4C capability-sensitive</b></li></ol><h3>Outcome</h3><p>Każda capability ma klasę <code>semantic</code> lub <code>packaging</code>. Unknown semantic blokuje; packaging może przejść po E1/E2/E4 jako <code>provisional</code>.</p></div></div>
+  <details><summary>Consequences</summary><ul><li>Klasyfikacja jest częścią schema/review.</li><li>CLI rozróżnia supported/provisional/unavailable/failed.</li><li>Evidence jest per host/capability/version/scenario/time/target.</li></ul></details>
+</article>
+
+<article id="adr-005" class="card adr">
+  <span class="badge accepted">Accepted</span><h2>ADR-005 — Usunięcie Claude Code</h2>
+  <div class="meta"><span>2026-07-14</span><span>Convergence: 5D</span><span>Scope reduction</span></div>
+  <div class="cols"><div><h3>Context</h3><p>Brak runtime i bieżącej potrzeby. Utrzymanie targetu zwiększa zakres i zachowuje Claude-native coupling przy niższym assurance.</p><h3>Drivers</h3><ul><li>brak nietestowalnych claims</li><li>neutralny common core</li><li>minimal implementation</li></ul></div><div><h3>Options</h3><ol><li>block without E5/E6</li><li>retain E1–E4</li><li>community certification</li><li><b>5D remove</b></li></ol><h3>Outcome</h3><p>Claude znika z targets, installera, overlays, assets, tests, capability matrix, docs i vocabulary. Future support jest osobnym new-host task.</p></div></div>
+  <details><summary>Consequences</summary><ul><li>Support matrix: Codex/Cursor/Kiro.</li><li>Możliwa komunikacja do istniejących użytkowników.</li><li>Brak placeholdera/future stub.</li><li>Project docs wymagają aktualizacji.</li></ul></details>
+</article>
+
+<article id="adr-006" class="card adr">
+  <span class="badge accepted">Accepted</span><h2>ADR-006 — Transakcyjna własność konfiguracji</h2>
+  <div class="meta"><span>2026-07-14</span><span>Installer invariant</span><span>Byte-exact rollback</span></div>
+  <div class="cols"><div><h3>Context</h3><p>Host settings bywają współdzielone, a delete-before-copy może zostawić partial state. Standard projektu wymaga byte-exact non-mutation lub rollbacku.</p><h3>Drivers</h3><ul><li>ochrona user data</li><li>jawna ownership</li><li>crash recovery</li><li>deterministyczny audit</li></ul></div><div><h3>Options</h3><ol><li>overwrite whole settings</li><li>best-effort merge</li><li><b>dedicated files + managed keys</b></li><li>manual config</li></ol><h3>Outcome</h3><p>Mutacja ma <code>whole_file</code> lub <code>managed_keys</code>. Installer używa backup bytes/modes/topology, temp rename, journalu i immutable receipt. Active pointer zmienia się na końcu.</p></div></div>
+  <details><summary>Consequences</summary><ul><li>Receipt/transaction schema są krytycznym API.</li><li>Recovery poprzedza nowe operacje.</li><li>Failure injection obejmuje każdy commit point.</li><li>Dedicated files są preferowane nad shared serialization.</li></ul></details>
+</article>
+
+<article id="adr-007" class="card adr">
+  <span class="badge accepted">Accepted</span><h2>ADR-007 — Granica testów i dowodu</h2>
+  <div class="meta"><span>2026-07-14</span><span>Research-derived</span><span>E1–E6</span></div>
+  <div class="cols"><div><h3>Context</h3><p>Portable E3 jest powtarzane dla byte-identical copies, a host test names mają nierówne znaczenie. <code>exit 77</code> jest brakiem dowodu, nie sukcesem.</p><h3>Drivers</h3><ul><li>szybki PR feedback</li><li>host assurance tylko dla różnic</li><li>brak false-green skipów</li><li>scenario/version provenance</li></ul></div><div><h3>Options</h3><ol><li>full suite per assembled tree</li><li>core only</li><li><b>E3 once + E1/E2/E4 per host + native E5/E6</b></li></ol><h3>Outcome</h3><p><code>test-core</code> działa raz. Parametryczny harness sprawdza trzy overlays, assembly i transactional lifecycle. Native probes zapisują structured evidence; 77 = unavailable.</p></div></div>
+  <details><summary>Consequences</summary><ul><li>Krótszy PR gate.</li><li>Host tests nie kopiują core edge cases.</li><li>Evidence freshness jest release governance.</li><li>Support jest per capability/scenario.</li></ul></details>
+</article>
+
+<section class="card">
+  <h2>Decision dependency map</h2>
+<pre>ADR-001 minimal primitives
+        |
+        +------&gt; ADR-002 common + overlays + installer
+                         |            |
+                         |            +--&gt; ADR-006 transactional ownership
+                         |
+                         +--&gt; ADR-003 legacy removal
+                         +--&gt; ADR-004 compatibility
+                         +--&gt; ADR-007 evidence
+
+ADR-005 Claude removal ------&gt; narrows scope to 3 hosts</pre>
+</section>
+
+<section class="card">
+  <h2>Traceability</h2>
+  <table><thead><tr><th>Choice</th><th>ADR</th><th>Design</th></tr></thead><tbody>
+    <tr><td>1A</td><td><a href="#adr-001">ADR-001</a></td><td><a href="high-level-design.html#primitives">Primitives</a></td></tr>
+    <tr><td>2D</td><td><a href="#adr-002">ADR-002</a></td><td><a href="high-level-design.html#overlay">Overlay + Installer</a></td></tr>
+    <tr><td>3D</td><td><a href="#adr-003">ADR-003</a></td><td><a href="high-level-design.html#migration">Migration</a></td></tr>
+    <tr><td>4C</td><td><a href="#adr-004">ADR-004</a></td><td><a href="high-level-design.html#compatibility">Compatibility</a></td></tr>
+    <tr><td>5D</td><td><a href="#adr-005">ADR-005</a></td><td><a href="high-level-design.html#dod">Definition of Done</a></td></tr>
+    <tr><td>Transaction invariant</td><td><a href="#adr-006">ADR-006</a></td><td><a href="high-level-design.html#settings">Settings</a></td></tr>
+    <tr><td>Evidence boundary</td><td><a href="#adr-007">ADR-007</a></td><td><a href="high-level-design.html#tests">Tests</a></td></tr>
+  </tbody></table>
+</section>
+</main>
+</body>
+</html>

@@ -1,0 +1,13 @@
+schema_version: 1
+target: codex
+overlay_version: 1.0.0
+required:
+  - .codex-plugin/plugin.json
+  - "skills/**/SKILL.md"
+  - "skills/**/agents/openai.yaml"
+  - hooks/hooks.json
+optional: []
+forbidden:
+  - ".cursor-plugin/**"
+  - ".claude-plugin/**"
+  - "**/*claude*"

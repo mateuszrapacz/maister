@@ -1,0 +1,915 @@
+{
+  "schema_version": 2,
+  "baseline_version": "2026-07-15.2",
+  "target": "cursor",
+  "rules": [
+    {
+      "id": "cursor-legacy-inventory-deletions",
+      "category": "expected-deletion",
+      "observed_category": "inventory",
+      "rationale": "These exact paths belong only to the read-only generated target tree: aliases, host builder output, migration-only support files, or old generated layout. Their planned removal is an expected deletion, not a portable behavior claim.",
+      "paths": [
+        ".hook-state",
+        ".hook-state/.gitignore",
+        "README.md",
+        "agents/e2e-test-verifier.md",
+        "lib",
+        "lib/orchestrator-framework",
+        "lib/orchestrator-framework/SKILL.md",
+        "lib/orchestrator-framework/assets",
+        "lib/orchestrator-framework/assets/dashboard.html",
+        "lib/orchestrator-framework/bin",
+        "lib/orchestrator-framework/bin/gate-evaluator.mjs",
+        "lib/orchestrator-framework/bin/orchestrator-state-repository.mjs",
+        "lib/orchestrator-framework/bin/orchestrator-state-schema.mjs",
+        "lib/orchestrator-framework/bin/phase-continue.mjs",
+        "lib/orchestrator-framework/bin/workflow-continuation.mjs",
+        "lib/orchestrator-framework/references",
+        "lib/orchestrator-framework/references/gate-decision-engine.md",
+        "lib/orchestrator-framework/references/gate-decision-fixtures.yml",
+        "lib/orchestrator-framework/references/host-capabilities.yml",
+        "lib/orchestrator-framework/references/html-report-style.md",
+        "lib/orchestrator-framework/references/orchestrator-creation-checklist.md",
+        "lib/orchestrator-framework/references/orchestrator-patterns.md",
+        "lib/skills",
+        "lib/skills/maister-codebase-analyzer",
+        "lib/skills/maister-codebase-analyzer/SKILL.md",
+        "lib/skills/maister-codebase-analyzer/references",
+        "lib/skills/maister-codebase-analyzer/references/code-analysis.md",
+        "lib/skills/maister-codebase-analyzer/references/combined.md",
+        "lib/skills/maister-codebase-analyzer/references/context-discovery.md",
+        "lib/skills/maister-codebase-analyzer/references/file-discovery.md",
+        "lib/skills/maister-codebase-analyzer/references/migration-target.md",
+        "lib/skills/maister-codebase-analyzer/references/pattern-mining.md",
+        "lib/skills/maister-docs-manager",
+        "lib/skills/maister-docs-manager/SKILL.md",
+        "lib/skills/maister-docs-manager/docs",
+        "lib/skills/maister-docs-manager/docs/INDEX.md",
+        "lib/skills/maister-docs-manager/docs/standards",
+        "lib/skills/maister-docs-manager/docs/standards/backend",
+        "lib/skills/maister-docs-manager/docs/standards/backend/api.md",
+        "lib/skills/maister-docs-manager/docs/standards/backend/migrations.md",
+        "lib/skills/maister-docs-manager/docs/standards/backend/models.md",
+        "lib/skills/maister-docs-manager/docs/standards/backend/queries.md",
+        "lib/skills/maister-docs-manager/docs/standards/frontend",
+        "lib/skills/maister-docs-manager/docs/standards/frontend/accessibility.md",
+        "lib/skills/maister-docs-manager/docs/standards/frontend/components.md",
+        "lib/skills/maister-docs-manager/docs/standards/frontend/css.md",
+        "lib/skills/maister-docs-manager/docs/standards/frontend/responsive.md",
+        "lib/skills/maister-docs-manager/docs/standards/global",
+        "lib/skills/maister-docs-manager/docs/standards/global/coding-style.md",
+        "lib/skills/maister-docs-manager/docs/standards/global/commenting.md",
+        "lib/skills/maister-docs-manager/docs/standards/global/conventions.md",
+        "lib/skills/maister-docs-manager/docs/standards/global/error-handling.md",
+        "lib/skills/maister-docs-manager/docs/standards/global/language-md-convention.md",
+        "lib/skills/maister-docs-manager/docs/standards/global/minimal-implementation.md",
+        "lib/skills/maister-docs-manager/docs/standards/global/validation.md",
+        "lib/skills/maister-docs-manager/docs/standards/testing",
+        "lib/skills/maister-docs-manager/docs/standards/testing/test-writing.md",
+        "lib/skills/maister-docs-manager/references",
+        "lib/skills/maister-docs-manager/references/agents-md-template.md",
+        "lib/skills/maister-docs-manager/references/claude-md-template.md",
+        "lib/skills/maister-docs-manager/references/index-md-template.md",
+        "lib/skills/maister-implementation-plan-executor",
+        "lib/skills/maister-implementation-plan-executor/SKILL.md",
+        "lib/skills/maister-implementation-verifier",
+        "lib/skills/maister-implementation-verifier/SKILL.md",
+        "rules/maister-workflows.mdc"
+      ],
+      "observations": {
+        ".hook-state": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        ".hook-state/.gitignore": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "240a3e0d37d2e86b614063f5347eb02d4f99ca6c254de6b82871ff8d95532a7d"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "README.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "91e8635d2135ae5d60f8d6e92526a67a3f95fce0ef1602b835be33bd2d24421e"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/e2e-test-verifier.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "7c933abd73f742b2d04270be68dcdbfd1fabe815002649e0e3914312ff60ee20"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a9ddda84a9f192b677406e1c55cd2a45b60ccdb9d99f8350e0d5b9e3b6858680"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/assets": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/assets/dashboard.html": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "929b7020dd23b4fe71a4b4f2c05ee0d6c7a487f1dffbf0992a8db5da5f5c3563"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/bin": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/bin/gate-evaluator.mjs": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "195df6b383dbe40037367ec332fb4326378f8091673ac373583fc7cca8f0e0f1"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/bin/orchestrator-state-repository.mjs": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d58358c98a53065eaf315712c39582bb45eaaae0a761c260be22c745db912922"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/bin/orchestrator-state-schema.mjs": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3e73cb7db70a843a65c35ce864a6d61add42dd2c3247e59443b5599ddce80648"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/bin/phase-continue.mjs": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "53ee4ad2c943357e67e82ca18308b88ee1216dcf038689e6d029fcc21732b542"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/bin/workflow-continuation.mjs": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a9da4923fd60adbbb4829c7621de061935ef663e451c6751632bcd92a2c9487d"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/references": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/references/gate-decision-engine.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "71f4dca405ff16b3c0f523e78b9b2430ace75b872c61a3b7a66a797582e1824e"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/references/gate-decision-fixtures.yml": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "503ff0ee6052ed3e7af0732c29ec992117e1306ac51cd759d69a6d48b1620c47"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/references/host-capabilities.yml": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "04a3fa65981d1d5da697effaaaaf0036e6ce1fe17787cea7a6bf95f93d371cee"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/references/html-report-style.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a3a74ccc20e83e4c9ac4a7c0421d92e8e064548a5475368a50d5c92757ddfa31"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/references/orchestrator-creation-checklist.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ec23e7838a115d272200b15ed3f7eecb112a18d20b441b459079176cea7b36da"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/orchestrator-framework/references/orchestrator-patterns.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "39b8a8888d369a3065eb13465bb5a8d8301e4732f8fc6aa8466a23a03f144ca2"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-codebase-analyzer": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-codebase-analyzer/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3050dc70a988ee9501305db5cc73dcbf5b39915149a64b508870e47b4bf4fa45"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-codebase-analyzer/references": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-codebase-analyzer/references/code-analysis.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "87e76521373a169f8bae105b40efb15d5caf54d5335e6846a9653fcc692efdc0"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-codebase-analyzer/references/combined.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a4253d9721d645511ea69cc786efc5b511e4158915374bee51f6fffd0cd6cbe5"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-codebase-analyzer/references/context-discovery.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3d9f651a21cc9a9a066ab8df4a347124da8660eab6924799c7e044a7ba792561"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-codebase-analyzer/references/file-discovery.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "211a43559fa6925e1db6b40f354a3baeb1053052b3dae69b59fbfcc0fa838958"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-codebase-analyzer/references/migration-target.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5a6ef3e89316abebf6bfd0b83283f362472774a822ce3cf71e58bf8deee7be00"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-codebase-analyzer/references/pattern-mining.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e3c6e93ae597ca0d5e800d2054adb60c042024cbdcc04a2988c858a9e0db3006"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "988b9fa31dcb45a5d31412b29e139b3b10727123c382f781f00dc38903ff5be9"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/INDEX.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "fb165a7c74829227eec6d7357b8cbc211bff187fa8d58e870b69d1c9c84665e9"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/backend": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/backend/api.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3c8799ce48d28e3532b540596901ddadd5d48e1f7f1b92c3725d52067758ceb7"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/backend/migrations.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b2c9147f7283275aab7bfa96b75997f7e173ecca565a716cd5d3c5d9f09fc6aa"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/backend/models.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ed07b9ffc44a35bb6a2d35280be3d5f82eaea48097f59f42ca3b48ce768c245c"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/backend/queries.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d27f51dca23ae288f1d3e6521b5be1c81dad7489dd3109e1a7bbaf6a63b8f128"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/frontend": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/frontend/accessibility.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "cf16f53038a6c43d4ed2f5faa2db2054e84c5e06782004f0b2d3c89c37b5842d"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/frontend/components.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a0fcdd268a2925bfe88e2fd3dc7bc8b1a87026b794446fcc25d0e8c4056a1632"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/frontend/css.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "cd8498bcfc0c7be71ad298dcb9b3ec8f6d922fb9864ff977be1462366a4bd019"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/frontend/responsive.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0653a62781fe33e65391f20d40018654f9e4c3f5662ecd93ba5b3f5c46c2ae26"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/global": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/global/coding-style.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "df52dc0b252d601b9318198558d60946d96ba99f56e51947059fd0544fe2b2fd"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/global/commenting.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "47a2f63aa45e4b3891599357b5c1ca7f237225e6771e76977ab4fa4be6ea1ec4"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/global/conventions.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "dd7b9f80b36839917000fd80226773aac5febbb3266cd2358f0c3b4ec7ef2ae8"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/global/error-handling.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "6783884128127916773e0af6e259d1da15bf4ab9287141f628d0bf8793959b01"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/global/language-md-convention.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e571d5b20acfeceff918f86abd15de34cd0520362f8920a702a974e27265d34c"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/global/minimal-implementation.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "aec6a4febe0686b791dc71033dcd23808658a59cd2fde34cbfbfe4104b81ebd1"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/global/validation.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "7c8ba29d8a06a26c05182290fb4d4792ad026bb800d6ce247bb24a4ee9d814ab"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/testing": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/docs/standards/testing/test-writing.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "88ccc4ba98ce043d17c4fd17caab05292255e7b66b4f552fef9648173d3c39b5"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/references": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/references/agents-md-template.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "397f11c93dbf4425eb29dbd911fa0a1961aa1b6dc0f155997b9a98c38c998842"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/references/claude-md-template.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "bce72c613bdedf2bb083d134cf48f36f04a43628570490e7db51dc8186c87aa8"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-docs-manager/references/index-md-template.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "752dfae13009c6ab6adf3e78e35d9c2e9226d1e5f4c5037f1ba7613adb25f819"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-implementation-plan-executor": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-implementation-plan-executor/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b8b1d949326863ca2e7f1622c36e7c78126ceec9d561c9a573848de8f749e688"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-implementation-verifier": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "lib/skills/maister-implementation-verifier/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "97dbdd43cbee62c8fe4fda972e401bc78c20efea2184f9a0e6744dcf63e86cfa"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "rules/maister-workflows.mdc": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "085c6d408d1fc6eb871bf5001975bd7794264596cbf98cb0611cdf9e06a283ca"
+          },
+          "materialized": {
+            "present": false
+          }
+        }
+      }
+    },
+    {
+      "id": "cursor-foreign-vocabulary-neutralization",
+      "category": "packaging",
+      "observed_category": "semantic",
+      "rationale": "These exact Cursor payloads remove foreign-host vocabulary during native packaging. The changes are wording/internal identifiers only; no portable control flow, state key, or hook behavior changes.",
+      "paths": [
+        "skills/maister-init/SKILL.md",
+        "skills/maister-init/bin/reconcile-advisor-config.sh",
+        "skills/maister-migration/references/migration-strategies.md",
+        "skills/maister-migration/references/migration-types.md",
+        "skills/maister-standards-discover/references/docs-extractor-prompt.md"
+      ],
+      "observations": {
+        "skills/maister-init/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "1a5b03670d19dd127d5d4ab5cc24247c3da5771a7082d6ff24f3bd6cf5014882"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ffb46d2cbc90bd933b058cc635ed0ffc1a9a40e4aa892e5b9a7300c6ec6569d8"
+          }
+        },
+        "skills/maister-init/bin/reconcile-advisor-config.sh": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0755",
+            "sha256": "527023439e16b1edc4f7edca8100e122e30dd480ad387936b0728e49298b2df5"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0755",
+            "sha256": "da55673377181751031e7eed9b1e6d265413ef85aa85aee6d97f796baca0ca92"
+          }
+        },
+        "skills/maister-migration/references/migration-strategies.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "faa30b98c8a087a82dd51e7832eda8b0d81855ea1c1a8e90ae4bd0ac70f74b01"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "46f1134fea20fb149d416d7db271ff1bb18cc17334bb2f347885b35b7a56a089"
+          }
+        },
+        "skills/maister-migration/references/migration-types.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "517fc15676f757114086fd76911a1908b0b8385aefaad64e714ac60c6a3fffe6"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "9831f8505144fbf21a47da40d0b0742f84734c7d742ecfb99b5ef0d8ff2978a0"
+          }
+        },
+        "skills/maister-standards-discover/references/docs-extractor-prompt.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c5582556afa5b43197e13724b27d08f0543628cf986545c1082e4b60660f32e6"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "1fc3f13f7c75afbc816c44b75721649e02c9716fcd45090ee808f8f5d50e64db"
+          }
+        }
+      }
+    },
+    {
+      "id": "cursor-common-source-semantic-migration",
+      "category": "packaging",
+      "observed_category": "semantic",
+      "rationale": "The Cursor projection receives the reviewed host-independent instruction wording from common source; this exact target path set records content-only packaging parity without accepting arbitrary future changes.",
+      "paths": [
+        "skills/maister-standards-discover/SKILL.md",
+        "skills/maister-standards-update/SKILL.md"
+      ],
+      "observations": {
+        "skills/maister-standards-discover/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d488ec7933e5acdbcd9acdcd91d607215c471bb828cd04f7f3866e6de7f87d06"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a973a59bed6c096ed3b2f35d94e6f85e1c87a3a8f17f6242ede8f4510611a952"
+          }
+        },
+        "skills/maister-standards-update/SKILL.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0e1ec1e6d5abfa0192142e36e5fd2c28fe36dff8c3b0831e565923051a64234b"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "fe8e0205753590b335c6a71454e882440ad5be51e2703d438c4319e58bfc9ff4"
+          }
+        }
+      }
+    }
+  ]
+}

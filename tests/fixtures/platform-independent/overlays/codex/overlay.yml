@@ -1,0 +1,138 @@
+schema_version: 1
+overlay_id: maister/codex
+overlay_version: 1.0.0
+target:
+  id: codex
+  host_version_constraint: ">=1.0.0"
+  discovery_roots:
+    - .codex/plugins/local/maister
+layout:
+  - source: common/skills
+    destination: skills
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+  - source: common/agents
+    destination: skills/orchestrator-framework/agents
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+  - source: assets/plugin.json
+    destination: .codex-plugin/plugin.json
+    kind: file
+    mode: "0644"
+    ownership: whole_file
+  - source: assets/hooks
+    destination: hooks
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+settings:
+  - path: .codex/config.toml
+    format: toml
+    ownership: managed_keys
+    managed_keys:
+      - plugins.maister
+    merge_policy: preserve_unmanaged_refuse_drift
+semantic_bindings:
+  user_gate:
+    adapter: codex.chat_gate
+    capability: semantic
+    fail_closed: true
+  delegate_agent:
+    adapter: codex.subagent
+    capability: delegation
+    fail_closed: true
+  track_progress:
+    adapter: codex.progress
+    capability: persistence
+    fail_closed: true
+  resolve_task_root:
+    adapter: codex.cwd
+    capability: persistence
+    fail_closed: true
+  persist_state:
+    adapter: codex.filesystem_state
+    capability: persistence
+    fail_closed: true
+  continue_workflow:
+    adapter: codex.resume
+    capability: continuation
+    fail_closed: true
+inventory:
+  required:
+    - .codex-plugin/plugin.json
+    - "skills/**/SKILL.md"
+    - "skills/**/agents/openai.yaml"
+    - hooks/hooks.json
+    - skills/orchestrator-framework/bin/gate-evaluator.mjs
+  optional:
+    - "skills/**/agents/*.yaml"
+  forbidden:
+    - ".cursor-plugin/**"
+    - "rules/**"
+    - "steering/**"
+    - "agents/*.md"
+    - "agents/*.json"
+    - ".claude-plugin/**"
+    - "**/*claude*"
+validation:
+  forbidden_vocabulary:
+    - cursor
+    - kiro
+    - claude
+    - anthropic
+    - .cursor-plugin
+    - .claude-plugin
+  executable_paths:
+    - "hooks/*.sh"
+  syntax_checks:
+    - "json:.codex-plugin/plugin.json"
+    - "json:hooks/hooks.json"
+    - "yaml:skills/**/agents/openai.yaml"
+capabilities:
+  semantic_bindings:
+    class: semantic
+    required_evidence:
+      - E1
+      - E3
+      - E5
+      - E6
+  safety_hooks:
+    class: safety
+    required_evidence:
+      - E1
+      - E2
+      - E4
+  state_persistence:
+    class: persistence
+    required_evidence:
+      - E1
+      - E2
+      - E4
+  rollback:
+    class: rollback
+    required_evidence:
+      - E1
+      - E2
+      - E4
+  native_discovery:
+    class: packaging
+    required_evidence:
+      - E1
+      - E2
+      - E5
+  native_runtime:
+    class: semantic
+    required_evidence:
+      - E3
+      - E6
+native_assets:
+  - source: assets/plugin.json
+    destination: .codex-plugin/plugin.json
+    mode: "0644"
+    sha256: 936cfe01de0c6320ff9e4b76c19d9432e926d6c7ed24a97d50c0178d73da605e
+  - source: assets/hooks/hooks.json
+    destination: hooks/hooks.json
+    mode: "0644"
+    sha256: 18975241e66ba4184ca90c92c73bcdd2053aa4172203537023e58bbdfab360b0

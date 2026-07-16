@@ -12,6 +12,14 @@ Write clear commit messages, use feature branches, and add meaningful descriptio
 ### Environment Variables
 Store configuration in environment variables; never commit secrets or API keys.
 
+For installation provenance, production instructions use a clean local Git checkout at a full commit SHA. `MAISTER_ALLOW_DIRTY_LOCAL=1` is development-only and must be explicit; it must not appear in a production release command.
+
+Operator instructions state the ownership and concurrency boundary: Maister owns receipt-listed paths and managed settings keys, its lock coordinates Maister processes only, and host/editor/synchronization writers must be stopped during lifecycle operations. Do not claim protection from malicious same-user or privileged concurrent mutation.
+
+Treat local `dist/` content as disposable. Release instructions require an isolated clean output directory and same-job validation; never publish an existing archive based on its name, timestamp, or an unsigned checksum alone.
+
+Do not document unsupported host targets, resolver paths, or package lifecycles as available. Migration-era names may remain only in a clearly labeled historical/parity section.
+
 ### Minimal Dependencies
 Keep dependencies lean and up-to-date; document why major ones are included.
 

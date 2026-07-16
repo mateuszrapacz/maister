@@ -1,18 +1,58 @@
 schema_version: 1
-invariants:
-  denylist: manual
-  terminal_history: exactly_once
-  phase_transition: required
-hosts:
-  - host: claude
-    declared_status: unsupported
-    target: tests/host-continuation/claude.e2e.sh
-  - host: cursor
-    declared_status: unsupported
-    target: platforms/cursor/tests/fully-automatic-continuation.e2e.sh
-  - host: kiro
-    declared_status: unsupported
-    target: platforms/kiro-cli/tests/fully-automatic-continuation.e2e.sh
-  - host: codex
-    declared_status: supported
-    target: platforms/codex-cli/tests/fully-automatic-continuation.e2e.sh
+policy:
+  supported_targets:
+    - codex
+    - cursor
+    - kiro-cli
+  required_every_target:
+    - E1
+    - E2
+    - E4
+  required_shared:
+    - E3
+  native_levels:
+    - E5
+    - E6
+  unavailable_is_passed: false
+  semantic_classes_fail_closed: true
+  packaging_classes_may_be_provisional: true
+freshness:
+  renew_on:
+    - expires_at
+    - host_version
+    - overlay_version
+    - source_commit
+    - scenario_version
+  default_ttl_hours: 24
+capabilities:
+  semantic_bindings:
+    class: semantic
+    required_evidence: [E1, E3, E5, E6]
+  safety_hooks:
+    class: safety
+    required_evidence: [E1, E2, E4]
+  state_persistence:
+    class: persistence
+    required_evidence: [E1, E2, E4]
+  rollback:
+    class: rollback
+    required_evidence: [E1, E2, E4]
+  native_discovery:
+    class: packaging
+    required_evidence: [E1, E2, E5]
+  native_runtime:
+    class: semantic
+    required_evidence: [E3, E6]
+targets:
+  codex:
+    host_version_source: codex --version
+    native_probe_module: plugins/maister/lib/distribution/host-probes/codex.mjs
+    runtime_evidence: available
+  cursor:
+    host_version_source: agent --version
+    native_probe_module: plugins/maister/lib/distribution/host-probes/cursor.mjs
+    runtime_evidence: unavailable-until-installed
+  kiro-cli:
+    host_version_source: kiro-cli --version
+    native_probe_module: plugins/maister/lib/distribution/host-probes/kiro-cli.mjs
+    runtime_evidence: unavailable-until-installed

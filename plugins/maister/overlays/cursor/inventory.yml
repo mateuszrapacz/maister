@@ -1,0 +1,18 @@
+schema_version: 1
+target: cursor
+overlay_version: 1.0.0
+required:
+  - .cursor-plugin/plugin.json
+  - "skills/maister-*/SKILL.md"
+  - "agents/*.md"
+  - "rules/*.mdc"
+  - hooks/hooks.json
+optional:
+  - "hooks/*.sh"
+forbidden:
+  - ".codex-plugin/**"
+  - "skills/**/agents/openai.yaml"
+  - "steering/**"
+  - "agents/*.json"
+  - ".claude-plugin/**"
+  - "**/*claude*"

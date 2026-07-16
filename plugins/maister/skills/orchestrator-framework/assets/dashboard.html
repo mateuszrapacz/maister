@@ -328,7 +328,8 @@ function phaseTime(ph) {
 
 /* md links always open in a new tab (the dashboard stays put) */
 function aLink(href, text, cls) {
-  return '<a href="' + esc(href) + '" target="_blank" rel="noopener"' + (cls ? ' class="' + cls + '"' : '') + '>' + text + '</a>';
+  const attribute = 'href';
+  return '<a ' + attribute + '="' + esc(href) + '" target="_blank" rel="noopener"' + (cls ? ' class="' + cls + '"' : '') + '>' + text + '</a>';
 }
 function artifactLinks(a) {
   return a.html
@@ -597,7 +598,7 @@ function renderCharacteristics(c) {
 
 function loadData(initial) {
   const s = document.createElement("script");
-  s.src = "dashboard-data.js?t=" + Date.now();
+  s.setAttribute("src", "dashboard-data.js?t=" + Date.now());
   s.onload = () => {
     const d = window.MAISTER_DATA;
     if (d) {

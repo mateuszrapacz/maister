@@ -1,6 +1,6 @@
 ---
 name: docs-manager
-description: Internal engine for managing project documentation and technical standards in .maister/docs/. Handles file operations, INDEX.md generation, and CLAUDE.md integration. Invoked by maister:init, standards-update, and standards-discover skills.
+description: Internal engine for managing project documentation and technical standards in .maister/docs/. Handles file operations, INDEX.md generation, and project-instructions integration. Invoked by maister:init, standards-update, and standards-discover skills.
 user-invocable: false
 ---
 
@@ -12,7 +12,7 @@ Internal skill that manages documentation file operations in `.maister/docs/`. N
 
 - **Project documentation is source of truth** — plugin-bundled docs are baseline/reference only
 - **INDEX.md is the master map** — always kept up-to-date after changes
-- **CLAUDE.md integration is mandatory** — ensures AI reads documentation
+- **Project-instructions integration is mandatory** — ensures AI reads documentation
 
 ## Documentation Structure
 
@@ -74,7 +74,7 @@ This skill bundles the following resources within the plugin:
 
 - **Plugin bundles** (read-only baseline): This skill's `docs/` subdirectory within the plugin
 - **Project documentation** (source of truth): `.maister/docs/` in the project root
-- **Project configuration**: `CLAUDE.md` in the project root
+- **Project instructions**: the repository-defined instruction file, normally `AGENTS.md`, in the project root
 
 ## Capabilities
 
@@ -116,9 +116,9 @@ Use this when a project doesn't have `.maister/docs/` or needs documentation for
      - *Add them manually using the docs-manager skill*
      - *Run `/maister:standards-discover --scope=frontend` to auto-discover*
      ```
-6. **MANDATORY - Update CLAUDE.md:**
-   - Check if `CLAUDE.md` exists in the project root; if not, ask the user if they want to create it
-   - Add the documentation reference section (see "Manage CLAUDE.md Integration" operation)
+6. **MANDATORY - Update the project-instructions file:**
+   - Check whether the project-defined instruction file (normally `AGENTS.md`) exists in the project root; if not, ask the user whether to create it
+   - Add the documentation reference section (see "Manage project-instructions integration" operation)
    - Ensure it emphasizes reading INDEX.md at the beginning of any task
 7. Inform the caller about the documentation structure created
 
@@ -131,7 +131,7 @@ Use this when a project doesn't have `.maister/docs/` or needs documentation for
   - If provided: Copy standards from this path instead of the bundled defaults
   - If omitted: Copy from this skill's bundled `docs/standards/` directory (default behavior)
 
-**Result:** The project now has baseline documentation in `.maister/docs/`, a comprehensive INDEX.md, and CLAUDE.md integration that ensures AI assistance is documentation-aware. Only selected standard categories are initialized.
+**Result:** The project now has baseline documentation in `.maister/docs/`, a comprehensive INDEX.md, and project-instructions integration that ensures AI assistance is documentation-aware. Only selected standard categories are initialized.
 
 **Important:** After this initial setup, the project's documentation becomes the source of truth. Teams should customize it for their specific needs.
 
@@ -154,7 +154,7 @@ Use this to create or update the INDEX.md file that serves as the master documen
 3. Read `references/index-md-template.md` for the INDEX.md structure template
 4. Generate INDEX.md by populating the template with discovered files and descriptions
 5. Write the generated INDEX.md to `.maister/docs/INDEX.md`
-6. Verify that CLAUDE.md references this index (see "Manage CLAUDE.md Integration" operation)
+6. Verify that the project-instructions file references this index (see "Manage project-instructions integration" operation)
 
 **Result:** A comprehensive, up-to-date INDEX.md that provides a clear map of all project documentation.
 
@@ -176,7 +176,7 @@ Use this to add new documentation to the project, either from plugin baseline or
    - Ask for the filename and purpose
    - Create a template file with appropriate frontmatter and structure
 4. Update INDEX.md to include the new documentation (see "Manage INDEX.md" operation)
-5. If this is a technical standard and corresponds to a Claude Code Skill, ensure consistency
+5. If this is a technical standard and corresponds to a host skill, ensure consistency
 
 **Result:** New documentation is added to the project and indexed in INDEX.md.
 
@@ -199,9 +199,9 @@ Use this to help the user update or modify existing project documentation.
    - Or offer to help them create custom documentation from scratch
 5. After updating:
    - Check if INDEX.md needs updating (if the purpose/description changed significantly)
-   - If updating tech-stack.md or architecture.md, suggest reviewing CLAUDE.md for consistency
+   - If updating tech-stack.md or architecture.md, suggest reviewing the project-instructions file for consistency
 6. For technical standards:
-   - If a corresponding Claude Code Skill exists, suggest reviewing it for consistency
+   - If a corresponding host skill exists, suggest reviewing it for consistency
    - Standards should align with actual code patterns in the project
 
 **Result:** Documentation is updated to reflect current project state and team decisions.
@@ -224,7 +224,7 @@ Use this when a team wants to see the plugin's baseline documentation for refere
 6. If the user chooses to copy any documentation:
    - Copy the selected files from this skill's bundled `docs/` directory to the project's `.maister/docs/` directory
    - Update INDEX.md to reflect any changes
-   - Review CLAUDE.md for any necessary updates
+   - Review the project-instructions file for any necessary updates
 
 **Important:** This operation should be used rarely, mainly when a team wants to reset to baseline. Project documentation is the source of truth and should be maintained by the team.
 
@@ -244,29 +244,29 @@ Use this to show what documentation is bundled with this plugin and their instal
    - Show installation status (bundled only, installed, or customized)
    - If installed, show whether it differs from the baseline (customized)
 3. Show whether INDEX.md exists and is up-to-date
-4. Show whether CLAUDE.md has documentation integration
+4. Show whether the project-instructions file has documentation integration
 5. Remind the user that plugin documentation is baseline/reference only, and project documentation (if installed) is the source of truth
 
 **Result:** The user sees a complete inventory of available baseline documentation and their installation status in the current project.
 
 ---
 
-### 7. Manage CLAUDE.md Integration
+### 7. Manage project-instructions integration
 
-Use this to ensure the project's CLAUDE.md properly integrates with the documentation system, encouraging AI to read and use the documentation.
+Use this to ensure the repository-defined project-instructions file properly integrates with the documentation system, encouraging AI to read and use the documentation.
 
 **What to do:**
-1. Check if `CLAUDE.md` exists in the project root
-2. If it doesn't exist, ask the user if they want to create it
-3. Look for a documentation reference section in CLAUDE.md
+1. Locate the project-defined instruction file, normally `AGENTS.md`, in the project root
+2. If it does not exist, ask the user whether they want to create it
+3. Look for a documentation reference section in that instruction file
 4. If the section doesn't exist or is incomplete:
-   - Read `references/claude-md-template.md` for the template
-   - Add the template section to CLAUDE.md
-5. Ensure the documentation section is placed prominently in CLAUDE.md (near the top)
+   - Read `references/project-instructions-template.md` for the template
+   - Add the template section to the project-instructions file
+5. Ensure the documentation section is placed prominently in the instruction file (near the top)
 6. Verify that the INDEX.md path is correct and the file exists
 7. If `.maister/docs/` doesn't exist, suggest running the initialization operation first
 
-**Result:** CLAUDE.md properly integrates with the documentation system, ensuring AI assistance is documentation-aware and follows team conventions.
+**Result:** The project-instructions file properly integrates with the documentation system, ensuring AI assistance is documentation-aware and follows team conventions.
 
 ---
 
@@ -283,9 +283,9 @@ Use this to check that documentation is consistent, up-to-date, and properly int
    - Check that all files in `.maister/docs/` are listed in INDEX.md
    - Check that all files listed in INDEX.md actually exist
    - Report any orphaned files or broken references
-3. **Check CLAUDE.md integration:**
-   - Verify CLAUDE.md exists
-   - Verify it contains documentation reference section
+3. **Check project-instructions integration:**
+   - Verify the project-defined instruction file exists
+   - Verify it contains a documentation reference section
    - Verify it uses valid file reference format: @.maister/docs/INDEX.md (with @ prefix, without backticks)
    - Warn if using incorrect formats like `.maister/docs/INDEX.md` or `@.maister/docs/INDEX.md` (backticks)
 4. **Check project documentation:**
@@ -293,7 +293,7 @@ Use this to check that documentation is consistent, up-to-date, and properly int
    - Check if they contain placeholder text vs. actual project information
    - Warn if critical documentation is missing or empty
 5. **Check standards consistency:**
-   - If Claude Code Skills exist, check if corresponding standards documentation exists
+   - If host skills exist, check if corresponding standards documentation exists
    - If standards exist without skills, suggest creating skills (if appropriate)
    - Report any inconsistencies
 6. **Generate validation report:**
@@ -303,7 +303,7 @@ Use this to check that documentation is consistent, up-to-date, and properly int
 7. **Offer to fix issues:**
    - Ask if the user wants to automatically fix found issues
    - Fix missing INDEX.md entries
-   - Fix missing CLAUDE.md integration
+   - Fix missing project-instructions integration
    - Create missing directory structure
 
 **Result:** A comprehensive validation report with optional automatic fixes for common issues.
@@ -315,37 +315,37 @@ Use this to check that documentation is consistent, up-to-date, and properly int
 **Initialize documentation in a new project:**
 ```
 User: "Set up documentation for this project"
-Claude: [Executes Initialize Documentation - creates structure, copies baseline docs, generates INDEX.md, updates CLAUDE.md, gathers project info]
+Caller: [Executes Initialize Documentation - creates structure, copies baseline docs, generates INDEX.md, updates the project-instructions file, gathers project info]
 ```
 
 **Update project vision:**
 ```
 User: "I want to update our project vision to include AI-first approach"
-Claude: [Executes Update Documentation - reads current vision.md, helps user edit it, updates INDEX.md if needed]
+Caller: [Executes Update Documentation - reads current vision.md, helps the user edit it, updates INDEX.md if needed]
 ```
 
 **Add custom documentation:**
 ```
 User: "Add documentation for our deployment process"
-Claude: [Executes Add Documentation File - creates custom project/deployment.md, updates INDEX.md]
+Caller: [Executes Add Documentation File - creates custom project/deployment.md, updates INDEX.md]
 ```
 
 **Reference plugin baseline:**
 ```
 User: "Show me the plugin's baseline error handling standard"
-Claude: [Executes Use Plugin Documentation as Reference - shows plugin baseline, compares with project version, no changes unless user requests]
+Caller: [Executes Use Plugin Documentation as Reference - shows plugin baseline, compares with project version, no changes unless requested]
 ```
 
 **Validate documentation:**
 ```
 User: "Check if our documentation is complete and consistent"
-Claude: [Executes Validate Documentation Consistency - checks structure, INDEX.md, CLAUDE.md integration, generates report]
+Caller: [Executes Validate Documentation Consistency - checks structure, INDEX.md, project-instructions integration, generates report]
 ```
 
 **Manage INDEX.md:**
 ```
 User: "Rebuild the documentation index"
-Claude: [Executes Manage INDEX.md - scans .maister/docs/, regenerates comprehensive INDEX.md]
+Caller: [Executes Manage INDEX.md - scans .maister/docs/, regenerates comprehensive INDEX.md]
 ```
 
 ---
@@ -354,6 +354,6 @@ Claude: [Executes Manage INDEX.md - scans .maister/docs/, regenerates comprehens
 
 - **Project documentation is source of truth** — plugin-bundled docs are baseline/reference only
 - **INDEX.md must stay current** — regenerate after any documentation change
-- **CLAUDE.md integration is mandatory** — ensures AI reads documentation at task start
+- **Project-instructions integration is mandatory** — ensures AI reads documentation at task start
 - **This skill is an internal engine** — called by maister:init, standards-update, and standards-discover. Not directly user-invocable.
 - **CRITICAL: Return control after completion** — This is an internal sub-skill. After completing the requested operation, return control to the calling workflow. Do NOT treat completion of this skill as the end of the conversation turn — the parent skill has more steps to execute.

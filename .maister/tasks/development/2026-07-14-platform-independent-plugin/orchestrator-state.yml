@@ -1,0 +1,1664 @@
+orchestrator:
+  started_phase: phase-1
+  current_phase: phase-14
+  completed_phases: [phase-1, phase-2, phase-5, phase-6, phase-7, phase-8, phase-10, phase-11, phase-13, phase-14]
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+    phase-7: 0
+    phase-8: 0
+    phase-9: 0
+    phase-10: 0
+    phase-11: 3
+    phase-12: 0
+    phase-13: 0
+    phase-14: 0
+  options:
+    html_output: true
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: false
+    user_docs_enabled: true
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+    sequential: false
+    advisor:
+      enabled: true
+      gate_policies:
+        phase-exit: fully_automatic
+        optional-phase: fully_automatic
+        clarify: fully_automatic
+        convergence: fully_automatic
+        verify-matrix: fully_automatic
+      advisor_agent: advisor
+      advisor_model: gpt-5.6-sol
+      arbiter_agent: arbiter
+      arbiter_model: gpt-5.6-sol
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
+  created: "2026-07-14T16:32:58Z"
+  updated: "2026-07-16T10:33:37Z"
+  task_path: .maister/tasks/development/2026-07-14-platform-independent-plugin
+  task_ids:
+    phase-1: development-phase-1
+    phase-2: development-phase-2
+    phase-3: development-phase-3
+    phase-4: development-phase-4
+    phase-5: development-phase-5
+    phase-6: development-phase-6
+    phase-7: development-phase-7
+    phase-8: development-phase-8
+    phase-9: development-phase-9
+    phase-10: development-phase-10
+    phase-11: development-phase-11
+    phase-12: development-phase-12
+    phase-13: development-phase-13
+    phase-14: development-phase-14
+  gate_history:
+    - schema_version: 1
+      idempotency_key: sha256:ec02c7f9f82f78391846592009ec9aee11bb8cb1d6d24dc1c4a45208d9328a78
+      phase_id: phase-1
+      gate_type: phase-1-clarification
+      question: "I assume the implementation scope is Codex, Cursor, and Kiro CLI only, with Claude and committed generated trees removed before completion. Is that correct?"
+      options:
+        - Confirm assumptions
+        - Correct assumptions
+        - Provide more context
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Confirm assumptions
+      final_actor: user
+      original_recommendation: Confirm assumptions
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user confirmed the research-approved target set and migration/deletion scope."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:ba5d887d0c4265cbcbe1c13696ffdc0cf70e09b9b115fd0cea577002cb7aee7a
+      phase_id: phase-1
+      gate_type: phase-1-exit
+      question: "Continue to Phase 2?"
+      options:
+        - Continue to Phase 2
+        - Pause workflow
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to Phase 2
+      final_actor: user
+      original_recommendation: Continue to Phase 2
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user chose to continue the development workflow into gap analysis."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:9e22d1cd8c8c8ccd768742a06292a9988d36f58656d7964e7799638229d15117
+      phase_id: phase-2
+      gate_type: phase-2-decision-host-contract-closure
+      question: "Which host-contract closure policy should the implementation adopt?"
+      options:
+        - "Contract-first overlay v1 with E1/E2/E4 for every host and E5/E6 when runtime exists"
+        - "Host-doc-first overlay using legacy outputs only as semantic comparison fixtures"
+        - "Runtime-gated support until native discovery and critical scenario evidence exist"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Contract-first overlay v1 with E1/E2/E4 for every host and E5/E6 when runtime exists"
+      final_actor: user
+      original_recommendation: "Contract-first overlay v1 with E1/E2/E4 for every host and E5/E6 when runtime exists"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The gap analyzer found that host discovery roots, native inventories, settings destinations, and semantic bindings are not yet encoded in a versioned overlay contract."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:d6c3f6d878255f05159dce1edbaff998b8ea79e84c59a7cecfe5ca12aeb92970
+      phase_id: phase-2
+      gate_type: phase-2-decision-settings-ownership
+      question: "Which settings and shell-configuration ownership contract should the implementation adopt?"
+      options:
+        - "Hybrid whole_file and managed_keys ownership with journal, backup, drift detection, and exact rollback"
+        - "Dedicated files only, with manual configuration where unavailable"
+        - "Managed-key merging for every shared settings file"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Hybrid whole_file and managed_keys ownership with journal, backup, drift detection, and exact rollback"
+      final_actor: user
+      original_recommendation: "Hybrid whole_file and managed_keys ownership with journal, backup, drift detection, and exact rollback"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The gap analyzer found that shared settings and shell configuration need explicit ownership and rollback semantics."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:a0da58fe5a1961fb662f7592b49c157c182bb70d3929cb36b7a5376a78c54e50
+      phase_id: phase-2
+      gate_type: phase-2-decision-native-evidence-policy
+      question: "Which minimum release-evidence policy should apply to hosts without native runtime?"
+      options:
+        - "Require E1-E4 and shared-core E3; record E5/E6 as unavailable, never pass"
+        - "Require E5/E6 before labeling any host supported"
+        - "Keep hosts provisional or unsupported until fresh native evidence exists"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Require E1-E4 and shared-core E3; record E5/E6 as unavailable, never pass"
+      final_actor: user
+      original_recommendation: "Require E1-E4 and shared-core E3; record E5/E6 as unavailable, never pass"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The gap analyzer found that Cursor and Kiro native continuation evidence is currently unavailable and must not be represented as a passing result."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:cc8019c200d90a666bb76ac3bae53660de40b4ed9ece30fd3779ea4351bc1064
+      phase_id: phase-2
+      gate_type: phase-2-decision-evidence-freshness
+      question: "Which evidence freshness policy should the implementation adopt?"
+      options:
+        - "Per-capability expiry with host, version, scenario, and timestamp renewal"
+        - "Release-bound expiry when Maister or host contract versions change"
+        - "No expiry beyond recorded host version and manual review"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Per-capability expiry with host, version, scenario, and timestamp renewal"
+      final_actor: user
+      original_recommendation: "Per-capability expiry with host, version, scenario, and timestamp renewal"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The gap analyzer found that capability records need explicit expiry and re-probe policy because host contracts and external binaries change independently."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:7049cc17ddbd24dd6410f8e24ac74d5fae4ccb63534d828b41f1244006b45172
+      phase_id: phase-2
+      gate_type: phase-2-decision-documentation-boundary
+      question: "Which documentation and release migration boundary should the implementation adopt?"
+      options:
+        - "Update all affected documentation, standards, Make/CI/release paths, and support matrices in this task"
+        - "Defer documentation migration to a follow-up"
+        - "Retain legacy instructions as a compatibility guide"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Update all affected documentation, standards, Make/CI/release paths, and support matrices in this task"
+      final_actor: user
+      original_recommendation: "Update all affected documentation, standards, Make/CI/release paths, and support matrices in this task"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The gap analyzer found that stale documentation and release paths would continue prescribing generated trees and Claude/marketplace workflows after the migration."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:cb8d23e0e7ad2eb2968a831e300e4a2f2c77b56b18216abfeff974cd16f1ab52
+      phase_id: phase-2
+      gate_type: phase-2-routing
+      question: "Continue to Phase 5: Technical Approach, Requirements & Specification?"
+      options:
+        - "Continue to Phase 5: Technical Approach, Requirements & Specification"
+        - "Pause workflow"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+      final_actor: user
+      original_recommendation: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The task modifies existing code, creates new installation and schema entities, and involves filesystem data operations, but has no reproducible defect or UI-heavy scope; route directly to requirements and specification."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:8358f6a9980394365c8e29349d3538166c7645e2aeb8875de965b725f22f292f
+      phase_id: phase-5
+      gate_type: phase-5-exit
+      question: "Continue to specification audit?"
+      options:
+        - "Continue to specification audit"
+        - "Pause workflow"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to specification audit"
+      final_actor: user
+      original_recommendation: "Continue to specification audit"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The specification artifacts are present and the local structural checks passed; an independent specification audit is the next recommended phase."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:eeba59811d29c2483cca234227ab77fd47023e60becab582b5c75f9a3d6994fe
+      phase_id: phase-6
+      gate_type: phase-6-exit
+      question: "Continue to implementation planning?"
+      options:
+        - "Continue to implementation planning"
+        - "Pause workflow"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to implementation planning"
+      final_actor: user
+      original_recommendation: "Continue to implementation planning"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The specification audit found the contract ready for planning with no critical or high-severity defects; two medium implementation-contract clarifications must be resolved in the plan."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:3816e7b010ce22a0a421f05dde1915496a6c69d60c72a8a783a82a76a8361265
+      phase_id: phase-7
+      gate_type: phase-7-exit
+      question: "Continue to implementation approval?"
+      options:
+        - "Continue to implementation approval"
+        - "Pause workflow"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to implementation approval"
+      final_actor: user
+      original_recommendation: "Continue to implementation approval"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The implementation plan covers all 17 requirements in five dependency-ordered groups, freezes the two medium audit contracts, and passes structural validation with 39 synchronized progress steps."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:663a42aa519cf64427fd11758ef12c313a7364b973068f67fc85f046e6b8e17b
+      phase_id: phase-7
+      gate_type: implementation-approval
+      question: "Approve this complete implementation scope?"
+      options:
+        - "Approve complete implementation scope"
+        - "Reject implementation scope"
+        - "Request scope changes"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: denylisted
+      status: decided
+      selected_option: "Approve complete implementation scope"
+      final_actor: user
+      original_recommendation: "Approve complete implementation scope"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The complete five-group implementation scope is ready for explicit protected approval; no advisor or automatic policy may authorize implementation."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:8427cbf0e377cd8f234e79d9f5346062d6bd293fe524dc517f25db71193408de
+      phase_id: phase-8
+      gate_type: group-failure-recovery
+      question: "Group 1 implementation failed: delegated agent timed out without a report. How to proceed?"
+      options:
+        - "Try suggested fix"
+        - "Retry group"
+        - "Complete manually"
+        - "Rollback changes"
+        - "Stop"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Try suggested fix"
+      final_actor: system
+      original_recommendation: "Retry group"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The same Group 1 implementer session was resumed after an observation timeout and completed successfully; no retry, manual completion, rollback, or stop action was needed."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:0e17e4a7c76e0fca66e93b36dd463df1e18f93bfcfa027baae084a83f0503922
+      phase_id: phase-8
+      gate_type: group-failure-recovery
+      question: "Group 4 implementation failed: materialization parity gate is red for Codex, Cursor, and Kiro CLI inventory/vocabulary contracts. How to proceed?"
+      options:
+        - "Try suggested fix"
+        - "Retry group"
+        - "Complete manually"
+        - "Rollback changes"
+        - "Stop"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Try suggested fix"
+      final_actor: user
+      original_recommendation: "Try suggested fix"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The focused evidence/parity tests pass, but clean materializer validation fails for all three targets because Group 1-2 inventory/common-source contracts are inconsistent with the retained source tree."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:7f3c4d56a3554cb24346cdbc9f46a6e8c551345121ef316d84827f26966be760
+      phase_id: phase-8
+      gate_type: group-failure-recovery
+      question: "Group 4 implementation failed: materialization is green but real shadow parity still has 573 unresolved differences across Codex, Cursor, and Kiro CLI. How to proceed?"
+      options:
+        - "Try suggested fix"
+        - "Retry group"
+        - "Complete manually"
+        - "Rollback changes"
+        - "Stop"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Try suggested fix"
+      final_actor: user
+      original_recommendation: "Try suggested fix"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user directed the workflow to analyze every parity difference and fix either the test when it reports an intentional packaging difference or the implementation when behavior is actually missing."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:19568792996c419f61acb934284693bd396df535db9c9b4ac814b5f6c528d7a5
+      phase_id: phase-8
+      gate_type: phase-8-exit
+      question: "Continue to verification?"
+      options:
+        - "Continue to verification"
+        - "Pause workflow"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to verification"
+      final_actor: user
+      original_recommendation: "Continue to verification"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "All five approved implementation groups are complete; 34 focused tests pass, all three targets materialize, reviewed parity has zero unresolved differences, and final topology is clean."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:239981881b195b61ea682efd83565288e6737e9def74584192f949dbc6d517e9
+      phase_id: phase-10
+      gate_type: verification-options
+      question: "Which standard verifications to run?"
+      options:
+        - "Code review (Recommended)"
+        - "Pragmatic review (Recommended)"
+        - "Reality check (Recommended)"
+        - "Production readiness (Recommended)"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Code review (Recommended); Pragmatic review (Recommended); Reality check (Recommended); Production readiness (Recommended)"
+      final_actor: user
+      original_recommendation: "Run all recommended standard verifications"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The migration changes architecture, installers, filesystem transactions, CI/release behavior, and supported hosts, so all four standard verification tracks are recommended."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:98c61b5e2542abb49b807564e2ad43644f9b6443be62cba708dc99c212945c5a
+      phase_id: phase-10
+      gate_type: optional-phase-selection/e2e
+      question: "Enable E2E browser verification?"
+      options:
+        - "Yes (Recommended)"
+        - "No, skip"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "No, skip"
+      final_actor: user
+      original_recommendation: "Yes (Recommended)"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The implementation changes installation and host integration behavior; an optional end-to-end pass can validate the assembled user-facing lifecycle beyond focused contract tests."
+      confidence: medium
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:430715d582c5f8acbf15c124fe155cb078622e8f8ea39e2c79f92d9958b04bb4
+      phase_id: phase-10
+      gate_type: optional-phase-selection/user-docs
+      question: "Generate user documentation?"
+      options:
+        - "Yes (Recommended)"
+        - "No, skip"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Yes (Recommended)"
+      final_actor: user
+      original_recommendation: "Yes (Recommended)"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The installer, supported-host set, source layout, recovery workflow, and release commands changed materially; dedicated user documentation can consolidate the new operating model."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:4faf97df6ac300025973a0db05ef2a15baaf46b02c225599fc10464dd193d969
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: "Which issues should I fix?"
+      options:
+        - "Fix all fixable issues"
+        - "Let me choose specific issues"
+        - "Skip fixes, proceed as-is"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Fix all fixable issues"
+      final_actor: user
+      original_recommendation: "Fix all fixable issues"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "Verification failed with five critical production blockers and sixteen warning groups despite 34/34 focused tests; all critical issues and most warnings are fixable within the approved architecture."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:198f8c6133aeb3ec728a3f71473293f3f72dcc7f7e72b7aa48b0e9c4367dd9c1
+      phase_id: phase-11
+      gate_type: verification-rerun
+      question: "Re-run verification to check fixes?"
+      options:
+        - "Yes, re-run verification"
+        - "No, proceed to the next phase"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Yes, re-run verification"
+      final_actor: user
+      original_recommendation: "Yes, re-run verification"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "Fix iteration 1 changed transaction safety, release packaging, immutable source resolution, evidence, materialization validation, target policy, Cursor projection, CI, tests, and documentation; 60/60 focused tests and make validate now pass, so independent re-verification is recommended."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:6921f6d132122613094ce1e600a5d075a682cd0557d4341a33ffcaf2e39815ec
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: "Which issues should I fix?"
+      options:
+        - "Fix all fixable issues"
+        - "Let me choose specific issues"
+        - "Skip fixes, proceed as-is"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Fix all fixable issues"
+      final_actor: user
+      original_recommendation: "Fix all fixable issues"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "Re-verification passes 60/60 tests but found four residual critical blockers and ten warnings; the critical issues are fixable within a second repair iteration."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:34eed63ef305b80ab06583847d5489291da6c39ed01a71bbb088ebb412d433be
+      phase_id: phase-11
+      gate_type: verification-rerun
+      question: "Re-run verification to check fixes?"
+      options:
+        - "Yes, re-run verification"
+        - "No, proceed to the next phase"
+      policy: manual
+      configured_policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Yes, re-run verification"
+      final_actor: user
+      original_recommendation: "Yes, re-run verification"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "Fix iteration 2 closes the four residual critical findings and the fixable warning groups; 91/91 platform-independent tests, 4/4 packaged lifecycle tests, clean-checkout three-target parity with zero unresolved differences, make validate, and git diff --check now pass. Independent re-verification is recommended."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:b0651b64f08d41434582be22a7b6f1b659a40d0f9faa356884dc366d93300f2a
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: "Which issues should I fix?"
+      options:
+        - "Fix all fixable issues"
+        - "Let me choose specific issues"
+        - "Skip fixes, proceed as-is"
+      policy: manual
+      configured_policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Fix all fixable issues"
+      final_actor: user
+      original_recommendation: "Fix all fixable issues"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "Re-verification iteration 2 passes 91/91 tests and resolves backup integrity, public E3/E4 ordering, and immutable parity wiring, but independent code review found four new or residual P1 blockers: pathname TOCTOU, post-resolution local-source mutation, split local source/overlay provenance, and Make recipe injection boundaries. All four are fixable."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:0ff4b47f90b0bdeac3716368d31f017fae20a732dc012d511834a5c49d1f7c0e
+      phase_id: phase-11
+      gate_type: verification-rerun
+      question: "Re-run verification to check fixes?"
+      options:
+        - "Yes, re-run verification"
+        - "No, proceed to the next phase"
+      policy: manual
+      configured_policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Yes, re-run verification"
+      final_actor: user
+      original_recommendation: "Yes, re-run verification"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "Fix iteration 3 addresses all four iteration-2 blockers and the fixable warning groups. Integrated validation passes 109/109 platform-independent tests, make validate, deterministic package lifecycle coverage, three-target diagnostic parity with zero unresolved differences, syntax checks, and git diff --check. Independent re-verification is recommended."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:3c9a3ae5d02a4d3badb43d3c03f40df5149a06021c9bcc48e3bed2d32803015d
+      phase_id: phase-11
+      gate_type: unresolved-critical
+      question: "Proceed with known issues?"
+      options:
+        - "Proceed with known issues"
+        - "Stop workflow"
+      policy: manual
+      configured_policy: manual
+      safety_classification: protected
+      status: decided
+      selected_option: "Stop workflow"
+      final_actor: user
+      original_recommendation: "Stop workflow"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "Independent re-verification iteration 3 passes 109/109 tests but finds two P1 blockers: lifecycle source binding can split overlay/evidence root A from materialized root B, and caller-controlled SUPPORTED_TARGETS is expanded by GNU Make before Node validation. The maximum three repair iterations are exhausted."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:b38801fbc024277030edaf7d11b3461eac96c4fcb2402dda48ee0d161f5f1f01
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: "Which issues should I fix?"
+      options:
+        - "Fix all fixable issues"
+        - "Let me choose specific issues"
+        - "Skip fixes, proceed as-is"
+      policy: manual
+      configured_policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Fix all fixable issues"
+      final_actor: user
+      original_recommendation: "Fix all fixable issues"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user selected the recommended option to repair both remaining P1 trust-boundary defects."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:949c1c70eecbf5b542f80cfb36dc9f5090ec10164e69582d0727f8e47ed16346
+      phase_id: phase-11
+      gate_type: phase-11-exit
+      question: "Continue to Phase 12?"
+      options:
+        - "Continue to Phase 12"
+        - "Pause workflow"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to Phase 12"
+      final_actor: user
+      original_recommendation: "Continue to Phase 12"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user selected option 1 at the mandatory Phase 11 exit gate after final implementation verification passed."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:5d3db71e7a2ecdaf6c5f3b8638d2ffd3418ea06b44e4aa52e4220cfe59c4992c
+      phase_id: phase-12
+      gate_type: phase-12-exit
+      question: "E2E complete. Continue to Phase 13?"
+      options:
+        - "Continue to Phase 13"
+        - "Pause workflow"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to Phase 13"
+      final_actor: user
+      original_recommendation: "Continue to Phase 13"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user selected option 1 at the mandatory Phase 12 exit gate after E2E was skipped by configuration."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:4190f0156e5926ddbfbb8dc4a7f936990fca079a77de6d4a9b2fd6262f1193ba
+      phase_id: phase-13
+      gate_type: phase-13-exit
+      question: "Documentation complete. Continue to Phase 14?"
+      options:
+        - "Continue to Phase 14"
+        - "Pause workflow"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to Phase 14"
+      final_actor: user
+      original_recommendation: "Continue to Phase 14"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user selected option 1 at the mandatory Phase 13 exit gate after the validated CLI user guide was completed."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:6d7f6ae8df3ed9da15c045e924b897b137471f0083602540051e6cd0bb590c6e
+      phase_id: phase-14
+      gate_type: final-handoff-approval
+      question: "Complete workflow or keep it open?"
+      options:
+        - "Complete workflow"
+        - "Keep workflow open"
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: denylisted
+      status: decided
+      selected_option: "Complete workflow"
+      final_actor: user
+      original_recommendation: "Complete workflow"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user selected option 1 and explicitly approved the final implementation, verification, documentation, and decision-summary handoff."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+  implementation_approval:
+    status: approved
+    approved_by: user
+    approved_at: "2026-07-14T19:08:52Z"
+    approved_scope:
+      - implementation/implementation-plan.md
+      - "Group 1: portable common contracts and versioned host overlays"
+      - "Group 2: immutable source resolver and host materializer"
+      - "Group 3: transactional installer, settings ownership, receipts, and recovery"
+      - "Group 4: evidence, parity, legacy deletion, documentation, and release updates"
+      - "Group 5: focused test review and completion evidence"
+      - "All 17 requirements mapped by the implementation plan"
+  task_context:
+    risk_level: high
+    clarifications_resolved: true
+    scope_expanded: true
+    architecture_decision: "Portable common core with explicit host overlays and transactional installer"
+    tech_clarified: true
+    task_characteristics:
+      has_reproducible_defect: false
+      modifies_existing_code: true
+      creates_new_entities: true
+      involves_data_operations: true
+      ui_heavy: false
+    research_reference:
+      path: .maister/tasks/research/2026-07-14-platform-independent-plugin
+      research_question: "Przeanalizować, jak zastąpić generowanie i osobne testowanie wariantów dla wielu hostów jednym rozwiązaniem niezależnym od narzędzia, z rozróżnieniem platformy możliwym na etapie instalacji."
+      research_type: mixed
+      confidence_level: high
+    design_reference:
+      source: null
+      product_design_path: null
+      mockup_count: 0
+      has_brief: false
+      index_path: null
+    phase_summaries:
+      research:
+        summary: "Research recommends one portable behavior/runtime core, explicit Codex/Cursor/Kiro CLI overlays, and a transactional install-time assembler. Legacy generated trees and Claude support are migration-only scope and must be removed before completion."
+        key_findings:
+          - "Generic skills and core runtime can be shared; installed layouts remain host-native."
+          - "Typed semantic primitives should be introduced selectively for control flow, safety, persistence, and capability-sensitive operations."
+          - "The installer needs staging, validation, receipt ownership, atomic commit, recovery, and byte-exact rollback."
+          - "Core tests run once; overlay, materialization, installation, and available host probes remain per host."
+        recommended_approach: "Portable common core plus repository-owned host overlays and a custom transactional installer."
+        decisions_made:
+          - "Use minimal semantic primitives rather than a full workflow DSL."
+          - "Support Codex, Cursor, and Kiro CLI with explicit overlays; remove Claude from this task."
+          - "Use legacy generated trees only as a shadow comparison oracle, then delete them before completion."
+      codebase_analysis:
+        summary: "The repository is a build-time generated architecture: a Claude-oriented canonical tree feeds three rewrite-heavy host builders and three committed projections. Portable ESM state/gate/continuation modules and transactional configuration tests are reusable foundations, while overlay contracts, target-aware assembly, receipt-backed installation, and topology-safe rollback are missing."
+        key_files:
+          - plugins/maister/skills/orchestrator-framework/bin/gate-evaluator.mjs
+          - plugins/maister/skills/orchestrator-framework/bin/orchestrator-state-repository.mjs
+          - plugins/maister/skills/orchestrator-framework/bin/orchestrator-state-schema.mjs
+          - plugins/maister/skills/orchestrator-framework/bin/phase-continue.mjs
+          - plugins/maister/skills/orchestrator-framework/bin/workflow-continuation.mjs
+          - platforms/codex-cli/build.sh
+          - platforms/cursor/build.sh
+          - platforms/kiro-cli/build.sh
+          - Makefile
+          - tests/phase-continue-contract.test.sh
+          - tests/advisor-config-reconciliation.test.sh
+          - tests/advisor-init-lifecycle.test.sh
+          - plugins/maister/skills/orchestrator-framework/references/host-capabilities.yml
+        primary_language: "Markdown/YAML with Bash and JavaScript ESM"
+        decisions:
+          - "The five byte-identical orchestrator runtime modules are the initial portable-core boundary."
+          - "Host-specific semantic behavior belongs in explicit overlays rather than global prose rewrites."
+          - "Core behavior is tested once; host seams retain targeted contract, install, and native evidence tests."
+        risks:
+          - "Current installers mutate or clear destinations before a complete transactional validation boundary."
+          - "Current CI and docs assume committed generated trees and four hosts, including Claude."
+          - "Deleting legacy trees before parity evidence could lose portable behavioral content hidden in Claude-native files."
+        artifacts:
+          - path: analysis/codebase-analysis.md
+            label: Codebase analysis
+            html: null
+      clarifications:
+        summary: "The user confirmed the research-approved target set and migration scope: Codex, Cursor, and Kiro CLI are supported; Claude and committed generated trees are temporary migration oracles and must be removed before completion."
+        decisions:
+          - "Support Codex, Cursor, and Kiro CLI only in the completed implementation."
+          - "Use legacy generated trees/builders for shadow comparison only, then delete them before completion."
+        risks:
+          - "Parity and deletion criteria must be explicit and testable before legacy removal."
+        artifacts:
+          - path: analysis/clarifications.md
+            label: Phase 1 clarifications
+            html: null
+      clarifications: []
+      gap_analysis:
+        summary: "The repository remains organized around a Claude-oriented source, three rewrite-heavy builders, three committed generated projections, and host-specific installers. The byte-identical runtime modules and existing transactional tests provide reusable foundations, but the common overlay contract, target-aware installer lifecycle, structured evidence model, and final three-host topology are missing. This is a high-risk, high-effort migration because source ownership, installation safety, compatibility policy, CI/release behavior, and documentation change together."
+        risk_level: high
+        effort_estimate: high
+        change_type: modificative
+        compatibility_requirements: strict
+        task_characteristics:
+          has_reproducible_defect: false
+          modifies_existing_code: true
+          creates_new_entities: true
+          involves_data_operations: true
+          ui_heavy: false
+        integration_points:
+          - common portable source and runtime ownership
+          - Codex, Cursor, and Kiro CLI host overlays
+          - target-aware installer and source resolver
+          - overlay, primitive, evidence, receipt, and journal schemas
+          - Makefile, CI, release, and repository-topology validation
+          - host settings, MCP, hooks, manifests, and native evidence
+          - README, host support docs, project docs, and standards
+        decisions:
+          - "Use minimal typed primitives rather than a full workflow DSL."
+          - "Use one common layer with explicit Codex, Cursor, and Kiro CLI overlays and a custom installer."
+          - "Use legacy generated trees only as a migration shadow oracle, then remove them before task completion."
+          - "Remove Claude Code from supported targets and require a separate future host-integration task for reintroduction."
+          - "Apply capability-sensitive compatibility: semantic boundaries fail closed and packaging-only differences may be provisional."
+          - "Test the portable core once and retain per-host overlay, materialization, installation, and available native evidence tests."
+        risks:
+          - "Semantic drift in gates, delegation, hooks, progress, and continuation can survive structural parity."
+          - "Partial installation or settings mutation can damage user state without journaled byte-exact recovery."
+          - "Incorrect semantic-versus-packaging classification can permit unsafe provisional compatibility."
+          - "Removing legacy before post-release observation increases the importance of parity and failure-injection gates."
+          - "Stale documentation and CI can continue directing users toward unsupported Claude and generated-tree workflows."
+        decisions_needed:
+          critical:
+            - id: host-contract-closure
+              issue: "Exact discovery roots, native inventories, settings destinations, and semantic bindings are not yet encoded in versioned overlays."
+              options:
+                - "Contract-first overlay v1 with E1/E2/E4 for every host and E5/E6 when runtime exists"
+                - "Host-doc-first overlay using legacy outputs only as semantic comparison fixtures"
+                - "Runtime-gated support until native discovery and critical scenario evidence exist"
+              recommendation: "Contract-first overlay v1"
+            - id: settings-ownership
+              issue: "Shared settings and shell configuration require explicit ownership and rollback semantics."
+              options:
+                - "Hybrid whole_file and managed_keys ownership with journal, backup, drift detection, and exact rollback"
+                - "Dedicated files only, with manual configuration where unavailable"
+                - "Managed-key merging for every shared settings file"
+              recommendation: "Hybrid ownership contract"
+          important:
+            - id: native-evidence-policy
+              issue: "Cursor and Kiro native continuation evidence is currently unavailable."
+              options:
+                - "Require E1-E4 and shared-core E3; record E5/E6 as unavailable, never pass"
+                - "Require E5/E6 before labeling any host supported"
+                - "Keep hosts provisional or unsupported until fresh native evidence exists"
+              default: "Require E1-E4 and shared-core E3; record E5/E6 as unavailable"
+            - id: evidence-freshness
+              issue: "Capability records need an explicit expiry and re-probe policy."
+              options:
+                - "Per-capability expiry with host, version, scenario, and timestamp renewal"
+                - "Release-bound expiry when Maister or host contract versions change"
+                - "No expiry beyond recorded host version and manual review"
+              default: "Per-capability expiry"
+            - id: documentation-boundary
+              issue: "Documentation, standards, CI, and release paths still prescribe generated trees and Claude/marketplace workflows."
+              options:
+                - "Update all affected documentation, standards, Make/CI/release paths, and support matrices in this task"
+                - "Defer documentation migration to a follow-up"
+                - "Retain legacy instructions as a compatibility guide"
+              default: "Update all affected documentation and release paths in this task"
+        scope_expansion_recommended: true
+        critical_issues:
+          - "No neutral common/host overlay, shared installer, receipt, journal, or schema implementation exists."
+          - "Cursor and Kiro installers delete or clear destinations before complete validation and commit."
+          - "Host semantics are implemented through large global rewrite lists without a shared binding-completeness contract."
+          - "Claude, committed generated trees, generated-tree CI, and legacy documentation still conflict with the accepted target architecture."
+        artifacts:
+          - path: analysis/gap-analysis.md
+            label: Gap analysis report
+            html: null
+      scope_clarifications:
+        summary: null
+        scope_expanded: null
+        decisions: []
+        risks: []
+        artifacts: []
+      ui_mockups:
+        summary: null
+        components_designed: []
+        decisions: []
+        risks: []
+        artifacts: []
+      design:
+        summary: null
+        screen_count: 0
+        component_count: 0
+        index_path: null
+        decisions: []
+        risks: []
+        artifacts: []
+      specification:
+        summary: "The specification defines a portable common source, explicit Codex/Cursor/Kiro CLI overlays, and a shared target-aware installer with immutable provenance, staged validation, journaled receipts, hybrid settings ownership, capability-sensitive evidence, rollback, and legacy deletion criteria. It also aligns core-once/per-host testing and all documentation, standards, CI, and release paths with the new topology."
+        goal: "Replace generated host variants with one portable source and safe install-time target selection."
+        requirements_count: 17
+        reusable_components: 10
+        new_components_needed: 7
+        visual_assets_referenced: 0
+        test_groups_estimated: 6
+        decisions:
+          - "Use a portable common layer plus explicit host overlays because native layouts remain host-specific while behavior should be owned once."
+          - "Treat the installer as a transaction manager because user state and settings require staged validation, receipts, recovery, and rollback."
+          - "Use capability-sensitive compatibility because semantic boundaries must fail closed while packaging-only differences can be provisional."
+          - "Delete Claude and generated trees only after zero-unresolved-difference shadow parity and failure-injection evidence."
+        risks:
+          - "Native E5/E6 evidence may remain unavailable for Cursor and Kiro."
+          - "Shared settings and shell files can be damaged without journaled ownership and exact rollback."
+          - "Textual parity can conceal semantic drift in gates, delegation, hooks, and continuation."
+          - "Legacy deletion removes the current rollback oracle and depends on complete parity evidence."
+        artifacts:
+          - path: analysis/requirements.md
+            label: Requirements
+            html: null
+          - path: analysis/technical-clarifications.md
+            label: Technical clarifications
+            html: null
+          - path: implementation/spec.md
+            label: Specification
+            html: implementation/spec.html
+      spec_audit:
+        summary: "The specification is Mostly Compliant as a pre-implementation contract: all 17 requirements map to the research decisions, current-state gaps, and migration exit criteria. There are no critical or high-severity specification defects; two medium clarifications remain around the exact installer/receipt contract and the field-level overlay schema."
+        compliance_status: "Mostly Compliant"
+        requirements_checked: 17
+        requirements_passed: 17
+        finding_counts:
+          critical: 0
+          high: 0
+          medium: 2
+          low: 2
+        decisions:
+          - "Treat current legacy implementation gaps as expected pre-implementation state because the specification explicitly covers migration and deletion criteria."
+          - "Freeze exact installer/receipt and overlay schema contracts in the implementation plan before implementation approval."
+        risks:
+          - "Native E5/E6 evidence may remain unavailable for Cursor and Kiro."
+          - "Shared settings and shell files require exact journaled rollback."
+          - "Textual parity can conceal semantic drift."
+        artifacts:
+          - path: verification/spec-audit.md
+            label: Specification audit
+            html: null
+      implementation_plan:
+        summary: "The plan organizes the migration into four serialized implementation groups plus a focused test-review group. It freezes overlay v1 and the installer CLI/error/receipt/journal contracts, preserves legacy outputs until parity and failure-injection evidence pass, and caps the feature suite at 34 tests."
+        task_groups: 5
+        total_steps: 39
+        expected_tests: "26-34"
+        has_testing_group: true
+        has_visual_coverage: false
+        decisions:
+          - "Keep plugins/maister as the single common source and represent host differences in strict versioned overlays."
+          - "Serialize overlay, materializer, installer, and legacy-removal groups because each freezes an interface consumed by the next."
+          - "Use one Node ESM lifecycle command with stable machine-readable errors, receipt v1, and journal v1."
+          - "Delete Claude support, old builders, and generated trees only after zero-unresolved parity and exact recovery evidence."
+        risks:
+          - "Cursor and Kiro E5/E6 may remain unavailable and must never be promoted to passed."
+          - "Shared settings require journaled multi-file recovery in addition to atomic managed-tree replacement."
+          - "A real immutable GitHub smoke probe depends on release-environment network availability."
+          - "No performance threshold is introduced in this migration."
+        artifacts:
+          - path: implementation/implementation-plan.md
+            label: Implementation plan
+            html: implementation/implementation-plan.html
+      architecture_decision:
+        decision: "Portable common core with explicit host overlays and transactional installer"
+        summary: "Use typed semantic bindings only where host choice can change control flow, safety, persistence, or capability evidence."
+        decisions: []
+        risks: []
+        artifacts: []
+      implementation_verification:
+        summary: "Final Phase 11 verification passes all 39 plan steps and 17 requirements with 114/114 authoritative tests, 20/20 focused evidence/topology checks, make validate, package lifecycle 4/4, and clean strict parity for all three targets with zero unresolved differences. Both former P1s, both stale test contracts, and the environment-coupled topology contract are resolved with zero production or test regressions."
+        status: passed
+        issue_counts:
+          critical: 0
+          warning: 0
+          info: 0
+        decisions:
+          - "Carry one immutable source binding through overlay selection, materialization, evidence, and receipt publication."
+          - "Keep supported-target ownership in the central Node registry and reject Make-level target-list overrides."
+          - "Scan repository topology through tracked plus non-ignored untracked Git candidates while retaining raw fixture traversal."
+          - "Separate the passed implementation verdict from exact-tag publication controls."
+        risks:
+          - "The exact tag commit must repeat the complete clean release sequence before publication."
+          - "Native E6 remains unavailable where no reviewed host runtime scenario exists."
+          - "Unsigned provenance and cooperative-writer limits remain explicit release boundaries."
+        artifacts:
+          - path: verification/implementation-verification.md
+            label: Implementation verification
+            html: verification/implementation-verification.html
+          - path: verification/test-suite-results.md
+            label: Test suite results
+            html: null
+          - path: verification/completeness-check.md
+            label: Completeness check
+            html: null
+          - path: verification/code-review-report.md
+            label: Code review
+            html: null
+          - path: verification/pragmatic-review.md
+            label: Pragmatic review
+            html: null
+          - path: verification/production-readiness-report.md
+            label: Production readiness
+            html: null
+          - path: verification/reality-check.md
+            label: Reality assessment
+            html: null
+      finalization:
+        summary: "The canonical 31-record decision ledger and its self-contained HTML companion are complete. The user explicitly approved the denylisted final handoff, and the workflow completion checkpoint is durable."
+        decisions:
+          - "Generate the final summary only from canonical gate history."
+          - "Preserve all alternatives, recommendations, rationales, confidence, retry/arbitration state, overrides, and idempotency keys."
+          - "Do not mark the task completed before protected final-handoff approval."
+        risks:
+          - "Production publication remains conditional on the exact clean tag workflow."
+        artifacts:
+          - path: outputs/decision-summary.md
+            label: Decision summary
+            html: outputs/decision-summary.html
+      advisor:
+        summary: null
+        decisions: []
+        risks: []
+        artifacts: []
+  project_context:
+    project_doc_paths:
+      - .maister/docs/project/vision.md
+      - .maister/docs/project/roadmap.md
+      - .maister/docs/project/tech-stack.md
+      - .maister/docs/project/architecture.md
+
+task:
+  title: "Implement platform-independent Maister distribution"
+  description: "Przeanalizować, jak zastąpić generowanie i osobne testowanie wariantów dla wielu hostów jednym rozwiązaniem niezależnym od narzędzia, z rozróżnieniem platformy możliwym na etapie instalacji."
+  status: completed
+  tags: [development, architecture, portability, installation, testing]
+  priority: high
+
+verification_context:
+  last_status: passed
+  issues_found: []
+  fixes_applied:
+    - "Resumed iteration 3: replaced checkout-wide raw topology validation with one shared fail-closed Git-aware repository policy covering tracked, non-ignored untracked, and force-added ignored files while preserving raw fixture traversal."
+    - "Resumed iteration 2: updated the topology contract to assert the non-configurable Make guard and Node validate-overlays delegation instead of the removed unsafe target declaration."
+    - "Resumed iteration 2: supplied the overlay-negative fixture with a valid source-bound Git identity so it reaches the intended E_OVERLAY_IO boundary."
+    - "Resumed iteration 1: bound lifecycle overlay, E3, and materialization to one prevalidated immutable source binding; direct A/B mismatch now fails before target-state creation."
+    - "Resumed iteration 1: removed Make-owned target enumeration, rejected SUPPORTED_TARGETS overrides before evaluation, and delegated all-target validation to the central Node registry."
+    - "Rejected symlink and persisted-path escapes across target, state, staging, settings, receipts, journals, backups, recovery, uninstall, and rollback."
+    - "Made managed-tree publication atomic by staged rename and hardened durability with fsync and private state/backup modes."
+    - "Made recovery and rollback ordered, idempotent, pointer-complete, transition-validated, and explicitly failure-journaled."
+    - "Preserved existing settings modes and use secure defaults for new settings files."
+    - "Implemented strict receipt/journal schemas and bound full source, overlay, materialized, and provenance hashes to complete E1-E6 evidence."
+    - "Added bounded host and Git timeouts; unavailable native evidence remains explicit and never becomes passed."
+    - "Made release archives self-contained, deterministic, checksumed, target-isolated, and lifecycle-tested after extraction."
+    - "Implemented bounded immutable GitHub resolution and strict clean local-ref provenance from the same checkout used for overlays."
+    - "Pinned release actions, removed unpinned swallowed Cursor installation, and validate all three targets in release CI."
+    - "Hardened complete-output materialization validation for containment, vocabulary, syntax, references, inventories, types, modes, and hashes."
+    - "Converted Cursor skills into a deterministic versioned projection with drift checking and hash-locked exceptions."
+    - "Centralized supported-target policy and linked Make's declarative target list to registry tests."
+    - "Removed brittle parity exact-count assertions while retaining immutable fingerprints and strong safety invariants."
+    - "Isolated mutable source fixtures so concurrent focused runs do not interfere."
+    - "Removed stale active Claude instructions and documented package, source, recovery, permissions, evidence, and operator workflows accurately."
+    - "Added descriptor-backed path identity snapshots and fail-closed pre/post mutation revalidation, including adversarial staging-parent symlink-swap coverage."
+    - "Cryptographically bound backup bytes, modes, symlink targets, existence, and directory topology; verify backups before restore and restored state afterward."
+    - "Clean successful recovery staging/orphan receipt residue while preserving forensic artifacts and code-7 rollback_failed state on recovery failure."
+    - "Replaced synthesized E3 with a strict portable-core attestation and finalize E4 only after commit and integrity verification before final receipt publication."
+    - "Verified injected GitHub resolver roots, commits, cleanliness, and hashes; strengthened strict frontmatter and internal-reference validation."
+    - "Added immutable clean-checkout three-target parity reconstruction with zero unresolved differences and made it a release dependency."
+    - "Made archive ordering explicit, pinned validation actions, removed active stale Claude wording, and generated verified checksums, CycloneDX SBOM, and provenance metadata."
+    - "Generated and embedded one deterministic E3 attestation after make test-core, bound it into all packages and release metadata, and proved fail-closed negative cases."
+    - "Removed remaining duplicated target policy from journal and CLI validation in favor of the central target registry."
+    - "Added descriptor-backed no-follow reads and mutation ownership boundaries for receipts, journals, recovery manifests, backups, settings, active pointers, and transaction publication, with adversarial parent/leaf replacement coverage."
+    - "Rebound local and injected source bytes before and after assembly, including dirty-local status fingerprints, and bound transaction E3 directly to the independently recomputed portable-core hash."
+    - "Removed running-checkout overlay fallback for install/update so source and overlay share one resolved root; verify, uninstall, and rollback retain receipt/package-backed lifecycle behavior."
+    - "Moved Make packaging, E3, parity, topology, and install inputs through a validated Node argv/environment boundary and added shell/JavaScript injection tests."
+    - "Normalized and validated BOM/CRLF frontmatter and rejected malformed or unsupported internal-reference grammar."
+  decisions_made:
+    - "All four standard verification tracks enabled; E2E skipped; user documentation enabled."
+    - "Re-verification iteration 1 failed with 4 critical, 10 warning, and 3 informational residuals despite 60/60 tests."
+    - "The user selected all fixable residual issues for Phase 11 fix iteration 2."
+    - "Fix iteration 2 completed with 91/91 platform-independent tests, 4/4 packaged lifecycle tests, zero-unresolved three-target parity, make validate, and git diff --check passing; independent re-verification is pending."
+    - "Re-verification iteration 2 failed with 4 critical blockers and 10 warnings despite 91/91 tests; backup integrity, public E3/E4 ordering, and immutable parity wiring are independently resolved."
+    - "The user selected all fixable issues for the final Phase 11 fix iteration 3."
+    - "Fix iteration 3 completed with 109/109 platform-independent tests, make validate, zero-unresolved three-target diagnostic parity, syntax checks, and git diff --check passing; independent re-verification is pending."
+    - "The user approved independent re-verification iteration 3 after the final repair loop."
+    - "Re-verification iteration 3 failed with 2 critical blockers and 10 warnings despite 109/109 tests; the three-attempt repair loop is exhausted and unresolved-critical approval is required."
+    - "The user selected Stop workflow at the unresolved-critical gate; Phase 11 and the overall task are failed with both P1 blockers preserved."
+    - "The resumed Phase 11 baseline independently reconfirmed both P1 blockers with 109/109 tests otherwise passing; fix selection is pending."
+    - "The user selected all fixable issues for resumed Phase 11 repair iteration 1."
+    - "Resumed fix iteration 1 completed with focused adversarial tests 3/3, full suite, make validate, package lifecycle 4/4, zero-unresolved diagnostic parity, syntax checks, and patch hygiene passing."
+    - "The existing terminal verification-rerun decision was reused idempotently: Yes, re-run verification."
+    - "Resumed fix iteration 2 repaired both stale test contracts; focused combined coverage passes 5/5 and the complete suite plus make validate are green."
+    - "The existing terminal verification-rerun decision was reused idempotently for final independent verification."
+    - "The final topology-contract repair passed 114/114 authoritative tests, 20/20 focused topology/evidence checks, make validate, clean strict parity 3/3 with zero unresolved differences, clean topology, and all three package builds."
+    - "Final independent verification passed with zero critical, warning, informational, production, or test-regression findings; exact-tag publication controls remain separate release conditions."
+  reverify_count: 3
+
+phases:
+  - id: phase-1
+    name: Analyze codebase & clarify requirements
+    status: completed
+    blocked_by: []
+    started: "2026-07-14T16:32:58Z"
+    completed: "2026-07-14T16:56:57Z"
+    gate:
+      question: "Continue to Phase 2?"
+      options:
+        - Continue to Phase 2
+        - Pause workflow
+      answer: Continue to Phase 2
+      status: decided
+  - id: phase-2
+    name: Analyze gaps & clarify scope
+    status: completed
+    blocked_by: [phase-1]
+    started: "2026-07-14T16:56:57Z"
+    completed: "2026-07-14T17:55:57Z"
+    gate:
+      question: "Continue to Phase 5: Technical Approach, Requirements & Specification?"
+      options:
+        - "Continue to Phase 5: Technical Approach, Requirements & Specification"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+      answer: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+      status: decided
+  - id: phase-3
+    name: Write failing test (TDD Red)
+    status: skipped
+    blocked_by: [phase-2]
+    started: null
+    completed: "2026-07-14T17:55:57Z"
+    skip_reason: "Skipped by routing: the task is not defect-driven and the workflow routes directly to requirements and specification."
+    gate: null
+  - id: phase-4
+    name: Generate UI mockups
+    status: skipped
+    blocked_by: [phase-2]
+    started: null
+    completed: "2026-07-14T17:55:57Z"
+    skip_reason: "Skipped by routing: gap analysis found no UI-heavy scope."
+    gate: null
+  - id: phase-5
+    name: Gather requirements & create specification
+    status: completed
+    blocked_by: [phase-2, phase-3, phase-4]
+    started: "2026-07-14T17:55:57Z"
+    completed: "2026-07-14T18:19:59Z"
+    gate:
+      question: "Continue to specification audit?"
+      options:
+        - "Continue to specification audit"
+        - "Pause workflow"
+      recommendation: "Continue to specification audit"
+      answer: "Continue to specification audit"
+      status: decided
+  - id: phase-6
+    name: Audit specification
+    status: completed
+    blocked_by: [phase-5]
+    started: "2026-07-14T18:19:59Z"
+    completed: "2026-07-14T18:36:21Z"
+    gate:
+      question: "Continue to implementation planning?"
+      options:
+        - "Continue to implementation planning"
+        - "Pause workflow"
+      recommendation: "Continue to implementation planning"
+      answer: "Continue to implementation planning"
+      status: decided
+  - id: phase-7
+    name: Plan implementation
+    status: completed
+    blocked_by: [phase-6]
+    started: "2026-07-14T18:36:21Z"
+    completed: "2026-07-14T18:54:09Z"
+    gate:
+      question: "Continue to implementation approval?"
+      options:
+        - "Continue to implementation approval"
+        - "Pause workflow"
+      recommendation: "Continue to implementation approval"
+      answer: "Continue to implementation approval"
+      status: decided
+  - id: phase-8
+    name: Execute implementation
+    status: completed
+    blocked_by: [phase-7]
+    started: "2026-07-14T19:08:52Z"
+    completed: "2026-07-14T22:12:26Z"
+    gate:
+      question: "Continue to verification?"
+      options:
+        - "Continue to verification"
+        - "Pause workflow"
+      recommendation: "Continue to verification"
+      answer: "Continue to verification"
+      status: decided
+  - id: phase-9
+    name: Verify test passes (TDD Green)
+    status: skipped
+    blocked_by: [phase-8]
+    started: null
+    completed: "2026-07-15T12:40:53Z"
+    skip_reason: "Skipped by routing: Phase 3 TDD Red was not executed because the task was not defect-driven."
+    gate: null
+  - id: phase-10
+    name: Prompt verification options
+    status: completed
+    blocked_by: [phase-8, phase-9]
+    started: "2026-07-15T12:40:53Z"
+    completed: "2026-07-15T12:47:27Z"
+    gate:
+      question: "Generate user documentation?"
+      options:
+        - "Yes (Recommended)"
+        - "No, skip"
+      recommendation: "Yes (Recommended)"
+      answer: "Yes (Recommended)"
+      status: decided
+  - id: phase-11
+    name: Verify implementation & resolve issues
+    status: completed
+    blocked_by: [phase-10]
+    started: "2026-07-15T18:46:53Z"
+    completed: "2026-07-15T22:30:35Z"
+    gate:
+      idempotency_key: sha256:949c1c70eecbf5b542f80cfb36dc9f5090ec10164e69582d0727f8e47ed16346
+      gate_type: phase-11-exit
+      question: "Continue to Phase 12?"
+      options:
+        - "Continue to Phase 12"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 12"
+      answer: "Continue to Phase 12"
+      status: decided
+  - id: phase-12
+    name: Run E2E tests
+    status: skipped
+    blocked_by: [phase-11]
+    started: null
+    completed: "2026-07-16T08:13:13Z"
+    skip_reason: "Skipped by configured verification options: orchestrator.options.e2e_enabled is false."
+    gate:
+      idempotency_key: sha256:5d3db71e7a2ecdaf6c5f3b8638d2ffd3418ea06b44e4aa52e4220cfe59c4992c
+      gate_type: phase-12-exit
+      question: "E2E complete. Continue to Phase 13?"
+      options:
+        - "Continue to Phase 13"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 13"
+      answer: "Continue to Phase 13"
+      status: decided
+  - id: phase-13
+    name: Generate user documentation
+    status: completed
+    blocked_by: [phase-12]
+    started: "2026-07-16T08:30:49Z"
+    completed: "2026-07-16T08:40:06Z"
+    skip_reason: null
+    gate:
+      idempotency_key: sha256:4190f0156e5926ddbfbb8dc4a7f936990fca079a77de6d4a9b2fd6262f1193ba
+      gate_type: phase-13-exit
+      question: "Documentation complete. Continue to Phase 14?"
+      options:
+        - "Continue to Phase 14"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 14"
+      answer: "Continue to Phase 14"
+      status: decided
+  - id: phase-14
+    name: Finalize workflow
+    status: completed
+    blocked_by: [phase-11, phase-12, phase-13]
+    started: "2026-07-16T09:17:19Z"
+    completed: "2026-07-16T10:33:37Z"
+    skip_reason: null
+    gate:
+      idempotency_key: sha256:6d7f6ae8df3ed9da15c045e924b897b137471f0083602540051e6cd0bb590c6e
+      gate_type: final-handoff-approval
+      question: "Complete workflow or keep it open?"
+      options:
+        - "Complete workflow"
+        - "Keep workflow open"
+      recommendation: "Complete workflow"
+      answer: "Complete workflow"
+      status: decided

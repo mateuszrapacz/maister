@@ -1,0 +1,44 @@
+schema_version: 1
+primitives:
+  - id: user_gate
+    purpose: evaluate a user-controlled workflow gate
+    module: skills/orchestrator-framework/bin/gate-evaluator.mjs
+    operation: evaluateGate
+    capability: semantic
+    fail_closed: true
+  - id: delegate_agent
+    purpose: dispatch durable work to a delegated agent
+    module: skills/orchestrator-framework/bin/workflow-continuation.mjs
+    operation: applySelectionAndCreateDispatch
+    capability: delegation
+    fail_closed: true
+  - id: track_progress
+    purpose: persist inventory and progress checkpoints
+    module: skills/orchestrator-framework/bin/workflow-continuation.mjs
+    operation: materializeInventory
+    capability: persistence
+    fail_closed: true
+  - id: resolve_task_root
+    purpose: read and safely resolve the workflow state root
+    module: skills/orchestrator-framework/bin/orchestrator-state-repository.mjs
+    operation: readState
+    capability: persistence
+    fail_closed: true
+  - id: persist_state
+    purpose: commit validated workflow state with compare-and-swap
+    module: skills/orchestrator-framework/bin/orchestrator-state-repository.mjs
+    operation: commitState
+    capability: persistence
+    fail_closed: true
+  - id: continue_workflow
+    purpose: apply one validated phase continuation transition
+    module: skills/orchestrator-framework/bin/phase-continue.mjs
+    operation: main
+    capability: continuation
+    fail_closed: true
+runtime_modules:
+  - skills/orchestrator-framework/bin/gate-evaluator.mjs
+  - skills/orchestrator-framework/bin/orchestrator-state-repository.mjs
+  - skills/orchestrator-framework/bin/orchestrator-state-schema.mjs
+  - skills/orchestrator-framework/bin/phase-continue.mjs
+  - skills/orchestrator-framework/bin/workflow-continuation.mjs

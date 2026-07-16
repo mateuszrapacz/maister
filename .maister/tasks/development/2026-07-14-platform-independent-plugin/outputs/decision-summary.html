@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Summary — Platform-Independent Maister Distribution</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+header { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; }
+header h1 { margin:6px 0 2px; }
+.meta { color:var(--dim); font-size:12.5px; }
+.status { border:1px solid var(--ok); background:var(--ok-soft); border-radius:var(--radius); padding:10px 14px; max-width:330px; }
+.status b { display:block; color:var(--ok); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; flex:1; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { border-left:4px solid var(--accent); }
+.summary-grid { display:grid; grid-template-columns:1.25fr 1fr; gap:14px; }
+.summary-grid h2 { margin-top:0; }
+.summary-grid ul, .card ul { margin:8px 0; padding-left:20px; }
+.summary-grid li, .card li { margin:5px 0; }
+.toc { font-size:12.5px; color:var(--dim); padding:7px 2px; }
+.toc a { margin:0 5px; }
+.table-wrap { overflow-x:auto; }
+.outcomes td:first-child { font-weight:650; white-space:nowrap; }
+.ledger { font-size:12.5px; min-width:1000px; }
+.ledger th:first-child, .ledger td:first-child { text-align:right; width:42px; }
+.ledger td:nth-child(2) { min-width:145px; }
+.ledger td:nth-child(3) { min-width:290px; }
+.ledger td:nth-child(4) { min-width:215px; }
+.ledger td:nth-child(5) { min-width:125px; }
+.decision { font-weight:650; }
+.key-list { columns:2; column-gap:28px; margin:12px 0 0; padding-left:26px; }
+.key-list li { break-inside:avoid; margin:5px 0; }
+.key-list code { overflow-wrap:anywhere; }
+.boundary { border:2px solid var(--ok); background:var(--ok-soft); }
+.boundary h2 { margin-top:0; color:var(--ok); }
+.muted { color:var(--dim); }
+@media (max-width:760px) {
+  header { display:block; } .status { margin-top:12px; max-width:none; }
+  .summary-grid { grid-template-columns:1fr; } .key-list { columns:1; }
+}
+</style>
+</head>
+<body>
+  <nav class="crumbs" aria-label="Report suite">
+    <span class="here">Decision Summary</span>
+    <a href="../verification/implementation-verification.html">Implementation Verification</a>
+    <a href="../documentation/user-guide.md" target="_blank" rel="noopener">User Guide</a>
+    <a href="../orchestrator-state.yml" target="_blank" rel="noopener">Canonical State</a>
+    <a href="decision-summary.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+  </nav>
+
+  <header>
+    <div>
+      <span class="badge">Decision Summary</span>
+      <h1>Platform-Independent Maister Distribution</h1>
+      <div class="meta">Generated 2026-07-16 · Development workflow · Implement platform-independent Maister distribution</div>
+    </div>
+    <div class="status">
+      <b>Current status</b>
+      Completed
+    </div>
+  </header>
+
+  <div class="tiles" aria-label="Headline outcomes">
+    <div class="tile"><b class="pass">17/17</b><span>requirements</span></div>
+    <div class="tile"><b class="pass">39/39</b><span>plan steps</span></div>
+    <div class="tile"><b class="pass">114/114</b><span>authoritative tests</span></div>
+    <div class="tile"><b class="pass">20/20</b><span>focused tests</span></div>
+    <div class="tile"><b>31</b><span>terminal gates</span></div>
+  </div>
+
+  <section class="card tldr" id="summary">
+    <h2 style="margin-top:0">TL;DR</h2>
+    <p>The workflow implemented and independently verified one portable Maister source with explicit Codex, Cursor, and Kiro CLI overlays, a transactional installer, immutable source and evidence binding, deterministic packaging, and removal of Claude and committed generated host trees.</p>
+    <p>Implementation verification passed with <strong>39/39 plan steps</strong>, <strong>17/17 requirements</strong>, <strong>114/114 authoritative tests</strong>, <strong>20/20 focused evidence/topology tests</strong>, package lifecycle <strong>4/4</strong>, and clean strict parity for all three targets with zero unresolved differences. Phase 12 E2E browser verification was intentionally skipped by user choice; Phase 13 produced a validated CLI user guide. The user approved the denylisted final handoff, and Phase 14 plus the overall task are durably completed.</p>
+  </section>
+
+  <div class="summary-grid">
+    <section class="card" id="key-decisions">
+      <h2>Key Decisions</h2>
+      <ul>
+        <li>Support exactly Codex, Cursor, and Kiro CLI; remove Claude and generated/marketplace projections.</li>
+        <li>Use one common portable source plus strict, versioned target overlays.</li>
+        <li>Use hybrid <code>whole_file</code> and <code>managed_keys</code> settings ownership with receipts, journals, backups, drift detection, recovery, and exact rollback.</li>
+        <li>Require E1–E4 and shared-core E3; record unavailable E5/E6 honestly and never promote unavailable evidence to passed.</li>
+        <li>Bind install/update overlay selection, materialization, E3 evidence, and receipts to one immutable source identity.</li>
+        <li>Keep supported-target enumeration in the central Node registry, outside caller-controlled Make expansion.</li>
+        <li>Validate repository topology through Git-tracked plus non-ignored untracked candidates, while preserving raw recursive scans for fixtures.</li>
+        <li>Treat the implementation as ready to merge; production publication remains conditional on the exact clean tag workflow.</li>
+      </ul>
+    </section>
+    <section class="card" id="release-conditions">
+      <h2>Open Questions and Release Conditions</h2>
+      <ul>
+        <li>Native E5/E6 remains unavailable where no reviewed host runtime scenario exists.</li>
+        <li>Checksums, SBOM, and provenance are unsigned and require a trusted release channel.</li>
+        <li>Installer locks coordinate cooperating Maister processes, not arbitrary external writers.</li>
+        <li>The exact tag commit must rerun the complete clean release sequence, explicitly request <code>contents: write</code>, and publish only a recreated allowlisted same-job artifact set.</li>
+      </ul>
+    </section>
+  </div>
+
+  <nav class="toc" aria-label="Contents"><strong>Contents:</strong>
+    <a href="#outcomes">Outcomes</a> ·
+    <a href="#audit">Decision-engine audit</a> ·
+    <a href="#ledger">Complete ledger</a> ·
+    <a href="#keys">Idempotency keys</a> ·
+    <a href="#handoff">Final-handoff decision</a>
+  </nav>
+
+  <main>
+    <section id="outcomes">
+      <h2>Outcome and Evidence</h2>
+      <div class="card table-wrap">
+        <table class="outcomes">
+          <thead><tr><th>Area</th><th>Outcome</th><th>Context</th></tr></thead>
+          <tbody>
+            <tr><td>Specification</td><td><span class="pass">17/17 requirements covered</span></td><td><a href="../implementation/spec.md" target="_blank" rel="noopener">Specification</a></td></tr>
+            <tr><td>Plan</td><td><span class="pass">39/39 steps across 5 groups</span></td><td><a href="../implementation/implementation-plan.md" target="_blank" rel="noopener">Implementation plan</a></td></tr>
+            <tr><td>Implementation log</td><td>All groups and repair cycles recorded</td><td><a href="../implementation/work-log.md" target="_blank" rel="noopener">Work log</a></td></tr>
+            <tr><td>Verification</td><td><span class="pass">Passed; zero open implementation findings</span></td><td><a href="../verification/implementation-verification.md" target="_blank" rel="noopener">Implementation verification</a></td></tr>
+            <tr><td>Tests</td><td><span class="pass">114/114 authoritative; 20/20 focused; package lifecycle 4/4</span></td><td><a href="../verification/test-suite-results.md" target="_blank" rel="noopener">Test results</a></td></tr>
+            <tr><td>Production readiness</td><td>Implementation GO; exact-tag publication conditional</td><td><a href="../verification/production-readiness-report.md" target="_blank" rel="noopener">Production readiness</a></td></tr>
+            <tr><td>User documentation</td><td><span class="pass">CLI guide complete and validated</span></td><td><a href="../documentation/user-guide.md" target="_blank" rel="noopener">User guide</a></td></tr>
+            <tr><td>Canonical workflow state</td><td><span class="pass">Phase 14 and task completed</span></td><td><a href="../orchestrator-state.yml">Orchestrator state</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="audit">
+      <h2>Decision-Engine Audit</h2>
+      <div class="card">
+        <ul>
+          <li>The ledger below contains all <strong>31 terminal gate records</strong> currently in canonical <code>orchestrator.gate_history</code>, in persisted order.</li>
+          <li>Every record has status <code>decided</code>; 30 were finalized by the user and one recovery reconciliation was finalized by the system after the original agent session completed.</li>
+          <li>Advisor model <code>gpt-5.6-sol</code> and arbiter model <code>gpt-5.6-sol</code> were configured on every record, but no advisor or arbiter response was used. Every attempts list is empty, no retry was scheduled, and neither agent was exhausted.</li>
+          <li>No arbitration occurred, no user override was recorded, and every terminal record has <code>error: null</code>.</li>
+          <li>Decision 13 differs from its original recommendation because the same timed-out Group 1 session recovered and completed; the durable system reconciliation records the actual outcome.</li>
+          <li>Decision 18 explicitly chose to skip optional browser E2E against the recommendation. The later Phase 12 exit correctly records that configured skip.</li>
+          <li>Decision 26 stopped the original exhausted repair loop. The workflow was later explicitly resumed from Phase 11 with repair counters reset while preserving this historical decision.</li>
+          <li>Reused idempotent decisions were not duplicated: the canonical re-verification decision and resumed fix-selection decision retained their original keys.</li>
+          <li>Decision 31 is the protected final-handoff approval. It was finalized by the user without advisor or automatic authority.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="ledger">
+      <h2>Complete Decision Ledger</h2>
+      <div class="card table-wrap">
+        <table class="ledger">
+          <thead><tr><th>#</th><th>Phase / gate</th><th>Question and ordered options</th><th>Recommendation → selection</th><th>Actor / confidence</th><th>Rationale and context</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Phase 1 / clarification</td><td><strong>Question:</strong> Confirm Codex, Cursor, Kiro CLI only, with Claude and generated trees removed?<br><strong>Options:</strong> Confirm assumptions · Correct assumptions · Provide more context</td><td>Confirm assumptions → <span class="decision">Confirm assumptions</span></td><td>User / high</td><td>Confirmed the research-approved target and deletion scope. <a href="../analysis/clarifications.md" target="_blank" rel="noopener">Analysis</a></td></tr>
+            <tr><td>2</td><td>Phase 1 / exit</td><td><strong>Question:</strong> Continue to Phase 2?<br><strong>Options:</strong> Continue to Phase 2 · Pause workflow</td><td>Continue to Phase 2 → <span class="decision">Continue to Phase 2</span></td><td>User / high</td><td>Continued into gap analysis. <a href="../analysis/codebase-analysis.md" target="_blank" rel="noopener">Codebase analysis</a></td></tr>
+            <tr><td>3</td><td>Phase 2 / host-contract closure</td><td><strong>Question:</strong> Which host-contract closure policy?<br><strong>Options:</strong> Contract-first overlay v1 with E1/E2/E4 for every host and E5/E6 when runtime exists · Host-doc-first overlay using legacy outputs only as semantic comparison fixtures · Runtime-gated support until native discovery and critical scenario evidence exist</td><td>Contract-first overlay v1… → <span class="decision">Contract-first overlay v1…</span></td><td>User / high</td><td>Discovery roots, inventories, settings destinations, and bindings required a versioned overlay contract. <a href="../analysis/gap-analysis.md" target="_blank" rel="noopener">Gap analysis</a></td></tr>
+            <tr><td>4</td><td>Phase 2 / settings ownership</td><td><strong>Question:</strong> Which settings and shell-configuration ownership contract?<br><strong>Options:</strong> Hybrid whole_file and managed_keys ownership with journal, backup, drift detection, and exact rollback · Dedicated files only, with manual configuration where unavailable · Managed-key merging for every shared settings file</td><td>Hybrid ownership → <span class="decision">Hybrid ownership</span></td><td>User / high</td><td>Shared settings required explicit ownership and rollback semantics. <a href="../analysis/gap-analysis.md" target="_blank" rel="noopener">Gap analysis</a></td></tr>
+            <tr><td>5</td><td>Phase 2 / native evidence</td><td><strong>Question:</strong> Minimum release evidence without native runtime?<br><strong>Options:</strong> Require E1-E4 and shared-core E3; record E5/E6 as unavailable, never pass · Require E5/E6 before labeling any host supported · Keep hosts provisional or unsupported until fresh native evidence exists</td><td>Require E1-E4… → <span class="decision">Require E1-E4…</span></td><td>User / high</td><td>Cursor and Kiro native evidence was unavailable and could not be represented as passing. <a href="../analysis/gap-analysis.md" target="_blank" rel="noopener">Gap analysis</a></td></tr>
+            <tr><td>6</td><td>Phase 2 / evidence freshness</td><td><strong>Question:</strong> Which evidence freshness policy?<br><strong>Options:</strong> Per-capability expiry with host, version, scenario, and timestamp renewal · Release-bound expiry when Maister or host contracts change · No expiry beyond recorded host version and manual review</td><td>Per-capability expiry → <span class="decision">Per-capability expiry</span></td><td>User / high</td><td>Host contracts and binaries change independently, requiring explicit renewal. <a href="../analysis/gap-analysis.md" target="_blank" rel="noopener">Gap analysis</a></td></tr>
+            <tr><td>7</td><td>Phase 2 / documentation boundary</td><td><strong>Question:</strong> Which documentation and release migration boundary?<br><strong>Options:</strong> Update all affected documentation, standards, Make/CI/release paths, and support matrices in this task · Defer documentation migration · Retain legacy instructions as compatibility guide</td><td>Update all affected paths → <span class="decision">Update all affected paths</span></td><td>User / high</td><td>Stale instructions would preserve removed generated-tree and Claude workflows. <a href="../analysis/gap-analysis.md" target="_blank" rel="noopener">Gap analysis</a></td></tr>
+            <tr><td>8</td><td>Phase 2 / routing</td><td><strong>Question:</strong> Continue to Phase 5?<br><strong>Options:</strong> Continue to Phase 5: Technical Approach, Requirements &amp; Specification · Pause workflow</td><td>Continue to Phase 5 → <span class="decision">Continue to Phase 5</span></td><td>User / high</td><td>The task required specification but had no defect-driven TDD-red or UI-heavy phase. <a href="../analysis/requirements.md" target="_blank" rel="noopener">Requirements</a></td></tr>
+            <tr><td>9</td><td>Phase 5 / exit</td><td><strong>Question:</strong> Continue to specification audit?<br><strong>Options:</strong> Continue to specification audit · Pause workflow</td><td>Continue → <span class="decision">Continue</span></td><td>User / high</td><td>Specification artifacts and structural checks were ready for independent audit. <a href="../implementation/spec.md" target="_blank" rel="noopener">Specification</a></td></tr>
+            <tr><td>10</td><td>Phase 6 / exit</td><td><strong>Question:</strong> Continue to implementation planning?<br><strong>Options:</strong> Continue to implementation planning · Pause workflow</td><td>Continue → <span class="decision">Continue</span></td><td>User / high</td><td>Audit found no critical/high defects; two medium contract clarifications moved into planning. <a href="../verification/spec-audit.md" target="_blank" rel="noopener">Spec audit</a></td></tr>
+            <tr><td>11</td><td>Phase 7 / exit</td><td><strong>Question:</strong> Continue to implementation approval?<br><strong>Options:</strong> Continue to implementation approval · Pause workflow</td><td>Continue → <span class="decision">Continue</span></td><td>User / high</td><td>The five-group plan covered all requirements and 39 synchronized steps. <a href="../implementation/implementation-plan.md" target="_blank" rel="noopener">Plan</a></td></tr>
+            <tr><td>12</td><td>Phase 7 / protected implementation approval</td><td><strong>Question:</strong> Approve this complete implementation scope?<br><strong>Options:</strong> Approve complete implementation scope · Reject implementation scope · Request scope changes</td><td>Approve → <span class="decision">Approve complete implementation scope</span></td><td>User / high</td><td>Explicit user authority was required before implementation. <a href="../implementation/implementation-plan.md" target="_blank" rel="noopener">Plan</a></td></tr>
+            <tr><td>13</td><td>Phase 8 / Group 1 recovery</td><td><strong>Question:</strong> Group 1 agent timed out; how to proceed?<br><strong>Options:</strong> Try suggested fix · Retry group · Complete manually · Rollback changes · Stop</td><td>Retry group → <span class="decision">Try suggested fix</span></td><td>System / high</td><td>The same session recovered and completed, so the durable record reconciled the observed outcome without duplicate work. <a href="../implementation/work-log.md" target="_blank" rel="noopener">Work log</a></td></tr>
+            <tr><td>14</td><td>Phase 8 / Group 4 recovery</td><td><strong>Question:</strong> Materialization parity red for all three target inventory/vocabulary contracts; how to proceed?<br><strong>Options:</strong> Try suggested fix · Retry group · Complete manually · Rollback changes · Stop</td><td>Try suggested fix → <span class="decision">Try suggested fix</span></td><td>User / high</td><td>Common-source and inventory contracts required reconciliation. <a href="../implementation/work-log.md" target="_blank" rel="noopener">Work log</a></td></tr>
+            <tr><td>15</td><td>Phase 8 / Group 4 parity recovery</td><td><strong>Question:</strong> Materialization green but 573 shadow-parity differences remain; how to proceed?<br><strong>Options:</strong> Try suggested fix · Retry group · Complete manually · Rollback changes · Stop</td><td>Try suggested fix → <span class="decision">Try suggested fix</span></td><td>User / high</td><td>Directed review of every difference to distinguish intentional packaging changes from missing behavior. <a href="../implementation/work-log.md" target="_blank" rel="noopener">Work log</a></td></tr>
+            <tr><td>16</td><td>Phase 8 / exit</td><td><strong>Question:</strong> Continue to verification?<br><strong>Options:</strong> Continue to verification · Pause workflow</td><td>Continue → <span class="decision">Continue</span></td><td>User / high</td><td>Five groups completed, 34 tests passed, targets materialized, parity had zero unresolved, and topology was clean. <a href="../implementation/work-log.md" target="_blank" rel="noopener">Work log</a></td></tr>
+            <tr><td>17</td><td>Phase 10 / verification matrix</td><td><strong>Question:</strong> Which standard verifications?<br><strong>Options:</strong> Code review · Pragmatic review · Reality check · Production readiness</td><td>Run all recommended → <span class="decision">All four tracks</span></td><td>User / high</td><td>Architecture, installer, filesystem, CI/release, and host changes warranted every standard review. <a href="../verification/implementation-verification.md" target="_blank" rel="noopener">Verification</a></td></tr>
+            <tr><td>18</td><td>Phase 10 / optional E2E</td><td><strong>Question:</strong> Enable E2E browser verification?<br><strong>Options:</strong> Yes (Recommended) · No, skip</td><td>Yes → <span class="decision">No, skip</span></td><td>User / medium</td><td>Optional browser E2E was declined; Phase 12 was later skipped as configured. <a href="../orchestrator-state.yml">State</a></td></tr>
+            <tr><td>19</td><td>Phase 10 / optional user docs</td><td><strong>Question:</strong> Generate user documentation?<br><strong>Options:</strong> Yes (Recommended) · No, skip</td><td>Yes → <span class="decision">Yes</span></td><td>User / high</td><td>Installer, hosts, sources, recovery, and release operation changed materially. <a href="../documentation/user-guide.md" target="_blank" rel="noopener">User guide</a></td></tr>
+            <tr><td>20</td><td>Phase 11 / fix selection 1</td><td><strong>Question:</strong> Which issues should be fixed?<br><strong>Options:</strong> Fix all fixable issues · Let me choose specific issues · Skip fixes, proceed as-is</td><td>Fix all → <span class="decision">Fix all</span></td><td>User / high</td><td>Initial verification found five critical blockers and sixteen warning groups. <a href="../verification/implementation-verification.md" target="_blank" rel="noopener">Verification history</a></td></tr>
+            <tr><td>21</td><td>Phase 11 / rerun 1</td><td><strong>Question:</strong> Re-run verification?<br><strong>Options:</strong> Yes, re-run verification · No, proceed</td><td>Yes → <span class="decision">Yes</span></td><td>User / high</td><td>First hardening pass produced 60/60 tests and integrated validation. <a href="../verification/implementation-verification.md" target="_blank" rel="noopener">Verification history</a></td></tr>
+            <tr><td>22</td><td>Phase 11 / fix selection 2</td><td><strong>Question:</strong> Which issues should be fixed?<br><strong>Options:</strong> Fix all fixable issues · Let me choose specific issues · Skip fixes, proceed as-is</td><td>Fix all → <span class="decision">Fix all</span></td><td>User / high</td><td>Re-verification found four critical blockers and ten warnings. <a href="../verification/implementation-verification.md" target="_blank" rel="noopener">Verification history</a></td></tr>
+            <tr><td>23</td><td>Phase 11 / rerun 2</td><td><strong>Question:</strong> Re-run verification?<br><strong>Options:</strong> Yes, re-run verification · No, proceed</td><td>Yes → <span class="decision">Yes</span></td><td>User / high</td><td>Second hardening pass reached 91/91 tests, package lifecycle 4/4, clean parity, and <code>make validate</code>. <a href="../verification/implementation-verification.md" target="_blank" rel="noopener">Verification history</a></td></tr>
+            <tr><td>24</td><td>Phase 11 / fix selection 3</td><td><strong>Question:</strong> Which issues should be fixed?<br><strong>Options:</strong> Fix all fixable issues · Let me choose specific issues · Skip fixes, proceed as-is</td><td>Fix all → <span class="decision">Fix all</span></td><td>User / high</td><td>Review found pathname TOCTOU, source mutation, split provenance, and Make injection boundaries. <a href="../verification/implementation-verification.md" target="_blank" rel="noopener">Verification history</a></td></tr>
+            <tr><td>25</td><td>Phase 11 / rerun 3</td><td><strong>Question:</strong> Re-run verification?<br><strong>Options:</strong> Yes, re-run verification · No, proceed</td><td>Yes → <span class="decision">Yes</span></td><td>User / high</td><td>Third hardening pass reached 109/109 tests and zero-unresolved diagnostic parity. <a href="../verification/implementation-verification.md" target="_blank" rel="noopener">Verification history</a></td></tr>
+            <tr><td>26</td><td>Phase 11 / unresolved critical</td><td><strong>Question:</strong> Proceed with known issues?<br><strong>Options:</strong> Proceed with known issues · Stop workflow</td><td>Stop → <span class="decision">Stop workflow</span></td><td>User / high</td><td>Two P1s remained after the three-attempt limit, so the workflow stopped safely. <a href="../verification/implementation-verification.md" target="_blank" rel="noopener">Verification history</a></td></tr>
+            <tr><td>27</td><td>Phase 11 resumed / fix selection</td><td><strong>Question:</strong> Which issues should be fixed?<br><strong>Options:</strong> Fix all fixable issues · Let me choose specific issues · Skip fixes, proceed as-is</td><td>Fix all → <span class="decision">Fix all</span></td><td>User / high</td><td>Explicit resume/reset authorized repair of both remaining P1 trust boundaries. <a href="../implementation/work-log.md" target="_blank" rel="noopener">Work log</a></td></tr>
+            <tr><td>28</td><td>Phase 11 / exit</td><td><strong>Question:</strong> Continue to Phase 12?<br><strong>Options:</strong> Continue to Phase 12 · Pause workflow</td><td>Continue → <span class="decision">Continue</span></td><td>User / high</td><td>Final verifier passed with 114/114 tests and zero open findings. <a href="../verification/implementation-verification.md" target="_blank" rel="noopener">Final verification</a></td></tr>
+            <tr><td>29</td><td>Phase 12 / exit</td><td><strong>Question:</strong> E2E complete. Continue to Phase 13?<br><strong>Options:</strong> Continue to Phase 13 · Pause workflow</td><td>Continue → <span class="decision">Continue</span></td><td>User / high</td><td>E2E was skipped by configuration and the workflow continued to enabled documentation. <a href="../orchestrator-state.yml">State</a></td></tr>
+            <tr><td>30</td><td>Phase 13 / exit</td><td><strong>Question:</strong> Documentation complete. Continue to Phase 14?<br><strong>Options:</strong> Continue to Phase 14 · Pause workflow</td><td>Continue → <span class="decision">Continue</span></td><td>User / high</td><td>The CLI guide was complete and validated before finalization. <a href="../documentation/user-guide.md" target="_blank" rel="noopener">User guide</a></td></tr>
+            <tr><td>31</td><td>Phase 14 / protected final handoff</td><td><strong>Question:</strong> Complete workflow or keep it open?<br><strong>Options:</strong> Complete workflow · Keep workflow open</td><td>Complete workflow → <span class="decision">Complete workflow</span></td><td>User / high</td><td>The user explicitly approved the final implementation, verification, documentation, and decision-summary handoff. <a href="../orchestrator-state.yml">Canonical state</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="keys">
+      <h2>Idempotency Keys</h2>
+      <details class="card">
+        <summary>Show all 31 canonical keys</summary>
+        <ol class="key-list">
+          <li><code>sha256:ec02c7f9f82f78391846592009ec9aee11bb8cb1d6d24dc1c4a45208d9328a78</code></li>
+          <li><code>sha256:ba5d887d0c4265cbcbe1c13696ffdc0cf70e09b9b115fd0cea577002cb7aee7a</code></li>
+          <li><code>sha256:9e22d1cd8c8c8ccd768742a06292a9988d36f58656d7964e7799638229d15117</code></li>
+          <li><code>sha256:d6c3f6d878255f05159dce1edbaff998b8ea79e84c59a7cecfe5ca12aeb92970</code></li>
+          <li><code>sha256:a0da58fe5a1961fb662f7592b49c157c182bb70d3929cb36b7a5376a78c54e50</code></li>
+          <li><code>sha256:cc8019c200d90a666bb76ac3bae53660de40b4ed9ece30fd3779ea4351bc1064</code></li>
+          <li><code>sha256:7049cc17ddbd24dd6410f8e24ac74d5fae4ccb63534d828b41f1244006b45172</code></li>
+          <li><code>sha256:cb8d23e0e7ad2eb2968a831e300e4a2f2c77b56b18216abfeff974cd16f1ab52</code></li>
+          <li><code>sha256:8358f6a9980394365c8e29349d3538166c7645e2aeb8875de965b725f22f292f</code></li>
+          <li><code>sha256:eeba59811d29c2483cca234227ab77fd47023e60becab582b5c75f9a3d6994fe</code></li>
+          <li><code>sha256:3816e7b010ce22a0a421f05dde1915496a6c69d60c72a8a783a82a76a8361265</code></li>
+          <li><code>sha256:663a42aa519cf64427fd11758ef12c313a7364b973068f67fc85f046e6b8e17b</code></li>
+          <li><code>sha256:8427cbf0e377cd8f234e79d9f5346062d6bd293fe524dc517f25db71193408de</code></li>
+          <li><code>sha256:0e17e4a7c76e0fca66e93b36dd463df1e18f93bfcfa027baae084a83f0503922</code></li>
+          <li><code>sha256:7f3c4d56a3554cb24346cdbc9f46a6e8c551345121ef316d84827f26966be760</code></li>
+          <li><code>sha256:19568792996c419f61acb934284693bd396df535db9c9b4ac814b5f6c528d7a5</code></li>
+          <li><code>sha256:239981881b195b61ea682efd83565288e6737e9def74584192f949dbc6d517e9</code></li>
+          <li><code>sha256:98c61b5e2542abb49b807564e2ad43644f9b6443be62cba708dc99c212945c5a</code></li>
+          <li><code>sha256:430715d582c5f8acbf15c124fe155cb078622e8f8ea39e2c79f92d9958b04bb4</code></li>
+          <li><code>sha256:4faf97df6ac300025973a0db05ef2a15baaf46b02c225599fc10464dd193d969</code></li>
+          <li><code>sha256:198f8c6133aeb3ec728a3f71473293f3f72dcc7f7e72b7aa48b0e9c4367dd9c1</code></li>
+          <li><code>sha256:6921f6d132122613094ce1e600a5d075a682cd0557d4341a33ffcaf2e39815ec</code></li>
+          <li><code>sha256:34eed63ef305b80ab06583847d5489291da6c39ed01a71bbb088ebb412d433be</code></li>
+          <li><code>sha256:b0651b64f08d41434582be22a7b6f1b659a40d0f9faa356884dc366d93300f2a</code></li>
+          <li><code>sha256:0ff4b47f90b0bdeac3716368d31f017fae20a732dc012d511834a5c49d1f7c0e</code></li>
+          <li><code>sha256:3c9a3ae5d02a4d3badb43d3c03f40df5149a06021c9bcc48e3bed2d32803015d</code></li>
+          <li><code>sha256:b38801fbc024277030edaf7d11b3461eac96c4fcb2402dda48ee0d161f5f1f01</code></li>
+          <li><code>sha256:949c1c70eecbf5b542f80cfb36dc9f5090ec10164e69582d0727f8e47ed16346</code></li>
+          <li><code>sha256:5d3db71e7a2ecdaf6c5f3b8638d2ffd3418ea06b44e4aa52e4220cfe59c4992c</code></li>
+          <li><code>sha256:4190f0156e5926ddbfbb8dc4a7f936990fca079a77de6d4a9b2fd6262f1193ba</code></li>
+          <li><code>sha256:6d7f6ae8df3ed9da15c045e924b897b137471f0083602540051e6cd0bb590c6e</code></li>
+        </ol>
+      </details>
+    </section>
+
+    <section class="card boundary" id="handoff">
+      <h2>Final-Handoff Decision</h2>
+      <p>The protected gate was resolved by the user as <strong>Complete workflow</strong>. No advisor, arbiter, or automatic continuation was permitted to authorize this boundary. The terminal record, Phase 14 completion, overall task completion, Markdown summary, and HTML companion are durable.</p>
+    </section>
+  </main>
+</body>
+</html>

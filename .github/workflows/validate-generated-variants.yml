@@ -1,48 +1,39 @@
-name: Validate Generated Variants
+name: Validate Portable Distribution
 
 on:
   push:
     branches: [master]
     paths:
-      - 'plugins/maister/**'
-      - 'platforms/**'
+      - "plugins/maister/**"
+      - "tests/platform-independent/**"
+      - "Makefile"
+      - ".github/workflows/**"
   pull_request:
     branches: [master]
     paths:
-      - 'plugins/maister/**'
-      - 'platforms/**'
+      - "plugins/maister/**"
+      - "tests/platform-independent/**"
+      - "Makefile"
+      - ".github/workflows/**"
 
 jobs:
-  validate-drift:
+  core:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Build supported platform variants
-        run: make build
-
-      - name: Check committed variants match fresh build
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Validate all overlays
         run: |
-          VARIANTS=(
-            plugins/maister-cursor
-            plugins/maister-kiro
-            plugins/maister-codex
-          )
-
-          if git diff --exit-code -- "${VARIANTS[@]}"; then
-            echo "Committed generated variants match source build."
-            exit 0
-          fi
-
-          echo "::error::Generated variant drift detected — committed output does not match a fresh 'make build'."
-          echo ""
-          echo "You changed plugins/maister/ or platforms/ but did not rebuild and commit the generated variants."
-          echo ""
-          echo "Fix locally:"
-          echo "  make build"
-          echo "  git add plugins/maister-cursor/ plugins/maister-kiro/ plugins/maister-codex/"
-          echo "  git commit -m \"Rebuild platform variants\""
-          echo ""
-          echo "Diff summary:"
-          git diff --stat -- "${VARIANTS[@]}"
-          exit 1
+          make test-overlay TARGET=codex
+          make test-overlay TARGET=cursor
+          make test-overlay TARGET=kiro-cli
+      - name: Run portable and distribution tests
+        run: make test-core test-evidence
+      - name: Verify repository topology
+        run: make test-topology
+      - name: Run reviewed three-target parity release gate
+        run: make test-parity-release

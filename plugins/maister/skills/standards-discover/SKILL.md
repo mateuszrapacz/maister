@@ -174,7 +174,7 @@ For each approved standard:
 2. **Check if file exists** — Determine create vs update action
 3. **Invoke `docs-operator` subagent** via Task tool (subagent_type: `maister:docs-operator`) — Pass prepared content. For creates: new file. For updates: merge new findings with existing. Wait for completion, then continue with the next standard.
 4. **After all standards applied, invoke `docs-operator` subagent** via Task tool to regenerate INDEX.md. Wait for completion, then continue with step 5.
-5. **Invoke `docs-operator` subagent** via Task tool to verify CLAUDE.md integration — ensure standards directory is referenced. Wait for completion, then display the application summary.
+5. **Invoke `docs-operator` subagent** via Task tool to verify project-instruction integration — ensure the standards directory is referenced. Wait for completion, then display the application summary.
 
 Display application summary: created count, updated count, total active.
 

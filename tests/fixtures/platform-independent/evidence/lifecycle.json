@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "source": {
+    "requested_ref": "0123456789012345678901234567890123456789",
+    "resolved_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_version": "2.2.1"
+  },
+  "targets": {
+    "codex": {
+      "clean_checkout": ["install", "verify", "update", "uninstall", "rollback", "recover"],
+      "failure_injection": ["snapshot", "commit", "settings"],
+      "native_runtime": "recorded-when-available"
+    },
+    "cursor": {
+      "clean_checkout": ["install", "verify", "update", "uninstall", "rollback", "recover"],
+      "failure_injection": ["snapshot", "commit", "settings"],
+      "native_runtime": "unavailable"
+    },
+    "kiro-cli": {
+      "clean_checkout": ["install", "verify", "update", "uninstall", "rollback", "recover"],
+      "failure_injection": ["snapshot", "commit", "settings"],
+      "native_runtime": "unavailable"
+    }
+  }
+}
