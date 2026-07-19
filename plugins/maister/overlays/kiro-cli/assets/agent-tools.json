@@ -1,98 +1,34 @@
 {
-  "defaults": {
-    "tools": ["read", "grep", "glob"]
+  "canonical_profile_source": "agent-projection-v1.json",
+  "logical_tool_map": {
+    "browser": [
+      "aws"
+    ],
+    "cloud": [
+      "aws"
+    ],
+    "read": [
+      "read"
+    ],
+    "search": [
+      "grep",
+      "glob"
+    ],
+    "shell": [
+      "shell"
+    ],
+    "web": [
+      "web_fetch",
+      "web_search"
+    ],
+    "write": [
+      "write"
+    ]
   },
-  "agents": {
-    "advisor": {
-      "tools": ["read", "grep", "glob"]
-    },
-    "bottleneck-analyzer": {
-      "tools": ["read", "grep", "glob"]
-    },
-    "codebase-analysis-reporter": {
-      "tools": ["read", "grep", "glob", "write"]
-    },
-    "code-quality-pragmatist": {
-      "tools": ["read", "grep", "glob", "shell"]
-    },
-    "code-reviewer": {
-      "tools": ["read", "grep", "glob", "write"]
-    },
-    "docs-operator": {
-      "tools": ["read", "grep", "glob", "write", "shell"]
-    },
-    "e2e-test-verifier": {
-      "tools": ["read", "grep", "glob", "write", "shell", "aws"]
-    },
-    "gap-analyzer": {
-      "tools": ["read", "grep", "glob"]
-    },
-    "implementation-completeness-checker": {
-      "tools": ["read", "grep", "glob", "write"]
-    },
-    "implementation-planner": {
-      "tools": ["read", "grep", "glob", "write"]
-    },
-    "information-gatherer": {
-      "tools": ["read", "grep", "glob", "write", "shell", "web_fetch", "web_search"]
-    },
-    "production-readiness-checker": {
-      "tools": ["read", "grep", "glob", "write", "aws"]
-    },
-    "project-analyzer": {
-      "tools": ["read", "grep", "glob"]
-    },
-    "reality-assessor": {
-      "tools": ["read", "grep", "glob", "write", "aws"]
-    },
-    "research-planner": {
-      "tools": ["read", "grep", "glob", "write"]
-    },
-    "research-synthesizer": {
-      "tools": ["read", "grep", "glob", "write"]
-    },
-    "solution-brainstormer": {
-      "tools": ["read", "grep", "glob", "write"]
-    },
-    "solution-designer": {
-      "tools": ["read", "grep", "glob", "write"]
-    },
-    "spec-auditor": {
-      "tools": ["read", "grep", "glob", "write", "shell", "aws"]
-    },
-    "specification-creator": {
-      "tools": ["read", "grep", "glob", "write"]
-    },
-    "task-classifier": {
-      "tools": ["read", "grep", "glob", "shell", "web_fetch", "web_search"]
-    },
-    "task-group-implementer": {
-      "tools": ["read", "grep", "glob", "write", "shell", "aws"]
-    },
-    "thermo-nuclear-code-quality-review-subagent": {
-      "tools": ["read", "grep", "glob"]
-    },
-    "thermo-nuclear-review-subagent": {
-      "tools": ["read", "grep", "glob", "shell"]
-    },
-    "test-suite-runner": {
-      "tools": ["read", "grep", "glob", "write", "shell", "aws"]
-    },
-    "ui-mockup-generator": {
-      "tools": ["read", "grep", "glob", "write"]
-    },
-    "user-docs-generator": {
-      "tools": ["read", "grep", "glob", "write", "shell"]
-    }
-  },
-  "synthetic": {
-    "maister": {
-      "tools": ["*"],
-      "orchestrator": true,
-      "trustedAgents": ["maister-*"]
-    },
-    "maister-explore": {
-      "tools": ["read", "grep", "glob", "aws"]
-    }
-  }
+  "projector_version": "1.0.0",
+  "schema_version": 1,
+  "support_profiles": [
+    "kiro-cli:explore",
+    "kiro-cli:maister"
+  ]
 }

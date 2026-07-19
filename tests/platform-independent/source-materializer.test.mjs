@@ -15,7 +15,10 @@ import {
   buildAssemblyPlan,
   materialize,
 } from "../../plugins/maister/lib/distribution/materializer.mjs";
-import { loadOverlay } from "../../plugins/maister/lib/distribution/overlay-loader.mjs";
+import {
+  loadOverlay,
+  parseOverlayYaml,
+} from "../../plugins/maister/lib/distribution/overlay-loader.mjs";
 import { SUPPORTED_TARGET_IDS } from "../../plugins/maister/lib/distribution/targets.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
@@ -23,10 +26,17 @@ const SOURCE_ROOT = path.join(ROOT, "tests/fixtures/platform-independent/source-
 const FIXTURE_OVERLAY = path.join(SOURCE_ROOT, "overlay.yml");
 const FIXTURE_INVENTORY = path.join(SOURCE_ROOT, "inventory.yml");
 const PRODUCTION_OVERLAY_ROOT = path.join(ROOT, "plugins/maister/overlays");
+const PROJECTION_PLUGIN_ROOT = path.join(ROOT, "plugins/maister");
 const COMMIT = "0123456789abcdef0123456789abcdef01234567";
 
 const cleanGit = {
   topLevel: () => SOURCE_ROOT,
+  head: () => COMMIT,
+  status: () => [],
+};
+
+const repositoryGit = {
+  topLevel: () => ROOT,
   head: () => COMMIT,
   status: () => [],
 };
@@ -52,26 +62,62 @@ function readTree(directory) {
 
 function productionOptions(target, stagingRoot) {
   return {
-    source: `local:${SOURCE_ROOT}`,
+    source: `local:${ROOT}`,
     target,
     overlayPath: path.join(PRODUCTION_OVERLAY_ROOT, target, "overlay.yml"),
     inventoryPath: path.join(PRODUCTION_OVERLAY_ROOT, target, "inventory.yml"),
     stagingRoot,
-    git: cleanGit,
+    git: repositoryGit,
     sourceVersion: "1.2.3",
     hostVersion: "1.0.0",
   };
+}
+
+function installProjectionInputs(source) {
+  const fixturePluginRoot = path.join(source, "plugins/maister");
+  fs.mkdirSync(fixturePluginRoot, { recursive: true });
+  fs.cpSync(path.join(PROJECTION_PLUGIN_ROOT, "agents"), path.join(fixturePluginRoot, "agents"), { recursive: true });
+  fs.copyFileSync(
+    path.join(PROJECTION_PLUGIN_ROOT, "agent-projection-v1.json"),
+    path.join(fixturePluginRoot, "agent-projection-v1.json"),
+  );
+  for (const skillId of ["docs-manager", "thermo-nuclear-code-quality-review", "thermo-nuclear-review"]) {
+    const fixtureSkillRoot = path.join(fixturePluginRoot, "skills", skillId);
+    fs.mkdirSync(fixtureSkillRoot, { recursive: true });
+    fs.copyFileSync(
+      path.join(PROJECTION_PLUGIN_ROOT, "skills", skillId, "SKILL.md"),
+      path.join(fixtureSkillRoot, "SKILL.md"),
+    );
+  }
+  for (const target of SUPPORTED_TARGET_IDS) {
+    const sourceOverlayRoot = path.join(PRODUCTION_OVERLAY_ROOT, target);
+    const fixtureOverlayRoot = path.join(fixturePluginRoot, "overlays", target);
+    fs.mkdirSync(fixtureOverlayRoot, { recursive: true });
+    fs.copyFileSync(path.join(sourceOverlayRoot, "overlay.yml"), path.join(fixtureOverlayRoot, "overlay.yml"));
+    fs.copyFileSync(path.join(sourceOverlayRoot, "inventory.yml"), path.join(fixtureOverlayRoot, "inventory.yml"));
+    const supportRoot = path.join(sourceOverlayRoot, "assets/support-agents");
+    if (fs.existsSync(supportRoot)) {
+      fs.cpSync(supportRoot, path.join(fixtureOverlayRoot, "assets/support-agents"), { recursive: true });
+    }
+  }
 }
 
 function cloneFixtureSource() {
   const root = tempDirectory();
   const source = path.join(root, "source");
   fs.cpSync(SOURCE_ROOT, source, { recursive: true });
+  installProjectionInputs(source);
   return { root, source };
 }
 
 function fixtureOverlay() {
-  return loadOverlay({ overlayPath: FIXTURE_OVERLAY, inventoryPath: FIXTURE_INVENTORY }).overlay;
+  const overlay = parseOverlayYaml(fs.readFileSync(FIXTURE_OVERLAY, "utf8"), FIXTURE_OVERLAY);
+  const productionProjection = loadOverlay({
+    overlayPath: path.join(PRODUCTION_OVERLAY_ROOT, "codex/overlay.yml"),
+    inventoryPath: path.join(PRODUCTION_OVERLAY_ROOT, "codex/inventory.yml"),
+  }).overlay.agent_projection;
+  overlay.agent_projection = structuredClone(productionProjection);
+  return overlay;
 }
 
 function fixtureOptions(source, stagingRoot, overlay = fixtureOverlay()) {
@@ -336,19 +382,12 @@ test("binds dirty-local opt-in to a deterministic status snapshot", async () => 
 });
 
 test("materializes identical source and overlay inputs deterministically", async () => {
-  const first = path.join(tempDirectory(), "one");
-  const second = path.join(tempDirectory(), "two");
-  const options = {
-    source: `local:${SOURCE_ROOT}`,
-    target: "codex",
-    overlayPath: FIXTURE_OVERLAY,
-    inventoryPath: FIXTURE_INVENTORY,
-    git: cleanGit,
-    sourceVersion: "1.2.3",
-    hostVersion: "1.0.0",
-  };
+  const fixture = cloneFixtureSource();
+  const first = path.join(fixture.root, "one");
+  const second = path.join(fixture.root, "two");
+  const options = fixtureOptions(fixture.source, first);
 
-  const firstResult = await materialize({ ...options, stagingRoot: first });
+  const firstResult = await materialize(options);
   const secondResult = await materialize({ ...options, stagingRoot: second });
 
   assert.deepEqual(readTree(first), readTree(second));
@@ -441,17 +480,9 @@ test("refuses normalized destination collisions", () => {
 });
 
 test("validates inventory, syntax, executable modes, and hashes before accepting staging", async () => {
-  const staging = path.join(tempDirectory(), "materialized");
-  const result = await materialize({
-    source: `local:${SOURCE_ROOT}`,
-    target: "codex",
-    overlayPath: FIXTURE_OVERLAY,
-    inventoryPath: FIXTURE_INVENTORY,
-    stagingRoot: staging,
-    git: cleanGit,
-    sourceVersion: "1.2.3",
-    hostVersion: "1.0.0",
-  });
+  const fixture = cloneFixtureSource();
+  const staging = path.join(fixture.root, "materialized");
+  const result = await materialize(fixtureOptions(fixture.source, staging));
 
   assert.equal(result.validation.inventory.ok, true);
   assert.equal(result.validation.syntax.ok, true);
@@ -679,16 +710,17 @@ test("rejects malformed supported reference syntax instead of ignoring it", asyn
 });
 
 test("enforces directory inventory entries and rejects forbidden directories", async () => {
+  const fixture = cloneFixtureSource();
   const requiredOverlay = fixtureOverlay();
   requiredOverlay.inventory.required.push("skills");
-  const requiredStage = path.join(tempDirectory(), "stage");
-  const required = await materialize(fixtureOptions(SOURCE_ROOT, requiredStage, requiredOverlay));
+  const requiredStage = path.join(fixture.root, "required-stage");
+  const required = await materialize(fixtureOptions(fixture.source, requiredStage, requiredOverlay));
   assert.equal(required.validation.inventory.ok, true);
 
   const forbiddenOverlay = fixtureOverlay();
   forbiddenOverlay.inventory.forbidden.push("skills");
   await assert.rejects(
-    materialize(fixtureOptions(SOURCE_ROOT, path.join(tempDirectory(), "stage"), forbiddenOverlay)),
+    materialize(fixtureOptions(fixture.source, path.join(fixture.root, "forbidden-stage"), forbiddenOverlay)),
     (error) => error.code === "E_MATERIALIZE_INVENTORY",
   );
 });
@@ -703,8 +735,9 @@ test("enforces native asset source type, declared mode, and hash contract", asyn
 
   const typeOverlay = fixtureOverlay();
   typeOverlay.native_assets[0].source = "common/skills";
+  const typeFixture = cloneFixtureSource();
   await assert.rejects(
-    materialize(fixtureOptions(SOURCE_ROOT, path.join(tempDirectory(), "stage"), typeOverlay)),
+    materialize(fixtureOptions(typeFixture.source, path.join(typeFixture.root, "stage"), typeOverlay)),
     (error) => error.code === "E_MATERIALIZE_NATIVE",
   );
 
@@ -725,4 +758,171 @@ test("enforces native asset source type, declared mode, and hash contract", asyn
     materialize(fixtureOptions(hashFixture.source, path.join(hashFixture.root, "stage"))),
     (error) => error.code === "E_MATERIALIZE_HASH",
   );
+});
+
+test("runs projection after trusted assembly and source revalidation but before candidate enumeration", async () => {
+  const phases = [];
+  const stagingRoot = path.join(tempDirectory(), "stage");
+  const result = await materialize({
+    ...productionOptions("cursor", stagingRoot),
+    testHooks: {
+      onPhase: (phase) => phases.push(phase),
+      afterProjection: ({ stagingRoot: projectedRoot }) => {
+        assert.equal(fs.existsSync(path.join(projectedRoot, "agents/advisor.md")), true);
+      },
+    },
+  });
+
+  assert.deepEqual(phases, [
+    "source-revalidated",
+    "assembly-complete",
+    "source-revalidated-after-assembly",
+    "projection-complete",
+    "staging-enumerated",
+    "candidate-validated",
+    "provenance-finalized",
+  ]);
+  assert.equal(result.validation.inventory.files.includes("agents/advisor.md"), true);
+});
+
+test("binds projection schema, projector, canonical set, manifest, and projected tree into provenance", async () => {
+  const result = await materialize(productionOptions("codex", path.join(tempDirectory(), "stage")));
+
+  assert.deepEqual(result.provenance.agent_projection, {
+    schema_version: result.projection.schema_version,
+    projector_version: result.projection.projector_version,
+    canonical_set_digest: result.projection.canonical_set_digest,
+    manifest_digest: result.projection.manifest_digest,
+    projected_tree_digest: result.projection.projected_tree_digest,
+  });
+  assert.equal(result.provenance.contentHash, result.contentHash);
+  assert.equal(hashTree(result.stagingRoot).contentHash, result.contentHash);
+});
+
+test("rejects projected JSON syntax corruption during normal candidate validation", async () => {
+  await assert.rejects(
+    materialize({
+      ...productionOptions("kiro-cli", path.join(tempDirectory(), "stage")),
+      testHooks: {
+        afterProjection: ({ stagingRoot }) => fs.writeFileSync(path.join(stagingRoot, "maister-advisor.json"), "{broken\n"),
+      },
+    }),
+    (error) => error.code === "E_MATERIALIZE_SYNTAX" && error.details.path === "maister-advisor.json",
+  );
+});
+
+test("rejects projected mode drift during normal candidate validation", async () => {
+  await assert.rejects(
+    materialize({
+      ...productionOptions("cursor", path.join(tempDirectory(), "stage")),
+      testHooks: {
+        afterProjection: ({ stagingRoot }) => fs.chmodSync(path.join(stagingRoot, "agents/advisor.md"), 0o600),
+      },
+    }),
+    (error) => error.code === "E_MATERIALIZE_MODE" && error.details.path === "agents/advisor.md",
+  );
+});
+
+test("rejects projected byte drift during normal candidate hash validation", async () => {
+  await assert.rejects(
+    materialize({
+      ...productionOptions("cursor", path.join(tempDirectory(), "stage")),
+      testHooks: {
+        afterProjection: ({ stagingRoot }) => fs.appendFileSync(path.join(stagingRoot, "agents/advisor.md"), "drift\n"),
+      },
+    }),
+    (error) => error.code === "E_MATERIALIZE_HASH" && error.details.path === "agents/advisor.md",
+  );
+});
+
+for (const scenario of [
+  {
+    name: "missing",
+    mutate: (stagingRoot) => fs.rmSync(path.join(stagingRoot, "instructions/maister-advisor.md")),
+  },
+  {
+    name: "escaping",
+    mutate: (stagingRoot) => {
+      const descriptorPath = path.join(stagingRoot, "maister-advisor.json");
+      const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
+      descriptor.prompt = "file://./../outside.md";
+      fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor)}\n`);
+    },
+  },
+  {
+    name: "absolute",
+    mutate: (stagingRoot) => {
+      const descriptorPath = path.join(stagingRoot, "maister-advisor.json");
+      const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
+      descriptor.prompt = "file:///outside.md";
+      fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor)}\n`);
+    },
+  },
+]) {
+  test(`rejects ${scenario.name} generated Kiro prompt references without a broad exception`, async () => {
+    await assert.rejects(
+      materialize({
+        ...productionOptions("kiro-cli", path.join(tempDirectory(), "stage")),
+        testHooks: { afterProjection: ({ stagingRoot }) => scenario.mutate(stagingRoot) },
+      }),
+      (error) => error.code === "E_MATERIALIZE_REFERENCE" && error.details.path === "maister-advisor.json",
+    );
+  });
+}
+
+test("projection failure precedes later candidate phases and preserves source and unrelated host bytes", async () => {
+  const sourceBefore = hashTree(ROOT).contentHash;
+  const hostRoot = tempDirectory();
+  fs.writeFileSync(path.join(hostRoot, "unrelated-agent.md"), "operator-owned\n");
+  const hostBefore = hashTree(hostRoot).contentHash;
+  const phases = [];
+
+  await assert.rejects(
+    materialize({
+      ...productionOptions("cursor", path.join(tempDirectory(), "stage")),
+      testHooks: {
+        onPhase: (phase) => phases.push(phase),
+        afterProjection: () => {
+          throw new DistributionError("E_MATERIALIZE_FAILED", "injected projection failure");
+        },
+      },
+    }),
+    (error) => error.code === "E_MATERIALIZE_FAILED",
+  );
+
+  assert.equal(phases.includes("staging-enumerated"), false);
+  assert.equal(phases.includes("candidate-validated"), false);
+  assert.equal(hashTree(ROOT).contentHash, sourceBefore);
+  assert.equal(hashTree(hostRoot).contentHash, hostBefore);
+});
+
+test("canonical source changes invalidate canonical, manifest, projected-tree, and provenance bindings", async () => {
+  const firstFixture = cloneFixtureSource();
+  const secondFixture = cloneFixtureSource();
+  fs.appendFileSync(
+    path.join(secondFixture.source, "plugins/maister/agents/advisor.md"),
+    "\nCanonical fixture change.\n",
+  );
+
+  const first = await materialize(fixtureOptions(firstFixture.source, path.join(firstFixture.root, "stage")));
+  const second = await materialize(fixtureOptions(secondFixture.source, path.join(secondFixture.root, "stage")));
+
+  assert.notEqual(second.projection.canonical_set_digest, first.projection.canonical_set_digest);
+  assert.notEqual(second.projection.manifest_digest, first.projection.manifest_digest);
+  assert.notEqual(second.projection.projected_tree_digest, first.projection.projected_tree_digest);
+  assert.notEqual(second.provenance.provenanceHash, first.provenance.provenanceHash);
+});
+
+test("materialization writes generated host files only to staging and runtime code has no projector dependency", async () => {
+  const sourceBefore = hashTree(ROOT).contentHash;
+  const stagingRoot = path.join(tempDirectory(), "stage");
+  await materialize(productionOptions("cursor", stagingRoot));
+
+  assert.equal(fs.existsSync(path.join(stagingRoot, "agents/advisor.md")), true);
+  assert.equal(hashTree(ROOT).contentHash, sourceBefore);
+  const runtimeRoot = path.join(PROJECTION_PLUGIN_ROOT, "skills/orchestrator-framework/bin/agent-runtime");
+  for (const entry of fs.readdirSync(runtimeRoot)) {
+    if (!entry.endsWith(".mjs")) continue;
+    assert.doesNotMatch(fs.readFileSync(path.join(runtimeRoot, entry), "utf8"), /agent-projector|projectAgents/u);
+  }
 });

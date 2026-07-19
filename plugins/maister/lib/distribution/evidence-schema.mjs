@@ -11,8 +11,15 @@ const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/u;
 const PROVENANCE_FIELDS = new Set([
   "source_commit",
   "source_version",
+  "overlay_id",
   "overlay_version",
+  "host",
   "scenario_version",
+  "schema_version",
+  "projector_version",
+  "canonical_set_digest",
+  "manifest_digest",
+  "projected_tree_digest",
   "source_hash",
   "overlay_hash",
   "materialized_hash",
@@ -23,13 +30,21 @@ const PROVENANCE_FIELDS = new Set([
   "command",
   "reason",
   "timeout_ms",
+  "discovery_subject",
+  "native_role_external_ids",
 ]);
 const REQUIRED_PROVENANCE_FIELDS = ["source_commit", "source_version", "overlay_version", "scenario_version"];
 const PROVENANCE_INPUT_FIELDS = new Set([
   ...PROVENANCE_FIELDS,
   "resolvedCommit",
   "sourceVersion",
+  "overlayId",
   "overlayVersion",
+  "schemaVersion",
+  "projectorVersion",
+  "canonicalSetDigest",
+  "manifestDigest",
+  "projectedTreeDigest",
   "sourceHash",
   "overlayHash",
   "materializedHash",
@@ -47,7 +62,22 @@ const PROVENANCE_INPUT_FIELDS = new Set([
   "overlayId",
   "host",
   "hashes",
+  "discoverySubject",
+  "nativeRoleExternalIds",
 ]);
+const NATIVE_PROVENANCE_FIELDS = [
+  "source_commit",
+  "source_version",
+  "overlay_id",
+  "overlay_version",
+  "host",
+  "scenario_version",
+  "schema_version",
+  "projector_version",
+  "canonical_set_digest",
+  "manifest_digest",
+  "projected_tree_digest",
+];
 const RECORD_FIELDS = new Set([
   "target",
   "capability",
@@ -131,6 +161,25 @@ function assertProvenance(provenance) {
   ]) {
     if (provenance[field] !== undefined) assertHash(provenance[field], `record.provenance.${field}`);
   }
+  for (const field of ["overlay_id", "host", "projector_version", "discovery_subject"]) {
+    if (provenance[field] !== undefined) assertText(provenance[field], `record.provenance.${field}`);
+  }
+  if (provenance.schema_version !== undefined && (!Number.isSafeInteger(provenance.schema_version) || provenance.schema_version < 1)) {
+    throw new EvidenceValidationError("record.provenance.schema_version must be a positive integer", {
+      field: "provenance.schema_version",
+    });
+  }
+  for (const field of ["canonical_set_digest", "manifest_digest", "projected_tree_digest"]) {
+    if (provenance[field] !== undefined) assertHash(provenance[field], `record.provenance.${field}`);
+  }
+  if (provenance.native_role_external_ids !== undefined) {
+    if (!Array.isArray(provenance.native_role_external_ids) || provenance.native_role_external_ids.length === 0) {
+      throw new EvidenceValidationError("record.provenance.native_role_external_ids must be a non-empty array", {
+        field: "provenance.native_role_external_ids",
+      });
+    }
+    provenance.native_role_external_ids.forEach((id, index) => assertText(id, `record.provenance.native_role_external_ids[${index}]`));
+  }
   if (provenance.timeout_ms !== undefined && (!Number.isInteger(provenance.timeout_ms) || provenance.timeout_ms <= 0)) {
     throw new EvidenceValidationError("record.provenance.timeout_ms must be a positive integer", {
       field: "provenance.timeout_ms",
@@ -155,8 +204,15 @@ export function normalizeEvidenceProvenance(value = {}, defaults = {}) {
   const normalized = {
     source_commit: value.source_commit ?? value.resolvedCommit ?? defaults.source_commit,
     source_version: value.source_version ?? value.sourceVersion ?? defaults.source_version,
+    overlay_id: value.overlay_id ?? value.overlayId ?? defaults.overlay_id,
     overlay_version: value.overlay_version ?? value.overlayVersion ?? defaults.overlay_version,
+    host: value.host ?? defaults.host,
     scenario_version: value.scenario_version ?? value.scenarioVersion ?? defaults.scenario_version,
+    schema_version: value.schema_version ?? value.schemaVersion ?? defaults.schema_version,
+    projector_version: value.projector_version ?? value.projectorVersion ?? defaults.projector_version,
+    canonical_set_digest: value.canonical_set_digest ?? value.canonicalSetDigest ?? hashes.canonicalSet ?? hashes.canonical_set,
+    manifest_digest: value.manifest_digest ?? value.manifestDigest ?? hashes.manifest,
+    projected_tree_digest: value.projected_tree_digest ?? value.projectedTreeDigest ?? hashes.projectedTree ?? hashes.projected_tree,
     source_hash: value.source_hash ?? value.sourceHash ?? hashes.source ?? hashes.sourceHash,
     overlay_hash: value.overlay_hash ?? value.overlayHash ?? hashes.overlay ?? hashes.overlayHash,
     materialized_hash: value.materialized_hash ?? value.materializedHash ?? value.contentHash ?? hashes.materialized ?? hashes.materializedHash,
@@ -167,6 +223,8 @@ export function normalizeEvidenceProvenance(value = {}, defaults = {}) {
     command: value.command,
     reason: value.reason,
     timeout_ms: value.timeout_ms,
+    discovery_subject: value.discovery_subject ?? value.discoverySubject,
+    native_role_external_ids: value.native_role_external_ids ?? value.nativeRoleExternalIds,
   };
   return Object.fromEntries(Object.entries(normalized).filter(([, item]) => item !== undefined));
 }
@@ -204,6 +262,20 @@ export function validateEvidenceRecord(record) {
     throw new EvidenceValidationError(`unsupported evidence result: ${record.result}`, { result: record.result });
   }
   assertProvenance(record.provenance);
+  if ((record.capability === "E5" || record.capability === "E6") && record.result !== "unavailable") {
+    for (const field of NATIVE_PROVENANCE_FIELDS) {
+      if (!Object.hasOwn(record.provenance, field)) {
+        throw new EvidenceValidationError(`native evidence must bind provenance.${field}`, { field: `provenance.${field}` });
+      }
+    }
+    if (record.provenance.host !== record.target) {
+      throw new EvidenceValidationError("native evidence provenance.host must match the selected target", {
+        field: "provenance.host",
+        expected: record.target,
+        actual: record.provenance.host,
+      });
+    }
+  }
   if (record.result === "unavailable" && !record.provenance.reason) {
     throw new EvidenceValidationError("unavailable evidence must include provenance.reason", {
       field: "provenance.reason",

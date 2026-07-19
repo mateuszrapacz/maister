@@ -6,6 +6,22 @@
 
 The public installer resolves a clean local Git checkout, a self-contained archive, or `github:owner/repo`. GitHub resolution uses bounded Git commands to resolve a safe ref to one full commit, creates a temporary detached checkout, verifies `HEAD`, status, and content hash, and selects the target overlay from that same checkout. The materializer validates the selected source and overlay, rejects unsafe paths and collisions, and creates a deterministic same-filesystem staging tree with provenance.
 
+## Canonical agent projection
+
+The 28 files in `plugins/maister/agents/` are the only behavior-bearing role source. A closed projection contract produces a versioned role IR and manifest, then the materializer generates target artifacts inside its isolated staging tree: complete prompt/schema pairs for managed Codex workers, exact `maister-<role>` Markdown agents for Cursor, and exact descriptor/prompt pairs for Kiro CLI. Support agents are inventoried separately and cannot satisfy canonical completeness. Schema, projector, canonical-set, manifest, and projected-tree digests flow into provenance and the active receipt.
+
+Projection runs before ordinary staged enumeration, syntax/reference checks, hashing, and provenance finalization. Invocation never regenerates roles and never accepts a hand-maintained host behavior copy.
+
+## Exact agent runtime
+
+The packaged `bin/maister-agent-gate.mjs` CLI is the production owner and registration surface. It accepts one bounded closed v1 request, selects target/home/state/task roots, loads only an explicitly registered real bridge module, and calls `agent-runtime/production-owner.mjs`. That owner reconstructs the manifest and projection through `production-runtime.mjs`, validates them against the active installed receipt, creates the three-method runtime port, and passes it to `evaluateGate()`. The package containing the owner is the fixed source root; callers cannot swap in another projector/source tree. Boundary failures use a typed JSON envelope, while runtime prerequisite failures remain durable typed unavailable/blocked gate results.
+
+The runtime port exposes exactly `resolveAgent`, `dispatchAgent`, and `readExecutionEventStream`. Registered hosts supply a closed versioned Codex capability port or Cursor/Kiro exact-native port; absent ports are explicit typed-unavailable implementations, never implicit fallback. Credentials and host-version discovery belong to the bridge owner. Exact-native cancellation is optional best-effort; inspect and launch are required. The resolver accepts only `maister:<role>`, validates receipt/projection bytes and capabilities, and returns a closed dispatch plan carrying the role source digest. The preparer converts a bounded workflow task into adapter input; Codex prompt and schema bytes come from the verified projection, while schema and last-message files are private dispatch artifacts.
+
+Codex executes a separately managed `codex exec` process with explicit model, reasoning effort, sandbox, workspace, JSONL, schema, and last-message controls. Requested and capability-accepted policy is recorded separately from independently observed effective policy; when the runtime cannot observe effective model or effort, those fields remain unavailable rather than trusting model self-report. Output capture is bounded and durable events retain hashes, byte counts, and diagnostic tails. Cursor and Kiro share the neutral exact-native adapter and must observe the selected external identity. No adapter falls back to inline, root, built-in, fuzzy, or alternate-host execution.
+
+Each dispatch writes a private, hash-chained JSONL stream under the workflow task. Read-only concurrency is scoped to a runtime and working root with the manifest limit; workspace writers serialize per checkout. `make test-runtime` is mandatory in local validation, CI, and release validation.
+
 ## Installation transaction
 
 The installer acquires a target lock, writes a durable journal, snapshots managed files and settings, commits through staging, verifies integrity, and publishes a receipt. Whole-file ownership is used for dedicated Maister files. Shared settings use narrowly allowlisted managed keys with drift detection. Rollback and recovery restore bytes, modes, symlinks, existence, and topology while preserving unmanaged content. A code-7 result remains an unresolved operational state: preserve the journal and backups, use the recovery command after the competing process has stopped, and verify the resulting receipt before continuing.

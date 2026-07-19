@@ -69,6 +69,7 @@ export function ensureDirectoryTree(directory, { root = null, label = "directory
 
 function secureRemove(target, options = {}) {
   const absolute = assertSafePath(target, { ...options, allowMissing: true });
+  if (!fs.lstatSync(absolute, { throwIfNoEntry: false }) && !fs.lstatSync(path.dirname(absolute), { throwIfNoEntry: false })) return;
   const targetIdentity = capturePathIdentity(absolute, {
     root: options.root,
     label: options.label ?? "path",
@@ -160,8 +161,8 @@ function fingerprintEntry(entryPath, { root, label = "backup entry" } = {}) {
 function manifestPayload(manifest) {
   return {
     schema_version: manifest.schema_version,
-    active_root: manifest.active_root,
-    target: manifest.target,
+    home: manifest.home,
+    roots: manifest.roots,
     settings: manifest.settings,
     active_receipt: manifest.active_receipt,
   };
@@ -292,11 +293,63 @@ function durableJson(filePath, value, mode = 0o600) {
   });
 }
 
-export function snapshotState({ activeRoot, settings, backupRoot, activeReceiptPath = null }) {
+function topologySnapshot(home, rootPath) {
+  const relative = path.relative(path.resolve(home), path.resolve(rootPath));
+  if (relative === "" || relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throwDistributionError("E_RECOVERY_PATH", "managed root must be contained by home", { home, rootPath });
+  }
+  const records = [];
+  let current = path.resolve(home);
+  for (const segment of relative.split(path.sep)) {
+    current = path.join(current, segment);
+    const stat = fs.lstatSync(current, { throwIfNoEntry: false });
+    if (stat?.isSymbolicLink() || (stat && !stat.isDirectory())) {
+      throwDistributionError("E_RECOVERY_PATH", "managed root topology contains a non-directory", { path: current });
+    }
+    records.push({
+      path: path.relative(home, current).split(path.sep).join("/"),
+      exists: Boolean(stat),
+      mode: stat ? formatMode(stat.mode) : null,
+    });
+  }
+  return records;
+}
+
+export function snapshotState({ managedRoots, managedInventory, settings, backupRoot, activeReceiptPath = null, home }) {
+  if (!Array.isArray(managedRoots) || managedRoots.length === 0) throwDistributionError("E_RECOVERY_BACKUP", "managed roots are required", {});
+  if (!Array.isArray(managedInventory)) throwDistributionError("E_RECOVERY_BACKUP", "managed inventory is required", {});
   ensureDirectoryTree(backupRoot, { root: path.dirname(backupRoot), label: "backup root", mode: 0o700, privateMode: true });
   if (settings.length > 0) ensureDirectoryTree(path.join(backupRoot, "settings"), { root: backupRoot, label: "backup settings root", mode: 0o700, privateMode: true });
-  const targetBackup = path.join(backupRoot, "target");
-  const target = { ...snapshotRecord(activeRoot, targetBackup, { sourceRoot: activeRoot, destinationRoot: backupRoot }), backup_path: targetBackup };
+  const roots = managedRoots.map((root) => {
+    const topology = topologySnapshot(home, root.path);
+    if (root.ownership === "whole_tree") {
+      const backupPath = path.join(backupRoot, "target");
+      return {
+        root_id: root.rootId,
+        path: root.path,
+        ownership: root.ownership,
+        topology,
+        tree: { ...snapshotRecord(root.path, backupPath, { sourceRoot: home, destinationRoot: backupRoot }), backup_path: backupPath },
+        leaves: [],
+      };
+    }
+    const entries = managedInventory
+      .filter((entry) => entry.root_id === root.rootId && entry.type !== "directory")
+      .sort((left, right) => left.path.localeCompare(right.path));
+    const leavesRoot = path.join(backupRoot, "roots", root.rootId, "leaves");
+    if (entries.length > 0) ensureDirectoryTree(leavesRoot, { root: backupRoot, label: "leaf backup root", mode: 0o700, privateMode: true });
+    const leaves = entries.map((entry, index) => {
+      const targetPath = path.join(root.path, ...entry.path.split("/"));
+      const backupPath = path.join(leavesRoot, String(index));
+      return {
+        path: entry.path,
+        target_path: targetPath,
+        backup_path: backupPath,
+        ...snapshotRecord(targetPath, backupPath, { sourceRoot: home, destinationRoot: backupRoot }),
+      };
+    });
+    return { root_id: root.rootId, path: root.path, ownership: root.ownership, topology, tree: null, leaves };
+  });
   const settingRecords = [];
   for (const [index, setting] of settings.entries()) {
     const backupPath = path.join(backupRoot, "settings", String(index));
@@ -307,7 +360,7 @@ export function snapshotState({ activeRoot, settings, backupRoot, activeReceiptP
   const activeReceipt = activeReceiptPath
     ? { path: activeReceiptPath, backupPath: activeReceiptBackup, ...snapshotRecord(activeReceiptPath, activeReceiptBackup, { sourceRoot: path.dirname(activeReceiptPath), destinationRoot: backupRoot }) }
     : { path: null, backupPath: activeReceiptBackup, exists: false, mode: null, fingerprint: null };
-  const manifest = { schema_version: 1, active_root: activeRoot, target, settings: settingRecords, active_receipt: activeReceipt };
+  const manifest = { schema_version: 2, home: path.resolve(home), roots, settings: settingRecords, active_receipt: activeReceipt };
   manifest.manifest_hash = manifestHash(manifest);
   durableJson(path.join(backupRoot, "manifest.json"), manifest, 0o600);
   return manifest;
@@ -355,16 +408,55 @@ function validateSnapshotRecord(record, location) {
   if (record.exists !== (record.fingerprint !== null)) throwDistributionError("E_RECOVERY_BACKUP", `${location} existence does not match its fingerprint`, { location });
 }
 
+function validateTopology(topology, location, home, expectedRoot) {
+  if (!Array.isArray(topology) || topology.length === 0) throwDistributionError("E_RECOVERY_BACKUP", `${location} must be a non-empty array`, { location });
+  let previous = null;
+  for (const [index, entry] of topology.entries()) {
+    exactFields(entry, ["path", "exists", "mode"], `${location}[${index}]`);
+    if (typeof entry.path !== "string" || path.isAbsolute(entry.path) || entry.path.split("/").some((part) => !part || part === "." || part === "..")) throwDistributionError("E_RECOVERY_BACKUP", `${location} contains an unsafe path`, { path: entry.path });
+    if (typeof entry.exists !== "boolean" || (entry.mode !== null && !MODE.test(entry.mode)) || entry.exists !== (entry.mode !== null)) throwDistributionError("E_RECOVERY_BACKUP", `${location} contains invalid topology state`, { path: entry.path });
+    const absolute = path.resolve(home, ...entry.path.split("/"));
+    assertContained(home, absolute, "backup topology");
+    if (previous && path.dirname(absolute) !== previous) throwDistributionError("E_RECOVERY_BACKUP", `${location} is not a contiguous parent chain`, {});
+    previous = absolute;
+  }
+  if (path.resolve(previous) !== path.resolve(expectedRoot)) throwDistributionError("E_RECOVERY_BACKUP", `${location} does not terminate at its managed root`, {});
+}
+
 function validateManifest(manifest, backupRoot, paths = null) {
-  exactFields(manifest, ["schema_version", "active_root", "target", "settings", "active_receipt", "manifest_hash"], "backup manifest");
-  if (manifest.schema_version !== 1) throwDistributionError("E_RECOVERY_BACKUP", "backup manifest schema_version must be 1", {});
+  exactFields(manifest, ["schema_version", "home", "roots", "settings", "active_receipt", "manifest_hash"], "backup manifest");
+  if (manifest.schema_version !== 2) throwDistributionError("E_RECOVERY_BACKUP", "backup manifest schema_version must be 2", {});
   if (!SHA256.test(manifest.manifest_hash) || manifest.manifest_hash !== manifestHash(manifest)) throwDistributionError("E_RECOVERY_BACKUP", "backup manifest integrity hash is invalid", {});
   const backupAbsolute = path.resolve(backupRoot);
   assertSafePath(backupAbsolute, { root: path.dirname(backupAbsolute), label: "backup root", allowMissing: false });
-  if (!path.isAbsolute(manifest.active_root) || path.normalize(manifest.active_root) !== manifest.active_root || path.resolve(manifest.active_root) !== path.resolve(paths?.activeRoot ?? manifest.active_root)) throwDistributionError("E_RECOVERY_BACKUP", "backup active_root does not match target", { active_root: manifest.active_root });
-  exactFields(manifest.target, ["exists", "mode", "fingerprint", "backup_path"], "backup target");
-  validateSnapshotRecord(manifest.target, "backup target");
-  if (path.normalize(manifest.target.backup_path) !== manifest.target.backup_path || manifest.target.backup_path !== path.join(backupAbsolute, "target")) throwDistributionError("E_RECOVERY_BACKUP", "backup target path is invalid", {});
+  if (!path.isAbsolute(manifest.home) || path.normalize(manifest.home) !== manifest.home || (paths && manifest.home !== paths.home)) throwDistributionError("E_RECOVERY_BACKUP", "backup home does not match target", {});
+  if (!Array.isArray(manifest.roots) || manifest.roots.length === 0) throwDistributionError("E_RECOVERY_BACKUP", "backup roots must be a non-empty array", {});
+  for (const [rootIndex, root] of manifest.roots.entries()) {
+    const location = `backup roots[${rootIndex}]`;
+    exactFields(root, ["root_id", "path", "ownership", "topology", "tree", "leaves"], location);
+    const expected = paths?.managedRoots?.[rootIndex];
+    if (typeof root.root_id !== "string" || !path.isAbsolute(root.path) || path.normalize(root.path) !== root.path) throwDistributionError("E_RECOVERY_BACKUP", `${location} identity is invalid`, {});
+    if (!new Set(["whole_tree", "leaf_set"]).has(root.ownership)) throwDistributionError("E_RECOVERY_BACKUP", `${location} ownership is invalid`, {});
+    if (expected && (root.root_id !== expected.rootId || root.path !== expected.path || root.ownership !== expected.ownership)) throwDistributionError("E_RECOVERY_BACKUP", `${location} does not match target paths`, {});
+    validateTopology(root.topology, `${location}.topology`, manifest.home, root.path);
+    if (!Array.isArray(root.leaves)) throwDistributionError("E_RECOVERY_BACKUP", `${location}.leaves must be an array`, {});
+    if (root.ownership === "whole_tree") {
+      if (root.leaves.length !== 0 || !root.tree) throwDistributionError("E_RECOVERY_BACKUP", `${location} whole-tree snapshot is invalid`, {});
+      exactFields(root.tree, ["exists", "mode", "fingerprint", "backup_path"], `${location}.tree`);
+      validateSnapshotRecord(root.tree, `${location}.tree`);
+      if (root.tree.backup_path !== path.join(backupAbsolute, "target")) throwDistributionError("E_RECOVERY_BACKUP", `${location}.tree backup path is invalid`, {});
+    } else {
+      if (root.tree !== null) throwDistributionError("E_RECOVERY_BACKUP", `${location} leaf-set tree must be null`, {});
+      for (const [leafIndex, leaf] of root.leaves.entries()) {
+        const leafLocation = `${location}.leaves[${leafIndex}]`;
+        exactFields(leaf, ["path", "target_path", "backup_path", "exists", "mode", "fingerprint"], leafLocation);
+        if (typeof leaf.path !== "string" || path.isAbsolute(leaf.path) || leaf.path.split("/").some((part) => !part || part === "." || part === "..")) throwDistributionError("E_RECOVERY_BACKUP", `${leafLocation}.path is unsafe`, {});
+        if (leaf.target_path !== path.join(root.path, ...leaf.path.split("/"))) throwDistributionError("E_RECOVERY_BACKUP", `${leafLocation}.target_path is invalid`, {});
+        if (leaf.backup_path !== path.join(backupAbsolute, "roots", root.root_id, "leaves", String(leafIndex))) throwDistributionError("E_RECOVERY_BACKUP", `${leafLocation}.backup_path is invalid`, {});
+        validateSnapshotRecord(leaf, leafLocation);
+      }
+    }
+  }
   if (!Array.isArray(manifest.settings)) throwDistributionError("E_RECOVERY_BACKUP", "backup settings must be an array", {});
   for (const [index, setting] of manifest.settings.entries()) {
     exactFields(setting, ["path", "targetPath", "backupPath", "exists", "mode", "fingerprint"], `backup settings[${index}]`);
@@ -391,13 +483,20 @@ function assertFingerprint(actual, expected, label) {
 function verifyManifestContents(manifest, backupRoot) {
   const backupAbsolute = path.resolve(backupRoot);
   const expectedTopLevel = ["manifest.json"];
-  if (manifest.target.exists) expectedTopLevel.push("target");
+  const wholeTree = manifest.roots.find((root) => root.ownership === "whole_tree");
+  if (wholeTree?.tree.exists) expectedTopLevel.push("target");
+  if (manifest.roots.some((root) => root.ownership === "leaf_set" && root.leaves.length > 0)) expectedTopLevel.push("roots");
   if (manifest.settings.length > 0) expectedTopLevel.push("settings");
   if (manifest.active_receipt.exists) expectedTopLevel.push("active-receipt.json");
   const actualTopLevel = fs.readdirSync(backupAbsolute).sort();
   expectedTopLevel.sort();
   if (canonical(actualTopLevel) !== canonical(expectedTopLevel)) throwDistributionError("E_RECOVERY_BACKUP", "backup topology contains unrecorded residue", { expected: expectedTopLevel, actual: actualTopLevel });
-  assertFingerprint(fingerprintEntry(manifest.target.backup_path, { root: backupAbsolute, label: "backup target" }), manifest.target.fingerprint, "backup target");
+  if (wholeTree) assertFingerprint(fingerprintEntry(wholeTree.tree.backup_path, { root: backupAbsolute, label: "backup target" }), wholeTree.tree.fingerprint, "backup target");
+  for (const root of manifest.roots.filter((entry) => entry.ownership === "leaf_set")) {
+    for (const [index, leaf] of root.leaves.entries()) {
+      assertFingerprint(fingerprintEntry(leaf.backup_path, { root: backupAbsolute, label: `backup ${root.root_id} leaf[${index}]` }), leaf.fingerprint, `backup ${root.root_id} leaf[${index}]`);
+    }
+  }
   for (const [index, setting] of manifest.settings.entries()) {
     assertFingerprint(fingerprintEntry(setting.backupPath, { root: backupAbsolute, label: `backup setting[${index}]` }), setting.fingerprint, `backup setting[${index}]`);
   }
@@ -425,22 +524,54 @@ export function readManifest(backupRoot, { paths = null } = {}) {
 export function restoreFullBackup(backupRoot, { paths = null, expectedManifestHash = null } = {}) {
   const manifest = readManifest(backupRoot, { paths });
   if (expectedManifestHash !== null && expectedManifestHash !== manifest.manifest_hash) throwDistributionError("E_RECOVERY_BACKUP", "backup manifest hash does not match the transaction record", { backupRoot });
-  const activeRoot = paths?.activeRoot ?? manifest.active_root;
-  assertSafePath(activeRoot, { root: paths?.home ?? path.dirname(activeRoot), label: "restore active root" });
-  secureRemove(activeRoot, { root: paths?.home ?? path.dirname(activeRoot), label: "restore active root" });
-  if (manifest.target.exists) copyTreeEntry(manifest.target.backup_path, activeRoot, { sourceRoot: manifest.target.backup_path, destinationRoot: paths?.home ?? path.dirname(activeRoot) });
+  const home = paths?.home ?? manifest.home;
+  for (const root of manifest.roots) {
+    if (root.ownership === "whole_tree") {
+      secureRemove(root.path, { root: home, label: `restore ${root.root_id}` });
+      if (root.tree.exists) copyTreeEntry(root.tree.backup_path, root.path, { sourceRoot: root.tree.backup_path, destinationRoot: home });
+      continue;
+    }
+    for (const leaf of [...root.leaves].sort((left, right) => right.path.length - left.path.length)) {
+      secureRemove(leaf.target_path, { root: home, label: `restore ${root.root_id} leaf`, allowLeafSymlink: true });
+    }
+    for (const leaf of root.leaves.filter((entry) => entry.exists)) {
+      copyTreeEntry(leaf.backup_path, leaf.target_path, { sourceRoot: path.dirname(leaf.backup_path), destinationRoot: home });
+    }
+  }
   for (const setting of manifest.settings) {
-    secureRemove(setting.targetPath, { root: paths?.home ?? path.dirname(setting.targetPath), label: "restore setting" });
-    if (setting.exists) copyTreeEntry(setting.backupPath, setting.targetPath, { sourceRoot: path.dirname(setting.backupPath), destinationRoot: paths?.home ?? path.dirname(setting.targetPath) });
+    secureRemove(setting.targetPath, { root: home, label: "restore setting" });
+    if (setting.exists) copyTreeEntry(setting.backupPath, setting.targetPath, { sourceRoot: path.dirname(setting.backupPath), destinationRoot: home });
   }
   const receipt = manifest.active_receipt;
   if (receipt.path) {
     secureRemove(receipt.path, { root: paths?.stateRoot ?? path.dirname(receipt.path), label: "restore active receipt" });
     if (receipt.exists) copyTreeEntry(receipt.backupPath, receipt.path, { sourceRoot: path.dirname(receipt.backupPath), destinationRoot: paths?.stateRoot ?? path.dirname(receipt.path) });
   }
-  flushDirectory(path.dirname(activeRoot));
+  for (const topology of manifest.roots.flatMap((root) => [root.topology])) {
+    for (const entry of topology.filter((item) => item.exists)) {
+      const directory = path.join(home, ...entry.path.split("/"));
+      ensureDirectoryTree(directory, { root: home, label: "restore managed-root topology", mode: Number.parseInt(entry.mode, 8) });
+      fs.chmodSync(directory, Number.parseInt(entry.mode, 8));
+    }
+    for (const entry of [...topology].reverse().filter((item) => !item.exists)) {
+      const directory = path.join(home, ...entry.path.split("/"));
+      const stat = fs.lstatSync(directory, { throwIfNoEntry: false });
+      if (stat) {
+        if (!stat.isDirectory() || stat.isSymbolicLink()) throwDistributionError("E_RECOVERY_FAILURE", "managed-root topology restore found a non-directory", { path: directory });
+        try { fs.rmdirSync(directory); } catch (error) {
+          if (!['ENOENT'].includes(error.code)) throwDistributionError("E_RECOVERY_FAILURE", "managed-root topology could not be restored exactly", { path: directory }, { cause: error });
+        }
+      }
+    }
+  }
   verifyManifestContents(manifest, backupRoot);
-  assertFingerprint(fingerprintEntry(activeRoot, { root: paths?.home ?? path.dirname(activeRoot), label: "restored active root" }), manifest.target.exists ? manifest.target.fingerprint : null, "restored active root");
+  for (const root of manifest.roots) {
+    if (root.ownership === "whole_tree") {
+      assertFingerprint(fingerprintEntry(root.path, { root: home, label: `restored ${root.root_id}` }), root.tree.exists ? root.tree.fingerprint : null, `restored ${root.root_id}`);
+    } else {
+      for (const leaf of root.leaves) assertFingerprint(fingerprintEntry(leaf.target_path, { root: home, label: `restored ${root.root_id} leaf` }), leaf.exists ? leaf.fingerprint : null, `restored ${root.root_id} leaf`);
+    }
+  }
   for (const setting of manifest.settings) assertFingerprint(fingerprintEntry(setting.targetPath, { root: paths?.home ?? path.dirname(setting.targetPath), label: "restored setting" }), setting.exists ? setting.fingerprint : null, "restored setting");
   if (manifest.active_receipt.path) assertFingerprint(fingerprintEntry(manifest.active_receipt.path, { root: paths?.stateRoot ?? path.dirname(manifest.active_receipt.path), label: "restored active receipt" }), manifest.active_receipt.exists ? manifest.active_receipt.fingerprint : null, "restored active receipt");
   return manifest;

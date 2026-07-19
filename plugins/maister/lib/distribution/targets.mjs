@@ -1,8 +1,15 @@
+function managedRoot(rootId, discoveryRoot, ownership) {
+  return Object.freeze({ rootId, discoveryRoot, ownership });
+}
+
 const definitions = [
   {
     id: "codex",
     overlayId: "maister/codex",
     discoveryRoot: ".codex/plugins/local/maister",
+    managedRoots: Object.freeze([
+      managedRoot("plugin_private", ".codex/plugins/local/maister", "whole_tree"),
+    ]),
     probe: "codex",
     probeCommand: "codex",
   },
@@ -10,6 +17,9 @@ const definitions = [
     id: "cursor",
     overlayId: "maister/cursor",
     discoveryRoot: ".cursor/plugins/local/maister",
+    managedRoots: Object.freeze([
+      managedRoot("plugin_private", ".cursor/plugins/local/maister", "whole_tree"),
+    ]),
     probe: "cursor",
     probeCommand: "agent",
   },
@@ -17,6 +27,10 @@ const definitions = [
     id: "kiro-cli",
     overlayId: "maister/kiro-cli",
     discoveryRoot: ".kiro-maister",
+    managedRoots: Object.freeze([
+      managedRoot("plugin_private", ".kiro-maister", "whole_tree"),
+      managedRoot("kiro_native_agents", ".kiro/agents", "leaf_set"),
+    ]),
     probe: "kiro-cli",
     probeCommand: "kiro-cli",
   },

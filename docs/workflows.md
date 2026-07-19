@@ -1,5 +1,9 @@
 # Workflow Details
 
+## Agent-role contract
+
+Delegation is a runtime request for one exact `maister:<role_id>`, not a host-specific agent name. The resolver checks receipt and projection provenance before selecting `codex.exec`, Cursor, or Kiro. It never generates files at invocation time and never falls back to a root, built-in, similar, or inline role. `advisor` takes this ordinary path; only its gate actor and attempt identity differ. Projection happens in the materializer staging tree before validation and receipt publication. A native discovery/invocation prerequisite that cannot be safely observed is reported as `unavailable`; an observed wrong identity or behavior is `failed`.
+
 Maister provides five workflow types, each with phases tailored to its needs. All workflows pause between phases for your review and input.
 
 ## Development Workflow

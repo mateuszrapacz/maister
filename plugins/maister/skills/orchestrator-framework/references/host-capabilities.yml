@@ -20,9 +20,17 @@ freshness:
   renew_on:
     - expires_at
     - host_version
+    - host
+    - source_version
+    - overlay_id
     - overlay_version
     - source_commit
     - scenario_version
+    - schema_version
+    - projector_version
+    - canonical_set_digest
+    - manifest_digest
+    - projected_tree_digest
   default_ttl_hours: 24
 capabilities:
   semantic_bindings:
@@ -47,12 +55,21 @@ targets:
   codex:
     host_version_source: codex --version
     native_probe_module: plugins/maister/lib/distribution/host-probes/codex.mjs
-    runtime_evidence: available
+    discovery_subject: codex.exec
+    discovery_scenario: codex-exec-discovery-v1
+    invocation_scenario: codex-exec-invocation-v1
+    runtime_evidence: unavailable-until-authenticated-control-probe
   cursor:
     host_version_source: agent --version
     native_probe_module: plugins/maister/lib/distribution/host-probes/cursor.mjs
-    runtime_evidence: unavailable-until-installed
+    discovery_subject: manifest-native-role-external-ids
+    discovery_scenario: cursor-native-inventory-v1
+    invocation_scenario: cursor-native-invocation-v1
+    runtime_evidence: unavailable-until-safe-observable-configured-scenario
   kiro-cli:
     host_version_source: kiro-cli --version
     native_probe_module: plugins/maister/lib/distribution/host-probes/kiro-cli.mjs
-    runtime_evidence: unavailable-until-installed
+    discovery_subject: manifest-native-role-external-ids
+    discovery_scenario: kiro-cli-native-inventory-v1
+    invocation_scenario: kiro-cli-native-invocation-v1
+    runtime_evidence: unavailable-until-safe-observable-configured-scenario

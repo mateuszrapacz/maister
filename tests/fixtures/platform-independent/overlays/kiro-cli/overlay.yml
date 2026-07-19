@@ -155,3 +155,75 @@ native_assets:
     destination: settings/mcp.json
     mode: "0644"
     sha256: 77a711f0ed6c082ede0094fd212fe8a7d440bf72074150021a3b152f2683da04
+agent_projection:
+  schema_version: 1
+  contract: agent-projection-v1.json
+  projector_version: 1.0.0
+  adapter_id: kiro-cli.native
+  representation: kiro-descriptor-prompt
+  canonical_roles:
+    - advisor
+    - bottleneck-analyzer
+    - code-quality-pragmatist
+    - code-reviewer
+    - codebase-analysis-reporter
+    - docs-operator
+    - e2e-test-verifier
+    - gap-analyzer
+    - html-companion-writer
+    - implementation-completeness-checker
+    - implementation-planner
+    - information-gatherer
+    - production-readiness-checker
+    - project-analyzer
+    - reality-assessor
+    - research-planner
+    - research-synthesizer
+    - solution-brainstormer
+    - solution-designer
+    - spec-auditor
+    - specification-creator
+    - task-classifier
+    - task-group-implementer
+    - test-suite-runner
+    - thermo-nuclear-code-quality-review-subagent
+    - thermo-nuclear-review-subagent
+    - ui-mockup-generator
+    - user-docs-generator
+  destinations:
+    - kind: descriptor
+      path_template: maister-{role_id}.json
+      mode: "0644"
+    - kind: prompt
+      path_template: instructions/maister-{role_id}.md
+      mode: "0644"
+  transform_ids:
+    - canonical-body-v1
+    - kiro-descriptor-v1
+  execution_profile_ids:
+    - kiro-cli.read-only
+    - kiro-cli.read-only-shell
+    - kiro-cli.workspace-write
+  support_inventory:
+    - support_id: explore
+      native_role_external_id: maister-explore
+      assets:
+        - kind: descriptor
+          source: assets/support-agents/maister-explore.json
+          destination: maister-explore.json
+          mode: "0644"
+        - kind: prompt
+          source: assets/support-agents/instructions/maister-explore.md
+          destination: instructions/maister-explore.md
+          mode: "0644"
+    - support_id: maister
+      native_role_external_id: maister
+      assets:
+        - kind: descriptor
+          source: assets/support-agents/maister.json
+          destination: maister.json
+          mode: "0644"
+        - kind: prompt
+          source: assets/support-agents/instructions/maister.md
+          destination: instructions/maister.md
+          mode: "0644"

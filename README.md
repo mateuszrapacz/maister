@@ -2,11 +2,15 @@
 
 Maister is a portable, auditable SDLC plugin. The repository contains one common source, three explicit host overlays, and one transactional installer. Host selection happens at installation time; maintainers do not independently maintain generated host trees. Cursor's checked-in compatibility projection is deterministically derived and drift-checked from the canonical source, with explicit hash-locked exceptions, and remains migration debt rather than a second source of truth.
 
-## Supported hosts
+## Distribution targets
 
-- Codex
-- Cursor
-- Kiro CLI
+Maister builds and installs packages for Codex, Cursor, and Kiro CLI. Package availability is not itself a native-support claim:
+
+| Target | Structural delivery | Native discovery and invocation |
+|---|---|---|
+| Codex | Packaged projection, installer, and managed-worker bridge | Supported only for a host/version whose current E5/E6 records pass; otherwise provisional or unavailable |
+| Cursor | Packaged projection, installer, and exact-native bridge | Supported only for a host/version whose current E5/E6 records pass; otherwise provisional or unavailable |
+| Kiro CLI | Packaged projection, multi-root installer, and exact-native bridge | Supported only for a host/version whose current E5/E6 records pass; otherwise provisional or unavailable |
 
 ### Migration boundary (historical)
 
@@ -110,7 +114,7 @@ cat dist/SHA256SUMS
 
 Treat `dist/` as disposable local build output. Filenames and timestamps do not prove that an archive was produced by the current source: old flat-layout or partially generated archives may remain there after development. Before a manual release, remove or isolate prior output, regenerate all three archives in the same clean release run, and require each archive to contain `plugins/maister/bin/maister-install.mjs` plus only its selected overlay. Never publish a pre-existing `dist/` archive that did not pass the current run's extracted lifecycle, checksum, metadata, and strict parity gates.
 
-The package test's default mode builds each target twice with a fixed source timestamp and verifies byte-for-byte deterministic output. The installer requires a passed portable-core E3 record for install/update. Generate the deterministic record only after the core gate, then pass the same bytes to every target package:
+The package test's default mode builds each target twice with fixed inputs and verifies byte-for-byte deterministic output. Each package contains the canonical role source, `agent-projection-v1.json`, projector/runtime/installer code, the selected target's support assets, and minimal contract-only overlay inputs required to build the shared manifest. It excludes foreign target assets, checked-in Cursor/Kiro behavior copies, parity baselines, and all legacy Codex TOML profiles. The installer requires a passed, current portable-core E3 record for install/update. Generate the deterministic record only after the core gate, then pass the same bytes to every target package:
 
 ```sh
 make test-core
@@ -151,6 +155,66 @@ tests/platform-independent/   core and target-seam tests
 ```
 
 Portable behavior is intended to have one owner. Codex and Kiro CLI consume the canonical common source; Cursor currently carries a behavior-bearing skills projection under its overlay, which is migration debt and must not be treated as an independent source of truth. An overlay should otherwise own only native manifests, layout, settings ownership, bindings, inventories, and forbidden vocabulary. The materializer produces a staging tree; the installer owns the target transaction.
+
+## Agent projections and dispatch
+
+Workflows request only exact logical IDs such as `maister:advisor`; aliases, bare role names, and defaults fail before dispatch. Canonical prompts live at `plugins/maister/agents/<role_id>.md`. Codex packages those prompts and starts managed `codex exec` workers; it has no native TOML role profiles. Cursor materializes `maister-<role_id>` Markdown agents, while Kiro materializes `~/.kiro/agents/maister-<role_id>.json` with receipt-owned prompts at `~/.kiro/agents/instructions/maister-<role_id>.md`.
+
+The shipped owner is `plugins/maister/bin/maister-agent-gate.mjs`. An operator or host sends one JSON object on stdin; the CLI selects the target and installed state, loads an explicitly registered bridge module when configured, calls the packaged production runtime, passes that runtime to the gate evaluator, and writes one JSON result on stdout. It never invokes the projector and has no root-agent, inline, built-in, fuzzy, or alternate-target fallback.
+
+### Agent-gate owner v1
+
+Invoke the installed package entrypoint as `node plugins/maister/bin/maister-agent-gate.mjs`. Stdin is bounded to 1 MiB and must be one closed object with exactly these fields:
+
+| Field | v1 value / ownership |
+|---|---|
+| `schema_version` | integer `1` |
+| `operation` | exact string `evaluate_gate` |
+| `target` | `codex`, `cursor`, or `kiro-cli` |
+| `home` | existing real host home directory selected by the host |
+| `state_root` | existing real Maister state root; the owner binds it as `XDG_STATE_HOME` |
+| `working_root` | existing real worker checkout/root |
+| `state_path` | existing real `orchestrator-state.yml` directly inside the task root |
+| `bridge_module` | `null`, or an existing real non-symlinked ESM file explicitly registered by the host |
+| `gate_context` | the closed gate-context v1 object accepted by `gate-evaluator.mjs` |
+| `role_config` | the closed Advisor/Arbiter role-config object accepted by `gate-evaluator.mjs` |
+| `automatic_continuation_supported` | boolean host capability decision |
+| `interactive` | exactly `false`; the CLI does not impersonate a user gate |
+
+The task root is `gate_context.context.task_path`; `state_path` must be its direct child. The source root is not caller-selectable: it is the `plugins/maister` tree containing the running owner. The runtime validates that source against the receipt-owned installed projection bytes. Credentials and host-version discovery belong to the bridge owner, never to Maister configuration or the workflow prompt.
+
+stdout is always one closed envelope. Success uses `{"schema_version":1,"status":"succeeded","result":<evaluateGate result>,"error":null}` and exit code `0`. Boundary failure uses `{"schema_version":1,"status":"failed","result":null,"error":{"code":"...","message":"...","retryable":false,"details":{}}}` and exit code `2`. A runtime prerequisite that is absent after gate evaluation remains a typed unavailable failure in the durable gate attempt and produces a fail-closed `blocked` gate; it is not converted into a successful decision.
+
+### Registered bridge module v1
+
+A non-null `bridge_module` must export `async createMaisterAgentBridgeV1(request)`. The factory request is closed and contains exactly `schema_version: 1`, `operation: "evaluate_gate"`, `target`, canonical real paths `home`, `state_root`, `working_root`, `state_path`, and the immutable packaged `plugin_source_root`.
+
+The factory response is also closed:
+
+- Codex: exactly `{schema_version: 1, target: "codex", credentials_owner: "host", version_owner: "host", capability_port: {inspect}}`.
+- Cursor/Kiro: exactly `{schema_version: 1, target, credentials_owner: "host", version_owner: "host", native_port}`. `native_port` has required fields `hostVersion` (non-empty string), `authenticated` (boolean), `externalCollisions` (array), `inspect` (function), and `launch` (function). `cancel` is the only optional field and is best-effort; cancellation support is not required.
+
+The Codex `capability_port.inspect` input is one of two closed v1 shapes: resolver preflight `{schema_version, adapter_id}`, or dispatch preflight `{schema_version, adapter_id, host_version, required_model, required_reasoning_effort}`. It returns exactly:
+
+```json
+{
+  "schema_version": 1,
+  "executable": {"available": true, "path": "/absolute/codex"},
+  "authentication": {"available": true, "authenticated": true},
+  "version": {"value": "host-version", "allowed": true},
+  "controls": {"working_root": true, "model": true, "reasoning_effort": true, "sandbox": true, "jsonl": true, "output_schema": true, "last_message": true, "ignore_user_config": true},
+  "model": {"available": true, "supported": true, "value": "gpt-5.6-terra"},
+  "reasoning": {"available": true, "supported": true, "value": "high"}
+}
+```
+
+Every field is required and unknown fields are rejected. Availability fields may be `false`, executable/model/reasoning values may be `null` where the source validator permits it, and unsupported authentication, versions, controls, model, or effort produce typed unavailable/unsupported outcomes rather than inheritance.
+
+The exact-native `inspect` input is either resolver preflight `{schema_version: 1, adapter_id, native_role_external_id: null}` or dispatch preflight `{schema_version: 1, adapter_id, host_version, native_role_external_id}`. It returns exactly `{schema_version: 1, exact_launch: boolean, observable_identity: boolean}`. `launch` receives exactly `{schema_version: 1, adapter_id, native_role_external_id, plan, task}` and returns exactly `{schema_version: 1, observed_native_role_external_id, output, native_observations}`. `plan` is dispatch-plan v1 with the exact top-level fields `schema_version`, `dispatch_id`, `requested_logical_role_id`, `role_id`, `role_source_digest`, `target`, `representation`, `adapter_id`, `native_role_external_id`, `host`, `host_version`, `policy`, and `provenance`; `policy` and `provenance` use the closed field sets enforced by `dispatch-contract.mjs`. `task` is the prepared exact-native task with exactly `task_path`, `bounded_task`, `canonical_source_digest`, `execution_context`, `gate_context`, and `work_item`.
+
+The bridge owns credentials, host-version discovery, and compatibility with its host API. An unavailable module/factory, malformed response, failed inspection, unauthenticated host, unsupported version/control/policy, launch failure, or wrong observed identity remains a typed fail-closed result. The registration lifecycle is explicit: install/verify the matching target first, provide the module path for each owner invocation, replace the module only when its host compatibility changes, and renew E5/E6 evidence for that exact bridge/host version. Maister does not cache bridge code or credentials.
+
+Projection is staged during materialization, never written back to the source checkout or generated during invocation. Kiro's shared native root is a receipt-owned `leaf_set`; Maister never owns unrelated Kiro agents. Cursor `explore`, and Kiro `explore`/`maister`, are explicit support roles and do not count toward the canonical 28 roles.
 
 ## Compatibility evidence
 

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Plan — Unified Agent Projections and Exact Invocation</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.step.todo::before  { content:"☐ "; color:var(--dim); }
+.step.done::before  { content:"☑ "; color:var(--ok); }
+.step.done          { color:var(--dim); }
+.group.todo .g-badge::after { content:"pending"; }
+.group.done .g-badge::after { content:"✓ completed"; color:var(--ok); }
+header { margin-bottom:6px; }
+header h1 { margin:4px 0; }
+header p { color:var(--dim); margin:0; }
+.tldr { border-left:4px solid var(--accent); }
+.summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.summary-grid h3 { margin:0 0 8px; font-size:14px; }
+.summary-grid ul { margin:0; padding-left:18px; }
+.risk { border-left:4px solid var(--warn); }
+.toc { font-size:13px; color:var(--dim); margin:18px 0; line-height:2; }
+.toc a { white-space:nowrap; }
+.group { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin:18px 0; }
+.group h3 { margin:0; font-size:16px; }
+.group-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.g-badge { flex:none; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--dim); background:var(--accent-soft); padding:3px 9px; border-radius:99px; }
+.meta { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; color:var(--dim); font-size:12px; }
+.meta span { border:1px solid var(--border); border-radius:99px; padding:2px 8px; }
+.files { display:flex; gap:5px; flex-wrap:wrap; margin:8px 0; }
+.steps { list-style:none; padding-left:0; margin:14px 0; }
+.steps > li { padding:5px 0 5px 2px; border-bottom:1px dashed var(--border); }
+.steps > li:last-child { border-bottom:0; }
+.steps ul { color:var(--dim); margin:5px 0 3px 22px; padding-left:16px; }
+.accept { background:var(--ok-soft); border-radius:8px; padding:10px 12px; margin-top:12px; }
+.accept b { color:var(--ok); }
+.accept ul { margin:6px 0 0; padding-left:18px; }
+.contract-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.contract-grid h3 { margin-top:0; font-size:14px; }
+.contract-grid ul { margin-bottom:0; padding-left:18px; }
+.wave { white-space:nowrap; font-weight:700; color:var(--accent); }
+.small { font-size:12px; color:var(--dim); }
+.standards li, .notes li { margin:5px 0; }
+@media (max-width:760px) { .summary-grid,.contract-grid { grid-template-columns:1fr; } .crumbs a.md { margin-left:0; } }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="spec.html">Spec</a>
+  <span class="here">Plan</span>
+  <a href="../verification/implementation-verification.html">Verification</a>
+  <a href="implementation-plan.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <span class="badge">Implementation plan</span>
+  <h1>Unified Agent Projections and Exact Invocation</h1>
+  <p>Phase 7 · generated 2026-07-18T11:21:47Z · high risk · no UI</p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>11</b><span>task groups</span></div>
+  <div class="tile"><b>92</b><span>total steps</span></div>
+  <div class="tile"><b>9</b><span>execution waves</span></div>
+  <div class="tile"><b>≥120</b><span>focused scenarios</span></div>
+  <div class="tile"><b>35/35</b><span>requirements mapped</span></div>
+</div>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>The canonical role contract lands first; deterministic projection and durable execution-event persistence then run in parallel. Materializer/provenance and the atomic multi-root Kiro lifecycle serialize before exact resolution. Host adapters and workflow configuration form the second safe parallel wave. Gate integration and legacy topology removal follow, with native evidence, release gates, documentation, and full verification last. Coverage is risk-based: at least 120 non-redundant focused scenarios, with no fixed maximum.</p>
+  <div class="summary-grid">
+    <div>
+      <h3>Key decisions</h3>
+      <ul>
+        <li>One checked-in projection contract plus strict parser/manifest code; canonical Markdown remains the sole behavior owner.</li>
+        <li>Target artifacts are generated only inside materializer staging and installed with digest-bound runtime metadata.</li>
+        <li>Receipt/journal v2 is a clean-install multi-root schema; v1 is rejected, not migrated.</li>
+        <li>The shared runtime lives under <code>skills/orchestrator-framework/bin/agent-runtime/</code>.</li>
+        <li>Cursor/Kiro return typed <code>unavailable</code> when exact native selection/identity cannot be enforced or observed.</li>
+        <li>Parity baselines, support claims, release wiring, and docs remain last.</li>
+      </ul>
+    </div>
+    <div class="risk">
+      <h3>Open risks</h3>
+      <ul>
+        <li>Codex controls, authentication, models, and JSONL/session observations are version-sensitive.</li>
+        <li>Cursor precedence and Kiro delegated identity observability may remain unavailable.</li>
+        <li>Kiro multi-root ownership must ship atomically across every lifecycle command.</li>
+        <li>Preserve unrelated worktree files; Group 9 deletes exactly <code>.codex/agents/{advisor,arbiter,luna_smoke_agent}.toml</code> by explicit recovery-gate override.</li>
+        <li>Workspace-writing Codex workers remain serialized per checkout.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<nav class="toc">Contents:
+  <a href="#contracts">Contracts</a> · <a href="#coverage">Requirements</a> ·
+  <a href="#groups">Task groups</a> · <a href="#execution">Execution waves</a> ·
+  <a href="#standards">Standards</a> · <a href="#notes">Notes</a>
+</nav>
+
+<main>
+<section id="contracts">
+  <h2>Frozen implementation contracts</h2>
+  <div class="contract-grid">
+    <article class="card">
+      <h3>Canonical role &amp; projection</h3>
+      <ul>
+        <li>Exactly <code>plugins/maister/agents/*.md</code>; no target-owned canonical behavior.</li>
+        <li><code>role_id = stem = frontmatter.name</code>; workflow ID is exact <code>maister:&lt;role_id&gt;</code>.</li>
+        <li><code>agent-projection-v1.json</code> owns expected inventory, versions, profiles, transforms, destinations, and separate support inventories.</li>
+        <li>Manifest separates logical ID, adapter ID, and nullable native ID; Codex is <code>codex.exec</code> with null native ID.</li>
+        <li>Canonical JSON, UTF-8/LF, stable modes/order/hashes, deterministic manifest and projected-tree digest.</li>
+        <li>Codex: 28 prompts + role schemas; Cursor: 28 Markdown agents; Kiro: 28 descriptor/prompt pairs.</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h3>Multi-root clean install</h3>
+      <ul>
+        <li>Receipt/journal v2 rejects v1 before mutation; no migration or cleanup branch.</li>
+        <li><code>managed_roots</code> uses stable IDs and <code>whole_tree | leaf_set</code>; inventory identity is <code>(root_id,path)</code>.</li>
+        <li>Kiro adds <code>kiro_native_agents</code> leaf ownership under <code>~/.kiro/agents</code>.</li>
+        <li>One lock and journal cover all roots/settings; publish only after all verify.</li>
+        <li>Unmanaged collisions fail even on identical bytes; stale leaves require prior exact ownership and no drift.</li>
+        <li>Code 7 preserves diagnostic state as unresolved recovery.</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h3>Runtime dispatch &amp; evidence</h3>
+      <ul>
+        <li>Exact resolver produces one immutable <code>DispatchPlan</code> or typed failure.</li>
+        <li>Per-dispatch locked JSONL: modes <code>0700/0600</code>, canonical events, monotonic sequence, digest chain, exactly one terminal.</li>
+        <li>Fsync before side effects; pre-spawn failure prevents launch; post-spawn failure cancels when possible and never succeeds.</li>
+        <li>Managed <code>codex exec</code> pins working root, model, effort, sandbox, JSONL, schema, and last-message output.</li>
+        <li>No native Codex custom agents, <code>spawn_agent</code>, V1/V2 switching, app server, natural-language fallback, or root fallback.</li>
+        <li>Gate, idempotency, dispatch, attempt, and canonical role identities remain separate.</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h3>Testing</h3>
+      <ul>
+        <li>Every group starts tests-first; risk and non-redundancy determine count, with no fixed maximum.</li>
+        <li>Group-local runs use only new/directly affected tests; broad release suites run in Group 11.</li>
+        <li>Real 28-role inventory plus small malformed fixtures; exact IDs/mappings/digests/support/closure, not counts alone.</li>
+        <li>Transactional failures compare bytes, modes, links, existence, topology, settings, receipts, journals, and unrelated Kiro agents.</li>
+        <li><code>passed</code>, <code>failed</code>, and <code>unavailable</code> remain distinct; version presence never proves E5/E6.</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<section id="coverage">
+  <h2>Requirement coverage</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Req</th><th>Groups</th><th>Planned proof</th></tr></thead>
+      <tbody>
+        <tr><td>R1</td><td>1</td><td>Exact 28-file allowlist and real-inventory parser test.</td></tr>
+        <tr><td>R2</td><td>1</td><td>Closed IR/frontmatter/body validation.</td></tr>
+        <tr><td>R3</td><td>1</td><td>Typed malformed, unknown, collision, unsafe dependency, zero-output cases.</td></tr>
+        <tr><td>R4</td><td>1</td><td>Sorted versioned manifest, distinct identity fields, deterministic digest.</td></tr>
+        <tr><td>R5</td><td>1-2</td><td>Explicit support inventories and canonical-bijection tests.</td></tr>
+        <tr><td>R6</td><td>1, 8-10</td><td>Advisor equality in manifest, config, adapters, topology, evidence.</td></tr>
+        <tr><td>R7</td><td>3</td><td>Project after trusted assembly, before enumeration/hash.</td></tr>
+        <tr><td>R8</td><td>2-3</td><td>Repeated projections with stable bytes/modes/order/hashes.</td></tr>
+        <tr><td>R9</td><td>1-2</td><td>Named allowlisted transforms and undeclared-drift rejection.</td></tr>
+        <tr><td>R10</td><td>2-3</td><td>Staging-only writes and no invocation-time generation.</td></tr>
+        <tr><td>R11</td><td>2-3</td><td>28/28, support separation, collision safety, Kiro closure.</td></tr>
+        <tr><td>R12</td><td>3-4, 6</td><td>Provenance/receipt bindings and mismatch rejection.</td></tr>
+        <tr><td>R13</td><td>2, 7</td><td>Codex prompts/schemas and managed process worker.</td></tr>
+        <tr><td>R14</td><td>2</td><td>Generated Cursor 28/28, E2E included, no Advisor metadata.</td></tr>
+        <tr><td>R15</td><td>2, 4</td><td>Kiro 28 pairs and separately owned support agents.</td></tr>
+        <tr><td>R16</td><td>1, 7</td><td>Validated profiles; no role-name branch or silent inheritance.</td></tr>
+        <tr><td>R17</td><td>4</td><td>Managed-root v2 and <code>(root_id,path)</code> identity.</td></tr>
+        <tr><td>R18</td><td>4</td><td>One lock/journal across all lifecycle operations and roots.</td></tr>
+        <tr><td>R19</td><td>4</td><td>Kiro unrelated-agent byte preservation.</td></tr>
+        <tr><td>R20</td><td>4</td><td>Pre-mutation collisions and exact stale-leaf checks.</td></tr>
+        <tr><td>R21</td><td>4</td><td>Exact recovery at every mutation boundary.</td></tr>
+        <tr><td>R22</td><td>4, 11</td><td>Identity/drift refusal and cooperative-concurrency docs.</td></tr>
+        <tr><td>R23</td><td>6</td><td>Exact grammar and alias/fuzzy/default rejection.</td></tr>
+        <tr><td>R24</td><td>6-7</td><td>Receipt/digest/collision/host/auth/control/model preflight.</td></tr>
+        <tr><td>R25</td><td>6-7</td><td>Distinct failures and no-fallback adapter tests.</td></tr>
+        <tr><td>R26</td><td>6-7</td><td>Common terminal shape across three adapters.</td></tr>
+        <tr><td>R27</td><td>5, 7</td><td>Locked, fsynced, hash-chained JSONL and write failure handling.</td></tr>
+        <tr><td>R28</td><td>5, 9</td><td>Separate gate, idempotency, dispatch, attempt, role IDs.</td></tr>
+        <tr><td>R29</td><td>7, 10</td><td>Codex controls; Cursor/Kiro exact inventory discovery.</td></tr>
+        <tr><td>R30</td><td>7, 10</td><td>Two ordinary roles plus ordinary Advisor E6 scenarios.</td></tr>
+        <tr><td>R31</td><td>10</td><td>Outcome semantics and freshness invalidation.</td></tr>
+        <tr><td>R32</td><td>10-11</td><td>One delivery scope and evidence-gated support claims.</td></tr>
+        <tr><td>R33</td><td>2, 11</td><td>Packages include inputs and exclude behavior copies/TOML.</td></tr>
+        <tr><td>R34</td><td>8-9, 11</td><td>Exact gate binding, removed legacy fields/topology, v1 rejection.</td></tr>
+        <tr><td>R35</td><td>11</td><td>Commands/workflows/architecture/build/testing/release docs.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="groups">
+  <h2>Task groups</h2>
+
+  <section data-group="1" class="group done" id="group-1">
+    <div class="group-head"><div><h3>Group 1 — Canonical Agent IR, Manifest, and Execution Profiles</h3><div class="meta"><span>Dependencies: none</span><span>8 steps</span><span>≥10 scenarios</span><span>Wave 1</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files and read-only inputs</summary><div class="files">
+      <code>plugins/maister/agent-projection-v1.json</code><code>lib/distribution/agent-ir.mjs</code><code>lib/distribution/agent-manifest.mjs</code><code>lib/distribution/overlay-loader.mjs</code><code>overlays/schema/overlay-v1.schema.json</code><code>overlays/{codex,cursor,kiro-cli}/{overlay.yml,inventory.yml}</code><code>tests/platform-independent/overlay-contract.test.mjs</code><code>tests/fixtures/platform-independent/overlays/**</code><code>tests/fixtures/platform-independent/agent-ir/**</code>
+    </div><p class="small">Read only: <code>plugins/maister/agents/*.md</code>, <code>plugins/maister/skills/*/SKILL.md</code>.</p></details>
+    <ul class="steps">
+      <li data-step="1.0" class="step done"><b>Complete the canonical role and execution-profile contract.</b></li>
+      <li data-step="1.1" class="step done">Write parser, manifest, profile, support-separation, and Advisor-equality tests first.<ul><li>Real 28-role tree plus malformed fixtures; cover identity, metadata, body, skills, YAML restrictions, collisions, unknowns, unsupported profiles, and zero output.</li></ul></li>
+      <li data-step="1.2" class="step done">Implement strict canonical Markdown parsing into immutable versioned Agent IR.<ul><li>Reuse canonical YAML, path safety, and hashing; preserve full bodies and validated skill order; infer no policy from prose.</li></ul></li>
+      <li data-step="1.3" class="step done">Add the closed projection/profile input.<ul><li>Exactly 28 roles, transforms, destinations, support inventories, tools/permissions/model/effort/timeout/schema/concurrency profiles, versions; no role-name code branches.</li></ul></li>
+      <li data-step="1.4" class="step done">Build and validate the sorted projection manifest.<ul><li>Bind source/digest, metadata, skills, transforms/profiles, three identity fields, manifest digest, and canonical-set digest.</li></ul></li>
+      <li data-step="1.5" class="step done">Extend strict overlay schema/loader and target fixtures.<ul><li>Reject unknowns, incomplete coverage, unsafe destinations/support assets, duplicate profiles, and adapter mismatches.</li></ul></li>
+      <li data-step="1.6" class="step done">Enforce support-role separation and Advisor equality.<ul><li>Reject Advisor-only TOML, readonly, sandbox, destination, permissions, model, adapter, evidence, lifecycle, or compatibility fields.</li></ul></li>
+      <li data-step="1.7" class="step done">Run only Group 1 overlay/Agent IR tests.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>Exactly 28 immutable canonical rows and separate support inventory.</li><li>Deterministic manifest identity/profile/projection fields and digests.</li><li>Invalid metadata/dependency/collision/profile/path/special-case inputs fail typed with no output.</li><li>No canonical role file or target behavior copy is changed.</li></ul></div>
+  </section>
+
+  <section data-group="2" class="group done" id="group-2">
+    <div class="group-head"><div><h3>Group 2 — Pure Deterministic Projector and Host Representations</h3><div class="meta"><span>Depends on 1</span><span>8 steps</span><span>≥12 scenarios</span><span>Wave 2</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files</summary><div class="files"><code>agent-projection-v1.json</code><code>lib/distribution/agent-projector.mjs</code><code>lib/distribution/agent-projection-validator.mjs</code><code>bin/project-agents.mjs</code><code>overlays/*/{overlay.yml,inventory.yml}</code><code>overlays/cursor/assets/{agents,support-agents}/**</code><code>overlays/kiro-cli/assets/{agents,support-agents}/**</code><code>overlays/kiro-cli/assets/agent-tools.json</code><code>tests/platform-independent/agent-projection.test.mjs</code><code>tests/platform-independent/overlay-contract.test.mjs</code><code>tests/fixtures/platform-independent/agent-projection/**</code></div></details>
+    <ul class="steps">
+      <li data-step="2.0" class="step done"><b>Complete pure deterministic target projection.</b></li>
+      <li data-step="2.1" class="step done">Write determinism, transform, host-shape, support, collision, and closure tests first.<ul><li>Compare independent runs; prove missing/substituted roles, undeclared transforms, unsafe paths/collisions, missing Kiro URIs, and hand edits fail with zero committed output.</li></ul></li>
+      <li data-step="2.2" class="step done">Implement a pure staging-root projector and sorted output inventory.<ul><li>Validated inputs only; reuse hash-tree/path safety; never mutate checkout, installation, or host.</li></ul></li>
+      <li data-step="2.3" class="step done">Emit all representations from the same 28 rows.<ul><li>Codex prompts + role schemas; Cursor 28 exact Markdown agents; Kiro 28 exact descriptor/prompt pairs.</li></ul></li>
+      <li data-step="2.4" class="step done">Validate bijection, normalized identity, support separation, destinations, modes, transforms, and references.</li>
+      <li data-step="2.5" class="step done">Replace checked-in Cursor/Kiro canonical assets with explicit support inputs.<ul><li>Cursor explore and Kiro maister/explore remain separately owned and cannot satisfy 28/28.</li></ul></li>
+      <li data-step="2.6" class="step done">Add isolated <code>project-agents --check</code> without checkout writes.</li>
+      <li data-step="2.7" class="step done">Run only Group 2 projection/overlay tests.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>Exact 28/28 per target plus separate support inventory.</li><li>Repeated runs match paths, bytes, modes, order, per-file hashes, manifest, and tree digest.</li><li>Cursor has E2E and no Advisor metadata; Kiro closure is 100%.</li><li>No checked-in canonical host behavior copies remain.</li></ul></div>
+  </section>
+
+  <section data-group="3" class="group done" id="group-3">
+    <div class="group-head"><div><h3>Group 3 — Materializer Boundary and Projection Provenance</h3><div class="meta"><span>Depends on 2</span><span>8 steps</span><span>≥8 scenarios</span><span>Wave 3</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files</summary><div class="files"><code>lib/distribution/materializer.mjs</code><code>lib/distribution/provenance.mjs</code><code>lib/distribution/hash-tree.mjs</code><code>lib/distribution/path-safety.mjs</code><code>bin/materialize.mjs</code><code>tests/platform-independent/source-materializer.test.mjs</code><code>tests/fixtures/platform-independent/source-repos/agent-projection/**</code><code>tests/fixtures/platform-independent/agent-projection/**</code></div></details>
+    <ul class="steps">
+      <li data-step="3.0" class="step done"><b>Integrate projection at the trusted materializer seam.</b></li>
+      <li data-step="3.1" class="step done">Write insertion, provenance, zero-mutation, and source-revalidation tests first.</li>
+      <li data-step="3.2" class="step done">Add explicit post-assembly/pre-enumeration projection into empty same-filesystem staging.</li>
+      <li data-step="3.3" class="step done">Bind schema/projector versions and canonical/manifest/projected-tree digests into provenance.</li>
+      <li data-step="3.4" class="step done">Make projected files ordinary inventory, syntax, mode, reference, hash, and content-hash inputs.</li>
+      <li data-step="3.5" class="step done">Remove the broad Kiro prompt-reference exception after generated closure is active.</li>
+      <li data-step="3.6" class="step done">Prove projection cannot write source or generate host files during invocation.</li>
+      <li data-step="3.7" class="step done">Run only source-materializer and Group 3 fixtures.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>Projection failure precedes snapshot/mutation and leaves source unchanged.</li><li>Validation/provenance cover exact installed bytes.</li><li>Kiro unsafe/missing references fail normally.</li><li>Every source/overlay/manifest/projector change invalidates the right binding.</li></ul></div>
+  </section>
+
+  <section data-group="4" class="group done" id="group-4">
+    <div class="group-head"><div><h3>Group 4 — Atomic Managed-Root v2 Lifecycle and Kiro Leaf Ownership</h3><div class="meta"><span>Depends on 3</span><span>11 steps</span><span>≥18 scenarios + every mutation boundary</span><span>Wave 4</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files</summary><div class="files"><code>lib/distribution/{targets,target-paths,receipt-schema,journal-schema,drift-detector,recovery,transaction-manager,cli-contract}.mjs</code><code>bin/maister-install.mjs</code><code>overlays/kiro-cli/{overlay.yml,inventory.yml}</code><code>tests/platform-independent/{target-registry,installer-transaction}.test.mjs</code><code>tests/fixtures/platform-independent/user-homes/multi-root/**</code><code>tests/fixtures/platform-independent/source-repos/agent-projection/**</code></div></details>
+    <ul class="steps">
+      <li data-step="4.0" class="step done"><b>Deliver managed-root schema and the complete Kiro lifecycle atomically.</b></li>
+      <li data-step="4.1" class="step done">Write v2 schema, lifecycle, collision, stale-leaf, drift, rollback, recovery, and topology tests first.<ul><li>Snapshot roots/settings/receipt/journal/unrelated Kiro leaves/minimum parent topology for rejection and injected failures.</li></ul></li>
+      <li data-step="4.2" class="step done">Define receipt/journal v2 with stable root IDs and <code>(root_id,path)</code> identity.<ul><li>Reject v1 before mutation; no interpreter/migration branch.</li></ul></li>
+      <li data-step="4.3" class="step done">Extend target paths with a managed-root registry.<ul><li>Codex/Cursor whole trees; Kiro private whole tree plus native agent leaf set.</li></ul></li>
+      <li data-step="4.4" class="step done">Generalize drift/inventory resolution across roots while retaining identity/type/mode/hash/link checks.</li>
+      <li data-step="4.5" class="step done">Generalize snapshot, backup, exact restore, and recovery across all roots/topology.</li>
+      <li data-step="4.6" class="step done">Generalize install/update/status/verify/uninstall/rollback/recover under one lock/journal.<ul><li>Publish only after every root, setting, and projection binding verifies.</li></ul></li>
+      <li data-step="4.7" class="step done">Enforce unmanaged collision and exact stale-leaf rules before mutation.</li>
+      <li data-step="4.8" class="step done">Preserve cooperative concurrency, identity rechecks, drift refusal, code 6, and code 7.</li>
+      <li data-step="4.9" class="step done">Enable Kiro native leaves only after all lifecycle/failure tests are green.</li>
+      <li data-step="4.10" class="step done">Run only target-registry and installer-transaction tests.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>Every lifecycle command uses the same root registry.</li><li>Collisions/modified stale leaves fail with zero mutation.</li><li>Every injected failure restores exact state/topology.</li><li>Unrelated Kiro agents stay byte-identical.</li><li>Receipt/journal v1 is rejected with no compatibility behavior.</li></ul></div>
+  </section>
+
+  <section data-group="5" class="group done" id="group-5">
+    <div class="group-head"><div><h3>Group 5 — Durable Dispatch Event Schema and Writer</h3><div class="meta"><span>Depends on 1</span><span>8 steps</span><span>≥10 scenarios</span><span>Wave 2</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files</summary><div class="files"><code>agent-runtime/execution-event-schema.mjs</code><code>agent-runtime/execution-event-writer.mjs</code><code>tests/platform-independent/agent-execution-events.test.mjs</code><code>tests/fixtures/platform-independent/agent-execution-events/**</code></div></details>
+    <ul class="steps">
+      <li data-step="5.0" class="step done"><b>Complete append-only dispatch events before live dispatch.</b></li>
+      <li data-step="5.1" class="step done">Write schema, permissions, sequence, chain, locking, idempotency, recovery, and failure tests first.</li>
+      <li data-step="5.2" class="step done">Implement closed event schema and canonical JSON/digest function.</li>
+      <li data-step="5.3" class="step done">Implement safe dispatch IDs, task containment, <code>0700/0600</code>, and per-dispatch lock.</li>
+      <li data-step="5.4" class="step done">Implement append, flush, fsync, reread validation, and exactly one terminal.</li>
+      <li data-step="5.5" class="step done">Implement idempotency reuse and incomplete-stream chain recovery.</li>
+      <li data-step="5.6" class="step done">Define pre- and post-side-effect recording failures for later adapters.</li>
+      <li data-step="5.7" class="step done">Run only agent-execution-events tests.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>Streams are immutable, canonical, ordered, chained, permissioned, locked, terminal once.</li><li>Validated idempotency reuse; corruption/conflict fails closed.</li><li>Pre-spawn failure prevents invocation; post-spawn API requests cancellation and never succeeds.</li><li>Dispatch, idempotency, work-item, gate, and role identities are distinct.</li></ul></div>
+  </section>
+
+  <section data-group="6" class="group done" id="group-6">
+    <div class="group-head"><div><h3>Group 6 — Exact Resolver and Common Dispatch Contracts</h3><div class="meta"><span>Depends on 1, 3, 4, 5</span><span>8 steps</span><span>≥12 scenarios</span><span>Wave 5</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files</summary><div class="files"><code>agent-runtime/dispatch-contract.mjs</code><code>agent-runtime/agent-resolver.mjs</code><code>agent-runtime/dispatch-agent.mjs</code><code>lib/distribution/receipt-schema.mjs</code><code>lib/distribution/target-paths.mjs</code><code>tests/platform-independent/agent-resolver.test.mjs</code><code>tests/fixtures/platform-independent/agent-resolver/**</code></div></details>
+    <ul class="steps">
+      <li data-step="6.0" class="step done"><b>Complete exact logical-role resolution and shared adapter envelopes.</b></li>
+      <li data-step="6.1" class="step done">Write grammar, preflight, collision, capability, model-control, Advisor, and no-fallback tests first.</li>
+      <li data-step="6.2" class="step done">Define exact grammar and immutable DispatchPlan/terminal-result schemas.</li>
+      <li data-step="6.3" class="step done">Implement exact unique lookup; no aliases, case folding, fuzzy, natural-language, or defaults.</li>
+      <li data-step="6.4" class="step done">Validate v2 receipt/status, digests, target representation, root inventory, and external collisions.</li>
+      <li data-step="6.5" class="step done">Add adapter/host/version/auth/control/model/effort availability preflight hooks.</li>
+      <li data-step="6.6" class="step done">Return distinct typed failures and prove Advisor uses the ordinary path.</li>
+      <li data-step="6.7" class="step done">Run only agent-resolver tests.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>Exactly one immutable plan or pre-invocation typed failure.</li><li>Plans bind installed bytes/policy to active receipt/manifest.</li><li>No inline/root/built-in/default/similar/alternate-host fallback.</li><li>All adapters share the plan/result shape.</li></ul></div>
+  </section>
+
+  <section data-group="7" class="group done" id="group-7">
+    <div class="group-head"><div><h3>Group 7 — Managed Codex Workers and Native Host Adapters</h3><div class="meta"><span>Depends on 5, 6</span><span>9 steps</span><span>≥12 scenarios + process boundaries</span><span>Wave 6</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files</summary><div class="files"><code>agent-runtime/codex-exec-capabilities.mjs</code><code>agent-runtime/codex-worker-manager.mjs</code><code>agent-runtime/host-adapters/{index,codex-exec,cursor,kiro-cli}.mjs</code><code>agent-projection-v1.json</code><code>overlays/{codex,cursor,kiro-cli}/overlay.yml</code><code>tests/platform-independent/agent-adapters.test.mjs</code><code>tests/fixtures/platform-independent/agent-adapters/**</code></div></details>
+    <ul class="steps">
+      <li data-step="7.0" class="step done"><b>Complete concrete target adapters using managed <code>codex exec</code>.</b></li>
+      <li data-step="7.1" class="step done">Write capability, argv/stdin, event, result, timeout/cancel, concurrency, native identity, and no-fallback tests first.</li>
+      <li data-step="7.2" class="step done">Implement versioned Codex capability inspection for auth/version and every required control.</li>
+      <li data-step="7.3" class="step done">Implement managed Codex process lifecycle.<ul><li>Complete prompt + bounded task on stdin; pin CWD/model/effort/sandbox; require JSONL/schema/last-message; ignore user execution defaults but retain auth.</li></ul></li>
+      <li data-step="7.4" class="step done">Bind process side effects to durable events and cancellation semantics.</li>
+      <li data-step="7.5" class="step done">Validate exit/timeout/JSONL/session/final schema/identity/digests/nonce/effective policy/output.</li>
+      <li data-step="7.6" class="step done">Enforce read-only concurrency and serialize workspace writes; no worktree/V1/V2/native-agent/spawn/app-server scope.</li>
+      <li data-step="7.7" class="step done">Implement Cursor/Kiro exact native adapter ports; return unavailable when exact launch/identity cannot be guaranteed.</li>
+      <li data-step="7.8" class="step done">Run only agent-adapters tests.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>Codex launches only fully pinned, schema-validated managed processes after durable preflight.</li><li>Missing controls/auth/model/native launch/identity return unavailable or unsupported, never fallback.</li><li>Concurrency follows profiles; Advisor is ordinary.</li><li>Cursor/Kiro retain requested and observed native IDs.</li></ul></div>
+  </section>
+
+  <section data-group="8" class="group done" id="group-8">
+    <div class="group-head"><div><h3>Group 8 — Exact Workflow Requests and Gate Configuration Cutover</h3><div class="meta"><span>Depends on 6</span><span>7 steps</span><span>≥6 scenarios + call-site scan</span><span>Wave 6</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files</summary><div class="files"><code>skills/init/{SKILL.md,bin/reconcile-gate-config.sh}</code><code>skills/init/bin/reconcile-advisor-config.sh (delete)</code><code>skills/{codebase-analyzer,development,implementation-plan-executor,implementation-verifier,migration,performance,product-design,research,standards-discover,standards-update,thermos}/SKILL.md</code><code>commands/{reviews-code,reviews-pragmatic,reviews-production-readiness,reviews-reality-check,reviews-spec-audit,work}.md</code><code>orchestrator-framework/references/{orchestrator-patterns,orchestrator-creation-checklist}.md</code><code>orchestrator-state-schema.mjs</code><code>lib/distribution/cursor-skill-projector.mjs</code><code>overlays/cursor/assets/skills/**</code><code>tests/{gate-config-reconciliation,advisor-workflow-snapshot}.test.sh</code><code>tests/fixtures/{gate-config,advisor-state}/**</code></div></details>
+    <ul class="steps">
+      <li data-step="8.0" class="step done"><b>Cut configuration to exact logical IDs before gate integration.</b></li>
+      <li data-step="8.1" class="step done">Write defaults/rejection/call-site tests first.<ul><li>Both actors default to <code>maister:advisor</code>; reject legacy model fields, bare advisor, noncanonical arbiter, aliases, incomplete config.</li></ul></li>
+      <li data-step="8.2" class="step done">Replace host-profile reconciliation with project-only gate config normalization.</li>
+      <li data-step="8.3" class="step done">Update all five orchestrator templates/snapshots and init output; remove actor model fields.</li>
+      <li data-step="8.4" class="step done">Update canonical workflow/command delegation to exact resolver calls and bounded task context.</li>
+      <li data-step="8.5" class="step done">Apply only required token-aware Cursor skill transforms and regenerate compatibility projection.</li>
+      <li data-step="8.6" class="step done">Run only Group 8 shell/snapshot/projection checks.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>Defaults, init, orchestrators, and call sites use exact namespaced IDs.</li><li>Both actors use <code>maister:advisor</code>; policy owns model/effort.</li><li>Legacy fields/values fail and are never rewritten.</li><li>No init path touches Codex agent TOML.</li></ul></div>
+  </section>
+
+  <section data-group="9" class="group done" id="group-9">
+    <div class="group-head"><div><h3>Group 9 — Gate Evaluator Integration and Clean Legacy Topology</h3><div class="meta"><span>Depends on 2, 3, 7, 8</span><span>8 steps</span><span>≥8 scenarios + topology scans</span><span>Wave 7</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files</summary><div class="files"><code>orchestrator-framework/bin/{gate-evaluator,orchestrator-state-schema,orchestrator-state-repository}.mjs</code><code>orchestrator-framework/references/gate-decision-engine.md</code><code>lib/distribution/materializer.mjs</code><code>.codex/agents/{advisor,arbiter,luna_smoke_agent}.toml (delete)</code><code>tests/{gate-evaluator,orchestrator-state-migration,orchestrator-state-repository,advisor-workflow-snapshot}.test.sh</code><code>tests/platform-independent/repository-topology.test.mjs</code><code>tests/fixtures/{orchestrator-state-v2,advisor-state}/**</code></div></details>
+    <ul class="steps">
+      <li data-step="9.0" class="step done"><b>Integrate exact dispatch and remove legacy Codex topology.</b></li>
+      <li data-step="9.1" class="step done">Write dispatch-plan, equality, distinct identity, durable result, retry/arbitration, and topology tests first.</li>
+      <li data-step="9.2" class="step done">Replace callback <code>{agent,model}</code> with resolver/dispatcher plans.</li>
+      <li data-step="9.3" class="step done">Record <code>maister:advisor</code> for both actors while keeping actor/attempt/idempotency/dispatch identity distinct.</li>
+      <li data-step="9.4" class="step done">Require validated durable terminal dispatch results before gate advancement; preserve denylist/user/approval safety.</li>
+      <li data-step="9.5" class="step done">Delete exactly the three user-authorized TOMLs and obsolete tracked lifecycle references.<ul><li>Preserve every other <code>.codex/agents/*</code>; no cleanup/migration runtime.</li></ul></li>
+      <li data-step="9.6" class="step done">Reject TOML profiles, special Advisor branches, old reconciliation, and compatibility flags in topology tests.</li>
+      <li data-step="9.7" class="step done">Run only Group 9 gate/state/topology tests.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>Both actors use one manifest row/profile/adapter while decision identity stays distinct.</li><li>Dispatch failure cannot become approval or inline execution.</li><li>Only the three specified TOMLs are removed; unrelated files remain.</li><li>Negative topology rejects all Advisor exceptions.</li></ul></div>
+  </section>
+
+  <section data-group="10" class="group done" id="group-10">
+    <div class="group-head"><div><h3>Group 10 — Correct E5/E6 Discovery and Invocation Evidence</h3><div class="meta"><span>Depends on 4, 7, 9</span><span>8 steps</span><span>≥14 scenarios</span><span>Wave 8</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files</summary><div class="files"><code>lib/distribution/{evidence-schema,evidence-policy}.mjs</code><code>lib/distribution/host-probes/{base,codex,cursor,kiro-cli,index}.mjs</code><code>lib/distribution/host-probes/scenarios/{codex,cursor,kiro-cli}.mjs</code><code>orchestrator-framework/references/host-capabilities.yml</code><code>agent-projection-v1.json</code><code>tests/platform-independent/evidence-parity-topology.test.mjs</code><code>tests/fixtures/platform-independent/{evidence,host-probes}/**</code></div></details>
+    <ul class="steps">
+      <li data-step="10.0" class="step done"><b>Correct discovery/invocation evidence after production adapters exist.</b></li>
+      <li data-step="10.1" class="step done">Write target E5/E6, outcome, freshness, wrong identity, timeout, and version-only negative tests first.</li>
+      <li data-step="10.2" class="step done">Bind freshness to source/overlay/host/scenario/schema/projector/canonical/manifest/projected-tree state.</li>
+      <li data-step="10.3" class="step done">Implement target-specific E5.<ul><li>Codex: adapter/auth/version/controls, no native-ID claim. Cursor/Kiro: exact native inventory and collisions/shadows.</li></ul></li>
+      <li data-step="10.4" class="step done">Implement E6 for two distinguishable ordinary roles plus ordinary Advisor.<ul><li>Validate identity, prompts/nonces/schemas, digests, behavior, session/dispatch, and effective policy.</li></ul></li>
+      <li data-step="10.5" class="step done">Classify missing prerequisites as unavailable; observed contradictions/started-scenario failures as failed.</li>
+      <li data-step="10.6" class="step done">Prevent structural success from satisfying E5/E6 or native support.</li>
+      <li data-step="10.7" class="step done">Run only evidence/probe fixture tests.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>Version success never passes E5/E6.</li><li>Codex proves controls; Cursor/Kiro prove native inventory.</li><li>E6 distinguishes two ordinary roles + Advisor and rejects inherited/implicit/wrong-role execution.</li><li>Freshness expires records; unavailable never becomes native support.</li></ul></div>
+  </section>
+
+  <section data-group="11" class="group done" id="group-11">
+    <div class="group-head"><div><h3>Group 11 — Release, Documentation, and Cross-Feature Verification</h3><div class="meta"><span>Depends on 1-10</span><span>9 steps</span><span>≥10 integration scenarios, no maximum</span><span>Wave 9</span></div></div><span class="g-badge"></span></div>
+    <details><summary>Files</summary><div class="files"><code>Makefile</code><code>.github/workflows/{validate-generated-variants,cursor-cli-smoke,release}.yml</code><code>bin/{release-interface,release-metadata,parity-release,shadow-parity}.mjs</code><code>overlays/*/{inventory.yml,parity-baseline.json}</code><code>overlays/codex/overlay.yml (recovery expansion 1)</code><code>overlays/{cursor,kiro-cli}/overlay.yml (recovery expansion 2)</code><code>tests/platform-independent/{make-interface,parity-release,release-package,repository-topology}.test.mjs</code><code>tests/fixtures/platform-independent/parity-oracle/manifest.json</code><code>tests/fixtures/platform-independent/source-repos/basic/overlay.yml (recovery expansion 1)</code><code>README.md</code><code>docs/{README,commands,workflows}.md</code><code>.maister/docs/project/{vision,roadmap,tech-stack,architecture}.md</code><code>.maister/docs/standards/global/{build-pipeline,conventions,error-handling,validation}.md</code><code>.maister/docs/standards/testing/test-writing.md</code></div></details>
+    <ul class="steps">
+      <li data-step="11.0" class="step done"><b>Complete release/evidence gating, docs, and final risk-based review.</b></li>
+      <li data-step="11.1" class="step done">Review Groups 1-10 against R1-R35; write every missing non-redundant package/parity/topology/release test first, with no cap.</li>
+      <li data-step="11.2" class="step done">Validate package canonical/projector/runtime closure and target isolation.<ul><li>Include canonical/projector/runtime/support/manifest/provenance dependencies; exclude behavior copies, foreign artifacts, legacy TOML.</li></ul></li>
+      <li data-step="11.3" class="step done">Update parity oracle/baselines only after new gates pass.<ul><li>Remove missing Cursor E2E, missing Kiro prompt, Advisor TOML, and reconciliation exceptions; never relearn output.</li></ul></li>
+      <li data-step="11.4" class="step done">Wire projector, target materializer/install, evidence, topology, strict parity, deterministic package, and extracted lifecycle into Make/CI.</li>
+      <li data-step="11.5" class="step done">Update operator/workflow/architecture/build/testing/release docs for IDs, destinations, ownership, support roles, staged generation, process workers, evidence, clean install, concurrency, code 7.</li>
+      <li data-step="11.6" class="step done">Record requirement-to-test inventory for all 35 requirements and 15 success criteria.</li>
+      <li data-step="11.7" class="step done">Run core, target overlay/materializer/install, evidence, topology, strict parity, and validate suites.</li>
+      <li data-step="11.8" class="step done">Generate fresh E3; build each target twice; compare hashes/sidecars; run extracted multi-root install/verify/uninstall; preserve explicit E5/E6 unavailable where needed.</li>
+    </ul>
+    <div class="accept"><b>Acceptance</b><ul><li>R1-R35 and all success criteria have passing behavior assertions.</li><li>All packages are deterministic, isolated, self-contained, complete, closed, and lifecycle-tested.</li><li>Strict parity/topology has zero unresolved differences.</li><li>Docs distinguish packaged/discovered/invoked/unavailable/failed.</li><li>No native-support claim without current policy-required E5/E6.</li></ul></div>
+  </section>
+</section>
+
+<section id="execution">
+  <h2>Execution order and safe serialization</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Wave</th><th>Groups</th><th>Rule</th></tr></thead>
+      <tbody>
+        <tr><td class="wave">1</td><td>1</td><td>Single writer freezes role/manifest/overlay contract.</td></tr>
+        <tr><td class="wave">2</td><td>2 + 5</td><td>Safe parallel window: distribution projection/overlays vs new execution-event files/tests.</td></tr>
+        <tr><td class="wave">3</td><td>3</td><td>Serialized after Group 2 on materializer projection contracts/fixtures.</td></tr>
+        <tr><td class="wave">4</td><td>4</td><td>Atomic lifecycle group; Kiro root/schema/lifecycle work cannot split.</td></tr>
+        <tr><td class="wave">5</td><td>6</td><td>Serialized after receipt, projection, and event contracts.</td></tr>
+        <tr><td class="wave">6</td><td>7 + 8</td><td>Safe parallel window: adapters/runtime vs workflow/config. Group 7 alone owns <code>agent-projection-v1.json</code> in this wave.</td></tr>
+        <tr><td class="wave">7</td><td>9</td><td>Serialized after adapter and configuration work; owns gate/state shared files and legacy deletion.</td></tr>
+        <tr><td class="wave">8</td><td>10</td><td>Evidence only after production adapters, Kiro lifecycle, and gate integration.</td></tr>
+        <tr><td class="wave">9</td><td>11</td><td>Sole writer for parity baselines, release wiring, support claims, docs, and final verification.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <ul>
+      <li><code>agent-projection-v1.json</code> and overlay files serialize 1 → 2 → 7.</li>
+      <li><code>materializer.mjs</code> serializes 3 → 9; Group 9 removes only obsolete topology references.</li>
+      <li><code>orchestrator-state-schema.mjs</code> serializes 8 → 9.</li>
+      <li><code>repository-topology.test.mjs</code> serializes 9 → 11.</li>
+      <li>Parity baselines/oracle, Make, CI release wiring, and release docs have one writer: Group 11.</li>
+      <li>Tests use isolated temporary homes/task roots; unsafe/unconfigured live probes report unavailable.</li>
+      <li>Workspace-writing Codex workers are serialized regardless of group parallelism; read-only concurrency requires a validated profile.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="standards">
+  <h2>Standards compliance</h2>
+  <div class="card standards">
+    <ul>
+      <li><code>project/{vision,architecture,tech-stack,roadmap}.md</code> — one canonical owner, deterministic adapters, transaction safety, explicit evidence, target-aware release.</li>
+      <li><code>global/build-pipeline.md</code> — canonical edits under <code>plugins/maister/</code>, explicit target checks, strict clean parity, extracted deterministic packages.</li>
+      <li><code>global/coding-style.md</code> + <code>commenting.md</code> — descriptive role/root/digest names, focused functions, no dead compatibility, timeless comments.</li>
+      <li><code>global/conventions.md</code> — minimal dependencies, evidence-backed support, isolated release output, accurate concurrency.</li>
+      <li><code>global/error-handling.md</code> — typed early failure, code-7 preservation, process cleanup, no unpinned prerequisite installs.</li>
+      <li><code>global/minimal-implementation.md</code> — only immediately used parser/projector/root/resolver/event/adapter/probe/release seams; no migration/DSL/future-host/native-Codex/worktree stubs.</li>
+      <li><code>global/validation.md</code> — closed schemas, containment, collisions, freshness, mutation-boundary identity, extracted closure.</li>
+      <li><code>testing/test-writing.md</code> — risk-based non-redundant tests, real seam parameterization, byte-exact rejection/recovery.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="notes">
+  <h2>Notes</h2>
+  <div class="card notes">
+    <ul>
+      <li>Tests-first is mandatory for every group; the obsolete fixed 2-8 ceiling and total maximum do not apply.</li>
+      <li>Group-local verification runs only new/directly affected tests; broad suites/release evidence run last.</li>
+      <li>No UI, mockups, screenshots, Visual References, or visual-coverage artifact.</li>
+      <li>The executor updates both Markdown checkboxes and these <code>data-group</code>/<code>data-step</code> markers.</li>
+      <li>Only active-group files are writable; implementation must not begin by deleting unrelated worktree content.</li>
+    </ul>
+  </div>
+</section>
+</main>
+</body>
+</html>

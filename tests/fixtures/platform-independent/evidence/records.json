@@ -69,8 +69,15 @@
     "provenance": {
       "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "source_version": "2.2.1",
+      "overlay_id": "maister/cursor",
       "overlay_version": "1.0.0",
+      "host": "cursor",
       "scenario_version": "1.0.0",
+      "schema_version": 1,
+      "projector_version": "1.0.0",
+      "canonical_set_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "manifest_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "projected_tree_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
       "reason": "runtime-not-installed"
     },
     "expires_at": "2026-07-15T19:00:00.000Z"
@@ -85,8 +92,15 @@
     "provenance": {
       "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "source_version": "2.2.1",
+      "overlay_id": "maister/kiro-cli",
       "overlay_version": "1.0.0",
+      "host": "kiro-cli",
       "scenario_version": "1.0.0",
+      "schema_version": 1,
+      "projector_version": "1.0.0",
+      "canonical_set_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "manifest_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "projected_tree_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
       "reason": "runtime-not-installed"
     },
     "expires_at": "2026-07-15T19:00:00.000Z"

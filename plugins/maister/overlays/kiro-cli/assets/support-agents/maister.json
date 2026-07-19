@@ -1,0 +1,117 @@
+{
+  "allowedTools": [
+    "*"
+  ],
+  "description": "Maister workflow orchestrator — invokes /maister-* skills and delegates to exact maister-* subagents",
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "~/.kiro-maister/hooks/skill-invocation-reminder.sh",
+        "timeout_ms": 10000
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "~/.kiro-maister/hooks/subagent-complete-cleanup.sh",
+        "matcher": "subagent",
+        "timeout_ms": 5000
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "~/.kiro-maister/hooks/block-destructive-commands-kiro.sh",
+        "matcher": "shell",
+        "timeout_ms": 5000
+      },
+      {
+        "command": "~/.kiro-maister/hooks/subagent-spawn-tracker.sh",
+        "matcher": "subagent",
+        "timeout_ms": 5000
+      }
+    ],
+    "stop": [
+      {
+        "command": "~/.kiro-maister/hooks/stop-state-reminder-kiro.sh",
+        "timeout_ms": 10000
+      }
+    ],
+    "userPromptSubmit": [
+      {
+        "command": "~/.kiro-maister/hooks/skill-invocation-reminder.sh",
+        "timeout_ms": 10000
+      }
+    ]
+  },
+  "includeMcpJson": true,
+  "name": "maister",
+  "prompt": "file://./instructions/maister.md",
+  "tools": [
+    "*"
+  ],
+  "toolsSettings": {
+    "subagent": {
+      "availableAgents": [
+        "maister-advisor",
+        "maister-bottleneck-analyzer",
+        "maister-code-quality-pragmatist",
+        "maister-code-reviewer",
+        "maister-codebase-analysis-reporter",
+        "maister-docs-operator",
+        "maister-e2e-test-verifier",
+        "maister-explore",
+        "maister-gap-analyzer",
+        "maister-html-companion-writer",
+        "maister-implementation-completeness-checker",
+        "maister-implementation-planner",
+        "maister-information-gatherer",
+        "maister-production-readiness-checker",
+        "maister-project-analyzer",
+        "maister-reality-assessor",
+        "maister-research-planner",
+        "maister-research-synthesizer",
+        "maister-solution-brainstormer",
+        "maister-solution-designer",
+        "maister-spec-auditor",
+        "maister-specification-creator",
+        "maister-task-classifier",
+        "maister-task-group-implementer",
+        "maister-test-suite-runner",
+        "maister-thermo-nuclear-code-quality-review-subagent",
+        "maister-thermo-nuclear-review-subagent",
+        "maister-ui-mockup-generator",
+        "maister-user-docs-generator"
+      ],
+      "trustedAgents": [
+        "maister-advisor",
+        "maister-bottleneck-analyzer",
+        "maister-code-quality-pragmatist",
+        "maister-code-reviewer",
+        "maister-codebase-analysis-reporter",
+        "maister-docs-operator",
+        "maister-e2e-test-verifier",
+        "maister-explore",
+        "maister-gap-analyzer",
+        "maister-html-companion-writer",
+        "maister-implementation-completeness-checker",
+        "maister-implementation-planner",
+        "maister-information-gatherer",
+        "maister-production-readiness-checker",
+        "maister-project-analyzer",
+        "maister-reality-assessor",
+        "maister-research-planner",
+        "maister-research-synthesizer",
+        "maister-solution-brainstormer",
+        "maister-solution-designer",
+        "maister-spec-auditor",
+        "maister-specification-creator",
+        "maister-task-classifier",
+        "maister-task-group-implementer",
+        "maister-test-suite-runner",
+        "maister-thermo-nuclear-code-quality-review-subagent",
+        "maister-thermo-nuclear-review-subagent",
+        "maister-ui-mockup-generator",
+        "maister-user-docs-generator"
+      ]
+    }
+  }
+}

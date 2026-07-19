@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "baseline_version": "2026-07-15.2",
+  "baseline_version": "2026-07-18.1",
   "target": "kiro-cli",
   "rules": [
     {
@@ -2726,7 +2726,6 @@
         "skills/implementation-verifier",
         "skills/implementation-verifier/SKILL.md",
         "skills/init/bin",
-        "skills/init/bin/reconcile-advisor-config.sh",
         "skills/init/references",
         "skills/init/references/architecture-template.md",
         "skills/init/references/roadmap-templates.md",
@@ -2799,7 +2798,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "7d047aeb5ec09f2af49a12d89305690985b07af4ceb3b50953ba0a0c6873f08d"
+            "sha256": "2a4e9274f0dd97433e98c99e42dd5af465127e227d003530b8a8b585220c9516"
           }
         },
         "skills/aggregate-designer": {
@@ -2841,7 +2840,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "93b6184e3786429aa50149fd3c2d7b0f48c3c3d23b471addbe12864bd6881f33"
+            "sha256": "5ce0b1280d6088931b7958e0d42c09356e17441ef17c365d31b48ac0647c2a43"
           }
         },
         "skills/codebase-analyzer/references": {
@@ -2959,7 +2958,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "bd743682cd5c2fa1a933e6e7126fbc3846f9f96825f767a98c9b61f930dd2f97"
+            "sha256": "f1b519a76a010426e3a418741e4d1c774a7c54159a1e6243cfa7edfd2312ba26"
           }
         },
         "skills/docs-manager": {
@@ -3280,7 +3279,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "8d6ff0cf59693b614850032062002f1a25887026d9dd7ad6ee640c3e92824935"
+            "sha256": "ba08a8a884b1d1c981bd0b08421e6a56895578b29658fdb48f88477de7234dad"
           }
         },
         "skills/implementation-verifier": {
@@ -3301,7 +3300,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "31f11f8e03c36c33ccd48d1d73d77c84d882e0287895a9698ef6afffbd1e1e26"
+            "sha256": "6ad4cd087b24277fe06aa7923e1e25a40b0b1b1233c73eb43c4eabba018a4fac"
           }
         },
         "skills/init/bin": {
@@ -3312,17 +3311,6 @@
             "present": true,
             "type": "directory",
             "mode": "0755"
-          }
-        },
-        "skills/init/bin/reconcile-advisor-config.sh": {
-          "legacy": {
-            "present": false
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0755",
-            "sha256": "527023439e16b1edc4f7edca8100e122e30dd480ad387936b0728e49298b2df5"
           }
         },
         "skills/init/references": {
@@ -3513,7 +3501,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "195df6b383dbe40037367ec332fb4326378f8091673ac373583fc7cca8f0e0f1"
+            "sha256": "d19fb3f6958cd51faaf0ddafeff0a44708b319ff60101e86e802b8c4bea61dd3"
           }
         },
         "skills/orchestrator-framework/bin/orchestrator-state-repository.mjs": {
@@ -3535,7 +3523,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "3e73cb7db70a843a65c35ce864a6d61add42dd2c3247e59443b5599ddce80648"
+            "sha256": "de23f7955e1fc5541f4aba48a254c4b4bf8dc8e365eaee6d261dc97cdab845af"
           }
         },
         "skills/orchestrator-framework/bin/phase-continue.mjs": {
@@ -3578,7 +3566,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "605148923d9975259d1b75e811aac59790453850a7315ba5b824c51191f07fb7"
+            "sha256": "7ca75c461dd6e04d54f8fbc98889108c9e36f5d7c3e1b1781bec58c0799aa795"
           }
         },
         "skills/orchestrator-framework/references/gate-decision-fixtures.yml": {
@@ -3600,7 +3588,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "15ae38bb65f3e8720a109a3bf907194393af50da4d66471973c114967a8e680c"
+            "sha256": "fd3177fdb4fec28f9c91eb48e18d62039e91dff94d51e273598d5ab251740b14"
           }
         },
         "skills/orchestrator-framework/references/html-report-style.md": {
@@ -3622,7 +3610,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "f14c78f6427ebe48611e3b569228820b3578fac8ef6473a4c388ee7767e24a08"
+            "sha256": "56222f7bba7d3f38f8d3ff5c65c4ee729b673ef7e25fdbcb676299dab291b686"
           }
         },
         "skills/orchestrator-framework/references/orchestrator-patterns.md": {
@@ -3633,7 +3621,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "43d0626a0f8c7eae95f74d6f75d0d278bc56d20e0e0502194122c8879be9b21a"
+            "sha256": "cbba498c116d571581de34ba9dc5e60b198a5e11dc515c6ef3e3b635a92027bc"
           }
         },
         "skills/performance/references": {
@@ -3696,7 +3684,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "39f05a35afb3dd6dc68fb80f6085947ab4569766aaae2068c11590c199a60eda"
+            "sha256": "1c59fd3eb45363dbb173612006fc7368ca916d8bd0f3de6d8310ebd776e867b1"
           }
         },
         "skills/product-design/references": {
@@ -4085,7 +4073,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "ff1d823ae38e3983c87115c86a7071f24ae87a036156ef17be4939ed66caf954"
+            "sha256": "315118ebf837afeb5d718f951e09eef15cf1ead46df5fc8f7b651cff8830f1c2"
           }
         },
         "skills/migration/SKILL.md": {
@@ -4099,7 +4087,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "0ec061644a3e19575edd6b20b0b6b00af9ac40562d387fd02ff21d2bdabbd785"
+            "sha256": "093a52e439e17310eae57db9b451f0d28e7d9cd60ed42341596a92050526e463"
           }
         },
         "skills/performance/SKILL.md": {
@@ -4113,7 +4101,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "30ddc7a67541ad174ffba33ad6f5817aa780989cbfeacd51efe64de19e7b36a4"
+            "sha256": "b9945f763ebad7e970b8eef581526260dd433ef39250b64681f277e54bd7f820"
           }
         },
         "skills/quick-bugfix/SKILL.md": {
@@ -4169,7 +4157,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "3015e2362cd9df2290e3ed8616bbee809282e21336c26b103513fecc7afb1117"
+            "sha256": "5a5c5f06ad7526f817abff2f53acb3062386c4f93da34d53680cefc69bcaa59c"
           }
         },
         "skills/standards-discover/SKILL.md": {
@@ -4183,7 +4171,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "2da51b9040eb5af9e3c858e263ae5fca91714b8f895cac3f8c7ce2030f651afb"
+            "sha256": "2aff792ce3f915bffbca0769dd5f4a427ba812711cf83db43b2f3c0a2fb3be57"
           }
         },
         "skills/standards-update/SKILL.md": {
@@ -4197,7 +4185,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "2740116824cc2cc5c4be196044402ffdf890a769b86f11d1d1bb3de7005a4ff2"
+            "sha256": "b0f70336ac2f4d150a1ab549be2595ff26b3e8196fc712a81b8e366a85f5a92f"
           }
         },
         "skills/thermos/SKILL.md": {
@@ -4211,7 +4199,1320 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "898b4b4683e78bf1078312b6df96997a9219837a9ae327391055b3ab44ef6f04"
+            "sha256": "330e1e5c78296eeacea959092361114e5545fd068b79355164eecd9f19a7af16"
+          }
+        }
+      }
+    },
+    {
+      "id": "kiro-cli-accepted-agent-projection-inventory",
+      "category": "packaging",
+      "observed_category": "inventory",
+      "rationale": "These exact paths are the accepted projection, managed-worker runtime, and target-native agent contract introduced by the approved canonical source migration.",
+      "paths": [
+        "agents",
+        "agents/maister-advisor.json",
+        "agents/maister-bottleneck-analyzer.json",
+        "agents/maister-code-quality-pragmatist.json",
+        "agents/maister-code-reviewer.json",
+        "agents/maister-codebase-analysis-reporter.json",
+        "agents/maister-docs-operator.json",
+        "agents/maister-e2e-test-verifier.json",
+        "agents/maister-explore.json",
+        "agents/maister-gap-analyzer.json",
+        "agents/maister-html-companion-writer.json",
+        "agents/maister-implementation-completeness-checker.json",
+        "agents/maister-implementation-planner.json",
+        "agents/maister-information-gatherer.json",
+        "agents/maister-production-readiness-checker.json",
+        "agents/maister-project-analyzer.json",
+        "agents/maister-reality-assessor.json",
+        "agents/maister-research-planner.json",
+        "agents/maister-research-synthesizer.json",
+        "agents/maister-solution-brainstormer.json",
+        "agents/maister-solution-designer.json",
+        "agents/maister-spec-auditor.json",
+        "agents/maister-specification-creator.json",
+        "agents/maister-task-classifier.json",
+        "agents/maister-task-group-implementer.json",
+        "agents/maister-test-suite-runner.json",
+        "agents/maister-thermo-nuclear-code-quality-review-subagent.json",
+        "agents/maister-thermo-nuclear-review-subagent.json",
+        "agents/maister-ui-mockup-generator.json",
+        "agents/maister-user-docs-generator.json",
+        "agents/maister.json",
+        "instructions",
+        "instructions/maister-advisor.md",
+        "instructions/maister-bottleneck-analyzer.md",
+        "instructions/maister-code-quality-pragmatist.md",
+        "instructions/maister-code-reviewer.md",
+        "instructions/maister-codebase-analysis-reporter.md",
+        "instructions/maister-docs-operator.md",
+        "instructions/maister-e2e-test-verifier.md",
+        "instructions/maister-explore.md",
+        "instructions/maister-gap-analyzer.md",
+        "instructions/maister-html-companion-writer.md",
+        "instructions/maister-implementation-completeness-checker.md",
+        "instructions/maister-implementation-planner.md",
+        "instructions/maister-information-gatherer.md",
+        "instructions/maister-production-readiness-checker.md",
+        "instructions/maister-project-analyzer.md",
+        "instructions/maister-reality-assessor.md",
+        "instructions/maister-research-planner.md",
+        "instructions/maister-research-synthesizer.md",
+        "instructions/maister-solution-brainstormer.md",
+        "instructions/maister-solution-designer.md",
+        "instructions/maister-spec-auditor.md",
+        "instructions/maister-specification-creator.md",
+        "instructions/maister-task-classifier.md",
+        "instructions/maister-task-group-implementer.md",
+        "instructions/maister-test-suite-runner.md",
+        "instructions/maister-thermo-nuclear-code-quality-review-subagent.md",
+        "instructions/maister-thermo-nuclear-review-subagent.md",
+        "instructions/maister-ui-mockup-generator.md",
+        "instructions/maister-user-docs-generator.md",
+        "instructions/maister.md",
+        "maister-advisor.json",
+        "maister-bottleneck-analyzer.json",
+        "maister-code-quality-pragmatist.json",
+        "maister-code-reviewer.json",
+        "maister-codebase-analysis-reporter.json",
+        "maister-docs-operator.json",
+        "maister-e2e-test-verifier.json",
+        "maister-explore.json",
+        "maister-gap-analyzer.json",
+        "maister-html-companion-writer.json",
+        "maister-implementation-completeness-checker.json",
+        "maister-implementation-planner.json",
+        "maister-information-gatherer.json",
+        "maister-production-readiness-checker.json",
+        "maister-project-analyzer.json",
+        "maister-reality-assessor.json",
+        "maister-research-planner.json",
+        "maister-research-synthesizer.json",
+        "maister-solution-brainstormer.json",
+        "maister-solution-designer.json",
+        "maister-spec-auditor.json",
+        "maister-specification-creator.json",
+        "maister-task-classifier.json",
+        "maister-task-group-implementer.json",
+        "maister-test-suite-runner.json",
+        "maister-thermo-nuclear-code-quality-review-subagent.json",
+        "maister-thermo-nuclear-review-subagent.json",
+        "maister-ui-mockup-generator.json",
+        "maister-user-docs-generator.json",
+        "maister.json",
+        "skills/init/bin/reconcile-gate-config.sh",
+        "skills/orchestrator-framework/bin/agent-runtime",
+        "skills/orchestrator-framework/bin/agent-runtime/agent-resolver.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/codex-exec-capabilities.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/codex-worker-manager.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/create-runtime.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-agent.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-contract.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-task-preparer.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-payload.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-schema.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-writer.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/codex-exec.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/cursor.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/exact-native.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/index.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/kiro-cli.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/node-process-port.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/production-owner.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/production-runtime.mjs"
+      ],
+      "observations": {
+        "agents": {
+          "legacy": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-advisor.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ad6195c56abac22740cfba76d955ae0d25c925691d886af28d80e6e908ed2227"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-bottleneck-analyzer.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "48e9e990ee6b47d96820cbf6eaa2e784ad59bcf82a82db664636392db85251b4"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-code-quality-pragmatist.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a6ffca15b40cb039e14f4b20b0e90069181bc940999a09fee804240cf5836a6e"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-code-reviewer.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "7f874cb9a9f660c1d21c26a2b30f6db81d062acad0c24f59d6bfb0d28439ae00"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-codebase-analysis-reporter.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5fd8a8f2328b6e6224abb1516b6e2f8a5b10779958ebb2a1ec0ccb120e7e2ac0"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-docs-operator.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2727e0b4a4b82e529f55c49835994b253d791802ffcfc3b7ed1eccee48efc757"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-e2e-test-verifier.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a6adad8dfcaf2b3e58ebf122681500c2ae2fe10821196211e2746a133616c9b6"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-explore.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d4fa123e954df425372e5eb3e7293279b96e0a611be4fa1ea525cd2c69fdea76"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-gap-analyzer.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "36282d4bec9330aeb0e1dd4252685c58445ac171e373bdad5d40c2dbd867d72e"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-html-companion-writer.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "6ab3b48541a461aaa3574dc05d8a978a154f81f2aa9184b28cad8dd385aa4262"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-implementation-completeness-checker.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "62890332eab8ee731ee2233284e98192c702022ebe01bda5f69a191cc2e15b22"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-implementation-planner.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "69ff3e490fc5851cdf1c11124da7d131dc1d6f33ac26c5f6fa1b0c1e4257defc"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-information-gatherer.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "30f57d7c51b7a496d36dfc9b8962a45495b1e783da5944a875ad701151a8fe64"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-production-readiness-checker.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3467033b2fbcdf3369e22c2cc4270b6678df1e865bfea2e81cbf91efd4f77437"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-project-analyzer.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "77b54cc2d90d857ebf6eda18d913d650bf63f339381c7d37af339a936fe2bac0"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-reality-assessor.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f0476c253aa682743f38d24c7bd74ebc9ac5be8a8170e96e177115f7eba32b0f"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-research-planner.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a71be687a067f6523a5fc6a7c37a7278e7ab378d6d015b1755918d1b6ac37ec9"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-research-synthesizer.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "871ea364135d4dba34da90892241dbe3046481b8a41357a0b94397dc2e676d9e"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-solution-brainstormer.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8487fafbbc8acbb93e0e6c32779392274dd6b356669a473d02424ada132080dd"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-solution-designer.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8cc13416edbfa1165fadcd01466b30e423316c57a182665cc5a88792f18317f1"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-spec-auditor.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "aaa0b71e0c20227f4e556c969d21041c65541f23ba342fd636a450beaa23319a"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-specification-creator.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "dc41c6d677793e6144e582fc388eeb5dd5d0289b45a5c4d663bf90488cac959e"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-task-classifier.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "bcfb167ede1512662a8d52e189f2338f089402a714b953bea036da86fbbd64c9"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-task-group-implementer.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "594f22d412e1eeb9ed8bccb0a6452fc5f4e782f70f05bfa010b01afbca7c91ac"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-test-suite-runner.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "67e11f95e8d1b74eb0a73d69e676e9c70aeedb790fb49fca02d7a298ab9baf5a"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-thermo-nuclear-code-quality-review-subagent.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3694fee02931f92b576c20772d774052299b79c90998fa9e5df8589b45e3dd3c"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-thermo-nuclear-review-subagent.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b7dc6575a3e6b5d370c2ebde802ef25bc33b44c47b6226f0ac2fa6a089e1b873"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-ui-mockup-generator.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "461592cbf880b7958fcae9c243799876f9b83eeacadac2f24ba9800d6c32f930"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister-user-docs-generator.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ffef46f37e137148de88cae2f689d42d5bb936026f22a6ba2a04f2d67f7164b7"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/maister.json": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b2fb856049443dc8d2e4b885eec1e0ea5407072898a6bcbb7f3ebb97dc75680a"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "instructions": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          }
+        },
+        "instructions/maister-advisor.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "35495c934aa4ad812cdaee70a89f98de353d5228613378d05721a2b8c21cba15"
+          }
+        },
+        "instructions/maister-bottleneck-analyzer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "cab599ee73555e8827828d543a0588087c7ca9791514935ea14563a0b1f21d1c"
+          }
+        },
+        "instructions/maister-code-quality-pragmatist.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "59a159bd82c90e683cb0087334ab7eff91eadf3ee2ddfc0879f134dd56cf9113"
+          }
+        },
+        "instructions/maister-code-reviewer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b3c7bb0b917f604155b991801108acb61573e4bcbdbe4d510ec04655b117dc9c"
+          }
+        },
+        "instructions/maister-codebase-analysis-reporter.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "1ecb0ddc7ef09eb06f58d84bff3c544bdb02f068496bfe4f239a86bc2fbb6e19"
+          }
+        },
+        "instructions/maister-docs-operator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "95d61a806ea42597ee736701550ad48d6465b96d2c481f521beec07bded77a1b"
+          }
+        },
+        "instructions/maister-e2e-test-verifier.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "102d12b7c1b2f8a121b7fd480a63408bc24a590cf4c3ae04017113e896691402"
+          }
+        },
+        "instructions/maister-explore.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "791ef30b801b24ff5c016f51be6695d3b98c2f6fb3f92a7c717dfc46b15acd65"
+          }
+        },
+        "instructions/maister-gap-analyzer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ed9cc34206564965ece89e95efa321530c1c6b74791850f289af5f1afc3f99d5"
+          }
+        },
+        "instructions/maister-html-companion-writer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "01988e87134614cdcde1c2f2639dc7fd8e8dde6207fe47a7ba5b588c1eb76fb4"
+          }
+        },
+        "instructions/maister-implementation-completeness-checker.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "7afab6294be89bf70500394029ab588db38eda1cdd7cafe35a11895c5212c720"
+          }
+        },
+        "instructions/maister-implementation-planner.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "77dcad34626ee0be9096993da56b3e4ce33e5508b73deaebf197dd049b7580ae"
+          }
+        },
+        "instructions/maister-information-gatherer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "71e59ac1a56986d3a4cad1b381d079c0eea76b4a36ad6fc29d48e90be19513a2"
+          }
+        },
+        "instructions/maister-production-readiness-checker.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3265277bba59889561e38aca667adc358a17a16b4e387c409efc0da698740581"
+          }
+        },
+        "instructions/maister-project-analyzer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d8ed5af1876df1b14b94cfb44b87bb1694595f18032fd56ea71849892877eac7"
+          }
+        },
+        "instructions/maister-reality-assessor.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8527343192de8622fd1d7deef7ec6b9c9b2f68fe022164497d12dd28a1c3659a"
+          }
+        },
+        "instructions/maister-research-planner.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3026741ab42ca1d25add2d22c4c4a5bff121e69187e90c97c06c97dbd6a9450e"
+          }
+        },
+        "instructions/maister-research-synthesizer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ce86054623d6c1c1d3d85939b83931429edc4ac29418df63098379a98ee084eb"
+          }
+        },
+        "instructions/maister-solution-brainstormer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ec03520a8f7a10209ababea73269c0ab553cd2288d2f1037c8cb53727edfd588"
+          }
+        },
+        "instructions/maister-solution-designer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8fe11c835cef3467e7c5127ac42edf62576089c37eeefea804089678ffb5f3dc"
+          }
+        },
+        "instructions/maister-spec-auditor.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c78a934df738761028c38407e19c7409a8fa76ca9f68cf86c095469b893bb265"
+          }
+        },
+        "instructions/maister-specification-creator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e21d0f8bd79e267538eb597a75a2bc937e0b14a3c3bb387b95d9e3d9e3dc16c4"
+          }
+        },
+        "instructions/maister-task-classifier.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "7f02668ad55c0fcfe347e4226c132df131c499c8c90f14dccb4b47e6624acac8"
+          }
+        },
+        "instructions/maister-task-group-implementer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "828edef51b012ae60f721a6521ff7b4144c1289cea9c9c6a1f1d397e2a94dc46"
+          }
+        },
+        "instructions/maister-test-suite-runner.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c2dffa88575b824616d6d97bc991dce370ef49a62a52d0b7e964a4ac313650f1"
+          }
+        },
+        "instructions/maister-thermo-nuclear-code-quality-review-subagent.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ee4a54f59a1558c28bbf3d9e683152459805ca6eb79b234054fb3c77baa29932"
+          }
+        },
+        "instructions/maister-thermo-nuclear-review-subagent.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "472c242293c2cfc2308f8e78cc9564e7d5b83980bf408dbe83183fb40c4c116e"
+          }
+        },
+        "instructions/maister-ui-mockup-generator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a2aa61dbdf98f92f06e6891d039bc7be1f99279338087f19a5fe1769560b37ff"
+          }
+        },
+        "instructions/maister-user-docs-generator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "73444d6e2995ff8487ad7325dc5c126b9b13d22006be4efaca2b40b17eb72f69"
+          }
+        },
+        "instructions/maister.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "69a26b45a6bd0dd91d3783b8a60eca1e7f87505605d5ff3bdbf68c28ab028b55"
+          }
+        },
+        "maister-advisor.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "7584888c1935727dba4f6396222c7059e72bff724625f1870bd6b0cd6bc30698"
+          }
+        },
+        "maister-bottleneck-analyzer.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "291aef859466d5d91cf904331af0e89cedf369976d2cc7865d7f9153ad8a898e"
+          }
+        },
+        "maister-code-quality-pragmatist.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c502dbf92b7fcfedddfc970c5fd980d9ba8741afeb9e30e224fabdc85d72b040"
+          }
+        },
+        "maister-code-reviewer.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4351c858213a23a79f04c2d8b91a1e7e2f1ee649b8b6048eb68ffd16ea31ea6c"
+          }
+        },
+        "maister-codebase-analysis-reporter.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "81b8a64e29df271b77f591d744331e5323d60208d7de4aed4f3a4d5bea092e59"
+          }
+        },
+        "maister-docs-operator.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5eab5630147dd412057d9f5faa4eb4e1cd993d5aff93aabec8265a438cd65607"
+          }
+        },
+        "maister-e2e-test-verifier.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c074b4e7a2eb58057f01adbc77850b5de14e7725ad8b0e01a3da6c31b55c7507"
+          }
+        },
+        "maister-explore.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "35bdbe01dc550d741befb647404a192c3b858cadba554a367ad4859e07a66b79"
+          }
+        },
+        "maister-gap-analyzer.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d284a65c5620651c288db8e711ac00a8c7f5f3ad6c64f86fb11fa078f9a28341"
+          }
+        },
+        "maister-html-companion-writer.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "24c2f36e1bf2b16cda7daa17b7baadf3ce1c0212c913ed411a1c711c910e55df"
+          }
+        },
+        "maister-implementation-completeness-checker.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "499104ea878c7e48362d0bfa86697f0795b3729b224ffa35121f2870b68bcf9a"
+          }
+        },
+        "maister-implementation-planner.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5c1e9b9fef6a3a7695c9151f3237cca69d6f89a1a1881a4ba83c0994d96a1e84"
+          }
+        },
+        "maister-information-gatherer.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "588a0c8b5d4d77a05e0a7a097bd97fab0fa19b4fd1a123d42581ae8399744375"
+          }
+        },
+        "maister-production-readiness-checker.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a52e96cabecab54c15a0846f09fb3822cdaf687c1848edda708dc44db3a49c95"
+          }
+        },
+        "maister-project-analyzer.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8a620007b8c6258909a0ad942053a1bbb4e0623b5807af8826b69124ba2823ef"
+          }
+        },
+        "maister-reality-assessor.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4f1ffdcb317190dc8375d1a0c765ffd6304a5236eaa283d00f63dada0995fb30"
+          }
+        },
+        "maister-research-planner.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0534c5aa0e25bb7bd19a3f40f43faf1c00914c9b5d93cb9947949ddc4395e414"
+          }
+        },
+        "maister-research-synthesizer.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ca15346bbf7ff3a59feca8abcaab44616ab7c97c293f5953263d03fe008ce25d"
+          }
+        },
+        "maister-solution-brainstormer.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "956a585d98d64653a12c7dbe219e44de781a52be0562e1b5a6fcc2e068dfab0b"
+          }
+        },
+        "maister-solution-designer.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ae4b6f06a39e98420f70088d9b08cd48243b6bd8b489b4ef51393b1b38bdaa7e"
+          }
+        },
+        "maister-spec-auditor.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3e14eeecbcfeaa03b18d3778f19d01071c50d99ad0025c4183a0ee5105835385"
+          }
+        },
+        "maister-specification-creator.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8f1fb4b27a89cee86e95a292931aa78a1cadfcd7eb34e9b0cca12fccda717df7"
+          }
+        },
+        "maister-task-classifier.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3c47b147117c7e0a5d3fc08ecf7c0f9b8d79e2bf3dbcb42b1f98a2b2c9bb917b"
+          }
+        },
+        "maister-task-group-implementer.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "480139f15928b26233182ed9c8b565fda873c9333079f23d029706723a10f766"
+          }
+        },
+        "maister-test-suite-runner.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "dca4031af2927a355cf24941a9ef7fcc13fd338f29c266238ad02364ba2675dc"
+          }
+        },
+        "maister-thermo-nuclear-code-quality-review-subagent.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "77f93ba625b0a47dcb83b2c9cd48cea2a1bfa453f4c7febf8a71066eeb11aa7b"
+          }
+        },
+        "maister-thermo-nuclear-review-subagent.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "576a6b2ad8e5f29c2b8ef0b16cf458f17fe1e73460de19cb5bace699d507f27a"
+          }
+        },
+        "maister-ui-mockup-generator.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "dca10499c9de6c2f1342e1d4142aa6c01a7c39936dc60cf7fb735da48fe45903"
+          }
+        },
+        "maister-user-docs-generator.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d045a8a444ddc52a8df1d2bf81c37dbf3bbd4a8d1bb3fa7443c91f747eb559fb"
+          }
+        },
+        "maister.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e6f82b5ca711733c0170d3075a8e10702bc7cfb6bac138b70e043c1af21fd275"
+          }
+        },
+        "skills/init/bin/reconcile-gate-config.sh": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0755",
+            "sha256": "7b6dff13a2300c228c7cf4b4dbaa87222430f529ab953ba237cfb23b3d18f8a5"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/agent-resolver.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "78b9adc66459efcc62747a4199cbdd064d7ceda19380987498943862d280df45"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/codex-exec-capabilities.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f78f1f462dc736e80928b2251ee1e80f1d83cd4791796ab8ccf3a8c6270aea90"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/codex-worker-manager.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a5195b91bbfdf04c81723a9f75bebf19ddde92bd69cd010e7a6badda46d326c5"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/create-runtime.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "dd2bebff69834c90c9ee9f297f96e66e1a2b62315f59f6b27efcf2ee859fcacb" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-task-preparer.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "8e030e7d7443ab6e0f15f6b195779703300dec73303db150d8215a4ba6614641" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-payload.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "322d36ba4c49443e98fa76b92a74e876d530f72f4edfddbc4fd6dda3d7ee82e9" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/exact-native.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "cfadc6994b2ef920dcd168bc4ce0836a7ca7c0268c0367e1282f99a7ae2aecba" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/node-process-port.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "bf057fad88b2b9bf12835d1a0259ba1c06fab7ea69142da52947d561919388df" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/production-owner.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "aa63a1fdc82d425b9c086d3a59317a9ed36682e849e87b3760f477b80a1dc86c" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/production-runtime.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "ea7dda3278230528119eccd42fb25f01c5cc78dfb64ac15aa0b00890bd13c729" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-agent.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2a63c13bb50e1b29654d84196d7f90418d075b27061ad16b4dfa799e08e8d667"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-contract.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5fb06a8769aa780ae05a6da97c29c5fd5cca84db3669ab6ec849b758b0c60406"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-schema.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "bb9d11c98b79876f2d3a600d41f1b6bd61300bd6687493dc6af046ce6983072a"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-writer.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0005f692d9c6853edf6d81b1233bce774f64eafd6cd7e29fc9e64e7694b07d4d"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/codex-exec.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "51fe18b76899da1849f01f0fd4a7d0b156ecbbb231ae5358cf88dc6b1c078aea"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/cursor.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e3c02431fe6acf3dd3e9b35c6e70afa9f39c8c4d559aec826203bad008420e16"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/index.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c0b4e933392a4a964a714de48f7922fd74d17c59a8bbb9bbf3aae87abce37889"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/kiro-cli.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "491122801fe8b8467dd145ed891b864287d7d62d540bcf1b8e9ea51b37575ac8"
           }
         }
       }

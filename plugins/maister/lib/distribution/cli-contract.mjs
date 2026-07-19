@@ -56,6 +56,7 @@ export function exitCodeFor(error) {
   if (!(error instanceof DistributionError) && typeof error?.kind !== "string") return EXIT_CODES.transaction;
   if (error.kind === "E_INTEGRITY") return EXIT_CODES.integrity;
   if (error.kind === "E_USAGE" || error.kind === "E_SETTINGS_FORMAT") return EXIT_CODES.usage;
+  if (error.kind === "E_CLEAN_INSTALL_REQUIRED") return EXIT_CODES.validation;
   if (error.kind === "E_LOCK_BUSY") return EXIT_CODES.lock;
   if (error.kind.startsWith("E_SOURCE")) return EXIT_CODES.source;
   if (error.kind.startsWith("E_OVERLAY") || error.kind.startsWith("E_MATERIALIZE") || error.kind.startsWith("E_PROVENANCE") || error.kind.startsWith("E_SETTINGS_") || error.kind.startsWith("E_EVIDENCE")) return EXIT_CODES.validation;

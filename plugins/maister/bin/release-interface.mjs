@@ -95,10 +95,81 @@ function copySourceTree(stage, target) {
       preserveTimestamps: true,
     });
   }
+  fs.copyFileSync(path.join(sourcePluginRoot, "agent-projection-v1.json"), path.join(stagePluginRoot, "agent-projection-v1.json"));
   fs.cpSync(path.join(sourcePluginRoot, "overlays", target), path.join(stagePluginRoot, "overlays", target), {
     recursive: true,
     preserveTimestamps: true,
   });
+  for (const otherTarget of SUPPORTED_TARGET_IDS.filter((candidate) => candidate !== target)) {
+    const sourceOverlay = path.join(sourcePluginRoot, "overlays", otherTarget);
+    const stagedOverlay = path.join(stagePluginRoot, "overlays", otherTarget);
+    fs.mkdirSync(stagedOverlay, { recursive: true });
+    for (const name of ["overlay.yml", "inventory.yml"]) {
+      fs.copyFileSync(path.join(sourceOverlay, name), path.join(stagedOverlay, name));
+    }
+  }
+}
+
+function assertPackageClosure(stage, target) {
+  const pluginRoot = path.join(stage, "plugins/maister");
+  const required = [
+    "agent-projection-v1.json",
+    "agents/advisor.md",
+    "bin/maister-install.mjs",
+    "bin/maister-agent-gate.mjs",
+    "bin/project-agents.mjs",
+    "lib/distribution/agent-projector.mjs",
+    "skills/orchestrator-framework/bin/agent-runtime/agent-resolver.mjs",
+    "skills/orchestrator-framework/bin/agent-runtime/production-runtime.mjs",
+    "skills/orchestrator-framework/bin/agent-runtime/production-owner.mjs",
+    `overlays/${target}/overlay.yml`,
+    `overlays/${target}/inventory.yml`,
+  ];
+  for (const relative of required) {
+    const candidate = path.join(pluginRoot, relative);
+    if (!fs.existsSync(candidate) || fs.lstatSync(candidate).isSymbolicLink()) {
+      fail("E_RELEASE_INTERFACE_PACKAGE", "package source closure is incomplete", { target, path: relative });
+    }
+  }
+
+  const overlays = fs.readdirSync(path.join(pluginRoot, "overlays"), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+  if (JSON.stringify(overlays) !== JSON.stringify([...SUPPORTED_TARGET_IDS].sort())) {
+    fail("E_RELEASE_INTERFACE_PACKAGE", "package must contain every projection-contract overlay", { target, overlays });
+  }
+
+  for (const otherTarget of SUPPORTED_TARGET_IDS.filter((candidate) => candidate !== target)) {
+    if (fs.existsSync(path.join(pluginRoot, "overlays", otherTarget, "assets"))) {
+      fail("E_RELEASE_INTERFACE_PACKAGE", "package contains foreign target assets", { target, path: `overlays/${otherTarget}/assets` });
+    }
+  }
+
+  const forbidden = [
+    "overlays/cursor/assets/agents",
+    "overlays/kiro-cli/assets/agents",
+    ".codex/agents",
+  ];
+  for (const relative of forbidden) {
+    if (fs.existsSync(path.join(pluginRoot, relative))) {
+      fail("E_RELEASE_INTERFACE_PACKAGE", "package contains forbidden legacy or behavior-bearing assets", { target, path: relative });
+    }
+  }
+}
+
+function removeForbiddenPackageTrees(stage) {
+  const pluginRoot = path.join(stage, "plugins/maister");
+  for (const relative of [
+    "overlays/cursor/assets/agents",
+    "overlays/kiro-cli/assets/agents",
+    ".codex/agents",
+    "overlays/codex/parity-baseline.json",
+    "overlays/cursor/parity-baseline.json",
+    "overlays/kiro-cli/parity-baseline.json",
+  ]) {
+    fs.rmSync(path.join(pluginRoot, relative), { recursive: true, force: true });
+  }
 }
 
 function writeSourceManifest(stage, sourceCommit, sourceVersion) {
@@ -212,6 +283,8 @@ export function packageTarget({ env = process.env } = {}) {
   const fileListPath = path.join(distDir, `.maister-package-${target}-list-${process.pid}-${Date.now()}.txt`);
   try {
     copySourceTree(stage, target);
+    removeForbiddenPackageTrees(stage);
+    assertPackageClosure(stage, target);
     validateAndEmbedAttestation(stage, sourceCommit, sourceVersion, epoch, attestationPath);
     writeSourceManifest(stage, sourceCommit, sourceVersion);
     stampTree(path.join(stage, "plugins/maister"), epoch);

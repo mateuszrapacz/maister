@@ -1,5 +1,8 @@
 name: Release
 
+permissions:
+  contents: read
+
 on:
   push:
     tags: ["v*"]
@@ -20,14 +23,14 @@ jobs:
         run: |
           mkdir -p dist
           make test-parity-release PARITY_REPORT=dist/parity-release.json
-      - name: Run portable core tests before generating E3
-        run: make test-core
+      - name: Run portable core and runtime tests before generating E3
+        run: make test-core test-runtime
       - name: Generate deterministic portable-core E3 attestation
         run: |
           make generate-e3-attestation \
             E3_OUTPUT=dist/e3-portable-core.json \
             E3_RESULT=passed \
-            E3_TEST_COMMAND="make test-core" \
+            E3_TEST_COMMAND="make test-core test-runtime" \
             SOURCE_COMMIT="$GITHUB_SHA" \
             SOURCE_VERSION="${GITHUB_REF_NAME#v}" \
             SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
@@ -61,6 +64,8 @@ jobs:
   publish:
     needs: validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:

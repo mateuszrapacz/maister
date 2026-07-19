@@ -196,7 +196,7 @@ Pass `task_type="enhancement"` and the performance-focused description. The code
 ### Phase 2: Static Performance Analysis
 
 **Purpose**: Identify bottlenecks through static code analysis + optional user profiling data
-**Execute**: Task tool - `maister:bottleneck-analyzer` subagent
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:bottleneck-analyzer" })`, then dispatch actor `performance`, work item `bottleneck-analysis`, output `analysis/performance-analysis.md`, and bounded code/profiling context.
 **Output**: `analysis/performance-analysis.md`
 **State**: Update `performance_context.bottlenecks_identified`, `performance_context.user_data_available`, `performance_context.bottleneck_priorities`
 
@@ -211,13 +211,13 @@ Pass `task_type="enhancement"` and the performance-focused description. The code
 - ❌ "Let me analyze the bottlenecks myself..." — STOP. Delegate to bottleneck-analyzer.
 - ❌ "I'll grep for N+1 patterns..." — STOP. Delegate to bottleneck-analyzer.
 
-**INVOKE NOW** — Task tool call:
+**INVOKE NOW** — common runtime call:
 
-4. Task tool - `maister:bottleneck-analyzer` subagent
+4. `resolveAgent({ logical_role_id: "maister:bottleneck-analyzer" })`, then dispatch the actor, work item, output, and bounded context described above.
 
 **Context to pass**: task_path, description, codebase analysis summary from Phase 1, user data paths (if any)
 
-**SELF-CHECK**: Did you just invoke the Task tool with `maister:bottleneck-analyzer`? Or did you start analyzing code yourself? If the latter, STOP and invoke the Task tool.
+**SELF-CHECK**: Did you resolve and dispatch exact `maister:bottleneck-analyzer`? Or did you start analyzing code yourself? If the latter, STOP and use the common runtime.
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -250,13 +250,13 @@ Invoke the engine as `phase-2-exit` with question "Performance analysis complete
 - ❌ "Let me create the specification..." — STOP. Delegate to specification-creator.
 - ❌ "I'll write the spec based on the analysis..." — STOP. Delegate to specification-creator.
 
-**INVOKE NOW** — Task tool call:
+**INVOKE NOW** — common runtime call:
 
-4. Task tool - `maister:specification-creator` subagent
+4. `resolveAgent({ logical_role_id: "maister:specification-creator" })`, then dispatch actor `performance`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
 
 **Context to pass**: task_path, task_type="performance", task_description, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), phase_summaries (codebase_analysis, bottleneck_analysis), html_style_guide_path (for the spec.html companion)
 
-**SELF-CHECK**: Did you just invoke the Task tool with `maister:specification-creator`? Or did you start writing spec.md yourself? If the latter, STOP and invoke the Task tool.
+**SELF-CHECK**: Did you resolve and dispatch exact `maister:specification-creator`? Or did you start writing spec.md yourself? If the latter, STOP and use the common runtime.
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -269,7 +269,7 @@ Invoke the engine as `phase-3-exit` with question "Continue to specification aud
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Independent review of optimization specification
-**Execute**: Task tool - `maister:spec-auditor` subagent
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:spec-auditor" })`, then dispatch actor `performance`, work item `spec-audit`, output `verification/spec-audit.md`, and bounded optimization-spec context.
 **Output**: `verification/spec-audit.md`
 **State**: Update `options.spec_audit_enabled`
 
@@ -296,15 +296,15 @@ Invoke the engine as `phase-4-exit` with question "Continue to implementation pl
 - ❌ "Let me create the implementation plan..." — STOP. Delegate to implementation-planner.
 - ❌ "I'll break this into optimization steps..." — STOP. Delegate to implementation-planner.
 
-**INVOKE NOW** — Task tool call:
+**INVOKE NOW** — common runtime call:
 
-**Execute**: Task tool - `maister:implementation-planner` subagent
+**Execute**: `resolveAgent({ logical_role_id: "maister:implementation-planner" })`, then dispatch actor `performance`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and the bounded context below.
 **Output**: `implementation/implementation-plan.md`
 **State**: Update task groups and dependencies
 
 **Context to pass**: task_path, task_type="performance", task_description, phase_summaries (specification, bottleneck_analysis, codebase_analysis), html_style_guide_path (for the implementation-plan.html companion)
 
-**SELF-CHECK**: Did you just invoke the Task tool with `maister:implementation-planner`? Or did you start writing the plan yourself? If the latter, STOP and invoke the Task tool.
+**SELF-CHECK**: Did you resolve and dispatch exact `maister:implementation-planner`? Or did you start writing the plan yourself? If the latter, STOP and use the common runtime.
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -460,10 +460,8 @@ orchestrator:
         clarify: manual
         convergence: manual
         verify-matrix: manual
-      advisor_agent: advisor
-      advisor_model: null
-      arbiter_agent: advisor
-      arbiter_model: null
+      advisor_agent: maister:advisor
+      arbiter_agent: maister:advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3

@@ -136,3 +136,53 @@ native_assets:
     destination: hooks/hooks.json
     mode: "0644"
     sha256: 18975241e66ba4184ca90c92c73bcdd2053aa4172203537023e58bbdfab360b0
+agent_projection:
+  schema_version: 1
+  contract: agent-projection-v1.json
+  projector_version: 1.0.0
+  adapter_id: codex.exec
+  representation: codex-prompt-schema
+  canonical_roles:
+    - advisor
+    - bottleneck-analyzer
+    - code-quality-pragmatist
+    - code-reviewer
+    - codebase-analysis-reporter
+    - docs-operator
+    - e2e-test-verifier
+    - gap-analyzer
+    - html-companion-writer
+    - implementation-completeness-checker
+    - implementation-planner
+    - information-gatherer
+    - production-readiness-checker
+    - project-analyzer
+    - reality-assessor
+    - research-planner
+    - research-synthesizer
+    - solution-brainstormer
+    - solution-designer
+    - spec-auditor
+    - specification-creator
+    - task-classifier
+    - task-group-implementer
+    - test-suite-runner
+    - thermo-nuclear-code-quality-review-subagent
+    - thermo-nuclear-review-subagent
+    - ui-mockup-generator
+    - user-docs-generator
+  destinations:
+    - kind: prompt
+      path_template: skills/orchestrator-framework/agents/{role_id}.md
+      mode: "0644"
+    - kind: output-schema
+      path_template: skills/orchestrator-framework/agent-schemas/{role_id}.schema.json
+      mode: "0644"
+  transform_ids:
+    - canonical-body-v1
+    - codex-output-schema-v1
+  execution_profile_ids:
+    - codex.read-only
+    - codex.read-only-shell
+    - codex.workspace-write
+  support_inventory: []

@@ -6,6 +6,8 @@ Shared execution rules, schemas, and patterns for all workflow orchestrators.
 
 ## 1. Delegation Rules
 
+Before the first common-runtime delegation, the host invokes the shipped `bin/maister-agent-gate.mjs` owner with the closed v1 request documented in the repository README. The owner selects the target and installed state, loads an explicitly registered bridge module, calls `createProductionAgentRuntime`, and passes the resulting three-method runtime port to `evaluateGate`. Missing Codex capability or Cursor/Kiro native bridges remain durable typed unavailable/blocked results; orchestrators never invent verified inputs or fall back to another execution mechanism. Hosts embedding the lower-level library must preserve this same owner call graph and the exact versioned bridge contract.
+
 **Always use Skill/Task tools to delegate. Never execute delegated work inline.**
 
 When a phase requires delegation:
@@ -102,6 +104,18 @@ source.
 
 Advisor mode changes who analyzes a gate response; it does not grant an agent permission to edit source code, configuration, or implementation artifacts. The `orchestrator-state.yml` file remains the source of truth for every gate and must be rewritten immediately after each decision so the workflow can be interrupted and resumed safely.
 
+### Exact logical-role dispatch
+
+Every canonical-role delegation uses the common runtime in two fail-closed
+steps. Resolve the requested role with
+`resolveAgent({ logical_role_id: "maister:<role_id>", target, dispatch_id, manifest, projection, paths, hooks })`,
+then invoke
+`dispatchAgent({ plan, task: { actor, work_item, output, bounded_task }, adapters })`.
+The bounded task carries the decision actor or workflow actor, stable work-item
+identity, required output contract/path, and only the context needed for that
+work. Resolution or dispatch failure stops the call site; never substitute a
+host task primitive, inline execution, an alias, or another role.
+
 At every gate, before invoking any platform mechanism:
 
 1. Classify the gate with one stable `gate_type` (for example `phase-exit`, `decisions-needed`, `optional-phase`, `clarify`, `convergence`, `refine`, `verify-matrix`, `fix-loop`, `failure-recovery`, `rollback`, `scope-expansion`, `implementation-approval`, or `production-go-no-go`).
@@ -116,12 +130,12 @@ At every gate, before invoking any platform mechanism:
 5. For `manual`, or for `fully_automatic` on an unsupported host, run the
    existing native user gate unchanged. If no user gate is available, persist
    `blocked`; never synthesize a user answer.
-6. For `advisor` or supported `fully_automatic`, invoke the configured read-only `advisor` agent with the exact question and every option, the original recommendation when one exists, the current dashboard and relevant artifacts, prior gate history and phase summaries, and the current gate type and safety policy.
+6. For `advisor` or supported `fully_automatic`, resolve the exact configured `advisor_agent` and dispatch it through the common runtime. The bounded task contains actor `advisor`, the gate-decision work item, the exact four-field response output contract, the exact question and every option, the original recommendation when one exists, the current dashboard and relevant artifacts, prior gate history and phase summaries, and the current gate type and safety policy.
 6. Require the exact four-key response map with `selected_option`, `rationale`, `confidence`, and `escalate_to_user`; reject extra decision fields, duplicate YAML keys, and options not in the supplied list. Retry malformed, unavailable, or timed-out calls using `advisor.retry.advisor_attempts` and `advisor.retry.backoff`. Persist each attempt and backoff timestamp. `confidence: low` is not an automatic approval.
 7. When the advisor agrees with the original recommendation, record the advisor decision and continue automatically for the configured non-denylisted gate. When no original recommendation exists, the advisor may choose one available option without arbitration.
-8. When the advisor disagrees with the original recommendation and arbitration is enabled, create exactly one logical arbiter decision in `arbiter_pending`. The arbiter receives both recommendations, their rationales, and the same read-only workflow context. Use `arbiter_agent` and `arbiter_model` when configured; otherwise use the advisor agent/model. Retry only within that arbiter record with `advisor.retry.arbiter_attempts` and the same backoff policy; never start a second arbiter or loop back to the advisor.
+8. When the advisor disagrees with the original recommendation and arbitration is enabled, create exactly one logical arbiter decision in `arbiter_pending`. Resolve the exact configured `arbiter_agent` and dispatch it through the same common runtime. The bounded task contains actor `arbiter`, the arbiter-decision work item, the exact four-field response output contract, both recommendations and rationales, and the same read-only workflow context. Retry only within that arbiter record with `advisor.retry.arbiter_attempts` and the same backoff policy; never start a second arbiter or loop back to the advisor.
 9. In `advisor` mode, show the original recommendation, advisor recommendation, and arbiter result to the user; the user makes the final choice. In `fully_automatic`, the arbiter may choose between the competing recommendations for non-denylisted gates, and the orchestrator continues through `phase_continue(selected_option)` after terminal state/report persistence. It must not synthesize input into a user prompt. If the arbiter cannot produce a valid, sufficiently confident result, fail closed: return to a manual gate or stop the workflow in fully automatic mode. Never start an unbounded arbitration loop.
-10. Compute the deterministic idempotency key from `phase_id`, `gate_type`, question, and ordered options before any invocation. Reuse terminal `decided`, `blocked`, or `failed` records without another model or user call. Persist the complete decision record before changing phase status or continuing: question, options, gate type, original recommendation, advisor response, arbiter response, retry attempts, selected option, final actor, model identifiers, rationale, confidence, escalation, and any user override. Append it to `orchestrator.gate_history[]` once and mirror the concise record in the phase's `gate` field.
+10. Compute the deterministic idempotency key from `phase_id`, `gate_type`, question, and ordered options before any invocation. Reuse terminal `decided`, `blocked`, or `failed` records without another runtime or user call. Persist the complete decision record before changing phase status or continuing: question, options, gate type, original recommendation, advisor response, arbiter response, retry attempts, logical role IDs, dispatch IDs, effective common execution-profile observations, selected option, final actor, rationale, confidence, escalation, and any user override. Append it to `orchestrator.gate_history[]` once and mirror the concise record in the phase's `gate` field.
 
 The final workflow summary must be generated from `gate_history`, not from transient dashboard data. Write both `outputs/decision-summary.md` and, when `orchestrator.options.html_output` is true, `outputs/decision-summary.html`. The summary includes every decision, all alternatives, explanations, full context links, arbitration history, retry failures, resume reuse, and the terminal workflow status. Generate it after successful completion and after blocked or failed termination. Reports must be written after the terminal state record and before phase continuation.
 
@@ -279,10 +293,8 @@ advisor:
     clarify: manual
     convergence: manual
     verify-matrix: manual
-  advisor_agent: advisor
-  advisor_model: null
-  arbiter_agent: advisor
-  arbiter_model: null
+  advisor_agent: maister:advisor
+  arbiter_agent: maister:advisor
   arbiter_enabled_on_disagreement: true
   retry:
     advisor_attempts: 3
@@ -318,10 +330,8 @@ orchestrator:
     advisor:
       enabled: false
       gate_policies: {}               # gate_type -> manual | advisor | fully_automatic
-      advisor_agent: advisor
-      advisor_model: null
-      arbiter_agent: advisor
-      arbiter_model: null
+      advisor_agent: maister:advisor
+      arbiter_agent: maister:advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3

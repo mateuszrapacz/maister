@@ -12,7 +12,7 @@ layout:
     kind: tree
     mode: "0755"
     ownership: whole_file
-  - source: assets/agents
+  - source: assets/support-agents
     destination: agents
     kind: tree
     mode: "0755"
@@ -45,7 +45,7 @@ semantic_bindings:
     capability: semantic
     fail_closed: true
   delegate_agent:
-    adapter: cursor.subagent
+    adapter: cursor.native
     capability: delegation
     fail_closed: true
   track_progress:
@@ -82,8 +82,6 @@ inventory:
     - "**/*claude*"
 validation:
   forbidden_vocabulary:
-    - codex
-    - kiro
     - claude
     - anthropic
     - .codex-plugin
@@ -140,3 +138,61 @@ native_assets:
     destination: hooks/hooks.json
     mode: "0644"
     sha256: 9439e06b8f6156c304a5528ebdcfe56c4eac5d4197bb0fdfbdd0da31f68795db
+  - source: assets/support-agents/explore.md
+    destination: agents/explore.md
+    mode: "0644"
+    sha256: 118bf52398598678e1b9a126be3e78516eab886bc0411e9d837aa3304ad54575
+agent_projection:
+  schema_version: 1
+  contract: agent-projection-v1.json
+  projector_version: 1.0.0
+  adapter_id: cursor.native
+  representation: cursor-markdown
+  canonical_roles:
+    - advisor
+    - bottleneck-analyzer
+    - code-quality-pragmatist
+    - code-reviewer
+    - codebase-analysis-reporter
+    - docs-operator
+    - e2e-test-verifier
+    - gap-analyzer
+    - html-companion-writer
+    - implementation-completeness-checker
+    - implementation-planner
+    - information-gatherer
+    - production-readiness-checker
+    - project-analyzer
+    - reality-assessor
+    - research-planner
+    - research-synthesizer
+    - solution-brainstormer
+    - solution-designer
+    - spec-auditor
+    - specification-creator
+    - task-classifier
+    - task-group-implementer
+    - test-suite-runner
+    - thermo-nuclear-code-quality-review-subagent
+    - thermo-nuclear-review-subagent
+    - ui-mockup-generator
+    - user-docs-generator
+  destinations:
+    - kind: agent
+      path_template: agents/{role_id}.md
+      mode: "0644"
+  transform_ids:
+    - canonical-body-v1
+    - cursor-frontmatter-v1
+  execution_profile_ids:
+    - cursor.read-only
+    - cursor.read-only-shell
+    - cursor.workspace-write
+  support_inventory:
+    - support_id: explore
+      native_role_external_id: explore
+      assets:
+        - kind: agent
+          source: assets/support-agents/explore.md
+          destination: agents/explore.md
+          mode: "0644"

@@ -1,0 +1,473 @@
+orchestrator:
+  started_phase: phase-1
+  current_phase: phase-6
+  completed_phases: [phase-1, phase-2, phase-3, phase-4, phase-5, phase-6]
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    html_output: true
+    brainstorming_enabled: false
+    design_enabled: true
+    advisor:
+      enabled: true
+      gate_policies:
+        phase-exit: fully_automatic
+        optional-phase: fully_automatic
+        clarify: fully_automatic
+        convergence: fully_automatic
+        verify-matrix: fully_automatic
+      advisor_agent: advisor
+      advisor_model: gpt-5.6-sol
+      arbiter_agent: arbiter
+      arbiter_model: gpt-5.6-sol
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
+  created: "2026-07-17T17:38:03Z"
+  updated: "2026-07-17T20:02:44Z"
+  task_path: .maister/tasks/research/2026-07-17-unify-agent-projections
+  task_ids:
+    phase-1: research-phase-1
+    phase-2: research-phase-2
+    phase-3: research-phase-3
+    phase-4: research-phase-4
+    phase-5: research-phase-5
+    phase-6: research-phase-6
+  gate_history:
+    - schema_version: 1
+      idempotency_key: sha256:8dc80ac772693c815f0dfac96f7baa45a3cded3e406f16c6f5a42756f1e157d4
+      phase_id: phase-1
+      gate_type: phase-1-exit
+      question: Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?
+      options:
+        - Continue to brainstorming evaluation
+        - Pause workflow
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to brainstorming evaluation
+      final_actor: user
+      original_recommendation: Continue to brainstorming evaluation
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user approved continuing the research workflow.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:99f3113cd7105936bc727db4bf0cb86d5ef197d114aaaaf2278ad15e56713dac
+      phase_id: phase-2
+      gate_type: optional-phase-selection
+      question: Research converged on one architecture and did not identify competing alternatives, so brainstorming is unlikely to add value. Would you like to explore solution alternatives?
+      options:
+        - Yes, explore alternatives
+        - No, skip brainstorming
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: No, skip brainstorming
+      final_actor: user
+      original_recommendation: No, skip brainstorming
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user chose to skip brainstorming after the research converged on one architecture.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:9b2ddc4d107ba91823dbe96461fee0cf7e83bbc3e977a797aa6c644d34c3cf89
+      phase_id: phase-2
+      gate_type: optional-phase-selection
+      question: Research identifies architectural decisions across parsing, projection, installation, dispatch, migration, and verification, and the design will feed maister:development. Would you like to generate a high-level design?
+      options:
+        - Yes, generate design
+        - No, skip design
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Yes, generate design
+      final_actor: user
+      original_recommendation: Yes, generate design
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user approved generating a high-level design as the development handoff.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:08d897407996d017ff889aaf062a92e49e6cd9aa9d9cd5942601cd8ea1002e91
+      phase_id: phase-5
+      gate_type: research-clarification
+      question: "Proposed design assumptions: 28 canonical Markdown roles remain the only behavior source; Codex uses generic subagent prompt injection; Cursor and Kiro receive deterministic native projections; role resolution is exact and fail-closed; legacy Codex TOML cleanup is hash-gated and preserves modified files. Confirm these assumptions?"
+      options:
+        - Confirm assumptions
+        - Correct assumptions
+        - Provide more context
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Correct assumptions
+      final_actor: user
+      original_recommendation: Confirm assumptions
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user removed backward-compatibility requirements; old Codex TOML agent files should simply be deleted because all installations will start clean.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:6bdf08499f5ea52adcb109887df08612b87fed5c1a2a6ba779d4fc70c9cb160e
+      phase_id: phase-5
+      gate_type: phase-5-exit
+      question: Design complete. Continue to output generation?
+      options:
+        - Continue to output generation
+        - Pause workflow
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to output generation
+      final_actor: user
+      original_recommendation: Continue to output generation
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user approved generating the final research summary and development handoff.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:d80f674bb46ee9bc4ab3f4827a639076174888b935b69a4d0c8ad83216fb4ee0
+      phase_id: phase-6
+      gate_type: final-handoff-approval
+      question: Research summary and development handoff are complete. Complete the workflow?
+      options:
+        - Complete workflow
+        - Keep workflow open
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Complete workflow
+      final_actor: user
+      original_recommendation: Complete workflow
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user explicitly confirmed completion of the research workflow and requested context compaction before development.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+  implementation_approval:
+    status: not_required
+    approved_by: null
+    approved_at: null
+    approved_scope: []
+
+task:
+  title: Unify agent projections across supported hosts
+  description: Research a single-source, per-host agent projection and invocation model for Codex, Cursor, and Kiro CLI, treating maister-advisor exactly like every other agent and excluding read-only or sandbox-specific behavior.
+  status: completed
+  tags: [research, architecture, agents, codex, cursor, kiro]
+  priority: high
+
+research_context:
+  research_type: mixed
+  research_question: How should Maister transform, install, discover, and invoke all canonical agents consistently on Codex, Cursor, and Kiro CLI when maister-advisor follows the same rules as every other agent?
+  scope:
+    included:
+      - Canonical agent inventory and ownership
+      - Codex, Cursor, and Kiro CLI overlays and installation roots
+      - Host-native discovery and runtime invocation contracts
+      - Deterministic transformation, validation, tests, clean-install topology, and documentation
+      - A development-ready recommendation and design handoff
+    excluded:
+      - Implementation changes in production code
+      - Special read-only or sandbox treatment for maister-advisor
+      - Unsupported hosts and legacy generated distributions
+      - General redesign of non-agent skills and workflows
+    constraints:
+      - plugins/maister/agents remains the portable source of truth
+      - Avoid committed generated trees and hand-maintained prompt duplication
+      - Preserve transactional installation, rollback, and drift detection
+      - Agent selection must be explicit and deterministic
+  methodology:
+    - Codebase architecture and execution-flow analysis
+    - Cross-host inventory and reference validation
+    - Official host-contract verification where required
+    - Multi-source triangulation across source, overlays, tests, and documentation
+  sources:
+    - planning/sources.md
+  confidence_level: high
+  gathering_strategy:
+    categories: [canonical-projection, codex-runtime, cursor-kiro-runtime, installer-tests-docs]
+    count: 4
+    source: planner
+  project_doc_paths:
+    - .maister/docs/project/vision.md
+    - .maister/docs/project/roadmap.md
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/project/architecture.md
+  phase_summaries:
+    phase-1:
+      summary: Research supports one canonical agent IR, a staged projector, an exact role resolver, and host-specific adapters; Codex injects prompts into generic subagents, Cursor uses projected Markdown, and Kiro uses projected JSON plus prompt files in its native agent root.
+      steps_completed: [initialize, plan, gather, synthesize]
+      decisions:
+        - decision: Treat maister-advisor like every other canonical agent.
+          rationale: The user explicitly removed the proposed Codex-only read-only and sandbox exception.
+        - decision: Use one canonical agent parser, versioned manifest, and deterministic staged projector.
+          rationale: Cursor and Kiro currently duplicate or omit behavior, while runtime-only generation would bypass receipt ownership and rollback.
+        - decision: Dispatch every workflow role through an exact logical-role resolver and fail closed.
+          rationale: Overlay capability labels and natural-language routing do not prove that the requested role executed.
+      risks:
+        - Current overlays contain duplicated or incomplete host projections that may require migration rather than an additive fix.
+        - Native discovery and invocation remain unavailable where host runtime evidence could not be completed.
+        - Kiro needs narrowly scoped ownership of generated leaves under its native agent root without taking ownership of the whole user directory.
+        - Clean installation intentionally does not support upgrading environments with legacy Codex TOML files.
+      artifacts:
+        - path: planning/research-brief.md
+          label: Research brief
+          html: null
+        - path: planning/research-plan.md
+          label: Research plan
+          html: null
+        - path: planning/sources.md
+          label: Source plan
+          html: null
+        - path: analysis/findings/01-canonical-projection.md
+          label: Canonical projection findings
+          html: null
+        - path: analysis/findings/02-codex-runtime.md
+          label: Codex runtime findings
+          html: null
+        - path: analysis/findings/03-cursor-kiro-runtime.md
+          label: Cursor and Kiro runtime findings
+          html: null
+        - path: analysis/findings/04-installer-tests-docs.md
+          label: Installer, tests, and documentation findings
+          html: null
+        - path: analysis/synthesis.md
+          label: Research synthesis
+          html: null
+        - path: outputs/research-report.md
+          label: Research report
+          html: outputs/research-report.html
+    phase-3:
+      summary: Skipped because the user disabled brainstorming after research converged on one architecture.
+      decisions:
+        - decision: Skip solution alternative generation.
+          rationale: No competing architecture remained after synthesis.
+      risks: []
+      artifacts: []
+    phase-4:
+      summary: Skipped because no alternatives were generated for convergence evaluation.
+      decisions:
+        - decision: Use the research report recommendation as the selected design direction.
+          rationale: Brainstorming was intentionally skipped.
+      risks: []
+      artifacts: []
+      decision_areas: []
+      deferred_ideas: []
+    phase-5:
+      summary: The design uses a portable core with ports and adapters, deterministic staged projections, transactional filesystem delivery, and exact fail-closed role dispatch across Codex, Cursor, and Kiro.
+      decisions:
+        - decision: Do not implement a legacy Codex TOML migration path.
+          rationale: The user specified clean installations and direct removal of old TOML agent files.
+        - decision: Keep 28 canonical Markdown roles as the only behavior source.
+          rationale: A versioned IR and manifest can project native representations without prompt duplication.
+        - decision: Treat advisor exactly like every other canonical role.
+          rationale: No role-specific installation, readonly, sandbox, TOML, or adapter branch is permitted.
+        - decision: Generate native host representations deterministically inside transaction staging.
+          rationale: Projection remains covered by validation, provenance, receipt ownership, rollback, and release closure.
+        - decision: Resolve logical roles exactly and fail closed.
+          rationale: Missing, duplicate, collision, unavailable, and digest mismatch conditions must never fall back.
+        - decision: Separate materialization, native discovery, and exact invocation evidence.
+          rationale: Structural parity alone does not prove that the intended role executed.
+      risks:
+        - Codex spawn schema and per-spawn model control remain version-dependent.
+        - Cursor agent precedence requires a native collision probe.
+        - Kiro exact identity observation requires a versioned native scenario.
+        - Multi-root Kiro transactions require full rollback and race-condition coverage.
+      artifacts:
+        - path: outputs/high-level-design.md
+          label: High-level design
+          html: outputs/high-level-design.html
+        - path: outputs/decision-log.md
+          label: Decision log
+          html: outputs/decision-log.html
+      architecture_style: Portable core with ports and adapters, deterministic staged projection, and transactional filesystem delivery
+      decisions_count: 6
+    phase-6:
+      summary: Final research summary and development handoff generated and explicitly approved by the user.
+      decisions:
+        - decision: Use the high-level design and decision log as the authoritative implementation input.
+          rationale: They incorporate the user's clean-install correction and supersede the earlier migration recommendation.
+      risks:
+        - Native discovery and exact invocation remain unavailable until versioned host probes pass.
+      artifacts:
+        - path: outputs/decision-summary.md
+          label: Decision summary
+          html: outputs/decision-summary.html
+
+phases:
+  - id: phase-1
+    name: Research foundation
+    status: completed
+    blocked_by: []
+    started: "2026-07-17T17:38:03Z"
+    completed: "2026-07-17T19:19:39Z"
+    skip_reason: null
+    gate:
+      idempotency_key: sha256:8dc80ac772693c815f0dfac96f7baa45a3cded3e406f16c6f5a42756f1e157d4
+      gate_type: phase-1-exit
+      question: Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?
+      options:
+        - Continue to brainstorming evaluation
+        - Pause workflow
+      recommendation: Continue to brainstorming evaluation
+      answer: Continue to brainstorming evaluation
+      status: decided
+  - id: phase-2
+    name: Evaluate optional phases
+    status: completed
+    blocked_by: [phase-1]
+    started: "2026-07-17T19:19:39Z"
+    completed: "2026-07-17T19:30:43Z"
+    skip_reason: null
+    gate:
+      idempotency_key: sha256:9b2ddc4d107ba91823dbe96461fee0cf7e83bbc3e977a797aa6c644d34c3cf89
+      gate_type: optional-phase-selection
+      question: Research identifies architectural decisions across parsing, projection, installation, dispatch, migration, and verification, and the design will feed maister:development. Would you like to generate a high-level design?
+      options:
+        - Yes, generate design
+        - No, skip design
+      recommendation: Yes, generate design
+      answer: Yes, generate design
+      status: decided
+  - id: phase-3
+    name: Generate solution alternatives
+    status: skipped
+    blocked_by: [phase-2]
+    started: null
+    completed: "2026-07-17T19:30:43Z"
+    skip_reason: Brainstorming disabled by user after research converged on one architecture.
+    gate: null
+  - id: phase-4
+    name: Evaluate solution alternatives
+    status: skipped
+    blocked_by: [phase-3]
+    started: null
+    completed: "2026-07-17T19:30:43Z"
+    skip_reason: No generated alternatives to evaluate because brainstorming was skipped.
+    gate: null
+  - id: phase-5
+    name: Design high-level architecture
+    status: completed
+    blocked_by: [phase-2, phase-4]
+    started: "2026-07-17T19:30:43Z"
+    completed: "2026-07-17T19:56:47Z"
+    skip_reason: null
+    gate:
+      idempotency_key: sha256:6bdf08499f5ea52adcb109887df08612b87fed5c1a2a6ba779d4fc70c9cb160e
+      gate_type: phase-5-exit
+      question: Design complete. Continue to output generation?
+      options:
+        - Continue to output generation
+        - Pause workflow
+      recommendation: Continue to output generation
+      answer: Continue to output generation
+      status: decided
+  - id: phase-6
+    name: Summarize research and hand off
+    status: completed
+    blocked_by: [phase-5]
+    started: "2026-07-17T19:56:47Z"
+    completed: "2026-07-17T20:02:44Z"
+    skip_reason: null
+    gate:
+      idempotency_key: sha256:d80f674bb46ee9bc4ab3f4827a639076174888b935b69a4d0c8ad83216fb4ee0
+      gate_type: final-handoff-approval
+      question: Research summary and development handoff are complete. Complete the workflow?
+      options:
+        - Complete workflow
+        - Keep workflow open
+      recommendation: Complete workflow
+      answer: Complete workflow
+      status: decided

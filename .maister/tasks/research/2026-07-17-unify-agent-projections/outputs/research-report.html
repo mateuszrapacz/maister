@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ujednolicone projekcje agentów — Unify agent projections</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { background:var(--accent-soft); border-left:4px solid var(--accent); }
+.toc { margin:16px 0; color:var(--dim); font-size:13px; }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.flow { white-space:pre-wrap; overflow:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
+.recommended { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+ul { margin:8px 0; padding-left:20px; }
+@media (max-width:720px) { .grid { grid-template-columns:1fr; } .crumbs a.md { margin-left:0; } }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <span class="here">Report</span>
+  <a href="research-report.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <span class="badge">research report</span>
+  <h1>Ujednolicone projekcje agentów Maister</h1>
+  <p>Transformacja, instalacja, discovery i exact invocation na Codex, Cursor i Kiro CLI · 2026-07-17</p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>6</b><span>confirmed findings</span></div>
+  <div class="tile"><b>10+</b><span>cited sources</span></div>
+  <div class="tile"><b>3</b><span>supported hosts</span></div>
+  <div class="tile"><b>High</b><span>design confidence</span></div>
+</div>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Utrzymaj 28 kanonicznych ról w <code>plugins/maister/agents/*.md</code>, parsuj je do jednego manifestu i projektuj deterministycznie w stagingu transakcji. Codex dostaje generic subagenta z wstrzykniętym promptem, Cursor wygenerowanego plugin-agenta Markdown, a Kiro wygenerowaną parę JSON + prompt w <code>~/.kiro/agents</code>. Każdy workflow wybiera logiczny <code>role_id</code>; brak, kolizja lub niedostępny runtime kończy się fail-closed. <code>advisor</code> jest zwykłą rolą, bez TOML, <code>readonly</code>, sandboxu i osobnej instalacji.</p>
+  <h2>Key Decisions</h2>
+  <ul>
+    <li>Jeden behavior owner, jeden manifest i jeden staged projector.</li>
+    <li>Runtime injection dla Codex; natywne projekcje dla Cursor i Kiro.</li>
+    <li>Host helpers są liczone osobno od canonical parity.</li>
+    <li>Legacy Codex TOML znika ze źródła rozwiązania; clean install nie ma ścieżki migracyjnej.</li>
+  </ul>
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li>Codex spawn schema/model override, Cursor collision precedence i exact Kiro delegation wymagają native probes.</li>
+    <li>Do ustalenia pozostaje miejsce projection digests w receipt/provenance.</li>
+  </ul>
+</section>
+
+<nav class="toc">Contents:
+  <a href="#state">Stan obecny</a> ·
+  <a href="#architecture">Architektura</a> ·
+  <a href="#hosts">Hosty</a> ·
+  <a href="#transaction">Transakcja</a> ·
+  <a href="#acceptance">Akceptacja</a> ·
+  <a href="#handoff">Development handoff</a>
+</nav>
+
+<main>
+<section id="state">
+  <h2>Stan obecny</h2>
+  <table>
+    <thead><tr><th>Host</th><th>Canonical parity</th><th>Discovery / invocation</th><th>Wniosek</th></tr></thead>
+    <tbody>
+      <tr><td>Codex</td><td><span class="pass">28/28</span> prompt resources</td><td>Nie są native custom agents; executable adapter niedostępny</td><td>Prompt pool jest gotowy do runtime injection</td></tr>
+      <tr><td>Cursor</td><td><span class="fail">27/28</span>; brak E2E, extra <code>explore</code></td><td>Natywny plugin shape; brak invocation probe</td><td>Usunąć behavior copies, generować 28/28</td></tr>
+      <tr><td>Kiro CLI</td><td>28 descriptorów + 2 helpery; <span class="fail">0/30 prompt closure</span></td><td><code>.kiro-maister</code> nie jest native root; invocation zablokowane</td><td>Przenieść descriptor+prompt do <code>~/.kiro/agents</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="architecture">
+  <h2>Rekomendowana architektura end-to-end</h2>
+  <pre class="flow">canonical Markdown
+  → agent IR + versioned manifest
+  → staged deterministic projector
+      ├─ Codex packaged prompt resource + runtime injection
+      ├─ Cursor plugin Markdown
+      └─ Kiro native JSON + prompt
+  → validation / reference closure / digests
+  → transaction receipt / provenance
+  → exact logical-role resolver
+  → host adapter + execution record</pre>
+
+  <div class="grid">
+    <article class="card recommended">
+      <h2>Identity contract</h2>
+      <p><code>role_id = filename stem = frontmatter.name</code>. Workflow używa <code>maister:&lt;role_id&gt;</code>, a host-facing ID to <code>maister-&lt;role_id&gt;</code>.</p>
+    </article>
+    <article class="card">
+      <h2>Projection contract</h2>
+      <p>Każdy canonical row daje dokładnie jedną projekcję/injection per host. Prompt pochodzi z canonical bytes i named transforms.</p>
+    </article>
+    <article class="card">
+      <h2>Advisor equality</h2>
+      <p><code>advisor</code> ma ten sam IR, projector, ownership, resolver, adapter i test path. Test odrzuca każdy specjalny TOML, read-only, sandbox lub destination.</p>
+    </article>
+    <article class="card">
+      <h2>Support agents</h2>
+      <p>Cursor/Kiro <code>explore</code> i Kiro <code>maister</code> należą do osobnego <code>support_agents</code> inventory i nie maskują brakującej roli.</p>
+    </article>
+  </div>
+</section>
+
+<section id="hosts">
+  <h2>Per-host projection i invocation</h2>
+  <table>
+    <thead><tr><th>Host</th><th>Artifact</th><th>Exact invocation</th><th>Fail-closed</th></tr></thead>
+    <tbody>
+      <tr><td>Codex</td><td><code>skills/orchestrator-framework/agents/&lt;role&gt;.md</code></td><td>Validated role body w message do generic subagenta</td><td>Brak delegation lub required model control = unavailable/error</td></tr>
+      <tr><td>Cursor</td><td><code>agents/&lt;role&gt;.md</code>, name <code>maister-&lt;role&gt;</code></td><td>Exact Task type; <code>/maister-&lt;role&gt;</code> na user boundary</td><td>Missing type lub unmanaged collision = stop</td></tr>
+      <tr><td>Kiro CLI</td><td><code>~/.kiro/agents/maister-&lt;role&gt;.json</code> + prompt</td><td>Generated allowlist i exact named delegation z parent <code>maister</code></td><td>Shadow, missing ref lub wrong identity = stop</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="transaction">
+  <h2>Transaction i migration</h2>
+  <div class="grid">
+    <article class="card">
+      <h2>Managed projections</h2>
+      <ul>
+        <li>Projector działa przed snapshot/commit.</li>
+        <li>Output wchodzi do receipt i drift detection.</li>
+        <li>Update usuwa tylko stare receipt-owned pliki.</li>
+        <li>Rollback przywraca bytes, modes, symlinks i topologię.</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>Kiro multi-root</h2>
+      <p>Zachowaj prywatny <code>.kiro-maister</code>, ale journaluj ściśle wyliczony leaf-set <code>maister-*.json</code> i prompts pod <code>~/.kiro/agents</code>. Nie przejmuj całego <code>~/.kiro</code>.</p>
+    </article>
+    <article class="card">
+      <h2>Legacy Codex cleanup</h2>
+      <p>Znany historyczny hash: backup i usuń. Modified, unknown, symlink lub unsafe: zero zmian. Failure: exact restore. Migracja jest jawna i idempotentna.</p>
+    </article>
+    <article class="card">
+      <h2>Execution evidence</h2>
+      <p>Zapisuj workflow/work-item, logical role, source digest, external ID, host/version, model status, dispatch ID, attempts i terminal result.</p>
+    </article>
+  </div>
+</section>
+
+<section id="acceptance">
+  <h2>Acceptance matrix</h2>
+  <table>
+    <thead><tr><th>Gate</th><th>Wymagany pass</th><th>Wymagany negative proof</th></tr></thead>
+    <tbody>
+      <tr><td>IR/parity</td><td>28 unique rows i 28/28 per host</td><td>Collision/missing/extra: typed role-level error</td></tr>
+      <tr><td>Determinism</td><td>Identyczne bytes, modes, order i hashes</td><td>Source/manifest change unieważnia <code>--check</code></td></tr>
+      <tr><td>References</td><td>Każdy Kiro URI rozwiązuje się</td><td>Brak promptu blokuje materialization; brak exemption</td></tr>
+      <tr><td>Ownership</td><td>Projection inventory w receipt</td><td>Drift/tamper nie zmienia targetu</td></tr>
+      <tr><td>Advisor</td><td>Zwykły row w całej macierzy</td><td>Special TOML/read-only/sandbox/branch rejected</td></tr>
+      <tr><td>Runtime</td><td>Dwie role + advisor dają role-specific result</td><td>Wrong identity/fallback fail; brak prerequisites = unavailable</td></tr>
+      <tr><td>Release</td><td>Target isolation, deterministic archive, extracted lifecycle</td><td>Foreign artifact, missing ref lub stale copy blokuje package</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>SWOT i confidence</h2>
+  <div class="grid">
+    <article class="card"><span class="sev info">Strength</span><p>Kompletny canonical source, deterministyczny materializer i dojrzały receipt/drift/rollback.</p></article>
+    <article class="card"><span class="sev critical">Weakness</span><p>Brak projectora i executable adapters; Cursor drift; Kiro wrong root i unresolved refs.</p></article>
+    <article class="card"><span class="sev info">Opportunity</span><p>Mały IR i staged projector wykorzystują istniejące seams bez redesignu wszystkich workflows.</p></article>
+    <article class="card"><span class="sev warning">Threat</span><p>Wersjozależne host contracts i ryzyko mylenia structural pass z runtime support.</p></article>
+  </div>
+  <p><strong>Confidence:</strong> wysoka dla rekomendacji architektonicznej i diagnozy obecnego stanu; operational support pozostaje niezweryfikowany do czasu native probes.</p>
+</section>
+
+<section>
+  <h2>Odrzucone alternatywy</h2>
+  <details class="card"><summary>28 native Codex TOML profiles</summary><p>Nie są plugin component i wprowadzają osobny discovery/collision lifecycle; runtime injection wystarcza.</p></details>
+  <details class="card"><summary>Ręcznie utrzymywane Cursor/Kiro assets</summary><p>Zachowują drugiego behavior ownera i drift.</p></details>
+  <details class="card"><summary>Runtime generation lub modyfikacja checkout</summary><p>Omija receipt/release/provenance albo łamie immutable source binding.</p></details>
+  <details class="card"><summary>Natural-language fallback i file-count parity</summary><p>Nie gwarantują exact identity ani canonical bijection.</p></details>
+</section>
+
+<section id="handoff">
+  <h2>Concrete development handoff</h2>
+  <ol>
+    <li>Canonical parser, IR, manifest i normalized collision tests.</li>
+    <li>Pure staged projector, transform registry, digests i <code>--check</code>.</li>
+    <li>Materializer integration, Kiro reference closure i host projections.</li>
+    <li>Kiro additional managed leaf root, transaction i receipt/provenance.</li>
+    <li>Exact resolver, execution record i trzy host adapters.</li>
+    <li>Usunięcie legacy Codex TOML ze źródła, init i dokumentacji bez migration runtime.</li>
+    <li>Projection/transaction/native/release tests, potem parity baselines i dokumentacja.</li>
+  </ol>
+  <p><strong>Definition of done:</strong> 28/28 na trzech hostach, helpery osobno, zero unresolved refs i undeclared drift, zachowany transactional ownership, exact role mapping, brak specjalnej gałęzi Advisora oraz pinned probes dla dwóch rozróżnialnych ról i Advisora.</p>
+  <p><strong>Architecture choice:</strong> nie pozostają dwie równorzędne alternatywy. Otwarte szczegóły dotyczą schema i evidence, nie kierunku.</p>
+</section>
+
+<section>
+  <h2>Evidence</h2>
+  <details class="card"><summary>Oficjalne kontrakty hostów</summary>
+    <p><a href="https://learn.chatgpt.com/docs/build-plugins#plugin-structure">OpenAI plugin structure</a> · <a href="https://learn.chatgpt.com/docs/agent-configuration/subagents">OpenAI subagents</a> · <a href="https://cursor.com/docs/reference/plugins.md">Cursor plugins</a> · <a href="https://cursor.com/docs/subagents.md">Cursor subagents</a> · <a href="https://kiro.dev/docs/cli/custom-agents/configuration-reference/">Kiro configuration</a> · <a href="https://kiro.dev/docs/cli/chat/subagents/">Kiro subagents</a>. Dostęp 2026-07-17.</p>
+  </details>
+  <details class="card"><summary>Repozytorium i pełny source trail</summary>
+    <p>Canonical inventory, overlay paths, materializer, transaction, test suites i szczegółowe line citations są opisane w <a href="research-report.md" target="_blank" rel="noopener">raporcie Markdown</a> oraz czterech findings w <code>../analysis/findings/</code>.</p>
+  </details>
+</section>
+</main>
+</body>
+</html>

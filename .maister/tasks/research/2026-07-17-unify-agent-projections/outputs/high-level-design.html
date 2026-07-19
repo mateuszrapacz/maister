@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High-Level Design — ujednolicona projekcja agentów Maister</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+header p { color:var(--dim); max-width:820px; }
+.tldr { border-left:4px solid var(--accent); }
+.risk { background:var(--warn-soft); border-color:var(--warn); }
+.toc { font-size:12.5px; color:var(--dim); margin:16px 0; }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.host-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.host h3, .scenario h3 { margin:0 0 8px; font-size:14px; }
+pre { overflow:auto; padding:16px; border-radius:var(--radius); border:1px solid var(--border);
+  background:#171a21; color:#e5e7eb; font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace; }
+ul, ol { padding-left:22px; } li { margin:4px 0; }
+.decision { border-left:3px solid var(--accent); }
+.flow { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; line-height:1.8; }
+.tag { display:inline-block; margin:2px 3px 2px 0; padding:2px 7px; border-radius:99px;
+  background:var(--accent-soft); color:var(--accent); font-size:11px; }
+@media (max-width:760px) { .grid,.host-grid { grid-template-columns:1fr; } table { display:block; overflow-x:auto; } }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="research-report.html">Report</a>
+  <span class="here">Design</span>
+  <a href="decision-log.html">Decision Log</a>
+  <a href="high-level-design.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+<header>
+  <span class="badge">High-level design</span>
+  <h1>Ujednolicona projekcja i uruchamianie agentów Maister</h1>
+  <p>Portable core, deterministyczne reprezentacje hostów, transakcyjna instalacja i dokładny fail-closed dispatch dla Codex, Cursor oraz Kiro CLI.</p>
+</header>
+<div class="tiles">
+  <div class="tile"><b>8</b><span>components</span></div>
+  <div class="tile"><b>6</b><span>decisions</span></div>
+  <div class="tile"><b>28</b><span>canonical roles</span></div>
+  <div class="tile"><b>3</b><span>host adapters</span></div>
+  <div class="tile"><b>Ports</b><span>architecture style</span></div>
+</div>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Maister przyjmie architekturę <strong>portable core + ports and adapters</strong>: 28 plików <code>plugins/maister/agents/*.md</code> pozostanie jedynym źródłem zachowania, a wspólny parser utworzy wersjonowany manifest. Projector wygeneruje reprezentacje hostów w stagingu, przed walidacją, hashowaniem i receipt. Workflow wybierze dokładny <code>maister:&lt;role_id&gt;</code>; resolver i adapter zakończą operację błędem przy braku, kolizji, niedostępności lub mismatchu digestu.</p>
+  <p><strong>Advisor jest zwykłą rolą.</strong> Stare pliki Codex TOML zostaną usunięte ze źródła rozwiązania, bez migracji i backward compatibility.</p>
+  <h2>Key Decisions</h2>
+  <ul>
+    <li>Jedno źródło zachowania i wersjonowany manifest — <a href="decision-log.html#adr-001">ADR-001</a>.</li>
+    <li>Deterministyczna projekcja w stagingu, związana z receipt/provenance — <a href="decision-log.html#adr-002">ADR-002</a>.</li>
+    <li>Exact fail-closed resolver i natywne adaptery bez fallbacku — <a href="decision-log.html#adr-003">ADR-003</a>.</li>
+    <li>Wąski receipt-owned leaf set pod natywnym rootem Kiro — <a href="decision-log.html#adr-004">ADR-004</a>.</li>
+    <li>Clean install bez legacy TOML migration — <a href="decision-log.html#adr-005">ADR-005</a>.</li>
+    <li>Oddzielne dowody materializacji, discovery i invocation — <a href="decision-log.html#adr-006">ADR-006</a>.</li>
+  </ul>
+</section>
+
+<section class="card risk">
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li><span class="sev warning">host contract</span> Codex nie gwarantuje stabilnego spawn schema ani per-spawn model override.</li>
+    <li><span class="sev warning">precedence</span> Cursor nie dokumentuje precedence plugin-agenta wobec projektowego lub użytkownika o tej samej nazwie.</li>
+    <li><span class="sev warning">identity</span> Kiro exact identity wymaga obserwowalnego, wersjonowanego probe.</li>
+    <li><span class="sev info">transaction</span> Multi-root receipt wymaga pełnych rollback, race detection i unmanaged-file preservation tests.</li>
+  </ul>
+</section>
+
+<nav class="toc">Contents: <a href="#overview">Overview</a> · <a href="#architecture">Architecture</a> · <a href="#components">Components</a> · <a href="#flow">Data Flow</a> · <a href="#hosts">Host Projections</a> · <a href="#integration">Integration</a> · <a href="#validation">Evidence</a> · <a href="#rollout">Rollout</a> · <a href="#examples">Examples</a> · <a href="#scope">Scope</a></nav>
+
+<main>
+<section id="overview">
+  <h2>Design Overview</h2>
+  <div class="card">
+    <p>Maister ma dostarczać ten sam zestaw wyspecjalizowanych ról na Codex, Cursor i Kiro CLI bez ręcznie synchronizowanych kopii oraz bez pozornej zgodności opartej tylko na liczbie plików. Zmiana usuwa drift zachowania, naprawia brakującą rolę Cursor i niedomknięte referencje Kiro oraz daje workflow jednoznaczny kontrakt wywołania.</p>
+    <p>Wybrano <strong>warstwowy portable core z adapterami hostów</strong>, <strong>deterministyczną projekcję build/install-time</strong> i <strong>transakcyjny filesystem delivery</strong>. Format hosta może się różnić, lecz identity, digest, semantyka błędu i evidence pozostają wspólne.</p>
+    <ul>
+      <li><code>role_id = filename stem = frontmatter.name</code>; workflow ID: <code>maister:&lt;role_id&gt;</code>; host ID: <code>maister-&lt;role_id&gt;</code>.</li>
+      <li>Wszystkie 28 ról, w tym <code>advisor</code>, używa tej samej ścieżki.</li>
+      <li><code>explore</code> i Kiro <code>maister</code> pozostają oddzielnymi support agents.</li>
+      <li>Generowane reprezentacje są efemerycznym wynikiem stagingu i release package.</li>
+      <li>Identity, closure, collision, availability i digest failures zatrzymują operację.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="architecture">
+  <h2>Architecture</h2>
+  <div class="card">
+    <h3>System Context — C4 Level 1</h3>
+<pre>[Maintainer / release pipeline]
+        | immutable checkout + target
+        v
+[Maister distribution system]
+        | transactional installation + receipts
+        v
+[Codex / Cursor / Kiro CLI host] &lt;---- workflow request: maister:&lt;role_id&gt;
+        | native generic spawn / plugin agent / Kiro custom agent
+        v
+[Selected Maister role execution]
+        |
+        `----&gt; [Evidence store: materialization, discovery, invocation]</pre>
+    <p>Maintainer publikuje jedno źródło. Maister tworzy reprezentację właściwą dla hosta i instaluje ją z pełnym ownership. Workflow wybiera logiczną rolę, a wynik zostaje związany z identity i digestami.</p>
+  </div>
+  <div class="card">
+    <h3>Container Overview — C4 Level 2</h3>
+<pre>[Immutable canonical checkout]
+  plugins/maister/agents/*.md
+          |
+          v
++---------------- Portable agent core ----------------+
+| [Role Parser] -&gt; [Agent IR] -&gt; [Projection Manifest]|
+|                       |             |                |
+|                       `----&gt; [Exact Role Resolver]   |
++-----------------------|-------------|----------------+
+                        |
+                        v
++--------------- Distribution boundary ----------------+
+| [Staged Agent Projector] -&gt; [Materializer Validators] |
+|             |                        |                 |
+|             v                        v                 |
+|    [Host projection tree] -&gt; [Transaction + Receipt]  |
++-------------|------------------------------------------+
+              | installs receipt-owned artifacts
+              v
+  +-----------+-------------+-------------------+
+  |                         |                   |
+[Codex resources]     [Cursor agents/*.md] [Kiro native leaf set]
+  |                         |               JSON + prompt
+  +-----------+-------------+-------------------+
+              | logical role + verified digest
+              v
++---------------- Runtime ports -------------------------+
+| [Resolver] -&gt; [Codex | Cursor | Kiro adapter]          |
+|                         |                               |
+|                         v                               |
+|              [Execution/Evidence Recorder]             |
++---------------------------------------------------------+</pre>
+    <p>Portable core nie zna transakcji ani host API. Distribution boundary nie wybiera roli workflow. Runtime ports nie generują plików.</p>
+  </div>
+</section>
+
+<section id="components">
+  <h2>Key Components</h2>
+  <div class="card">
+  <table>
+    <thead><tr><th>Component</th><th>Purpose &amp; responsibilities</th><th>Interfaces</th><th>Dependencies</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Canonical Role Parser</strong></td><td>Parsuje frontmatter/body, sprawdza <code>stem=name</code>, oblicza SHA-256 i odrzuca duplicate/case/path collisions.</td><td><code>parseCanonicalRoles(sourceRoot)</code></td><td>Source resolver, Markdown parser, hashes.</td></tr>
+      <tr><td><strong>Versioned Projection Manifest</strong></td><td>Mapuje logical roles na external IDs, destinations, transform IDs i tools profiles; support inventory jest osobny.</td><td><code>loadAgentManifest()</code>, <code>validateAgentManifest(ir)</code></td><td>Agent IR, overlay contracts.</td></tr>
+      <tr><td><strong>Staged Agent Projector</strong></td><td>Emituje Codex resources, Cursor Markdown i Kiro JSON+prompt ze stabilnymi bytes, modes i digestami.</td><td><code>projectAgents(...)</code></td><td>Manifest, overlay assets, staging.</td></tr>
+      <tr><td><strong>Projection Validator</strong></td><td>Sprawdza 28/28, syntax, Kiro closure, Advisor equality, support inventory, collisions i tree hash.</td><td><code>validateAgentProjection(candidate)</code></td><td>Staging tree, overlay schema, hash-tree.</td></tr>
+      <tr><td><strong>Transaction &amp; Managed Roots</strong></td><td>Snapshot, drift check, commit, rollback, recovery, Kiro leaf root, receipt-listed uninstall i race revalidation.</td><td>Install/update/verify/uninstall/recover</td><td>Transaction manager, receipt/journal, paths.</td></tr>
+      <tr><td><strong>Exact Role Resolver</strong></td><td>Tworzy jeden dispatch plan po ID, digest, availability i collision checks; nie ma fallbacku.</td><td><code>resolveAgentRole(...)</code></td><td>Manifest, receipt, target registry.</td></tr>
+      <tr><td><strong>Host Adapter Port</strong></td><td>Codex injection, Cursor exact plugin agent, Kiro exact custom agent; wspólny terminal result.</td><td><code>dispatchAgent(plan, context)</code></td><td>Host runtime contract.</td></tr>
+      <tr><td><strong>Execution &amp; Evidence Recorder</strong></td><td>Wiąże identity, digesty, host/version, dispatch ID i wynik; tworzy osobne E5/E6.</td><td>Evidence schema/policy, host probes</td><td>Adapters, provenance, scenario version.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="flow">
+  <h2>Data Flow</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Build, install i receipt</h3>
+      <p class="flow">immutable source<br>→ parse 28 roles<br>→ validate identity + manifest<br>→ project into empty staging<br>→ validate parity, syntax, refs, modes, hashes<br>→ calculate projection provenance<br>→ snapshot managed roots<br>→ commit receipt-owned files<br>→ verify + publish receipt</p>
+      <p><code>provenance.agent_projection</code>: schema/projector version, canonical set hash, manifest hash i projected tree hash.</p>
+    </div>
+    <div class="card">
+      <h3>Runtime dispatch</h3>
+      <p class="flow">workflow asks maister:&lt;role_id&gt;<br>→ exact ID validation<br>→ one manifest row<br>→ receipt + digest verification<br>→ adapter/version/collision preflight<br>→ exact host dispatch<br>→ observed identity check<br>→ terminal evidence record<br>→ return result</p>
+      <p>Support agent Kiro może mieć generated allowlist, ale nigdy nie staje się 29. rolą.</p>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Receipt, provenance and ownership</h3>
+    <ul>
+      <li>Receipt deklaruje <code>managed_roots</code> z polityką <code>whole_tree</code> lub <code>leaf_set</code>.</li>
+      <li>Inventory identity to <code>root_id + relative path</code>, nie absolutna ścieżka.</li>
+      <li>Kiro leaf set obejmuje wyłącznie manifest/receipt-derived <code>maister-*</code> artefakty.</li>
+      <li>Journal i rollback obejmują wszystkie roots w jednej transakcji; receipt jest publikowany po pełnym verify.</li>
+      <li>Update usuwa tylko stale receipt-owned entries; hand edit daje drift i zero zmian.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="hosts">
+  <h2>Host Projections</h2>
+  <div class="host-grid">
+    <article class="card host">
+      <h3>Codex</h3>
+      <span class="tag">prompt resource</span><span class="tag">generic spawn</span>
+      <p>Packaged canonical resources w pluginie. Generic subagent dostaje pełną instrukcję przez message envelope.</p>
+      <p><strong>Bez:</strong> <code>.codex/agents/*.toml</code>, readonly, sandbox branch i native name discovery.</p>
+      <p>Fail closed: delegation unavailable, digest mismatch, unsupported required model.</p>
+    </article>
+    <article class="card host">
+      <h3>Cursor</h3>
+      <span class="tag">28 Markdown</span><span class="tag">exact native ID</span>
+      <p>Generuje <code>agents/&lt;role_id&gt;.md</code> z <code>name: maister-&lt;role_id&gt;</code>, w tym brakujący E2E verifier.</p>
+      <p>Fail closed: missing/extra role, unmanaged collision, niewspierany kontrakt hosta.</p>
+    </article>
+    <article class="card host">
+      <h3>Kiro CLI</h3>
+      <span class="tag">JSON + prompt</span><span class="tag">leaf ownership</span>
+      <p>Generuje 28 par pod <code>~/.kiro/agents</code>; descriptor URI musi mieć pełne reference closure.</p>
+      <p>Fail closed: broken URI, project-local shadow, nieweryfikowalna identity.</p>
+    </article>
+  </div>
+  <p class="card"><strong>Advisor equality invariant:</strong> żadnego specjalnego pola, destination, readonly, sandbox, TOML profile ani alternatywnego adaptera. Test negatywny odrzuca każdy taki wyjątek.</p>
+</section>
+
+<section id="integration">
+  <h2>Integration Points &amp; Likely Touchpoints</h2>
+  <div class="card">
+  <table>
+    <thead><tr><th>Boundary</th><th>Likely touchpoint</th><th>Contract</th></tr></thead>
+    <tbody>
+      <tr><td>Immutable source</td><td><code>source-resolver.mjs</code></td><td>Parser dostaje tylko verified root/full commit.</td></tr>
+      <tr><td>IR + manifest</td><td><code>agent-ir.mjs</code>, <code>agent-projection-v1.json</code></td><td>Versioned schema, 28 canonical rows, support section.</td></tr>
+      <tr><td>Projection</td><td><code>agent-projector.mjs</code>, <code>materializer.mjs</code></td><td>Po assembly/source resolution, przed validation i <code>hashTree</code>.</td></tr>
+      <tr><td>Overlays</td><td><code>overlays/*/overlay.yml</code>, <code>inventory.yml</code>, schema</td><td>Format/destinations/transforms bez kopii behavior.</td></tr>
+      <tr><td>Ownership</td><td><code>transaction-manager.mjs</code>, <code>target-paths.mjs</code>, receipt/journal schemas</td><td><code>managed_roots</code> + inventory <code>root_id</code>.</td></tr>
+      <tr><td>Provenance</td><td><code>provenance.mjs</code>, receipt/release metadata</td><td>Validated <code>agent_projection</code> binding.</td></tr>
+      <tr><td>Resolution</td><td><code>lib/runtime/agent-resolver.mjs</code></td><td>Logical ID → one <code>DispatchPlan</code>.</td></tr>
+      <tr><td>Dispatch</td><td><code>lib/runtime/host-adapters/{codex,cursor,kiro-cli}.mjs</code></td><td>One plan, no inline/natural-language fallback.</td></tr>
+      <tr><td>Execution record</td><td><code>lib/runtime/execution-record.mjs</code>, evidence policy</td><td>Workflow/role/source/manifest/dispatch/result binding.</td></tr>
+      <tr><td>Native probes</td><td><code>distribution/host-probes/*.mjs</code></td><td>E5 discovery; E6 exact invocation.</td></tr>
+      <tr><td>Tests/docs</td><td>Materializer, overlay, transaction, topology, evidence, parity, release suites; project/operator docs</td><td>Bijection, deterministic projection, multi-root rollback, exact dispatch, clean topology.</td></tr>
+    </tbody>
+  </table>
+  <p>Nazwy nowych modułów są proponowanymi seamami dla <code>maister:development</code>. Runtime może użyć host-native portu zamiast wspólnego JS API, ale musi zachować <code>DispatchPlan</code> i record contract.</p>
+  </div>
+</section>
+
+<section id="validation">
+  <h2>Validation and Evidence</h2>
+  <div class="card">
+  <table>
+    <thead><tr><th>Gate</th><th>Proof</th><th>Missing prerequisite</th></tr></thead>
+    <tbody>
+      <tr><td>Structural projection</td><td>28 unique roles, deterministic bytes/modes, support agents separate, zero unresolved refs.</td><td><span class="fail">failed</span>; no target mutation.</td></tr>
+      <tr><td>Transaction materialization</td><td>Installed, receipted and verified in all managed roots.</td><td><span class="fail">failed</span>; rollback or preserved recovery state.</td></tr>
+      <tr><td>Native discovery (E5)</td><td>Versioned host discovers expected external IDs.</td><td><span class="sev warning">unavailable</span>, never passed.</td></tr>
+      <tr><td>Exact invocation (E6)</td><td>Requested role executes; identity/result binds to manifest and digest.</td><td><span class="sev warning">unavailable</span>; wrong identity is failed.</td></tr>
+    </tbody>
+  </table>
+  <p>Evidence scenario binds host version, overlay version, source commit, manifest digest i projection digest. Zmiana dowolnego elementu wymaga renewal.</p>
+  </div>
+</section>
+
+<section id="rollout">
+  <h2>Rollout in Dependency Order</h2>
+  <div class="card">
+  <ol>
+    <li>Parser/IR, manifest schema, canonical inventory i Advisor equality invariants.</li>
+    <li>Pure projector, validator, deterministic fixtures i projection provenance.</li>
+    <li>Materializer integration; usunięcie ręcznych behavior copies i Kiro exemption po closure tests.</li>
+    <li><code>managed_roots</code> i Kiro leaf-set z injected-failure rollback tests.</li>
+    <li>Generated Cursor/Kiro projections; support inventory osobno.</li>
+    <li>Exact resolver, host adapter ports, execution record i workflow bindings.</li>
+    <li>Usunięcie legacy Codex TOML ze źródła/init/docs — bez migratora.</li>
+    <li>Versioned E5/E6 probes, parity baseline update po gates, full release lifecycle.</li>
+  </ol>
+  </div>
+</section>
+
+<section id="decisions">
+  <h2>Design Decisions</h2>
+  <div class="card">
+  <table>
+    <thead><tr><th>ADR</th><th>Decision</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><a href="decision-log.html#adr-001">ADR-001</a></td><td>Jedno kanoniczne źródło i manifest</td><td class="pass">Accepted</td></tr>
+      <tr><td><a href="decision-log.html#adr-002">ADR-002</a></td><td>Projekcja w stagingu</td><td class="pass">Accepted</td></tr>
+      <tr><td><a href="decision-log.html#adr-003">ADR-003</a></td><td>Exact resolver i adaptery</td><td class="pass">Accepted</td></tr>
+      <tr><td><a href="decision-log.html#adr-004">ADR-004</a></td><td>Wąskie multi-root ownership Kiro</td><td class="pass">Accepted</td></tr>
+      <tr><td><a href="decision-log.html#adr-005">ADR-005</a></td><td>Clean install bez TOML migration</td><td class="pass">Accepted</td></tr>
+      <tr><td><a href="decision-log.html#adr-006">ADR-006</a></td><td>Oddzielne evidence gates</td><td class="pass">Accepted</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="examples">
+  <h2>Concrete Examples</h2>
+  <div class="grid">
+    <article class="card scenario"><h3>1. Zwykły Advisor na Codex</h3><p><strong>Given</strong> canonical Advisor i receipt-bound manifest, <strong>when</strong> workflow żąda <code>maister:advisor</code>, <strong>then</strong> resolver wybiera jeden wiersz, adapter wstrzykuje prompt do generic subagenta i zapisuje standardowy evidence record. Nie odczytuje TOML, readonly ani sandbox branch.</p></article>
+    <article class="card scenario"><h3>2. Kiro obok agenta użytkownika</h3><p><strong>Given</strong> użytkownik ma <code>personal-reviewer.json</code>, <strong>when</strong> Maister instaluje 28 par, <strong>then</strong> receipt obejmuje tylko <code>maister-*</code>, osobisty agent zostaje byte-exact, URI mają closure, a uninstall usuwa tylko owned leaves.</p></article>
+    <article class="card scenario"><h3>3. Brak exact invocation proof</h3><p><strong>Given</strong> 28/28 materializuje się poprawnie, ale host nie pozwala obserwować exact identity, <strong>when</strong> zbierane jest evidence, <strong>then</strong> structural gate może przejść, a E6 pozostaje <code>unavailable</code>. Nie ma native-pass claim ani fallbacku.</p></article>
+  </div>
+</section>
+
+<section id="scope">
+  <h2>Out of Scope</h2>
+  <div class="card">
+    <ul>
+      <li>Migracja, backup, hash-gated cleanup, preservation i journal dla legacy Codex TOML.</li>
+      <li>Nowy ogólny workflow DSL lub redesign orchestratora.</li>
+      <li>Specjalne uprawnienia, model, readonly, sandbox lub polityka Advisor.</li>
+      <li>Nowe canonical roles poza istniejącymi 28.</li>
+      <li>Jeden wspólny format fizyczny hostów.</li>
+      <li>Uznawanie nieweryfikowalnego native probe za sukces.</li>
+      <li>Przejmowanie całego <code>~/.kiro</code> lub plików użytkownika.</li>
+    </ul>
+  </div>
+  <h2>Success Criteria</h2>
+  <div class="card">
+    <ol>
+      <li>Dokładnie 28 ról spełnia identity invariant; Advisor nie ma wyjątku.</li>
+      <li>Dwa runs projectora dają identyczne paths, bytes, modes, order i tree hash.</li>
+      <li>Każdy target ma 28/28, support inventory osobno, Kiro ma 100% reference closure.</li>
+      <li>Full lifecycle zachowuje multi-root ownership i unrelated Kiro files.</li>
+      <li>Każda logical role daje jeden dispatch plan; błędy kończą się typed error i zero fallback.</li>
+      <li>Versioned E5/E6 rozróżnia dwie role i Advisor lub jawnie raportuje <code>unavailable</code>.</li>
+      <li>Repo/init/docs nie zawiera legacy TOML path ani compatibility code; clean packages przechodzą pełny lifecycle.</li>
+    </ol>
+  </div>
+</section>
+</main>
+</body>
+</html>

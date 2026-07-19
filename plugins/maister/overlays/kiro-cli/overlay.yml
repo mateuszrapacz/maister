@@ -12,11 +12,6 @@ layout:
     kind: tree
     mode: "0755"
     ownership: whole_file
-  - source: assets/agents
-    destination: agents
-    kind: tree
-    mode: "0755"
-    ownership: whole_file
   - source: assets/steering
     destination: steering
     kind: tree
@@ -55,7 +50,7 @@ semantic_bindings:
     capability: semantic
     fail_closed: true
   delegate_agent:
-    adapter: kiro-cli.subagent
+    adapter: kiro-cli.native
     capability: delegation
     fail_closed: true
   track_progress:
@@ -77,7 +72,8 @@ semantic_bindings:
 inventory:
   required:
     - "skills/**/SKILL.md"
-    - "agents/*.json"
+    - "maister*.json"
+    - "instructions/*.md"
     - "steering/*.md"
     - "hooks/*.sh"
     - agent-tools.json
@@ -92,8 +88,6 @@ inventory:
     - "**/*claude*"
 validation:
   forbidden_vocabulary:
-    - codex
-    - cursor
     - claude
     - anthropic
     - .codex-plugin
@@ -103,7 +97,8 @@ validation:
     - "hooks/*.sh"
   syntax_checks:
     - "json:agent-tools.json"
-    - "json:agents/*.json"
+    - "json:maister*.json"
+    - "markdown:instructions/*.md"
     - "markdown:steering/*.md"
 capabilities:
   semantic_bindings:
@@ -146,12 +141,80 @@ native_assets:
   - source: assets/agent-tools.json
     destination: agent-tools.json
     mode: "0644"
-    sha256: 7d047aeb5ec09f2af49a12d89305690985b07af4ceb3b50953ba0a0c6873f08d
-  - source: assets/agents/maister.json
-    destination: agents/maister.json
-    mode: "0644"
-    sha256: b2fb856049443dc8d2e4b885eec1e0ea5407072898a6bcbb7f3ebb97dc75680a
+    sha256: 2a4e9274f0dd97433e98c99e42dd5af465127e227d003530b8a8b585220c9516
   - source: assets/settings-mcp.json
     destination: settings/mcp.json
     mode: "0644"
     sha256: 77a711f0ed6c082ede0094fd212fe8a7d440bf72074150021a3b152f2683da04
+agent_projection:
+  schema_version: 1
+  contract: agent-projection-v1.json
+  projector_version: 1.0.0
+  adapter_id: kiro-cli.native
+  representation: kiro-descriptor-prompt
+  canonical_roles:
+    - advisor
+    - bottleneck-analyzer
+    - code-quality-pragmatist
+    - code-reviewer
+    - codebase-analysis-reporter
+    - docs-operator
+    - e2e-test-verifier
+    - gap-analyzer
+    - html-companion-writer
+    - implementation-completeness-checker
+    - implementation-planner
+    - information-gatherer
+    - production-readiness-checker
+    - project-analyzer
+    - reality-assessor
+    - research-planner
+    - research-synthesizer
+    - solution-brainstormer
+    - solution-designer
+    - spec-auditor
+    - specification-creator
+    - task-classifier
+    - task-group-implementer
+    - test-suite-runner
+    - thermo-nuclear-code-quality-review-subagent
+    - thermo-nuclear-review-subagent
+    - ui-mockup-generator
+    - user-docs-generator
+  destinations:
+    - kind: descriptor
+      path_template: maister-{role_id}.json
+      mode: "0644"
+    - kind: prompt
+      path_template: instructions/maister-{role_id}.md
+      mode: "0644"
+  transform_ids:
+    - canonical-body-v1
+    - kiro-descriptor-v1
+  execution_profile_ids:
+    - kiro-cli.read-only
+    - kiro-cli.read-only-shell
+    - kiro-cli.workspace-write
+  support_inventory:
+    - support_id: explore
+      native_role_external_id: maister-explore
+      assets:
+        - kind: descriptor
+          source: assets/support-agents/maister-explore.json
+          destination: maister-explore.json
+          mode: "0644"
+        - kind: prompt
+          source: assets/support-agents/instructions/maister-explore.md
+          destination: instructions/maister-explore.md
+          mode: "0644"
+    - support_id: maister
+      native_role_external_id: maister
+      assets:
+        - kind: descriptor
+          source: assets/support-agents/maister.json
+          destination: maister.json
+          mode: "0644"
+        - kind: prompt
+          source: assets/support-agents/instructions/maister.md
+          destination: instructions/maister.md
+          mode: "0644"

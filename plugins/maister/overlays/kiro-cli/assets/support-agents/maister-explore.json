@@ -1,0 +1,17 @@
+{
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
+    "aws"
+  ],
+  "description": "Read-only codebase exploration (replaces built-in explore)",
+  "name": "maister-explore",
+  "prompt": "file://./instructions/maister-explore.md",
+  "tools": [
+    "read",
+    "grep",
+    "glob",
+    "aws"
+  ]
+}

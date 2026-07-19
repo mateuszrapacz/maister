@@ -103,19 +103,35 @@ export function collectEvidence({
 
 export function evidenceNeedsRenewal(record, {
   now = new Date().toISOString(),
+  host,
   hostVersion,
+  sourceVersion,
+  overlayId,
   overlayVersion,
   sourceCommit,
   scenarioVersion,
+  schemaVersion,
+  projectorVersion,
+  canonicalSetDigest,
+  manifestDigest,
+  projectedTreeDigest,
 } = {}) {
   const validated = validateEvidenceRecord(record);
   if (validated.result !== "passed") return true;
   if (Date.parse(now) >= Date.parse(validated.expires_at)) return true;
+  if (host !== undefined && validated.provenance.host !== host) return true;
   if (hostVersion !== undefined && validated.host_version !== hostVersion) return true;
   const provenance = validated.provenance;
+  if (sourceVersion !== undefined && provenance.source_version !== sourceVersion) return true;
+  if (overlayId !== undefined && provenance.overlay_id !== overlayId) return true;
   if (overlayVersion !== undefined && provenance.overlay_version !== overlayVersion) return true;
   if (sourceCommit !== undefined && provenance.source_commit !== sourceCommit) return true;
   if (scenarioVersion !== undefined && provenance.scenario_version !== scenarioVersion) return true;
+  if (schemaVersion !== undefined && provenance.schema_version !== schemaVersion) return true;
+  if (projectorVersion !== undefined && provenance.projector_version !== projectorVersion) return true;
+  if (canonicalSetDigest !== undefined && provenance.canonical_set_digest !== canonicalSetDigest) return true;
+  if (manifestDigest !== undefined && provenance.manifest_digest !== manifestDigest) return true;
+  if (projectedTreeDigest !== undefined && provenance.projected_tree_digest !== projectedTreeDigest) return true;
   return false;
 }
 
@@ -134,10 +150,18 @@ export function evaluateCapability({
   requiredEvidence,
   records = [],
   now = new Date().toISOString(),
+  host,
   hostVersion,
+  sourceVersion,
+  overlayId,
   overlayVersion,
   sourceCommit,
   scenarioVersion,
+  schemaVersion,
+  projectorVersion,
+  canonicalSetDigest,
+  manifestDigest,
+  projectedTreeDigest,
 }) {
   assertTarget(target);
   if (!CAPABILITY_CLASSES.has(capabilityClass)) {
@@ -147,7 +171,21 @@ export function evaluateCapability({
   if (!Array.isArray(records)) {
     throw new EvidenceValidationError("records must be an array", { field: "records" });
   }
-  const context = { now, hostVersion, overlayVersion, sourceCommit, scenarioVersion };
+  const context = {
+    now,
+    host,
+    hostVersion,
+    sourceVersion,
+    overlayId,
+    overlayVersion,
+    sourceCommit,
+    scenarioVersion,
+    schemaVersion,
+    projectorVersion,
+    canonicalSetDigest,
+    manifestDigest,
+    projectedTreeDigest,
+  };
   const passed = [];
   const unavailable = [];
   const failed = [];

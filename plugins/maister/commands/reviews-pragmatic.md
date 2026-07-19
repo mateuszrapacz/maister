@@ -3,7 +3,7 @@ name: maister:reviews-pragmatic
 description: Run pragmatic code review to detect over-engineering and ensure code matches project scale
 ---
 
-**ACTION REQUIRED**: This command delegates to a different skill. The `<command-name>` tag refers to THIS command, not the target. Call the Task tool with subagent_type="maister:code-quality-pragmatist" NOW. Pass the path to analyze in the prompt. Do not read files, explore code, or execute workflow steps yourself.
+**ACTION REQUIRED**: This command delegates through the common exact-role runtime. The `<command-name>` tag refers to THIS command, not the target. Resolve and dispatch the code-quality-pragmatist now with the bounded path. Do not execute the review inline.
 
 You are running a pragmatic code review using the `code-quality-pragmatist` agent.
 
@@ -21,13 +21,15 @@ You are performing pragmatic analysis to identify over-engineering, unnecessary 
 
 ## Your Instructions
 
-**Invoke the code-quality-pragmatist agent NOW using the Task tool:**
+**Resolve and dispatch exact code-quality-pragmatist NOW:**
 
 ```
-Task Tool:
-- subagent_type: maister:code-quality-pragmatist
-- description: Pragmatic code review
-- prompt: |
+resolveAgent({ logical_role_id: "maister:code-quality-pragmatist" })
+dispatchAgent:
+  actor: reviews-pragmatic
+  work_item: pragmatic-code-review
+  output: verification/pragmatic-review.md
+  bounded_task: |
     You are the code-quality-pragmatist agent. Review the code at: [path]
 
     Your task:

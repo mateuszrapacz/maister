@@ -16,10 +16,12 @@ import { collectEvidence, evaluateTarget, FAIL_CLOSED_CLASSES } from "./evidence
 import { createEvidenceRecord, normalizeEvidenceProvenance, validateEvidenceRecord } from "./evidence-schema.mjs";
 import { consumeE3Attestation, portableCoreTreeHash, requireE3Attestation } from "./e3-attestation.mjs";
 import { getTargetDefinition } from "./targets.mjs";
+import { canonicalJson } from "./provenance.mjs";
 import {
   assertSafePath,
   copyTreeEntry,
   ensureDirectoryTree,
+  readManifest,
   recoverJournal,
   removeEntry,
   restoreFullBackup,
@@ -78,6 +80,26 @@ function provenanceHashes(provenance) {
   };
 }
 
+function receiptProvenance(provenance) {
+  if (!provenance.agent_projection) throwDistributionError("E_PROVENANCE_INCOMPLETE", "materialization did not produce agent projection provenance", {});
+  return {
+    ...provenanceHashes(provenance),
+    agent_projection: provenance.agent_projection,
+  };
+}
+
+function persistedManagedRoots(paths) {
+  return paths.managedRoots.map(({ rootId, path: rootPath, ownership }) => ({
+    root_id: rootId,
+    path: rootPath,
+    ownership,
+  }));
+}
+
+function managedRootMap(paths) {
+  return new Map(paths.managedRoots.map((root) => [root.rootId, root]));
+}
+
 function evidenceBinding(provenance, scenarioVersion) {
   return {
     source_commit: provenance.resolvedCommit,
@@ -128,7 +150,13 @@ function createValidatedPortableEvidence({ target, materialized, attestation, po
     target,
     hostVersion: materialized.provenance.hostVersion,
     provenance: {
-      ...materialized.provenance,
+      resolvedCommit: materialized.provenance.resolvedCommit,
+      sourceVersion: materialized.provenance.sourceVersion,
+      overlayVersion: materialized.provenance.overlayVersion,
+      sourceHash: materialized.provenance.sourceHash,
+      overlayHash: materialized.provenance.overlayHash,
+      materializedHash: materialized.provenance.materializedHash,
+      provenanceHash: materialized.provenance.provenanceHash,
       scenarioVersion: options.scenarioVersion ?? DEFAULT_SCENARIO_VERSION,
       portableCoreTreeHash: portableCoreHash,
       artifactDigest: portableCoreHash,
@@ -254,7 +282,6 @@ function ensureDirectories(paths) {
   assertSafePath(paths.home, { root: path.dirname(paths.home), label: "home", allowMissing: false });
   const homeStat = fs.lstatSync(paths.home);
   if (!homeStat.isDirectory()) throwDistributionError("E_PATH_SECURITY", "home must be a directory", { home: paths.home });
-  ensureDirectoryTree(path.dirname(paths.activeRoot), { root: paths.home, label: "target parent", mode: 0o755 });
   const stateBase = path.dirname(path.dirname(paths.stateRoot));
   ensureDirectoryTree(stateBase, { root: path.dirname(stateBase), label: "state base", mode: 0o755 });
   ensureDirectoryTree(paths.stateRoot, { root: stateBase, label: "state root", mode: 0o700, privateMode: true });
@@ -262,7 +289,7 @@ function ensureDirectories(paths) {
     ensureDirectoryTree(directory, { root: paths.stateRoot, label: "private state directory", mode: 0o700, privateMode: true });
   }
   for (const filePath of [paths.activeReceiptPath, paths.lockPath]) assertSafePath(filePath, { root: paths.stateRoot, label: "state file" });
-  assertSafePath(paths.activeRoot, { root: paths.home, label: "target root" });
+  for (const root of paths.managedRoots) assertSafePath(root.path, { root: paths.home, label: `managed root ${root.rootId}` });
 }
 
 function durableJson(filePath, value, mode = 0o600, { root = null } = {}) {
@@ -423,8 +450,15 @@ function readActive(paths) {
   try {
     const pointer = JSON.parse(readStableFile(paths.activeReceiptPath, { root: paths.stateRoot, label: "active receipt" }));
     if (!pointer || typeof pointer !== "object" || Array.isArray(pointer)) throw new Error("invalid active receipt pointer");
+    if (pointer.schema_version === 1) {
+      throwDistributionError("E_CLEAN_INSTALL_REQUIRED", "active receipt schema v1 is unsupported; a clean install with empty Maister target state is required", {
+        persisted_schema_version: 1,
+        required_schema_version: 2,
+        artifact: "active receipt",
+      });
+    }
     const keys = Object.keys(pointer);
-    if (keys.length !== 3 || pointer.schema_version !== 1 || typeof pointer.receipt_id !== "string" || typeof pointer.receipt_path !== "string") throw new Error("invalid active receipt pointer");
+    if (keys.length !== 3 || pointer.schema_version !== 2 || typeof pointer.receipt_id !== "string" || typeof pointer.receipt_path !== "string") throw new Error("invalid active receipt pointer");
     if (!UUID.test(pointer.receipt_id)) throw new Error("invalid active receipt id");
     const expectedPath = path.join(paths.receiptsRoot, `${pointer.receipt_id}.json`);
     if (pointer.receipt_path !== expectedPath) throwDistributionError("E_RECEIPT_SCHEMA", "active receipt path is outside the receipts root", { receipt_path: pointer.receipt_path });
@@ -433,7 +467,7 @@ function readActive(paths) {
     assertPathIdentity(activeIdentity, { label: "active receipt", errorCode: "E_PATH_SECURITY" });
     return { receipt: readReceiptSafely(pointer.receipt_path, paths), receiptPath: pointer.receipt_path };
   } catch (error) {
-    if (error?.kind === "E_RECEIPT_SCHEMA") throw error;
+    if (["E_RECEIPT_SCHEMA", "E_CLEAN_INSTALL_REQUIRED"].includes(error?.kind)) throw error;
     throw distributionError("E_RECEIPT_IO", "active receipt pointer is invalid", { path: paths.activeReceiptPath }, { cause: error });
   }
 }
@@ -444,6 +478,34 @@ function readReceiptById(paths, receiptId) {
   const filePath = path.join(paths.receiptsRoot, `${receiptId}.json`);
   assertSafePath(filePath, { root: paths.receiptsRoot, label: "receipt path", allowMissing: false });
   return { receipt: readReceiptSafely(filePath, paths), receiptPath: filePath };
+}
+
+function assertNoLegacyState(paths) {
+  const stateStat = fs.lstatSync(paths.stateRoot, { throwIfNoEntry: false });
+  if (!stateStat) return;
+  if (!stateStat.isDirectory() || stateStat.isSymbolicLink()) throwDistributionError("E_PATH_SECURITY", "state root must be a real directory", { path: paths.stateRoot });
+  const candidates = [paths.activeReceiptPath];
+  for (const root of [paths.receiptsRoot, paths.journalsRoot]) {
+    const stat = fs.lstatSync(root, { throwIfNoEntry: false });
+    if (!stat) continue;
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throwDistributionError("E_PATH_SECURITY", "transaction state directory must be a real directory", { path: root });
+    for (const name of fs.readdirSync(root).filter((entry) => entry.endsWith(".json"))) candidates.push(path.join(root, name));
+  }
+  for (const candidate of candidates) {
+    const stat = fs.lstatSync(candidate, { throwIfNoEntry: false });
+    if (!stat) continue;
+    if (!stat.isFile() || stat.isSymbolicLink()) continue;
+    let parsed;
+    try { parsed = JSON.parse(readFileNoFollow(candidate, { root: paths.stateRoot, label: "persisted transaction state", encoding: "utf8", errorCode: "E_PATH_SECURITY" })); }
+    catch { continue; }
+    if (parsed?.schema_version === 1) {
+      throwDistributionError("E_CLEAN_INSTALL_REQUIRED", "persisted receipt or journal schema v1 is unsupported; a clean install with empty Maister target state is required", {
+        persisted_schema_version: 1,
+        required_schema_version: 2,
+        path: candidate,
+      });
+    }
+  }
 }
 
 function writeJournal(paths, journal) {
@@ -558,15 +620,61 @@ function ownershipFor(plan, relative) {
   return plan.find((entry) => entry.destination === relative)?.ownership ?? "whole_file";
 }
 
-function receiptInventory(stagingRoot, plan) {
-  return hashTree(stagingRoot).entries.map((entry) => ({
-    path: entry.path,
-    type: entry.type,
-    mode: entry.mode,
-    sha256: entry.type === "file" ? entry.sha256 : null,
-    link_target: entry.type === "symlink" ? entry.target : null,
-    ownership: ownershipFor(plan, entry.path),
-  }));
+function receiptInventory(stagingRoot, plan, paths, projection) {
+  const projectedPaths = new Set((projection?.outputs ?? []).map(({ path: outputPath }) => outputPath));
+  const isProjectedPath = (entryPath) => projectedPaths.has(entryPath)
+    || [...projectedPaths].some((outputPath) => outputPath.startsWith(`${entryPath}/`));
+  const entries = [];
+  const seen = new Set();
+  for (const entry of hashTree(stagingRoot).entries) {
+    const native = paths.target === "kiro-cli" && isProjectedPath(entry.path);
+    if (native && entry.type === "directory") continue;
+    const rootId = native ? "kiro_native_agents" : "plugin_private";
+    const relativePath = native && entry.path.startsWith("agents/") ? entry.path.slice("agents/".length) : entry.path;
+    const identity = `${rootId}\0${relativePath}`;
+    if (seen.has(identity)) throwDistributionError("E_MATERIALIZE_COLLISION", "materialized outputs collide in a managed root", { root_id: rootId, path: relativePath });
+    seen.add(identity);
+    entries.push({
+      root_id: rootId,
+      path: relativePath,
+      source_path: entry.path,
+      type: entry.type,
+      mode: entry.mode,
+      sha256: entry.type === "file" ? entry.sha256 : null,
+      link_target: entry.type === "symlink" ? entry.target : null,
+      ownership: ownershipFor(plan, entry.path),
+    });
+  }
+  return entries.sort((left, right) => left.root_id.localeCompare(right.root_id) || left.path.localeCompare(right.path));
+}
+
+function persistedInventory(entries) {
+  return entries.map(({ source_path: _sourcePath, ...entry }) => entry);
+}
+
+function assertNoUnmanagedCollisions(candidateInventory, previousReceipt, paths) {
+  const roots = managedRootMap(paths);
+  const owned = new Set((previousReceipt?.managed_inventory ?? []).map((entry) => `${entry.root_id}\0${entry.path}`));
+  if (!previousReceipt) {
+    for (const root of paths.managedRoots.filter(({ ownership }) => ownership === "whole_tree")) {
+      if (fs.lstatSync(root.path, { throwIfNoEntry: false })) {
+        throwDistributionError("E_DRIFT_CONFLICT", "an unmanaged whole-tree root already exists", { root_id: root.rootId, path: root.path });
+      }
+    }
+  }
+  for (const entry of candidateInventory.filter(({ type }) => type !== "directory")) {
+    const identity = `${entry.root_id}\0${entry.path}`;
+    if (owned.has(identity)) continue;
+    const root = roots.get(entry.root_id);
+    const actual = describe(root.path, entry.path);
+    if (actual.exists) {
+      throwDistributionError("E_DRIFT_CONFLICT", "unmanaged content collides with a managed destination", {
+        root_id: entry.root_id,
+        path: entry.path,
+        actual,
+      });
+    }
+  }
 }
 
 function removeManagedPath(root, relative, type) {
@@ -586,13 +694,23 @@ function removeManagedPath(root, relative, type) {
 }
 
 function validateReceiptPaths(receipt, paths) {
-  assertSafePath(paths.activeRoot, { root: paths.home, label: "active target" });
-  for (const entry of receipt.managed_inventory) assertSafePath(path.resolve(paths.activeRoot, ...entry.path.split("/")), { root: paths.activeRoot, label: "managed receipt path", allowLeafSymlink: true });
+  const roots = managedRootMap(paths);
+  for (const root of receipt.managed_roots) {
+    const expected = roots.get(root.root_id);
+    if (!expected || expected.path !== root.path || expected.ownership !== root.ownership) throwDistributionError("E_RECEIPT_SCHEMA", "receipt managed roots differ from target paths", { root_id: root.root_id });
+    assertSafePath(root.path, { root: paths.home, label: `managed receipt root ${root.root_id}` });
+  }
+  for (const entry of receipt.managed_inventory) {
+    const root = roots.get(entry.root_id);
+    if (!root) throwDistributionError("E_RECEIPT_SCHEMA", "managed inventory references an unknown root", { root_id: entry.root_id });
+    assertSafePath(path.resolve(root.path, ...entry.path.split("/")), { root: paths.home, label: "managed receipt path", allowLeafSymlink: true });
+  }
   for (const setting of receipt.settings) assertSafePath(path.resolve(paths.home, ...setting.path.split("/")), { root: paths.home, label: "settings receipt path" });
 }
 
-function commitTree({ stagingRoot, activeRoot, candidateInventory, previousReceipt, failurePoint }) {
+function commitWholeTree({ stagingRoot, activeRoot, candidateInventory, previousReceipt, failurePoint, home }) {
   const parent = path.dirname(activeRoot);
+  ensureDirectoryTree(parent, { root: home, label: "active target parent", mode: 0o755 });
   assertSafePath(activeRoot, { root: parent, label: "active target" });
   const parentIdentity = capturePathIdentity(parent, { root: path.dirname(parent), label: "active target parent", allowMissing: false, errorCode: "E_PATH_SECURITY" });
   const activeIdentity = capturePathIdentity(activeRoot, { root: parent, label: "active target", allowMissing: true, errorCode: "E_PATH_SECURITY" });
@@ -607,16 +725,16 @@ function commitTree({ stagingRoot, activeRoot, candidateInventory, previousRecei
     if (activeStat) copyTreeEntry(activeRoot, replacement, { sourceRoot: activeRoot, destinationRoot: parent });
     const next = new Set(candidateInventory.map((entry) => entry.path));
     if (previousReceipt) {
-      for (const entry of [...previousReceipt.managed_inventory].sort((left, right) => right.path.length - left.path.length)) {
+      for (const entry of previousReceipt.managed_inventory.filter(({ root_id: rootId }) => rootId === "plugin_private").sort((left, right) => right.path.length - left.path.length)) {
         if (!next.has(entry.path)) removeManagedPath(replacement, entry.path, entry.type);
       }
     }
     let operations = 0;
     for (const entry of candidateInventory.filter((value) => value.type === "directory")) {
-      copyTreeEntry(path.join(stagingRoot, ...entry.path.split("/")), path.join(replacement, ...entry.path.split("/")), { sourceRoot: stagingRoot, destinationRoot: replacement });
+      copyTreeEntry(path.join(stagingRoot, ...entry.source_path.split("/")), path.join(replacement, ...entry.path.split("/")), { sourceRoot: stagingRoot, destinationRoot: replacement });
     }
     for (const entry of candidateInventory.filter((value) => value.type !== "directory")) {
-      copyTreeEntry(path.join(stagingRoot, ...entry.path.split("/")), path.join(replacement, ...entry.path.split("/")), { sourceRoot: stagingRoot, destinationRoot: replacement });
+      copyTreeEntry(path.join(stagingRoot, ...entry.source_path.split("/")), path.join(replacement, ...entry.path.split("/")), { sourceRoot: stagingRoot, destinationRoot: replacement });
       operations += 1;
       if (failurePoint === "during-commit" && operations === 1) failureInjection({ failurePoint }, "during-commit");
     }
@@ -643,6 +761,54 @@ function commitTree({ stagingRoot, activeRoot, candidateInventory, previousRecei
   } catch (error) {
     removeEntry(replacement, { root: parent, label: "replacement target" });
     throw error;
+  }
+}
+
+function assertRootInventoryUnchanged(receipt, rootId, paths) {
+  if (!receipt) return;
+  const root = managedRootMap(paths).get(rootId);
+  const conflicts = [];
+  for (const entry of receipt.managed_inventory.filter(({ root_id: entryRootId }) => entryRootId === rootId)) {
+    const actual = describe(root.path, entry.path);
+    const matches = actual.exists
+      && actual.type === entry.type
+      && actual.mode === entry.mode
+      && (entry.type !== "file" || actual.sha256 === entry.sha256)
+      && (entry.type !== "symlink" || actual.linkTarget === entry.link_target);
+    if (!matches) conflicts.push({ root_id: rootId, path: entry.path, expected: entry, actual });
+  }
+  if (conflicts.length > 0) throwDistributionError("E_DRIFT_CONFLICT", "managed content changed at a mutation boundary", { conflicts });
+}
+
+function commitLeafSet({ stagingRoot, root, candidateInventory, previousReceipt, paths }) {
+  ensureDirectoryTree(root.path, { root: paths.home, label: `${root.rootId} root`, mode: 0o755 });
+  const next = new Set(candidateInventory.map(({ path: entryPath }) => entryPath));
+  const previous = previousReceipt?.managed_inventory.filter(({ root_id: rootId }) => rootId === root.rootId) ?? [];
+  for (const entry of [...previous].sort((left, right) => right.path.length - left.path.length)) {
+    if (!next.has(entry.path)) removeManagedPath(root.path, entry.path, entry.type);
+  }
+  for (const entry of candidateInventory) {
+    const destination = path.join(root.path, ...entry.path.split("/"));
+    ensureDirectoryTree(path.dirname(destination), { root: paths.home, label: `${root.rootId} leaf parent`, mode: 0o755 });
+    copyTreeEntry(
+      path.join(stagingRoot, ...entry.source_path.split("/")),
+      destination,
+      { sourceRoot: stagingRoot, destinationRoot: paths.home },
+    );
+  }
+  flushDirectory(root.path);
+}
+
+function commitManagedRoots({ stagingRoot, candidateInventory, previousReceipt, paths, options }) {
+  for (const root of paths.managedRoots) {
+    assertRootInventoryUnchanged(previousReceipt, root.rootId, paths);
+    const rootInventory = candidateInventory.filter(({ root_id: rootId }) => rootId === root.rootId);
+    if (root.ownership === "whole_tree") {
+      commitWholeTree({ stagingRoot, activeRoot: root.path, candidateInventory: rootInventory, previousReceipt, failurePoint: options.failurePoint, home: paths.home });
+    } else {
+      commitLeafSet({ stagingRoot, root, candidateInventory: rootInventory, previousReceipt, paths });
+    }
+    failureInjection(options, `after-root-${root.rootId}`);
   }
 }
 
@@ -691,13 +857,15 @@ function settingsReceipt(settings, backupRoot) {
   }));
 }
 
-function verifyReceipt(receiptState, paths, overlay) {
+function verifyReceipt(receiptState, paths, overlay, expectedProjection = null) {
   const conflicts = [];
+  const roots = managedRootMap(paths);
   for (const entry of receiptState.managed_inventory) {
-    const absolute = path.resolve(paths.activeRoot, ...entry.path.split("/"));
-    assertSafePath(absolute, { root: paths.activeRoot, label: "managed receipt path", allowLeafSymlink: true });
-    const actual = describe(paths.activeRoot, entry.path);
-    if (!actual.exists || actual.type !== entry.type || actual.mode !== entry.mode || (entry.type === "file" && actual.sha256 !== entry.sha256) || (entry.type === "symlink" && actual.linkTarget !== entry.link_target)) conflicts.push(entry.path);
+    const root = roots.get(entry.root_id);
+    const absolute = path.resolve(root.path, ...entry.path.split("/"));
+    assertSafePath(absolute, { root: paths.home, label: "managed receipt path", allowLeafSymlink: true });
+    const actual = describe(root.path, entry.path);
+    if (!actual.exists || actual.type !== entry.type || actual.mode !== entry.mode || (entry.type === "file" && actual.sha256 !== entry.sha256) || (entry.type === "symlink" && actual.linkTarget !== entry.link_target)) conflicts.push({ root_id: entry.root_id, path: entry.path });
   }
   for (const setting of receiptState.settings) {
     const targetPath = path.resolve(paths.home, ...setting.path.split("/"));
@@ -707,12 +875,15 @@ function verifyReceipt(receiptState, paths, overlay) {
   }
   if (conflicts.length > 0) throwDistributionError("E_INTEGRITY", "post-commit integrity verification failed", { conflicts });
   if (overlay.target.id !== receiptState.target.id) throwDistributionError("E_INTEGRITY", "receipt target does not match overlay", {});
+  if (expectedProjection !== null && canonicalJson(receiptState.provenance?.agent_projection) !== canonicalJson(expectedProjection)) {
+    throwDistributionError("E_INTEGRITY", "receipt projection provenance does not match the verified materialization", {});
+  }
 }
 
 function newJournal({ command, paths, journalId, stageRoot, previousReceipt, candidateReceipt = null }) {
   const started = now();
   return {
-    schema_version: 1,
+    schema_version: 2,
     journal_id: journalId,
     command,
     target: paths.target,
@@ -721,7 +892,7 @@ function newJournal({ command, paths, journalId, stageRoot, previousReceipt, can
     state: "prepared",
     state_history: [{ state: "prepared", timestamp: started }],
     stage_root: stageRoot,
-    destination_root: paths.activeRoot,
+    managed_roots: persistedManagedRoots(paths),
     previous_receipt: previousReceipt?.receiptPath ?? null,
     candidate_receipt: candidateReceipt,
     lock: { path: paths.lockPath },
@@ -754,15 +925,15 @@ async function installOrUpdate(command, options, paths) {
   const overlay = loadOverlay(overlayFiles).overlay;
   validateSettingPaths(overlay, paths);
   if (command === "install" && previousReceipt?.status === "installed") throwDistributionError("E_DRIFT_CONFLICT", "target is already installed; use update", { target: paths.target });
-  if (previousReceipt?.status === "installed") { validateReceiptPaths(previousReceipt, paths); assertNoDrift({ receipt: previousReceipt, activeRoot: paths.activeRoot, settingsRoot: paths.home, settingDefinitions: overlay.settings }); }
+  if (previousReceipt?.status === "installed") { validateReceiptPaths(previousReceipt, paths); assertNoDrift({ receipt: previousReceipt, paths, settingsRoot: paths.home, settingDefinitions: overlay.settings }); }
   const e3Attestation = requireE3Attestation(options.e3Attestation, { now: now() });
   const sourceRoot = options.resolvedSource.root;
   const portableCoreHashBeforeMaterialize = options.portableCoreHash ?? portableCoreTreeHash(sourceRoot);
   const journalId = crypto.randomUUID();
   const stageRoot = path.join(paths.stagingRoot, journalId);
   ensureDirectoryTree(stageRoot, { root: paths.stagingRoot, label: "staging root", mode: 0o700, privateMode: true });
-  let journal = newJournal({ command, paths, journalId, stageRoot, previousReceipt: active });
-  const journalPath = writeJournal(paths, journal);
+  let journal = null;
+  let journalPath = null;
   let backupRoot;
   let backupManifestHash = null;
   let settings = [];
@@ -783,16 +954,10 @@ async function installOrUpdate(command, options, paths) {
       });
     }
     assertSafePath(stageRoot, { root: paths.stagingRoot, label: "staging root", allowMissing: false });
-    journal = transition(paths, journal, "staged", { steps: [...journal.steps, { name: "materialize", status: "completed", timestamp: now(), before_ref: null, after_hash: materialized.contentHash }] });
-    const candidateInventory = receiptInventory(stageRoot, materialized.plan);
+    const candidateInventory = receiptInventory(stageRoot, materialized.plan, paths, materialized.projection);
     settings = prepareSettings({ overlay, paths, target: paths.target, activeRoot: paths.activeRoot, stagingRoot: stageRoot });
+    assertNoUnmanagedCollisions(candidateInventory, previousReceipt, paths);
     if (!previousReceipt) {
-      for (const entry of candidateInventory.filter((value) => value.type !== "directory")) {
-        const actualPath = path.resolve(paths.activeRoot, ...entry.path.split("/"));
-        assertSafePath(actualPath, { root: paths.activeRoot, label: "initial managed path" });
-        const actual = describe(paths.activeRoot, entry.path);
-        if (actual.exists && (actual.type !== entry.type || (entry.type === "file" && actual.sha256 !== entry.sha256) || (entry.type === "symlink" && actual.linkTarget !== entry.link_target))) throwDistributionError("E_DRIFT_CONFLICT", `existing user content conflicts with managed path: ${entry.path}`, { path: entry.path });
-      }
       for (const definition of overlay.settings) {
         if (definition.ownership === "whole_file") {
           const targetPath = path.resolve(paths.home, ...definition.path.split("/"));
@@ -802,9 +967,15 @@ async function installOrUpdate(command, options, paths) {
         }
       }
     }
+    journal = newJournal({ command, paths, journalId, stageRoot, previousReceipt: active });
+    journalPath = writeJournal(paths, journal);
+    journal = transition(paths, journal, "staged", { steps: [...journal.steps, { name: "materialize", status: "completed", timestamp: now(), before_ref: null, after_hash: materialized.contentHash }] });
     journal = transition(paths, journal, "snapshotted", { steps: [...journal.steps, { name: "stage-validated", status: "completed", timestamp: now(), before_ref: null, after_hash: materialized.contentHash }] });
     backupRoot = path.join(paths.backupsRoot, journalId);
-    const backupManifest = snapshotState({ activeRoot: paths.activeRoot, settings, backupRoot, activeReceiptPath: paths.activeReceiptPath });
+    const snapshotInventory = persistedInventory([...candidateInventory, ...(previousReceipt?.managed_inventory ?? [])].filter((entry, index, entries) => (
+      entries.findIndex((candidate) => candidate.root_id === entry.root_id && candidate.path === entry.path) === index
+    )));
+    const backupManifest = snapshotState({ managedRoots: paths.managedRoots, managedInventory: snapshotInventory, settings, backupRoot, activeReceiptPath: paths.activeReceiptPath, home: paths.home });
     backupManifestHash = backupManifest.manifest_hash;
     const portableEvidence = createValidatedPortableEvidence({
       target: paths.target,
@@ -817,17 +988,21 @@ async function installOrUpdate(command, options, paths) {
     journal = transition(paths, journal, "snapshotted", { steps: [...journal.steps, { name: "snapshot", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: null }] });
     failureInjection(options, "after-snapshot");
     journal = transition(paths, journal, "committing");
-    commitTree({ stagingRoot: stageRoot, activeRoot: paths.activeRoot, candidateInventory, previousReceipt, failurePoint: options.failurePoint });
+    commitManagedRoots({ stagingRoot: stageRoot, candidateInventory, previousReceipt, paths, options });
     failureInjection(options, "after-tree-swap");
     commitSettings(settings, paths, options.failurePoint);
-    journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "commit", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: hashTree(paths.activeRoot).contentHash }] });
+    failureInjection(options, "after-settings");
+    const storedInventory = persistedInventory(candidateInventory);
+    const managedHash = sha256(Buffer.from(canonicalJson(storedInventory)));
+    journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "commit", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: managedHash }] });
     const receiptState = {
       target: { id: paths.target },
-      managed_inventory: candidateInventory,
+      managed_inventory: storedInventory,
       settings: settingsReceipt(settings, backupRoot),
+      provenance: receiptProvenance(materialized.provenance),
     };
-    verifyReceipt(receiptState, paths, overlay);
-    const integrityHash = hashTree(paths.activeRoot).contentHash;
+    verifyReceipt(receiptState, paths, overlay, materialized.provenance.agent_projection);
+    const integrityHash = managedHash;
     const integrityTimestamp = now();
     failureInjection(options, "after-integrity");
     const e4Timestamp = now();
@@ -851,17 +1026,17 @@ async function installOrUpdate(command, options, paths) {
     const targetDefinition = getTargetDefinition(paths.target);
     if (!targetDefinition) throwDistributionError("E_TARGET_SCHEMA", `unsupported target: ${paths.target}`, { target: paths.target });
     const candidateReceipt = validateReceipt({
-      schema_version: 1,
+      schema_version: 2,
       receipt_id: journalId,
       installer_version: INSTALLER_VERSION,
       status: "installed",
       installed_at: e4Timestamp,
       target: { id: paths.target, overlay_id: targetDefinition.overlayId, overlay_version: materialized.provenance.overlayVersion, host_version: materialized.provenance.hostVersion },
       source: { kind: materialized.provenance.sourceKind, requested: materialized.provenance.requestedSource, requested_ref: materialized.provenance.requestedRef, resolved_commit: materialized.provenance.resolvedCommit, source_version: materialized.provenance.sourceVersion, content_hash: materialized.provenance.sourceHash },
-      active_root: paths.activeRoot,
-      managed_inventory: candidateInventory,
+      managed_roots: persistedManagedRoots(paths),
+      managed_inventory: storedInventory,
       settings: receiptState.settings,
-      provenance: provenanceHashes(materialized.provenance),
+      provenance: receiptState.provenance,
       compatibility,
       evidence,
       transaction: { journal_id: journalId, backup_root: backupRoot, backup_manifest_hash: backupManifestHash, previous_receipt_id: previousReceipt?.receipt_id ?? null },
@@ -870,7 +1045,7 @@ async function installOrUpdate(command, options, paths) {
     failureInjection(options, "after-e4");
     const receiptPath = path.join(paths.receiptsRoot, `${candidateReceipt.receipt_id}.json`);
     durableJson(receiptPath, candidateReceipt, 0o600, { root: paths.receiptsRoot });
-    durableJson(paths.activeReceiptPath, { schema_version: 1, receipt_id: candidateReceipt.receipt_id, receipt_path: receiptPath }, 0o600, { root: paths.stateRoot });
+    durableJson(paths.activeReceiptPath, { schema_version: 2, receipt_id: candidateReceipt.receipt_id, receipt_path: receiptPath }, 0o600, { root: paths.stateRoot });
     failureInjection(options, "after-receipt");
     journal = transition(paths, journal, "verified", { steps: [...journal.steps, { name: "receipt-published", status: "completed", timestamp: now(), before_ref: null, after_hash: sha256(Buffer.from(JSON.stringify(candidateReceipt))) }] });
     removeEntry(stageRoot, { root: paths.stagingRoot, label: "staging root" });
@@ -878,6 +1053,10 @@ async function installOrUpdate(command, options, paths) {
   } catch (error) {
     let failure = error;
     if (!(failure instanceof DistributionError) && typeof failure?.kind !== "string") failure = distributionError("E_TRANSACTION", failure.message, { journal_id: journalId }, { cause: failure });
+    if (!journal) {
+      try { removeEntry(stageRoot, { root: paths.stagingRoot, label: "staging root" }); } catch { /* preflight failure must preserve the original error */ }
+      throw failure;
+    }
     let failureState = "failed";
     const backupManifestPath = backupRoot ? path.join(backupRoot, "manifest.json") : null;
     let backupManifestIdentity = null;
@@ -923,7 +1102,7 @@ async function uninstall(options, paths) {
   const overlayFiles = candidateOverlay(options.source ?? paths.home, paths.target, options.overlayRoot);
   const overlay = loadOverlay(overlayFiles).overlay;
   validateSettingPaths(overlay, paths);
-  if (active.receipt.status === "installed") { validateReceiptPaths(active.receipt, paths); assertNoDrift({ receipt: active.receipt, activeRoot: paths.activeRoot, settingsRoot: paths.home, settingDefinitions: overlay.settings }); }
+  if (active.receipt.status === "installed") { validateReceiptPaths(active.receipt, paths); assertNoDrift({ receipt: active.receipt, paths, settingsRoot: paths.home, settingDefinitions: overlay.settings }); }
   const journalId = crypto.randomUUID();
   const stageRoot = path.join(paths.stagingRoot, journalId);
   const backupRoot = path.join(paths.backupsRoot, journalId);
@@ -931,11 +1110,19 @@ async function uninstall(options, paths) {
   const journalPath = writeJournal(paths, journal);
   try {
     const settings = overlay.settings.map((definition) => ({ ...definition, targetPath: path.resolve(paths.home, ...definition.path.split("/")) }));
-    const backupManifest = snapshotState({ activeRoot: paths.activeRoot, settings, backupRoot, activeReceiptPath: paths.activeReceiptPath });
+    const backupManifest = snapshotState({ managedRoots: paths.managedRoots, managedInventory: active.receipt.managed_inventory, settings, backupRoot, activeReceiptPath: paths.activeReceiptPath, home: paths.home });
+    let originalReceipt = active.receipt;
+    while (originalReceipt.transaction.previous_receipt_id) {
+      originalReceipt = readReceiptById(paths, originalReceipt.transaction.previous_receipt_id).receipt;
+    }
+    const originalTopology = readManifest(originalReceipt.transaction.backup_root, { paths });
     journal = transition(paths, journal, "snapshotted", { steps: [{ name: "snapshot", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: null }] });
     journal = transition(paths, journal, "committing");
     const previous = active.receipt;
-    for (const entry of [...previous.managed_inventory].sort((left, right) => right.path.length - left.path.length)) removeManagedPath(paths.activeRoot, entry.path, entry.type);
+    const roots = managedRootMap(paths);
+    for (const entry of [...previous.managed_inventory].sort((left, right) => right.path.length - left.path.length)) {
+      removeManagedPath(roots.get(entry.root_id).path, entry.path, entry.type);
+    }
     for (const definition of settings) {
       assertSafePath(definition.targetPath, { root: paths.home, label: "settings target" });
       if (definition.ownership === "managed_keys") {
@@ -944,22 +1131,20 @@ async function uninstall(options, paths) {
         if (bytes && stat) atomicWriteSetting(definition.targetPath, bytes, formatMode(stat.mode));
       } else removeEntry(definition.targetPath, { root: paths.home, label: "settings target" });
     }
-    const activeStat = fs.lstatSync(paths.activeRoot, { throwIfNoEntry: false });
-    if (activeStat?.isDirectory()) {
-      const activeParent = path.dirname(paths.activeRoot);
-      const activeParentIdentity = capturePathIdentity(activeParent, { root: paths.home, label: "uninstall target parent", allowMissing: false, errorCode: "E_PATH_SECURITY" });
-      const activeIdentity = capturePathIdentity(paths.activeRoot, { root: paths.home, label: "uninstall target", allowMissing: false, errorCode: "E_PATH_SECURITY" });
-      assertPathIdentity(activeParentIdentity, { label: "uninstall target parent", errorCode: "E_PATH_SECURITY" });
-      assertPathIdentity(activeIdentity, { label: "uninstall target", errorCode: "E_PATH_SECURITY" });
-      try { fs.rmdirSync(paths.activeRoot); } catch (error) { if (!['ENOENT', 'ENOTEMPTY', 'EEXIST'].includes(error.code)) throw error; }
-      assertPathIdentity(activeParentIdentity, { label: "uninstall target parent", errorCode: "E_PATH_SECURITY" });
-      flushDirectory(activeParent);
+    for (const root of originalTopology.roots) {
+      for (const topology of [...root.topology].reverse().filter(({ exists }) => !exists)) {
+        const directory = path.join(paths.home, ...topology.path.split("/"));
+        const stat = fs.lstatSync(directory, { throwIfNoEntry: false });
+        if (stat?.isDirectory() && !stat.isSymbolicLink()) {
+          try { fs.rmdirSync(directory); } catch (error) { if (!['ENOENT', 'ENOTEMPTY', 'EEXIST'].includes(error.code)) throw error; }
+        }
+      }
     }
     const receipt = validateReceipt({ ...previous, receipt_id: journalId, status: "uninstalled", installed_at: now(), managed_inventory: [], settings: [], transaction: { journal_id: journalId, backup_root: backupRoot, backup_manifest_hash: backupManifest.manifest_hash, previous_receipt_id: previous.receipt_id } }, { paths });
     journal = transition(paths, journal, "committed", { candidate_receipt: receipt, steps: [...journal.steps, { name: "uninstall", status: "completed", timestamp: now(), before_ref: previous.receipt_id, after_hash: null }] });
     const receiptPath = path.join(paths.receiptsRoot, `${receipt.receipt_id}.json`);
     durableJson(receiptPath, receipt, 0o600, { root: paths.receiptsRoot });
-    durableJson(paths.activeReceiptPath, { schema_version: 1, receipt_id: receipt.receipt_id, receipt_path: receiptPath }, 0o600, { root: paths.stateRoot });
+    durableJson(paths.activeReceiptPath, { schema_version: 2, receipt_id: receipt.receipt_id, receipt_path: receiptPath }, 0o600, { root: paths.stateRoot });
     journal = transition(paths, journal, "rolled_back", { steps: [...journal.steps, { name: "receipt-published", status: "completed", timestamp: now(), before_ref: null, after_hash: sha256(Buffer.from(JSON.stringify(receipt))) }] });
     return { receipt, receiptPath, journalPath };
   } catch (error) {
@@ -981,7 +1166,7 @@ async function rollback(options, paths) {
   if (!active || !previousId) throwDistributionError("E_TRANSACTION", "no previous receipt is available for rollback", { target: paths.target });
   const overlayFiles = candidateOverlay(options.source ?? paths.home, paths.target, options.overlayRoot);
   const overlay = loadOverlay(overlayFiles).overlay;
-  if (active.receipt.status === "installed") { validateReceiptPaths(active.receipt, paths); assertNoDrift({ receipt: active.receipt, activeRoot: paths.activeRoot, settingsRoot: paths.home, settingDefinitions: overlay.settings }); }
+  if (active.receipt.status === "installed") { validateReceiptPaths(active.receipt, paths); assertNoDrift({ receipt: active.receipt, paths, settingsRoot: paths.home, settingDefinitions: overlay.settings }); }
   const previous = readReceiptById(paths, previousId);
   const journalId = crypto.randomUUID();
   const journal = newJournal({ command: "rollback", paths, journalId, stageRoot: path.join(paths.stagingRoot, journalId), previousReceipt: active });
@@ -990,7 +1175,7 @@ async function rollback(options, paths) {
     restoreFullBackup(active.receipt.transaction.backup_root, { paths, expectedManifestHash: active.receipt.transaction.backup_manifest_hash });
     const restored = readActive(paths);
     if (!restored || restored.receipt.receipt_id !== previous.receipt.receipt_id || restored.receiptPath !== previous.receiptPath) throwDistributionError("E_RECOVERY_FAILURE", "rollback did not restore the exact active receipt", { expected: previous.receiptPath, actual: restored?.receiptPath ?? null });
-    const completed = transition(paths, journal, "rolled_back", { steps: [{ name: "rollback", status: "completed", timestamp: now(), before_ref: active.receipt.receipt_id, after_hash: hashTree(paths.activeRoot).contentHash }, { name: "restore-active-receipt", status: "completed", timestamp: now(), before_ref: previous.receiptPath, after_hash: null }] });
+    const completed = transition(paths, journal, "rolled_back", { steps: [{ name: "rollback", status: "completed", timestamp: now(), before_ref: active.receipt.receipt_id, after_hash: sha256(Buffer.from(canonicalJson(previous.receipt.managed_inventory))) }, { name: "restore-active-receipt", status: "completed", timestamp: now(), before_ref: previous.receiptPath, after_hash: null }] });
     return { receipt: previous.receipt, receiptPath: previous.receiptPath, journalPath, journal: completed };
   } catch (error) {
     const failure = error?.kind === "E_RECOVERY_FAILURE"
@@ -1043,16 +1228,17 @@ export async function executeLifecycle(command, options) {
     resolvedSource = Object.freeze({ ...resolvedSource, root: resolvedSourceRoot });
   }
   const paths = getTargetPaths({ target: options.target, home: options.home, env: options.env });
+  assertNoLegacyState(paths);
   ensureDirectories(paths);
   if (command === "status" || command === "verify") {
     const active = readActive(paths);
     if (!active) return { receipt: null, receiptPath: null, journalPath: null };
-    if (command === "verify" && active.receipt.status === "installed") {
+    if (active.receipt.status === "installed") {
       const overlay = loadOverlay(candidateOverlay(options.source ?? options.home, paths.target, options.overlayRoot)).overlay;
       validateSettingPaths(overlay, paths);
       validateReceiptPaths(active.receipt, paths);
-      assertNoDrift({ receipt: active.receipt, activeRoot: paths.activeRoot, settingsRoot: paths.home, settingDefinitions: overlay.settings });
-      verifyReceipt(active.receipt, paths, overlay);
+      assertNoDrift({ receipt: active.receipt, paths, settingsRoot: paths.home, settingDefinitions: overlay.settings });
+      if (command === "verify") verifyReceipt(active.receipt, paths, overlay, active.receipt.provenance.agent_projection);
     }
     return { receipt: active.receipt, receiptPath: active.receiptPath, journalPath: null };
   }

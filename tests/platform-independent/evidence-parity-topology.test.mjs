@@ -34,6 +34,9 @@ import {
   defaultRun,
   probeHost,
 } from "../../plugins/maister/lib/distribution/host-probes/base.mjs";
+import { probeCodex } from "../../plugins/maister/lib/distribution/host-probes/codex.mjs";
+import { probeCursor } from "../../plugins/maister/lib/distribution/host-probes/cursor.mjs";
+import { probeKiroCli } from "../../plugins/maister/lib/distribution/host-probes/kiro-cli.mjs";
 import {
   assertCleanRepositoryTopology,
   assertCleanTopology,
@@ -74,7 +77,104 @@ function record(overrides = {}) {
   if (base.result === "unavailable" && !base.provenance.reason) {
     base.provenance = { ...base.provenance, reason: "fixture-unavailable" };
   }
+  if (base.capability === "E5" || base.capability === "E6") {
+    base.provenance = { ...nativeProvenance(base.target), ...base.provenance };
+  }
   return base;
+}
+
+const NATIVE_BINDING = Object.freeze({
+  source_commit: "a".repeat(40),
+  source_version: "2.2.1",
+  overlay_id: "maister/codex",
+  overlay_version: "1.0.0",
+  host: "codex",
+  scenario_version: "1.0.0",
+  schema_version: 1,
+  projector_version: "1.0.0",
+  canonical_set_digest: "b".repeat(64),
+  manifest_digest: "c".repeat(64),
+  projected_tree_digest: "d".repeat(64),
+});
+
+function nativeProvenance(target, overrides = {}) {
+  return {
+    ...NATIVE_BINDING,
+    overlay_id: `maister/${target}`,
+    host: target,
+    ...overrides,
+  };
+}
+
+function nativeManifest(target) {
+  const roleIds = ["code-reviewer", "implementation-planner", "advisor"];
+  return {
+    canonical_set_digest: NATIVE_BINDING.canonical_set_digest,
+    manifest_digest: NATIVE_BINDING.manifest_digest,
+    projected_tree_digest: NATIVE_BINDING.projected_tree_digest,
+    rows: roleIds.map((roleId) => ({
+      target,
+      logical_role_id: `maister:${roleId}`,
+      adapter_id: target === "codex" ? "codex.exec" : `${target}.native`,
+      native_role_external_id: target === "codex" ? null : `maister-${roleId}`,
+      source_sha256: crypto.createHash("sha256").update(roleId).digest("hex"),
+      execution_policy: {
+        model: { model: "gpt-5.6-terra" },
+        reasoning: { effort: "high" },
+        output_schema: { schema_id: "maister.agent-role-result.v1" },
+      },
+    })),
+  };
+}
+
+function availableVersion() {
+  return { status: 0, stdout: "1.2.3\n", stderr: "", error: null };
+}
+
+function codexCapability(overrides = {}) {
+  return {
+    adapter_id: "codex.exec",
+    authentication: true,
+    allowed_version: true,
+    controls: {
+      working_root: true,
+      model: true,
+      reasoning_effort: true,
+      sandbox: true,
+      jsonl: true,
+      output_schema: true,
+      last_message: true,
+      ignore_user_config: true,
+    },
+    ...overrides,
+  };
+}
+
+function matchingInvocation(request) {
+  const expectedPolicy = {
+    model: request.requested_execution_policy.model.model,
+    reasoning_effort: request.requested_execution_policy.reasoning.effort,
+  };
+  return {
+    logical_role_id: request.logical_role_id,
+    observed_native_role_external_id: request.native_role_external_id,
+    prompt_digest: request.prompt_digest,
+    canonical_prompt_digest: request.canonical_prompt_digest,
+    nonce: request.nonce,
+    output_schema: request.output_schema,
+    canonical_set_digest: request.canonical_set_digest,
+    manifest_digest: request.manifest_digest,
+    projected_tree_digest: request.projected_tree_digest,
+    dispatch_id: request.dispatch_id,
+    session_id: `session-${request.dispatch_id}`,
+    effective_execution_policy: request.requested_execution_policy,
+    execution_policy_evidence: {
+      requested: expectedPolicy,
+      accepted: expectedPolicy,
+      observed: { ...expectedPolicy, status: "observed" },
+    },
+    behavior: request.expected_behavior,
+  };
 }
 
 function fileObservation(content, mode = "0644") {
@@ -298,10 +398,7 @@ test("discovers the self-contained archive location and rejects candidate mismat
 
 test("collects one validated E1-E6 set and records unavailable native outcomes explicitly", () => {
   const provenance = {
-    source_commit: "a".repeat(40),
-    source_version: "2.2.1",
-    overlay_version: "1.0.0",
-    scenario_version: "1.0.0",
+    ...nativeProvenance("cursor"),
   };
   const collected = collectEvidence({
     target: "cursor",
@@ -326,6 +423,25 @@ test("collects one validated E1-E6 set and records unavailable native outcomes e
   );
   assert.ok(collected.filter((evidence) => evidence.result === "unavailable").every((evidence) => evidence.provenance.reason));
   assert.deepEqual(validateEvidenceSet(collected), collected);
+});
+
+test("collectEvidence preserves installer-facing incomplete unavailable native prerequisites", () => {
+  const collected = collectEvidence({
+    target: "codex",
+    hostVersion: "unknown",
+    timestamp: NOW,
+    provenance: {
+      source_commit: "a".repeat(40),
+      source_version: "2.2.1",
+      overlay_version: "1.0.0",
+      scenario_version: "1.0.0",
+    },
+    records: ["E1", "E2", "E3", "E4"].map((capability) => record({ capability, timestamp: NOW })),
+  });
+  const native = collected.filter((evidence) => evidence.capability === "E5" || evidence.capability === "E6");
+  assert.deepEqual(native.map((evidence) => evidence.result), ["unavailable", "unavailable"]);
+  assert.ok(native.every((evidence) => evidence.provenance.reason === "not-collected"));
+  assert.ok(native.every((evidence) => evidence.provenance.overlay_id === undefined));
 });
 
 test("creates complete immutable provenance hashes for source, overlay, materialized output, and provenance", () => {
@@ -503,6 +619,7 @@ test("host probe timeouts are bounded and returned as typed failed evidence", ()
   const result = probeHost({
     target: "codex",
     now: NOW,
+    provenance: nativeProvenance("codex"),
     run: () => { throw new HostProbeTimeoutError("codex", ["--version"], 25); },
   });
   assert.equal(result.error.kind, "E_HOST_PROBE_TIMEOUT");
@@ -512,11 +629,315 @@ test("host probe timeouts are bounded and returned as typed failed evidence", ()
   const unavailable = probeHost({
     target: "cursor",
     now: NOW,
+    provenance: nativeProvenance("cursor"),
     run: () => ({ status: null, error: { code: "ENOENT" }, stdout: "", stderr: "" }),
   });
   assert.equal(unavailable.error, null);
   assert.deepEqual(unavailable.records.map((evidence) => evidence.result), ["unavailable", "unavailable"]);
   assert.ok(unavailable.records.every((evidence) => evidence.provenance.reason === "runtime-not-installed"));
+});
+
+test("Codex version success alone never passes E5 or E6", () => {
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest: nativeManifest("codex"),
+  });
+  assert.deepEqual(result.records.map(({ result: outcome }) => outcome), ["unavailable", "unavailable"]);
+  assert.equal(result.records[0].provenance.reason, "safe-adapter-not-configured");
+  assert.equal(result.records[1].provenance.reason, "scenario-not-configured");
+});
+
+test("Codex E5 passes only with its authenticated managed exec control surface", () => {
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest: nativeManifest("codex"),
+    discover: () => codexCapability(),
+  });
+  assert.equal(result.records[0].result, "passed");
+  assert.equal(result.records[0].provenance.discovery_subject, "codex.exec");
+});
+
+test("Codex missing authentication is unavailable rather than a discovery pass", () => {
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest: nativeManifest("codex"),
+    discover: () => codexCapability({ authentication: false }),
+  });
+  assert.equal(result.records[0].result, "unavailable");
+  assert.equal(result.records[0].provenance.reason, "authentication-unavailable");
+});
+
+test("Codex missing a required exec control is unavailable rather than structurally supported", () => {
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest: nativeManifest("codex"),
+    discover: () => codexCapability({ controls: { ...codexCapability().controls, output_schema: false } }),
+  });
+  assert.equal(result.records[0].result, "unavailable");
+  assert.equal(result.records[0].provenance.reason, "required-control-unavailable");
+});
+
+test("Cursor E5 passes only when the observed native inventory exactly matches its manifest", () => {
+  const manifest = nativeManifest("cursor");
+  const result = probeCursor({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("cursor"),
+    manifest,
+    discover: () => ({ native_role_external_ids: manifest.rows.map((row) => row.native_role_external_id) }),
+  });
+  assert.equal(result.records[0].result, "passed");
+  assert.deepEqual(result.records[0].provenance.native_role_external_ids, [
+    "maister-advisor", "maister-code-reviewer", "maister-implementation-planner",
+  ]);
+});
+
+test("Cursor E5 fails when an observed native ID shadows a manifest ID", () => {
+  const manifest = nativeManifest("cursor");
+  const result = probeCursor({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("cursor"),
+    manifest,
+    discover: () => ({ native_role_external_ids: [
+      "maister-advisor", "maister-code-reviewer", "maister-code-reviewer", "maister-implementation-planner",
+    ] }),
+  });
+  assert.equal(result.records[0].result, "failed");
+  assert.equal(result.records[0].provenance.reason, "native-inventory-collision");
+});
+
+test("Kiro E5 fails for a missing observed manifest identity", () => {
+  const manifest = nativeManifest("kiro-cli");
+  const result = probeKiroCli({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("kiro-cli"),
+    manifest,
+    discover: () => ({ native_role_external_ids: manifest.rows.slice(0, 2).map((row) => row.native_role_external_id) }),
+  });
+  assert.equal(result.records[0].result, "failed");
+  assert.equal(result.records[0].provenance.reason, "native-inventory-mismatch");
+});
+
+test("missing a safe versioned E6 scenario remains unavailable", () => {
+  const manifest = nativeManifest("cursor");
+  const result = probeCursor({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("cursor"),
+    manifest,
+    discover: () => ({ native_role_external_ids: manifest.rows.map((row) => row.native_role_external_id) }),
+  });
+  assert.equal(result.records[1].result, "unavailable");
+  assert.equal(result.records[1].provenance.reason, "scenario-not-configured");
+});
+
+test("Codex E6 resolves production-shaped namespaced manifest rows for two ordinary roles and advisor", () => {
+  const calls = [];
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest: nativeManifest("codex"),
+    discover: () => codexCapability(),
+    invoke: (request) => {
+      calls.push(request);
+      return matchingInvocation(request);
+    },
+  });
+  assert.equal(result.records[1].result, "passed");
+  assert.deepEqual(calls.map((call) => call.logical_role_id), [
+    "maister:code-reviewer", "maister:implementation-planner", "maister:advisor",
+  ]);
+  assert.equal(new Set(calls.map((call) => call.prompt_digest)).size, 3);
+  assert.equal(new Set(calls.map((call) => call.prompt)).size, 3);
+  assert.equal(new Set(calls.map((call) => call.nonce)).size, 3);
+  assert.equal(new Set(calls.map((call) => call.output_schema)).size, 3);
+  assert.ok(calls.every((call) => call.prompt_digest === crypto.createHash("sha256").update(call.prompt).digest("hex")));
+  assert.ok(calls.every((call) => call.canonical_prompt_digest === nativeManifest("codex").rows
+    .find((row) => row.logical_role_id === call.logical_role_id).source_sha256));
+});
+
+test("Codex E6 remains unavailable when effective policy only echoes the request", () => {
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest: nativeManifest("codex"),
+    discover: () => codexCapability(),
+    invoke: (request) => {
+      const observation = matchingInvocation(request);
+      delete observation.execution_policy_evidence;
+      return observation;
+    },
+  });
+  assert.equal(result.records[1].result, "unavailable");
+  assert.equal(result.records[1].provenance.reason, "effective-policy-observation-unavailable");
+});
+
+test("a missing required E6 role is unavailable with a precise reason instead of throwing", () => {
+  const manifest = nativeManifest("codex");
+  manifest.rows = manifest.rows.filter((row) => row.logical_role_id !== "maister:advisor");
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest,
+    discover: () => codexCapability(),
+    invoke: matchingInvocation,
+  });
+  assert.equal(result.records[1].result, "unavailable");
+  assert.equal(result.records[1].provenance.reason, "required-role-missing");
+});
+
+test("a discovery timeout does not contaminate a successful E6 record or returned probe error", () => {
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest: nativeManifest("codex"),
+    discover: () => { throw new HostProbeTimeoutError("codex", ["discovery"], 25); },
+    invoke: matchingInvocation,
+  });
+  assert.equal(result.records[0].result, "failed");
+  assert.equal(result.records[0].provenance.reason, "timeout");
+  assert.equal(result.records[1].result, "passed");
+  assert.equal(result.records[1].provenance.reason, undefined);
+  assert.equal(result.error, null);
+});
+
+test("E6 fails after launch when Cursor reports the wrong native identity", () => {
+  const manifest = nativeManifest("cursor");
+  const result = probeCursor({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("cursor"),
+    manifest,
+    discover: () => ({ native_role_external_ids: manifest.rows.map((row) => row.native_role_external_id) }),
+    invoke: (request) => ({ ...matchingInvocation(request), observed_native_role_external_id: "maister-wrong-role" }),
+  });
+  assert.equal(result.records[1].result, "failed");
+  assert.equal(result.records[1].provenance.reason, "wrong-observed-identity");
+});
+
+test("E6 fails after launch when Kiro does not observe the selected native identity", () => {
+  const manifest = nativeManifest("kiro-cli");
+  const result = probeKiroCli({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("kiro-cli"),
+    manifest,
+    discover: () => ({ native_role_external_ids: manifest.rows.map((row) => row.native_role_external_id) }),
+    invoke: (request) => ({ ...matchingInvocation(request), observed_native_role_external_id: null }),
+  });
+  assert.equal(result.records[1].result, "failed");
+  assert.equal(result.records[1].provenance.reason, "missing-observed-identity");
+});
+
+test("E6 fails when a started Codex scenario times out", () => {
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest: nativeManifest("codex"),
+    discover: () => codexCapability(),
+    invoke: () => ({ started: true, timed_out: true }),
+  });
+  assert.equal(result.records[1].result, "failed");
+  assert.equal(result.records[1].provenance.reason, "scenario-timeout");
+});
+
+test("E6 fails when an invocation observation has a stale projection digest", () => {
+  const manifest = nativeManifest("codex");
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest,
+    discover: () => codexCapability(),
+    invoke: (request) => ({ ...matchingInvocation(request), projected_tree_digest: "e".repeat(64) }),
+  });
+  assert.equal(result.records[1].result, "failed");
+  assert.equal(result.records[1].provenance.reason, "digest-mismatch");
+});
+
+test("E6 fails when the role-specific behavior is wrong despite matching identity", () => {
+  const manifest = nativeManifest("codex");
+  const result = probeCodex({
+    now: NOW,
+    run: availableVersion,
+    provenance: nativeProvenance("codex"),
+    manifest,
+    discover: () => codexCapability(),
+    invoke: (request) => ({ ...matchingInvocation(request), behavior: "wrong-behavior" }),
+  });
+  assert.equal(result.records[1].result, "failed");
+  assert.equal(result.records[1].provenance.reason, "wrong-behavior");
+});
+
+test("E5 and E6 native evidence requires complete projection provenance and renews on every binding", () => {
+  const nativeEvidence = createEvidenceRecord({
+    target: "codex",
+    capability: "E5",
+    hostVersion: "1.2.3",
+    scenario: "codex-e5-v1",
+    result: "passed",
+    timestamp: "2026-07-14T19:00:00.000Z",
+    expiresAt: "2026-07-15T19:00:00.000Z",
+    provenance: nativeProvenance("codex"),
+  });
+  for (const changed of [
+    { sourceVersion: "2.2.2" },
+    { overlayId: "maister/codex-next" },
+    { schemaVersion: 2 },
+    { projectorVersion: "2.0.0" },
+    { canonicalSetDigest: "e".repeat(64) },
+    { manifestDigest: "f".repeat(64) },
+    { projectedTreeDigest: "0".repeat(64) },
+  ]) {
+    assert.equal(evidenceNeedsRenewal(nativeEvidence, {
+      now: NOW,
+      hostVersion: "1.2.3",
+      sourceCommit: NATIVE_BINDING.source_commit,
+      sourceVersion: NATIVE_BINDING.source_version,
+      overlayId: NATIVE_BINDING.overlay_id,
+      overlayVersion: NATIVE_BINDING.overlay_version,
+      scenarioVersion: NATIVE_BINDING.scenario_version,
+      schemaVersion: NATIVE_BINDING.schema_version,
+      projectorVersion: NATIVE_BINDING.projector_version,
+      canonicalSetDigest: NATIVE_BINDING.canonical_set_digest,
+      manifestDigest: NATIVE_BINDING.manifest_digest,
+      projectedTreeDigest: NATIVE_BINDING.projected_tree_digest,
+      ...changed,
+    }), true);
+  }
+  assert.throws(() => createEvidenceRecord({
+    target: "codex", capability: "E6", hostVersion: "1.2.3", scenario: "codex-e6-v1", result: "passed",
+    provenance: { ...nativeProvenance("codex"), manifest_digest: undefined },
+  }), /E_EVIDENCE_SCHEMA/);
+});
+
+test("structural evidence cannot satisfy native discovery or invocation support", () => {
+  const records = ["E1", "E2", "E3", "E4"].map((capability) => record({ capability }));
+  const result = evaluateCapability({
+    target: "codex",
+    capability: "native_support",
+    capabilityClass: "semantic",
+    requiredEvidence: ["E1", "E2", "E3", "E4", "E5", "E6"],
+    records,
+    now: NOW,
+  });
+  assert.equal(result.status, "blocked");
+  assert.deepEqual(result.missing, ["E5", "E6"]);
 });
 
 test("fails closed for semantic capabilities but permits packaging provisional status", () => {
@@ -979,7 +1400,7 @@ test("the real repository topology and focused Make entry point use only registe
   for (const target of SUPPORTED_TARGET_IDS) {
     assert.match(validationWorkflow, new RegExp(`make test-overlay TARGET=${target}`, "u"));
   }
-  assert.match(validationWorkflow, /make test-core test-evidence/u);
+  assert.match(validationWorkflow, /make test-core test-runtime test-evidence/u);
   assert.match(validationWorkflow, /make test-topology/u);
 
   const releaseWorkflow = fs.readFileSync(".github/workflows/release.yml", "utf8");

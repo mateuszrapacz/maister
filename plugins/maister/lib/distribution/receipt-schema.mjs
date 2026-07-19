@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 
 import { distributionError, readFileNoFollow } from "./path-safety.mjs";
@@ -6,19 +7,23 @@ import { getTargetDefinition, SUPPORTED_TARGET_IDS } from "./targets.mjs";
 
 const RECEIPT_FIELDS = [
   "schema_version", "receipt_id", "installer_version", "status", "installed_at",
-  "target", "source", "active_root", "managed_inventory", "settings", "provenance", "compatibility", "evidence", "transaction",
+  "target", "source", "managed_roots", "managed_inventory", "settings", "provenance", "compatibility", "evidence", "transaction",
 ];
 const TARGET_FIELDS = ["id", "overlay_id", "overlay_version", "host_version"];
 const SOURCE_FIELDS = ["kind", "requested", "requested_ref", "resolved_commit", "source_version", "content_hash"];
-const PROVENANCE_FIELDS = ["source_hash", "overlay_hash", "materialized_hash", "provenance_hash"];
+const HASH_PROVENANCE_FIELDS = ["source_hash", "overlay_hash", "materialized_hash", "provenance_hash"];
+const PROVENANCE_FIELDS = [...HASH_PROVENANCE_FIELDS, "agent_projection"];
+const PROJECTION_FIELDS = ["schema_version", "projector_version", "canonical_set_digest", "manifest_digest", "projected_tree_digest"];
 const COMPATIBILITY_FIELDS = ["policy", "scenario_version", "status", "evaluations"];
 const EVALUATION_FIELDS = ["target", "capability", "capabilityClass", "required", "passedEvidence", "unavailable", "failed", "missing", "expired", "passed", "status"];
-const INVENTORY_FIELDS = ["path", "type", "mode", "sha256", "link_target", "ownership"];
+const MANAGED_ROOT_FIELDS = ["root_id", "path", "ownership"];
+const INVENTORY_FIELDS = ["root_id", "path", "type", "mode", "sha256", "link_target", "ownership"];
 const SETTING_FIELDS = ["path", "format", "ownership", "managed_keys", "before_sha256", "after_sha256", "backup_ref", "mode", "before_mode"];
 const TRANSACTION_FIELDS = ["journal_id", "backup_root", "backup_manifest_hash", "previous_receipt_id"];
 const STATUSES = new Set(["installed", "uninstalled"]);
 const INVENTORY_TYPES = new Set(["file", "directory", "symlink"]);
 const OWNERSHIP = new Set(["whole_file", "managed_keys"]);
+const ROOT_OWNERSHIP = new Set(["whole_tree", "leaf_set"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const SHA256 = /^[0-9a-f]{64}$/u;
 const COMMIT = /^[0-9a-f]{40}$/u;
@@ -30,6 +35,16 @@ const EVALUATION_STATUSES = new Set(["passed", "provisional", "blocked"]);
 
 function invalid(message, details = {}) {
   throw distributionError("E_RECEIPT_SCHEMA", message, details);
+}
+
+function rejectLegacySchema(value, label) {
+  if (value?.schema_version === 1) {
+    throw distributionError(
+      "E_CLEAN_INSTALL_REQUIRED",
+      `${label} schema v1 is unsupported; a clean install with empty Maister target state is required`,
+      { persisted_schema_version: 1, required_schema_version: 2, artifact: label },
+    );
+  }
 }
 
 function object(value, location) {
@@ -98,15 +113,48 @@ function isoDate(value, location) {
   if (!Number.isFinite(Date.parse(value))) invalid(`${location} must be an ISO timestamp`, { location });
 }
 
-function validateInventory(entries) {
+function validateManagedRoots(roots, receipt, paths) {
+  array(roots, "managed_roots");
+  if (roots.length === 0) invalid("managed_roots must not be empty");
+  const seen = new Set();
+  for (const [index, root] of roots.entries()) {
+    const location = `managed_roots[${index}]`;
+    exactFields(root, MANAGED_ROOT_FIELDS, location);
+    string(root.root_id, `${location}.root_id`);
+    if (!/^[a-z][a-z0-9_]*$/u.test(root.root_id)) invalid(`${location}.root_id is unsafe`, { root_id: root.root_id });
+    if (seen.has(root.root_id)) invalid("managed root IDs must be unique", { root_id: root.root_id });
+    seen.add(root.root_id);
+    absolutePath(root.path, `${location}.path`);
+    if (!ROOT_OWNERSHIP.has(root.ownership)) invalid(`${location}.ownership is unsupported`, { ownership: root.ownership });
+  }
+  const definition = getTargetDefinition(receipt.target.id);
+  const expectedIds = definition.managedRoots.map(({ rootId }) => rootId);
+  if (roots.length !== expectedIds.length || roots.some((root, index) => root.root_id !== expectedIds[index])) {
+    invalid("managed_roots do not match the target registry", { expected: expectedIds, actual: roots.map(({ root_id: rootId }) => rootId) });
+  }
+  for (const [index, expected] of definition.managedRoots.entries()) {
+    if (roots[index].ownership !== expected.ownership) invalid("managed root ownership does not match the target registry", { root_id: expected.rootId });
+    if (paths) {
+      const resolved = paths.managedRoots.find(({ rootId }) => rootId === expected.rootId);
+      if (!resolved || roots[index].path !== resolved.path) invalid("managed root path does not match the target registry", { root_id: expected.rootId });
+    }
+  }
+  return new Map(roots.map((root) => [root.root_id, root]));
+}
+
+function validateInventory(entries, rootsById) {
   array(entries, "managed_inventory");
   const seen = new Set();
   for (const [index, entry] of entries.entries()) {
     const location = `managed_inventory[${index}]`;
     exactFields(entry, INVENTORY_FIELDS, location);
+    string(entry.root_id, `${location}.root_id`);
+    const root = rootsById.get(entry.root_id);
+    if (!root) invalid(`${location}.root_id is not declared`, { root_id: entry.root_id });
     const entryPath = relativePath(entry.path, `${location}.path`);
-    if (seen.has(entryPath)) invalid("managed_inventory paths must be unique", { path: entryPath });
-    seen.add(entryPath);
+    const identity = `${entry.root_id}\0${entryPath}`;
+    if (seen.has(identity)) invalid("managed inventory identities must be unique", { root_id: entry.root_id, path: entryPath });
+    seen.add(identity);
     if (!INVENTORY_TYPES.has(entry.type)) invalid(`${location}.type is unsupported`, { location });
     if (!MODE.test(entry.mode)) invalid(`${location}.mode must be a four-digit octal mode`, { location });
     if (!OWNERSHIP.has(entry.ownership)) invalid(`${location}.ownership is unsupported`, { location });
@@ -117,13 +165,14 @@ function validateInventory(entries) {
     if (entry.type === "symlink") {
       if (path.isAbsolute(entry.link_target)) invalid(`${location}.link_target must be relative`, { location });
       const linkLocation = path.posix.normalize(path.posix.join(path.posix.dirname(entryPath), entry.link_target));
-      if (linkLocation === ".." || linkLocation.startsWith("../")) invalid(`${location}.link_target escapes active_root`, { location });
+      if (linkLocation === ".." || linkLocation.startsWith("../")) invalid(`${location}.link_target escapes its managed root`, { location });
     }
+    if (root.ownership === "leaf_set" && entry.type === "directory") invalid(`${location} leaf-set inventory must contain leaves only`, { location });
   }
   for (const entry of entries) {
     let parent = path.posix.dirname(entry.path);
     while (parent !== ".") {
-      const ancestor = entries.find((candidate) => candidate.path === parent);
+      const ancestor = entries.find((candidate) => candidate.root_id === entry.root_id && candidate.path === parent);
       if (ancestor && ancestor.type !== "directory") invalid("managed_inventory contains a child below a non-directory entry", { path: entry.path, ancestor: parent });
       parent = path.posix.dirname(parent);
     }
@@ -161,8 +210,14 @@ function validateSettings(settings, { paths } = {}) {
 
 function validateProvenance(provenance, source) {
   exactFields(provenance, PROVENANCE_FIELDS, "provenance");
-  for (const field of PROVENANCE_FIELDS) nullableHash(provenance[field], `provenance.${field}`, true);
+  for (const field of HASH_PROVENANCE_FIELDS) nullableHash(provenance[field], `provenance.${field}`, true);
   if (provenance.source_hash !== source.content_hash) invalid("provenance.source_hash must equal source.content_hash");
+  exactFields(provenance.agent_projection, PROJECTION_FIELDS, "provenance.agent_projection");
+  if (!Number.isSafeInteger(provenance.agent_projection.schema_version) || provenance.agent_projection.schema_version < 1) {
+    invalid("provenance.agent_projection.schema_version must be a positive integer");
+  }
+  string(provenance.agent_projection.projector_version, "provenance.agent_projection.projector_version");
+  for (const field of PROJECTION_FIELDS.slice(2)) nullableHash(provenance.agent_projection[field], `provenance.agent_projection.${field}`, true);
 }
 
 function validateLevelList(value, location, required, evidenceByCapability, expectedResult = null) {
@@ -258,7 +313,7 @@ function validateEvidenceAndCompatibility(receipt) {
             : receipt.compatibility.scenario_version;
       if (provenance[field] !== expected) invalid(`${location}.provenance.${field} is not bound to the receipt`, { location, field });
     }
-    for (const field of PROVENANCE_FIELDS) {
+    for (const field of HASH_PROVENANCE_FIELDS) {
       const evidenceField = field;
       if (provenance[evidenceField] !== receipt.provenance[field]) invalid(`${location}.provenance.${evidenceField} is not bound to the receipt hash`, { location, field: evidenceField });
     }
@@ -268,8 +323,9 @@ function validateEvidenceAndCompatibility(receipt) {
 }
 
 export function validateReceipt(receipt, { paths = null, receiptPath = null } = {}) {
+  rejectLegacySchema(receipt, "receipt");
   exactFields(receipt, RECEIPT_FIELDS, "receipt");
-  if (receipt.schema_version !== 1) invalid("receipt schema_version must be 1");
+  if (receipt.schema_version !== 2) invalid("receipt schema_version must be 2");
   string(receipt.receipt_id, "receipt_id");
   if (!UUID.test(receipt.receipt_id)) invalid("receipt_id must be a UUID", { receipt_id: receipt.receipt_id });
   string(receipt.installer_version, "installer_version");
@@ -286,9 +342,8 @@ export function validateReceipt(receipt, { paths = null, receiptPath = null } = 
   for (const field of SOURCE_FIELDS.slice(0, -1)) string(receipt.source[field], `source.${field}`);
   if (!COMMIT.test(receipt.source.resolved_commit)) invalid("source.resolved_commit must be a full commit hash");
   nullableHash(receipt.source.content_hash, "source.content_hash", true);
-  absolutePath(receipt.active_root, "active_root");
-  if (paths && receipt.active_root !== path.resolve(paths.activeRoot)) invalid("receipt active_root does not match the target root", { active_root: receipt.active_root, expected: paths.activeRoot });
-  validateInventory(receipt.managed_inventory);
+  const rootsById = validateManagedRoots(receipt.managed_roots, receipt, paths);
+  validateInventory(receipt.managed_inventory, rootsById);
   validateSettings(receipt.settings, { paths });
   validateProvenance(receipt.provenance, receipt.source);
   validateEvidenceAndCompatibility(receipt);
@@ -331,8 +386,41 @@ export function readReceipt(filePath, context = {}) {
     }));
     return validateReceipt(receipt, { paths, receiptPath: filePath });
   } catch (error) {
-    if (error?.kind === "E_RECEIPT_SCHEMA" || error?.kind === "E_RECEIPT_IO") throw error;
+    if (["E_RECEIPT_SCHEMA", "E_RECEIPT_IO", "E_CLEAN_INSTALL_REQUIRED"].includes(error?.kind)) throw error;
     throw distributionError("E_RECEIPT_IO", `could not read receipt: ${filePath}`, { filePath }, { cause: error });
+  }
+}
+
+export function readActiveReceipt(paths) {
+  if (!paths?.activeReceiptPath || !paths?.stateRoot || !paths?.receiptsRoot) {
+    throw distributionError("E_RECEIPT_IO", "target paths are required to read the active receipt", {});
+  }
+  const activeStat = fs.lstatSync(paths.activeReceiptPath, { throwIfNoEntry: false });
+  if (!activeStat) return null;
+  if (!activeStat.isFile() || activeStat.isSymbolicLink()) {
+    throw distributionError("E_RECEIPT_IO", "active receipt pointer must be a regular file", { path: paths.activeReceiptPath });
+  }
+  try {
+    const pointer = JSON.parse(readFileNoFollow(paths.activeReceiptPath, {
+      root: paths.stateRoot,
+      label: "active receipt pointer",
+      encoding: "utf8",
+      errorCode: "E_RECEIPT_IO",
+    }));
+    rejectLegacySchema(pointer, "active receipt");
+    exactFields(pointer, ["schema_version", "receipt_id", "receipt_path"], "active receipt");
+    if (pointer.schema_version !== 2) invalid("active receipt schema_version must be 2");
+    if (!UUID.test(pointer.receipt_id)) invalid("active receipt receipt_id must be a UUID");
+    absolutePath(pointer.receipt_path, "active receipt receipt_path");
+    const expectedPath = path.join(paths.receiptsRoot, `${pointer.receipt_id}.json`);
+    if (pointer.receipt_path !== expectedPath) {
+      invalid("active receipt path does not match its receipt ID", { expected: expectedPath, actual: pointer.receipt_path });
+    }
+    contained(paths.receiptsRoot, pointer.receipt_path, "active receipt receipt_path");
+    return { receipt: readReceipt(pointer.receipt_path, { paths }), receiptPath: pointer.receipt_path };
+  } catch (error) {
+    if (["E_RECEIPT_SCHEMA", "E_RECEIPT_IO", "E_CLEAN_INSTALL_REQUIRED"].includes(error?.kind)) throw error;
+    throw distributionError("E_RECEIPT_IO", "active receipt pointer is invalid", { path: paths.activeReceiptPath }, { cause: error });
   }
 }
 

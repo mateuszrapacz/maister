@@ -1,0 +1,16 @@
+html_output: false
+advisor:
+  enabled: true
+  gate_policies:
+    phase-exit: manual
+    optional-phase: fully_automatic
+    clarify: advisor
+    convergence: manual
+    verify-matrix: fully_automatic
+  advisor_agent: maister:advisor
+  arbiter_agent: maister:advisor
+  arbiter_enabled_on_disagreement: false
+  retry:
+    advisor_attempts: 2
+    arbiter_attempts: 7
+    backoff: exponential

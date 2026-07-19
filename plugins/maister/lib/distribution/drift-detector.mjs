@@ -25,15 +25,22 @@ function matchesExpected(actual, expected) {
   return true;
 }
 
-export function detectDrift({ receipt, activeRoot, settingsRoot = path.dirname(activeRoot), settingDefinitions = [] }) {
+export function detectDrift({ receipt, paths = null, settingsRoot = paths?.home, settingDefinitions = [] }) {
   const conflicts = [];
+  const roots = new Map(receipt.managed_roots.map((root) => [root.root_id, root.path]));
   for (const entry of receipt.managed_inventory) {
-    const actual = describe(activeRoot, entry.path);
-    if (!matchesExpected(actual, entry)) conflicts.push({ path: entry.path, expected: entry, actual });
+    const root = roots.get(entry.root_id);
+    if (!root) {
+      conflicts.push({ root_id: entry.root_id, path: entry.path, expected: entry, actual: { exists: false, reason: "unknown-root" } });
+      continue;
+    }
+    const actual = describe(root, entry.path);
+    if (!matchesExpected(actual, entry)) conflicts.push({ root_id: entry.root_id, path: entry.path, expected: entry, actual });
   }
+  const activeRoot = roots.get("plugin_private");
   for (const definition of settingDefinitions) {
     const setting = receipt.settings.find((entry) => entry.path === definition.path);
-    const targetPath = path.resolve(settingsRoot, ...definition.path.split("/"));
+    const targetPath = path.resolve(settingsRoot ?? path.dirname(activeRoot), ...definition.path.split("/"));
     if (definition.ownership === "whole_file") {
       const actual = fs.existsSync(targetPath) ? hashFile(targetPath) : null;
       if (setting && actual !== setting.after_sha256) conflicts.push({ path: definition.path, expected: setting.after_sha256, actual });

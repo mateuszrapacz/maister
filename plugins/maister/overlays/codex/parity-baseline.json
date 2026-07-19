@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "baseline_version": "2026-07-15.2",
+  "baseline_version": "2026-07-18.1",
   "target": "codex",
   "rules": [
     {
@@ -51,7 +51,8 @@
         "skills/status",
         "skills/status/SKILL.md",
         "skills/work",
-        "skills/work/SKILL.md"
+        "skills/work/SKILL.md",
+        "skills/init/bin/reconcile-advisor-config.sh"
       ],
       "observations": {
         "README.md": {
@@ -507,6 +508,17 @@
           "materialized": {
             "present": false
           }
+        },
+        "skills/init/bin/reconcile-advisor-config.sh": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0755",
+            "sha256": "527023439e16b1edc4f7edca8100e122e30dd480ad387936b0728e49298b2df5"
+          },
+          "materialized": {
+            "present": false
+          }
         }
       }
     },
@@ -553,7 +565,9 @@
         "skills/thermo-nuclear-code-quality-review/SKILL.md",
         "skills/thermo-nuclear-review/SKILL.md",
         "skills/thermos/SKILL.md",
-        "skills/transcript-critic/SKILL.md"
+        "skills/transcript-critic/SKILL.md",
+        "skills/orchestrator-framework/bin/gate-evaluator.mjs",
+        "skills/orchestrator-framework/bin/orchestrator-state-schema.mjs"
       ],
       "observations": {
         "skills/aggregate-designer/SKILL.md": {
@@ -581,7 +595,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "93b6184e3786429aa50149fd3c2d7b0f48c3c3d23b471addbe12864bd6881f33"
+            "sha256": "5ce0b1280d6088931b7958e0d42c09356e17441ef17c365d31b48ac0647c2a43"
           }
         },
         "skills/context-distiller/SKILL.md": {
@@ -609,7 +623,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "bd743682cd5c2fa1a933e6e7126fbc3846f9f96825f767a98c9b61f930dd2f97"
+            "sha256": "f1b519a76a010426e3a418741e4d1c774a7c54159a1e6243cfa7edfd2312ba26"
           }
         },
         "skills/docs-manager/SKILL.md": {
@@ -693,7 +707,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "8d6ff0cf59693b614850032062002f1a25887026d9dd7ad6ee640c3e92824935"
+            "sha256": "ba08a8a884b1d1c981bd0b08421e6a56895578b29658fdb48f88477de7234dad"
           }
         },
         "skills/implementation-verifier/SKILL.md": {
@@ -707,7 +721,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "31f11f8e03c36c33ccd48d1d73d77c84d882e0287895a9698ef6afffbd1e1e26"
+            "sha256": "6ad4cd087b24277fe06aa7923e1e25a40b0b1b1233c73eb43c4eabba018a4fac"
           }
         },
         "skills/linguistic-boundary-verifier/SKILL.md": {
@@ -749,7 +763,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "0ec061644a3e19575edd6b20b0b6b00af9ac40562d387fd02ff21d2bdabbd785"
+            "sha256": "093a52e439e17310eae57db9b451f0d28e7d9cd60ed42341596a92050526e463"
           }
         },
         "skills/migration/references/migration-strategies.md": {
@@ -805,7 +819,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "605148923d9975259d1b75e811aac59790453850a7315ba5b824c51191f07fb7"
+            "sha256": "7ca75c461dd6e04d54f8fbc98889108c9e36f5d7c3e1b1781bec58c0799aa795"
           }
         },
         "skills/orchestrator-framework/references/orchestrator-creation-checklist.md": {
@@ -819,7 +833,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "f14c78f6427ebe48611e3b569228820b3578fac8ef6473a4c388ee7767e24a08"
+            "sha256": "56222f7bba7d3f38f8d3ff5c65c4ee729b673ef7e25fdbcb676299dab291b686"
           }
         },
         "skills/orchestrator-framework/references/orchestrator-patterns.md": {
@@ -833,7 +847,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "43d0626a0f8c7eae95f74d6f75d0d278bc56d20e0e0502194122c8879be9b21a"
+            "sha256": "cbba498c116d571581de34ba9dc5e60b198a5e11dc515c6ef3e3b635a92027bc"
           }
         },
         "skills/performance/SKILL.md": {
@@ -847,7 +861,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "30ddc7a67541ad174ffba33ad6f5817aa780989cbfeacd51efe64de19e7b36a4"
+            "sha256": "b9945f763ebad7e970b8eef581526260dd433ef39250b64681f277e54bd7f820"
           }
         },
         "skills/problem-classifier/SKILL.md": {
@@ -875,7 +889,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "39f05a35afb3dd6dc68fb80f6085947ab4569766aaae2068c11590c199a60eda"
+            "sha256": "1c59fd3eb45363dbb173612006fc7368ca916d8bd0f3de6d8310ebd776e867b1"
           }
         },
         "skills/product-design/references/interaction-patterns.md": {
@@ -973,7 +987,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "3015e2362cd9df2290e3ed8616bbee809282e21336c26b103513fecc7afb1117"
+            "sha256": "5a5c5f06ad7526f817abff2f53acb3062386c4f93da34d53680cefc69bcaa59c"
           }
         },
         "skills/standards-discover/SKILL.md": {
@@ -987,7 +1001,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "2da51b9040eb5af9e3c858e263ae5fca91714b8f895cac3f8c7ce2030f651afb"
+            "sha256": "2aff792ce3f915bffbca0769dd5f4a427ba812711cf83db43b2f3c0a2fb3be57"
           }
         },
         "skills/standards-discover/references/docs-extractor-prompt.md": {
@@ -1015,7 +1029,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "2740116824cc2cc5c4be196044402ffdf890a769b86f11d1d1bb3de7005a4ff2"
+            "sha256": "b0f70336ac2f4d150a1ab549be2595ff26b3e8196fc712a81b8e366a85f5a92f"
           }
         },
         "skills/test-strategy-reviewer/SKILL.md": {
@@ -1071,7 +1085,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "898b4b4683e78bf1078312b6df96997a9219837a9ae327391055b3ab44ef6f04"
+            "sha256": "330e1e5c78296eeacea959092361114e5545fd068b79355164eecd9f19a7af16"
           }
         },
         "skills/transcript-critic/SKILL.md": {
@@ -1086,6 +1100,34 @@
             "type": "file",
             "mode": "0644",
             "sha256": "97eae41b4342d2dbd7f40fc65afe377b60286e9666d7e284703bc0581ef25751"
+          }
+        },
+        "skills/orchestrator-framework/bin/gate-evaluator.mjs": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "195df6b383dbe40037367ec332fb4326378f8091673ac373583fc7cca8f0e0f1"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d19fb3f6958cd51faaf0ddafeff0a44708b319ff60101e86e802b8c4bea61dd3"
+          }
+        },
+        "skills/orchestrator-framework/bin/orchestrator-state-schema.mjs": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3e73cb7db70a843a65c35ce864a6d61add42dd2c3247e59443b5599ddce80648"
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "de23f7955e1fc5541f4aba48a254c4b4bf8dc8e365eaee6d261dc97cdab845af"
           }
         }
       }
@@ -1146,7 +1188,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "f1c8ea4da90d897fdda0e27145f9eb8d5b9266e8bdf69a58b1d9c778884ec0ed"
+            "sha256": "35495c934aa4ad812cdaee70a89f98de353d5228613378d05721a2b8c21cba15"
           }
         },
         "skills/orchestrator-framework/agents/bottleneck-analyzer.md": {
@@ -1157,7 +1199,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "a56bd6183bd2b7e1b918df8d4c9ca6f84f0d42a28252833f65761df5b61b09d4"
+            "sha256": "cab599ee73555e8827828d543a0588087c7ca9791514935ea14563a0b1f21d1c"
           }
         },
         "skills/orchestrator-framework/agents/code-quality-pragmatist.md": {
@@ -1168,7 +1210,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "f43c8b5c88cfb1f13e79f05f743e8087be4be690941d02fcea663e5a545858e4"
+            "sha256": "59a159bd82c90e683cb0087334ab7eff91eadf3ee2ddfc0879f134dd56cf9113"
           }
         },
         "skills/orchestrator-framework/agents/code-reviewer.md": {
@@ -1179,7 +1221,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "56b14ed858cc0284b79e5793de01c973fc060d90493774c884ee755e9d63acb8"
+            "sha256": "b3c7bb0b917f604155b991801108acb61573e4bcbdbe4d510ec04655b117dc9c"
           }
         },
         "skills/orchestrator-framework/agents/codebase-analysis-reporter.md": {
@@ -1190,7 +1232,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "e0b8723676ed88688422680c0b1146edfdfca1c65e5f3d493ac8aa7df6fa30d5"
+            "sha256": "1ecb0ddc7ef09eb06f58d84bff3c544bdb02f068496bfe4f239a86bc2fbb6e19"
           }
         },
         "skills/orchestrator-framework/agents/docs-operator.md": {
@@ -1201,7 +1243,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "797c07a089497ce92a6b578d67c34a4a4be89e4441f07dfd0ed8be579d944c17"
+            "sha256": "95d61a806ea42597ee736701550ad48d6465b96d2c481f521beec07bded77a1b"
           }
         },
         "skills/orchestrator-framework/agents/e2e-test-verifier.md": {
@@ -1212,7 +1254,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "cbb5d0a2b00aef0bfe670d6d3f43f3aaa3f91b592de9c7fdd52af52a7118913b"
+            "sha256": "102d12b7c1b2f8a121b7fd480a63408bc24a590cf4c3ae04017113e896691402"
           }
         },
         "skills/orchestrator-framework/agents/gap-analyzer.md": {
@@ -1223,7 +1265,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "aa95e8a98dfea21aa01ca22469dcb5c1951468df6a78d569c41efd787a4636cc"
+            "sha256": "ed9cc34206564965ece89e95efa321530c1c6b74791850f289af5f1afc3f99d5"
           }
         },
         "skills/orchestrator-framework/agents/html-companion-writer.md": {
@@ -1234,7 +1276,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "9123237fe602559fd2462a32ff5c62a87b6e53f852768004c707f0267084020e"
+            "sha256": "01988e87134614cdcde1c2f2639dc7fd8e8dde6207fe47a7ba5b588c1eb76fb4"
           }
         },
         "skills/orchestrator-framework/agents/implementation-completeness-checker.md": {
@@ -1245,7 +1287,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "8efa95aa89904dd8d26bc1c299c2babfdc3aa31987aa2c561cc9a7a50ea06535"
+            "sha256": "7afab6294be89bf70500394029ab588db38eda1cdd7cafe35a11895c5212c720"
           }
         },
         "skills/orchestrator-framework/agents/implementation-planner.md": {
@@ -1256,7 +1298,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "5e46068ab69b71817e530c858bb4979f66fd0a92edca85437481a7fdcda8f593"
+            "sha256": "77dcad34626ee0be9096993da56b3e4ce33e5508b73deaebf197dd049b7580ae"
           }
         },
         "skills/orchestrator-framework/agents/information-gatherer.md": {
@@ -1267,7 +1309,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "fd3fde81f77983f2a26d5f88a7d2ba728a951b7f3e9882aeaa6c31ee02e59e73"
+            "sha256": "71e59ac1a56986d3a4cad1b381d079c0eea76b4a36ad6fc29d48e90be19513a2"
           }
         },
         "skills/orchestrator-framework/agents/production-readiness-checker.md": {
@@ -1278,7 +1320,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "146d3db2467598dd264ccbc982bcf7ae69b9982ff4aeee05725911ac81b146a8"
+            "sha256": "3265277bba59889561e38aca667adc358a17a16b4e387c409efc0da698740581"
           }
         },
         "skills/orchestrator-framework/agents/project-analyzer.md": {
@@ -1289,7 +1331,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "5ac1365114fae87c44d7df950218a653d631b4ede1d0bcd71738a3b897c4e172"
+            "sha256": "d8ed5af1876df1b14b94cfb44b87bb1694595f18032fd56ea71849892877eac7"
           }
         },
         "skills/orchestrator-framework/agents/reality-assessor.md": {
@@ -1300,7 +1342,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "5eb54995a6bc9c91c669c86f3a8cb6345d0e2a62259fca1c6fadf8ff3fd84027"
+            "sha256": "8527343192de8622fd1d7deef7ec6b9c9b2f68fe022164497d12dd28a1c3659a"
           }
         },
         "skills/orchestrator-framework/agents/research-planner.md": {
@@ -1311,7 +1353,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "c0a19f7f38d6c05af3fb9ead04f91bd41db015bfd0fa80a231f265ed63f791af"
+            "sha256": "3026741ab42ca1d25add2d22c4c4a5bff121e69187e90c97c06c97dbd6a9450e"
           }
         },
         "skills/orchestrator-framework/agents/research-synthesizer.md": {
@@ -1322,7 +1364,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "c927b904a073500ed6b7383183770436de4bc7ce4cf28a11569f33c27daf529e"
+            "sha256": "ce86054623d6c1c1d3d85939b83931429edc4ac29418df63098379a98ee084eb"
           }
         },
         "skills/orchestrator-framework/agents/solution-brainstormer.md": {
@@ -1333,7 +1375,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "d3b0813a3cd4ff7cb6edbb37712e441f376db9a1ff75a49f78d84e6534a6ff8d"
+            "sha256": "ec03520a8f7a10209ababea73269c0ab553cd2288d2f1037c8cb53727edfd588"
           }
         },
         "skills/orchestrator-framework/agents/solution-designer.md": {
@@ -1344,7 +1386,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "732800f080704cc7b0a474f4232a504058feb558447149058134dc0127afa701"
+            "sha256": "8fe11c835cef3467e7c5127ac42edf62576089c37eeefea804089678ffb5f3dc"
           }
         },
         "skills/orchestrator-framework/agents/spec-auditor.md": {
@@ -1355,7 +1397,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "41576a2e0e9b0f5e3ff0e9e16943e9851f3ec51da1d6fa854c699b0dc364204d"
+            "sha256": "c78a934df738761028c38407e19c7409a8fa76ca9f68cf86c095469b893bb265"
           }
         },
         "skills/orchestrator-framework/agents/specification-creator.md": {
@@ -1366,7 +1408,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "3db8b2afa5a56c4cf10e232861312f8134abc3f346d283bb08d31d4a4756ba43"
+            "sha256": "e21d0f8bd79e267538eb597a75a2bc937e0b14a3c3bb387b95d9e3d9e3dc16c4"
           }
         },
         "skills/orchestrator-framework/agents/task-classifier.md": {
@@ -1377,7 +1419,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "b74c9c9d608164c684c4141a57db26ab4f99f8d4be514e6e8093dfee86a8d0a8"
+            "sha256": "7f02668ad55c0fcfe347e4226c132df131c499c8c90f14dccb4b47e6624acac8"
           }
         },
         "skills/orchestrator-framework/agents/task-group-implementer.md": {
@@ -1388,7 +1430,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "6a80aaffa847c5829995c561957c7dd5935b329531a304534d08aee036f5cdd5"
+            "sha256": "828edef51b012ae60f721a6521ff7b4144c1289cea9c9c6a1f1d397e2a94dc46"
           }
         },
         "skills/orchestrator-framework/agents/test-suite-runner.md": {
@@ -1399,7 +1441,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "cdcf4450d4de75398f70ed5ca93e26610c54f9d8a53685a1b38815f4a122973b"
+            "sha256": "c2dffa88575b824616d6d97bc991dce370ef49a62a52d0b7e964a4ac313650f1"
           }
         },
         "skills/orchestrator-framework/agents/thermo-nuclear-code-quality-review-subagent.md": {
@@ -1410,7 +1452,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "c965a6d7e1a549dd105f2763a2b5cc772895ef881b43b38122e17fca7dbac032"
+            "sha256": "ee4a54f59a1558c28bbf3d9e683152459805ca6eb79b234054fb3c77baa29932"
           }
         },
         "skills/orchestrator-framework/agents/thermo-nuclear-review-subagent.md": {
@@ -1421,7 +1463,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "8ffdeca72f5f3366c13e8aa51d742e50089c7f086f9254e2d75d7695683e2a3a"
+            "sha256": "472c242293c2cfc2308f8e78cc9564e7d5b83980bf408dbe83183fb40c4c116e"
           }
         },
         "skills/orchestrator-framework/agents/ui-mockup-generator.md": {
@@ -1432,7 +1474,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "a712cbefbc108f18fe61cdf9c8b4e34cdde0301059581d0bdff9d4c6bcab8102"
+            "sha256": "a2aa61dbdf98f92f06e6891d039bc7be1f99279338087f19a5fe1769560b37ff"
           }
         },
         "skills/orchestrator-framework/agents/user-docs-generator.md": {
@@ -1443,7 +1485,7 @@
             "present": true,
             "type": "file",
             "mode": "0644",
-            "sha256": "84562b2b6779e048bf85eded5929cc6b4168f94a7f4f5879b2a61bc4352ad545"
+            "sha256": "73444d6e2995ff8487ad7325dc5c126b9b13d22006be4efaca2b40b17eb72f69"
           }
         }
       }
@@ -1465,7 +1507,7 @@
           "present": true,
           "type": "file",
           "mode": "0644",
-          "sha256": "ff1d823ae38e3983c87115c86a7071f24ae87a036156ef17be4939ed66caf954"
+          "sha256": "315118ebf837afeb5d718f951e09eef15cf1ead46df5fc8f7b651cff8830f1c2"
         }
       }
     },
@@ -1507,7 +1549,565 @@
           "present": true,
           "type": "file",
           "mode": "0644",
-          "sha256": "15ae38bb65f3e8720a109a3bf907194393af50da4d66471973c114967a8e680c"
+          "sha256": "fd3177fdb4fec28f9c91eb48e18d62039e91dff94d51e273598d5ab251740b14"
+        }
+      }
+    },
+    {
+      "id": "codex-accepted-agent-projection-inventory",
+      "category": "packaging",
+      "observed_category": "inventory",
+      "rationale": "These exact paths are the accepted projection, managed-worker runtime, and target-native agent contract introduced by the approved canonical source migration.",
+      "paths": [
+        "skills/init/bin/reconcile-gate-config.sh",
+        "skills/orchestrator-framework/agent-schemas",
+        "skills/orchestrator-framework/agent-schemas/advisor.schema.json",
+        "skills/orchestrator-framework/agent-schemas/bottleneck-analyzer.schema.json",
+        "skills/orchestrator-framework/agent-schemas/code-quality-pragmatist.schema.json",
+        "skills/orchestrator-framework/agent-schemas/code-reviewer.schema.json",
+        "skills/orchestrator-framework/agent-schemas/codebase-analysis-reporter.schema.json",
+        "skills/orchestrator-framework/agent-schemas/docs-operator.schema.json",
+        "skills/orchestrator-framework/agent-schemas/e2e-test-verifier.schema.json",
+        "skills/orchestrator-framework/agent-schemas/gap-analyzer.schema.json",
+        "skills/orchestrator-framework/agent-schemas/html-companion-writer.schema.json",
+        "skills/orchestrator-framework/agent-schemas/implementation-completeness-checker.schema.json",
+        "skills/orchestrator-framework/agent-schemas/implementation-planner.schema.json",
+        "skills/orchestrator-framework/agent-schemas/information-gatherer.schema.json",
+        "skills/orchestrator-framework/agent-schemas/production-readiness-checker.schema.json",
+        "skills/orchestrator-framework/agent-schemas/project-analyzer.schema.json",
+        "skills/orchestrator-framework/agent-schemas/reality-assessor.schema.json",
+        "skills/orchestrator-framework/agent-schemas/research-planner.schema.json",
+        "skills/orchestrator-framework/agent-schemas/research-synthesizer.schema.json",
+        "skills/orchestrator-framework/agent-schemas/solution-brainstormer.schema.json",
+        "skills/orchestrator-framework/agent-schemas/solution-designer.schema.json",
+        "skills/orchestrator-framework/agent-schemas/spec-auditor.schema.json",
+        "skills/orchestrator-framework/agent-schemas/specification-creator.schema.json",
+        "skills/orchestrator-framework/agent-schemas/task-classifier.schema.json",
+        "skills/orchestrator-framework/agent-schemas/task-group-implementer.schema.json",
+        "skills/orchestrator-framework/agent-schemas/test-suite-runner.schema.json",
+        "skills/orchestrator-framework/agent-schemas/thermo-nuclear-code-quality-review-subagent.schema.json",
+        "skills/orchestrator-framework/agent-schemas/thermo-nuclear-review-subagent.schema.json",
+        "skills/orchestrator-framework/agent-schemas/ui-mockup-generator.schema.json",
+        "skills/orchestrator-framework/agent-schemas/user-docs-generator.schema.json",
+        "skills/orchestrator-framework/bin/agent-runtime",
+        "skills/orchestrator-framework/bin/agent-runtime/agent-resolver.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/codex-exec-capabilities.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/codex-worker-manager.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/create-runtime.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-agent.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-contract.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-task-preparer.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-payload.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-schema.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-writer.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/codex-exec.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/cursor.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/exact-native.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/index.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/kiro-cli.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/node-process-port.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/production-owner.mjs",
+        "skills/orchestrator-framework/bin/agent-runtime/production-runtime.mjs"
+      ],
+      "observations": {
+        "skills/init/bin/reconcile-gate-config.sh": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0755",
+            "sha256": "7b6dff13a2300c228c7cf4b4dbaa87222430f529ab953ba237cfb23b3d18f8a5"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/advisor.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "624dffc0225c0d691d128a7831b2a3e93db38fec7350f7a1b3ab483caa692224"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/bottleneck-analyzer.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "31efefa8152dd4518da71228074eecd968cf19295be25428f5a0e4a859c5d864"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/code-quality-pragmatist.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "dd1d94250c53095284ac6cb749f1c4d8e570849cdaaaeb8bd167b8bc14413eb8"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/code-reviewer.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d4a4ef74f51c72d79410e3af9969ac8a8e5d1ded7ed4e6d3c8af6697fc391058"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/codebase-analysis-reporter.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e6fc672dd63c28a4de3e53ff7c15cafc555ef4f3f39b714c66073bc118762e9a"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/docs-operator.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f04a4fa447aefd1d027e282290c2afea8af49a9f8548cedb99a3ed0934c7f7d4"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/e2e-test-verifier.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e58e7b99fdb3ab9cb1314d511bb6a2dd41a85055346dd95951a99a2c9c828523"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/gap-analyzer.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3433fbae5ca9154fae6cc5ab5bf774fdf713f6519ac7838f58d742150e34181b"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/html-companion-writer.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e2d0f67e0161d68eb9b23e9c112c2929f4c6ad773529e48ecfa394c9cbbc5218"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/implementation-completeness-checker.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "72871a88244ecf215164e9a3f45b49c6b7a8dc55f0807fbcd16c088888bf15aa"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/implementation-planner.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "fbc3671aacdfb842502e3ba2ce421a78e3f818822f8bbc75a38f670721d81401"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/information-gatherer.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "437fd35a7b2f1ebae0f7bdb7bb9a2ffbeeda975393880b2f11da94b8d13ee1b4"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/production-readiness-checker.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "995df1211037d9aef260c807b90f9b693891559bca2e053537f62e7c54e9e243"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/project-analyzer.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "6ea43187d3a8bc60caf9669b0b2c64a93fe82c3f1c2d0423f0703441485e41ad"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/reality-assessor.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "92276593dce6e5787ce09274e627488a4873b8f077ab54d2a4cc3a38501c05ab"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/research-planner.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "34dc195c6fdf0365017f2eacc6119b9568b8ef00d0f23739dd31f452f61d5397"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/research-synthesizer.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "49f713ec430578ce3415b99b2f4b0be38b196875927a54e80b90930910bebfa0"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/solution-brainstormer.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "893110f80103a0e8165087b609063c54de123700b004acdf4e10379491cef7c9"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/solution-designer.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "af29277f5d3d1b57d689144ad939a848bed7f3588ace06e13134cfc6b4ccc841"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/spec-auditor.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "419002f70132fc6b6af78446c87da8d54c94d951a1fb4971c5552ae9b643e9bd"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/specification-creator.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "77c5b077ec2d45e2bee225964c471090da68955dddcac86d5311b308b551e381"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/task-classifier.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "547aa69d850f7d009c11af68b353c091da341c9372f62497efa7fb73f13b65f4"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/task-group-implementer.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "929cac12cc952495998165c8db94baa52e7bdc5b1c45b78ecfc71b8fbce6ddec"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/test-suite-runner.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "91164c75745d179c204b259c825aca489d564ced1d6f982fe1624a6ad111a4e4"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/thermo-nuclear-code-quality-review-subagent.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2d18edd92bc247b1e5b2648ef386d5ebe36686c413663981b38404c985d1782c"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/thermo-nuclear-review-subagent.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "1d18bbcc95bacc3c1ca3a021de6dc2f73a23fd3219d0326a4ed5d2ecbf08a822"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/ui-mockup-generator.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3883edc9931c732a264bbb2c3b171021d237f78f4705d45de9434d240bde1164"
+          }
+        },
+        "skills/orchestrator-framework/agent-schemas/user-docs-generator.schema.json": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b27686c44f8753b0d8f1f0fc7a433c5de58df518534d0b92069cc120fa116edf"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/agent-resolver.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "78b9adc66459efcc62747a4199cbdd064d7ceda19380987498943862d280df45"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/codex-exec-capabilities.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f78f1f462dc736e80928b2251ee1e80f1d83cd4791796ab8ccf3a8c6270aea90"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/codex-worker-manager.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a5195b91bbfdf04c81723a9f75bebf19ddde92bd69cd010e7a6badda46d326c5"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/create-runtime.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "dd2bebff69834c90c9ee9f297f96e66e1a2b62315f59f6b27efcf2ee859fcacb" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-task-preparer.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "8e030e7d7443ab6e0f15f6b195779703300dec73303db150d8215a4ba6614641" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-payload.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "322d36ba4c49443e98fa76b92a74e876d530f72f4edfddbc4fd6dda3d7ee82e9" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/exact-native.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "cfadc6994b2ef920dcd168bc4ce0836a7ca7c0268c0367e1282f99a7ae2aecba" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/node-process-port.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "bf057fad88b2b9bf12835d1a0259ba1c06fab7ea69142da52947d561919388df" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/production-owner.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "aa63a1fdc82d425b9c086d3a59317a9ed36682e849e87b3760f477b80a1dc86c" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/production-runtime.mjs": {
+          "legacy": { "present": false },
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "ea7dda3278230528119eccd42fb25f01c5cc78dfb64ac15aa0b00890bd13c729" }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-agent.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2a63c13bb50e1b29654d84196d7f90418d075b27061ad16b4dfa799e08e8d667"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/dispatch-contract.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "5fb06a8769aa780ae05a6da97c29c5fd5cca84db3669ab6ec849b758b0c60406"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-schema.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "bb9d11c98b79876f2d3a600d41f1b6bd61300bd6687493dc6af046ce6983072a"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/execution-event-writer.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0005f692d9c6853edf6d81b1233bce774f64eafd6cd7e29fc9e64e7694b07d4d"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "directory",
+            "mode": "0755"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/codex-exec.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "51fe18b76899da1849f01f0fd4a7d0b156ecbbb231ae5358cf88dc6b1c078aea"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/cursor.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e3c02431fe6acf3dd3e9b35c6e70afa9f39c8c4d559aec826203bad008420e16"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/index.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c0b4e933392a4a964a714de48f7922fd74d17c59a8bbb9bbf3aae87abce37889"
+          }
+        },
+        "skills/orchestrator-framework/bin/agent-runtime/host-adapters/kiro-cli.mjs": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "491122801fe8b8467dd145ed891b864287d7d62d540bcf1b8e9ea51b37575ac8"
+          }
         }
       }
     }

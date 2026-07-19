@@ -117,9 +117,10 @@ const second = await repository.migrateState(process.env.STATE);
 const gate = repository.readState(process.env.STATE).orchestrator.gate_history[0];
 if (!first.migrated || second.migrated || gate.provenance_kind !== "complete" || gate.legacy_record !== null) process.exit(1);
 if (gate.final_actor !== "arbiter" || gate.advisor.response.selected_option !== "B" || gate.arbiter.response.selected_option !== "A") process.exit(1);
-if (!gate.advisor.logical_role_id?.startsWith("sha256:") || !gate.arbiter.logical_role_id?.startsWith("sha256:")) process.exit(1);
-if (gate.advisor.model !== "legacy-advisor" || gate.arbiter.model !== "legacy-arbiter") process.exit(1);
+if (gate.advisor.logical_role_id !== "maister:advisor" || gate.arbiter.logical_role_id !== "maister:advisor") process.exit(1);
+if (gate.advisor.terminal_dispatch !== null || gate.arbiter.terminal_dispatch !== null) process.exit(1);
 if (gate.advisor.attempts.length !== 1 || gate.arbiter.attempts.length !== 1) process.exit(1);
+if (gate.advisor.attempts[0].terminal_dispatch !== null || gate.arbiter.attempts[0].terminal_dispatch !== null) process.exit(1);
 NODE
 }
 

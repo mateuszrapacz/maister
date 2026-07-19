@@ -27,7 +27,32 @@ function requireHash(value, field) {
   return value;
 }
 
-export function createProvenance({ source, overlay, hostVersion, contentHash, materializedHash: suppliedMaterializedHash }) {
+function projectionBinding(agentProjection) {
+  if (!agentProjection || typeof agentProjection !== "object" || Array.isArray(agentProjection)) {
+    throwDistributionError("E_PROVENANCE_INCOMPLETE", "agent projection provenance must be an object", {});
+  }
+  if (!Number.isSafeInteger(agentProjection.schema_version) || agentProjection.schema_version < 1) {
+    throwDistributionError("E_PROVENANCE_INCOMPLETE", "agent projection schema version must be a positive integer", {
+      schema_version: agentProjection.schema_version,
+    });
+  }
+  return Object.freeze({
+    schema_version: agentProjection.schema_version,
+    projector_version: requireText(agentProjection.projector_version, "agentProjection.projector_version"),
+    canonical_set_digest: requireHash(agentProjection.canonical_set_digest, "agentProjection.canonical_set_digest"),
+    manifest_digest: requireHash(agentProjection.manifest_digest, "agentProjection.manifest_digest"),
+    projected_tree_digest: requireHash(agentProjection.projected_tree_digest, "agentProjection.projected_tree_digest"),
+  });
+}
+
+export function createProvenance({
+  source,
+  overlay,
+  hostVersion,
+  contentHash,
+  materializedHash: suppliedMaterializedHash,
+  agentProjection = null,
+}) {
   if (!source || !overlay || typeof source !== "object" || typeof overlay !== "object") {
     throwDistributionError("E_PROVENANCE_INCOMPLETE", "source, overlay, and content hash are required", {});
   }
@@ -73,6 +98,7 @@ export function createProvenance({ source, overlay, hostVersion, contentHash, ma
     hostVersion: resolvedHostVersion,
     sourceHash: hashes.source,
     materializedHash: hashes.materialized,
+    ...(agentProjection === null ? {} : { agent_projection: projectionBinding(agentProjection) }),
   };
   const provenanceHash = crypto.createHash("sha256").update(canonicalJson(payload)).digest("hex");
   return Object.freeze({

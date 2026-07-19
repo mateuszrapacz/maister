@@ -70,6 +70,34 @@ test("release interface validates every target from the central registry", () =>
   assert.equal(payload.targets.every(({ ok }) => ok === true), true);
 });
 
+test("Make and release CI keep projection, target checks, evidence, topology, parity, and package lifecycle in dependency order", () => {
+  const makefile = fs.readFileSync(path.join(ROOT, "Makefile"), "utf8");
+  const validationWorkflow = fs.readFileSync(path.join(ROOT, ".github/workflows/validate-generated-variants.yml"), "utf8");
+  const releaseWorkflow = fs.readFileSync(path.join(ROOT, ".github/workflows/release.yml"), "utf8");
+
+  assert.match(makefile, /test-targets:/u);
+  assert.match(makefile, /test-targets:/u);
+  assert.match(makefile, /test-materializer\n/u);
+  assert.match(makefile, /test-install\n/u);
+  assert.match(makefile, /validate: check-cursor-projection/u);
+  assert.match(makefile, /test: test-core test-runtime test-evidence test-topology/u);
+  assert.match(validationWorkflow, /make test-overlay TARGET=codex/u);
+  assert.match(validationWorkflow, /make test-overlay TARGET=cursor/u);
+  assert.match(validationWorkflow, /make test-overlay TARGET=kiro-cli/u);
+  assert.match(validationWorkflow, /make test-core test-runtime test-evidence/u);
+  assert.match(releaseWorkflow, /make test-core test-runtime/u);
+  assert.match(validationWorkflow, /permissions:\s+contents: read/u);
+  assert.match(releaseWorkflow, /permissions:\s+contents: read/u);
+  assert.match(releaseWorkflow, /publish:[\s\S]*permissions:\s+contents: write/u);
+  assert.match(validationWorkflow, /make test-topology/u);
+  const projection = releaseWorkflow.indexOf("make validate");
+  const parity = releaseWorkflow.indexOf("make test-parity-release");
+  const e3 = releaseWorkflow.indexOf("make generate-e3-attestation");
+  const packageIndex = releaseWorkflow.indexOf("make package TARGET=codex");
+  const lifecycle = releaseWorkflow.indexOf("Smoke extracted target archives");
+  assert.ok(projection >= 0 && parity > projection && e3 > parity && packageIndex > e3 && lifecycle > packageIndex);
+});
+
 test("Make rejects an unsafe package version without executing shell text", () => {
   const root = tempDirectory("maister-make-package-safety-");
   const marker = path.join(root, "package-injected");

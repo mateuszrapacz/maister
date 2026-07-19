@@ -1,5 +1,9 @@
 # Command Reference
 
+## Exact agent dispatch
+
+Workflow configuration uses exact `maister:<role_id>` values only. `advisor_agent` and `arbiter_agent` both default to `maister:advisor`, while Advisor and Arbiter retain separate decision/attempt identities. Bare `advisor`, aliases, legacy model fields, and legacy Codex TOML profiles are rejected; a v1 receipt is a clean-install rejection before mutation. A managed Codex worker receives the complete canonical prompt with pinned policy. Cursor and Kiro require exact observed native identities; if a safe runtime, authentication, or scenario is absent, E5/E6 is `unavailable`, never passed.
+
 ## Unified Entry Point
 
 ### `/maister:work [input]`

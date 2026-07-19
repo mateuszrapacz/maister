@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "projector_version": "1.0.0",
+  "expected_role_ids": [
+    "advisor",
+    "bottleneck-analyzer",
+    "code-quality-pragmatist",
+    "code-reviewer",
+    "codebase-analysis-reporter",
+    "docs-operator",
+    "e2e-test-verifier",
+    "gap-analyzer",
+    "html-companion-writer",
+    "implementation-completeness-checker",
+    "implementation-planner",
+    "information-gatherer",
+    "production-readiness-checker",
+    "project-analyzer",
+    "reality-assessor",
+    "research-planner",
+    "research-synthesizer",
+    "solution-brainstormer",
+    "solution-designer",
+    "spec-auditor",
+    "specification-creator",
+    "task-classifier",
+    "task-group-implementer",
+    "test-suite-runner",
+    "thermo-nuclear-code-quality-review-subagent",
+    "thermo-nuclear-review-subagent",
+    "ui-mockup-generator",
+    "user-docs-generator"
+  ],
+  "allowed_transform_ids": [
+    "canonical-body-v1",
+    "codex-output-schema-v1",
+    "cursor-frontmatter-v1",
+    "kiro-descriptor-v1"
+  ],
+  "defaults": {
+    "canonical_model_profile_id": "inherit"
+  },
+  "profiles": {
+    "tools": [
+      {
+        "id": "tools.read-only",
+        "tools": ["read", "search"]
+      },
+      {
+        "id": "tools.read-only-shell",
+        "tools": ["read", "search", "shell"]
+      },
+      {
+        "id": "tools.workspace",
+        "tools": ["read", "search", "write", "shell", "web", "browser", "cloud"]
+      }
+    ],
+    "permissions": [
+      {
+        "id": "permissions.read-only",
+        "filesystem": "read-only",
+        "network": "restricted"
+      },
+      {
+        "id": "permissions.workspace-write",
+        "filesystem": "workspace-write",
+        "network": "host-controlled"
+      }
+    ],
+    "model": [
+      {
+        "id": "model.codex-pinned",
+        "model": "gpt-5.6-terra",
+        "allow_inherit": false
+      },
+      {
+        "id": "model.host-inherit",
+        "model": null,
+        "allow_inherit": true
+      }
+    ],
+    "reasoning": [
+      {
+        "id": "reasoning.codex-high",
+        "effort": "high",
+        "allow_inherit": false
+      },
+      {
+        "id": "reasoning.host-inherit",
+        "effort": null,
+        "allow_inherit": true
+      }
+    ],
+    "timeout": [
+      {
+        "id": "timeout.standard",
+        "milliseconds": 900000
+      }
+    ],
+    "output_schema": [
+      {
+        "id": "output-schema.role-result-v1",
+        "schema_id": "maister.agent-role-result.v1"
+      }
+    ],
+    "concurrency": [
+      {
+        "id": "concurrency.read-only",
+        "class": "read-only-concurrent",
+        "max_parallel": 4
+      },
+      {
+        "id": "concurrency.workspace-write",
+        "class": "workspace-write-serial",
+        "max_parallel": 1
+      }
+    ],
+    "execution": [
+      {
+        "id": "codex.read-only",
+        "target": "codex",
+        "tools_profile_id": "tools.read-only",
+        "permissions_profile_id": "permissions.read-only",
+        "model_profile_id": "model.codex-pinned",
+        "reasoning_profile_id": "reasoning.codex-high",
+        "timeout_profile_id": "timeout.standard",
+        "output_schema_profile_id": "output-schema.role-result-v1",
+        "concurrency_profile_id": "concurrency.read-only"
+      },
+      {
+        "id": "codex.read-only-shell",
+        "target": "codex",
+        "tools_profile_id": "tools.read-only-shell",
+        "permissions_profile_id": "permissions.read-only",
+        "model_profile_id": "model.codex-pinned",
+        "reasoning_profile_id": "reasoning.codex-high",
+        "timeout_profile_id": "timeout.standard",
+        "output_schema_profile_id": "output-schema.role-result-v1",
+        "concurrency_profile_id": "concurrency.read-only"
+      },
+      {
+        "id": "codex.workspace-write",
+        "target": "codex",
+        "tools_profile_id": "tools.workspace",
+        "permissions_profile_id": "permissions.workspace-write",
+        "model_profile_id": "model.codex-pinned",
+        "reasoning_profile_id": "reasoning.codex-high",
+        "timeout_profile_id": "timeout.standard",
+        "output_schema_profile_id": "output-schema.role-result-v1",
+        "concurrency_profile_id": "concurrency.workspace-write"
+      },
+      {
+        "id": "cursor.read-only",
+        "target": "cursor",
+        "tools_profile_id": "tools.read-only",
+        "permissions_profile_id": "permissions.read-only",
+        "model_profile_id": "model.host-inherit",
+        "reasoning_profile_id": "reasoning.host-inherit",
+        "timeout_profile_id": "timeout.standard",
+        "output_schema_profile_id": "output-schema.role-result-v1",
+        "concurrency_profile_id": "concurrency.read-only"
+      },
+      {
+        "id": "cursor.read-only-shell",
+        "target": "cursor",
+        "tools_profile_id": "tools.read-only-shell",
+        "permissions_profile_id": "permissions.read-only",
+        "model_profile_id": "model.host-inherit",
+        "reasoning_profile_id": "reasoning.host-inherit",
+        "timeout_profile_id": "timeout.standard",
+        "output_schema_profile_id": "output-schema.role-result-v1",
+        "concurrency_profile_id": "concurrency.read-only"
+      },
+      {
+        "id": "cursor.workspace-write",
+        "target": "cursor",
+        "tools_profile_id": "tools.workspace",
+        "permissions_profile_id": "permissions.workspace-write",
+        "model_profile_id": "model.host-inherit",
+        "reasoning_profile_id": "reasoning.host-inherit",
+        "timeout_profile_id": "timeout.standard",
+        "output_schema_profile_id": "output-schema.role-result-v1",
+        "concurrency_profile_id": "concurrency.workspace-write"
+      },
+      {
+        "id": "kiro-cli.read-only",
+        "target": "kiro-cli",
+        "tools_profile_id": "tools.read-only",
+        "permissions_profile_id": "permissions.read-only",
+        "model_profile_id": "model.host-inherit",
+        "reasoning_profile_id": "reasoning.host-inherit",
+        "timeout_profile_id": "timeout.standard",
+        "output_schema_profile_id": "output-schema.role-result-v1",
+        "concurrency_profile_id": "concurrency.read-only"
+      },
+      {
+        "id": "kiro-cli.read-only-shell",
+        "target": "kiro-cli",
+        "tools_profile_id": "tools.read-only-shell",
+        "permissions_profile_id": "permissions.read-only",
+        "model_profile_id": "model.host-inherit",
+        "reasoning_profile_id": "reasoning.host-inherit",
+        "timeout_profile_id": "timeout.standard",
+        "output_schema_profile_id": "output-schema.role-result-v1",
+        "concurrency_profile_id": "concurrency.read-only"
+      },
+      {
+        "id": "kiro-cli.workspace-write",
+        "target": "kiro-cli",
+        "tools_profile_id": "tools.workspace",
+        "permissions_profile_id": "permissions.workspace-write",
+        "model_profile_id": "model.host-inherit",
+        "reasoning_profile_id": "reasoning.host-inherit",
+        "timeout_profile_id": "timeout.standard",
+        "output_schema_profile_id": "output-schema.role-result-v1",
+        "concurrency_profile_id": "concurrency.workspace-write"
+      }
+    ]
+  },
+  "targets": {
+    "codex": {
+      "adapter_id": "codex.exec",
+      "representation": "codex-prompt-schema",
+      "native_role_external_id_template": null,
+      "destinations": [
+        {
+          "kind": "prompt",
+          "path_template": "skills/orchestrator-framework/agents/{role_id}.md",
+          "mode": "0644"
+        },
+        {
+          "kind": "output-schema",
+          "path_template": "skills/orchestrator-framework/agent-schemas/{role_id}.schema.json",
+          "mode": "0644"
+        }
+      ],
+      "transform_ids": ["canonical-body-v1", "codex-output-schema-v1"],
+      "support_ids": []
+    },
+    "cursor": {
+      "adapter_id": "cursor.native",
+      "representation": "cursor-markdown",
+      "native_role_external_id_template": "maister-{role_id}",
+      "destinations": [
+        {
+          "kind": "agent",
+          "path_template": "agents/{role_id}.md",
+          "mode": "0644"
+        }
+      ],
+      "transform_ids": ["canonical-body-v1", "cursor-frontmatter-v1"],
+      "support_ids": ["cursor:explore"]
+    },
+    "kiro-cli": {
+      "adapter_id": "kiro-cli.native",
+      "representation": "kiro-descriptor-prompt",
+      "native_role_external_id_template": "maister-{role_id}",
+      "destinations": [
+        {
+          "kind": "descriptor",
+          "path_template": "maister-{role_id}.json",
+          "mode": "0644"
+        },
+        {
+          "kind": "prompt",
+          "path_template": "instructions/maister-{role_id}.md",
+          "mode": "0644"
+        }
+      ],
+      "transform_ids": ["canonical-body-v1", "kiro-descriptor-v1"],
+      "support_ids": ["kiro-cli:explore", "kiro-cli:maister"]
+    }
+  },
+  "roles": [
+    { "role_id": "advisor", "execution_profiles": { "codex": "codex.read-only", "cursor": "cursor.read-only", "kiro-cli": "kiro-cli.read-only" } },
+    { "role_id": "bottleneck-analyzer", "execution_profiles": { "codex": "codex.read-only", "cursor": "cursor.read-only", "kiro-cli": "kiro-cli.read-only" } },
+    { "role_id": "code-quality-pragmatist", "execution_profiles": { "codex": "codex.read-only-shell", "cursor": "cursor.read-only-shell", "kiro-cli": "kiro-cli.read-only-shell" } },
+    { "role_id": "code-reviewer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "codebase-analysis-reporter", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "docs-operator", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "e2e-test-verifier", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "gap-analyzer", "execution_profiles": { "codex": "codex.read-only", "cursor": "cursor.read-only", "kiro-cli": "kiro-cli.read-only" } },
+    { "role_id": "html-companion-writer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "implementation-completeness-checker", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "implementation-planner", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "information-gatherer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "production-readiness-checker", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "project-analyzer", "execution_profiles": { "codex": "codex.read-only", "cursor": "cursor.read-only", "kiro-cli": "kiro-cli.read-only" } },
+    { "role_id": "reality-assessor", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "research-planner", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "research-synthesizer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "solution-brainstormer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "solution-designer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "spec-auditor", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "specification-creator", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "task-classifier", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "task-group-implementer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "test-suite-runner", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "thermo-nuclear-code-quality-review-subagent", "execution_profiles": { "codex": "codex.read-only", "cursor": "cursor.read-only", "kiro-cli": "kiro-cli.read-only" } },
+    { "role_id": "thermo-nuclear-review-subagent", "execution_profiles": { "codex": "codex.read-only-shell", "cursor": "cursor.read-only-shell", "kiro-cli": "kiro-cli.read-only-shell" } },
+    { "role_id": "ui-mockup-generator", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
+    { "role_id": "user-docs-generator", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } }
+  ],
+  "support_inventory": [
+    {
+      "support_id": "cursor:explore",
+      "target": "cursor",
+      "native_role_external_id": "explore",
+      "execution_profile_id": "cursor.read-only",
+      "assets": [
+        { "kind": "agent", "source": "assets/support-agents/explore.md", "destination": "agents/explore.md", "mode": "0644" }
+      ]
+    },
+    {
+      "support_id": "kiro-cli:explore",
+      "target": "kiro-cli",
+      "native_role_external_id": "maister-explore",
+      "execution_profile_id": "kiro-cli.read-only",
+      "assets": [
+        { "kind": "descriptor", "source": "assets/support-agents/maister-explore.json", "destination": "maister-explore.json", "mode": "0644" },
+        { "kind": "prompt", "source": "assets/support-agents/instructions/maister-explore.md", "destination": "instructions/maister-explore.md", "mode": "0644" }
+      ]
+    },
+    {
+      "support_id": "kiro-cli:maister",
+      "target": "kiro-cli",
+      "native_role_external_id": "maister",
+      "execution_profile_id": "kiro-cli.workspace-write",
+      "assets": [
+        { "kind": "descriptor", "source": "assets/support-agents/maister.json", "destination": "maister.json", "mode": "0644" },
+        { "kind": "prompt", "source": "assets/support-agents/instructions/maister.md", "destination": "instructions/maister.md", "mode": "0644" }
+      ]
+    }
+  ]
+}

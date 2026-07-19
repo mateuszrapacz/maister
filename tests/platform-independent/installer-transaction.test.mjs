@@ -20,6 +20,7 @@ import { e3AttestationDigest, portableCoreTreeHash } from "../../plugins/maister
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
 const SOURCE_ROOT = path.join(ROOT, "tests/fixtures/platform-independent/source-repos/basic");
+const MULTI_ROOT_HOME = path.join(ROOT, "tests/fixtures/platform-independent/user-homes/multi-root");
 const COMMIT = "0123456789abcdef0123456789abcdef01234567";
 const TARGETS = ["codex", "cursor", "kiro-cli"];
 
@@ -44,6 +45,17 @@ function sandbox() {
     path.join(sourceRoot, "plugins/maister/overlays"),
     { recursive: true },
   );
+  fs.cpSync(
+    path.join(ROOT, "plugins/maister/agent-projection-v1.json"),
+    path.join(sourceRoot, "plugins/maister/agent-projection-v1.json"),
+  );
+  for (const directory of ["agents", "skills"]) {
+    fs.cpSync(
+      path.join(ROOT, "plugins/maister", directory),
+      path.join(sourceRoot, "plugins/maister", directory),
+      { recursive: true },
+    );
+  }
   const git = {
     topLevel: () => fs.realpathSync(sourceRoot),
     head: () => COMMIT,
@@ -96,6 +108,73 @@ function readAttestation(box) {
 
 function activePath(box, target = "codex") {
   return getTargetPaths({ target, home: box.home, env: box.env }).activeRoot;
+}
+
+function managedRootPath(box, target, rootId) {
+  const root = getTargetPaths({ target, home: box.home, env: box.env }).managedRoots.find((entry) => entry.rootId === rootId);
+  assert.ok(root, `${target}.${rootId}`);
+  return root.path;
+}
+
+function snapshotPath(targetPath) {
+  const stat = fs.lstatSync(targetPath, { throwIfNoEntry: false });
+  if (!stat) return { exists: false };
+  const mode = (stat.mode & 0o7777).toString(8).padStart(4, "0");
+  if (stat.isDirectory()) return { exists: true, type: "directory", mode, tree: hashTree(targetPath) };
+  if (stat.isSymbolicLink()) return { exists: true, type: "symlink", mode, linkTarget: fs.readlinkSync(targetPath) };
+  return { exists: true, type: "file", mode, sha256: crypto.createHash("sha256").update(fs.readFileSync(targetPath)).digest("hex") };
+}
+
+function snapshotManagedHome(box) {
+  return snapshotPath(box.home);
+}
+
+function snapshotStateRoot(box, target = "kiro-cli") {
+  return snapshotPath(getTargetPaths({ target, home: box.home, env: box.env }).stateRoot);
+}
+
+function seedMultiRootHome(box) {
+  fs.cpSync(MULTI_ROOT_HOME, box.home, { recursive: true });
+  return {
+    descriptor: fs.readFileSync(path.join(box.home, ".kiro/agents/user-owned.json")),
+    prompt: fs.readFileSync(path.join(box.home, ".kiro/agents/instructions/user-owned.md")),
+    nested: fs.readFileSync(path.join(box.home, ".kiro/agents/user-space/nested.txt")),
+  };
+}
+
+function assertUnrelatedKiroContent(box, expected) {
+  assert.deepEqual(fs.readFileSync(path.join(box.home, ".kiro/agents/user-owned.json")), expected.descriptor);
+  assert.deepEqual(fs.readFileSync(path.join(box.home, ".kiro/agents/instructions/user-owned.md")), expected.prompt);
+  assert.deepEqual(fs.readFileSync(path.join(box.home, ".kiro/agents/user-space/nested.txt")), expected.nested);
+}
+
+function prepareStateLayout(box, target = "kiro-cli") {
+  const paths = getTargetPaths({ target, home: box.home, env: box.env });
+  for (const directory of [paths.stateRoot, paths.journalsRoot, paths.receiptsRoot, paths.backupsRoot, paths.stagingRoot]) {
+    fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+    fs.chmodSync(directory, 0o700);
+  }
+  return paths;
+}
+
+function addReceiptOwnedStaleLeaf(receiptPath, nativeRoot, { path: relativePath, bytes, mode = 0o640 }) {
+  const targetPath = path.join(nativeRoot, ...relativePath.split("/"));
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  fs.writeFileSync(targetPath, bytes, { mode });
+  fs.chmodSync(targetPath, mode);
+  const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
+  receipt.managed_inventory.push({
+    root_id: "kiro_native_agents",
+    path: relativePath,
+    type: "file",
+    mode: mode.toString(8).padStart(4, "0"),
+    sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+    link_target: null,
+    ownership: "whole_file",
+  });
+  receipt.managed_inventory.sort((left, right) => left.root_id.localeCompare(right.root_id) || left.path.localeCompare(right.path));
+  fs.writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
+  return targetPath;
 }
 
 function readActiveSnapshot(box, target = "codex") {
@@ -282,8 +361,9 @@ function recoveryFixture() {
   fs.writeFileSync(activeReceiptPath, "receipt-original\n");
   fs.chmodSync(activeReceiptPath, 0o600);
   const settings = [{ path: "settings.json", targetPath: settingsPath }];
-  const paths = { home, stateRoot, activeRoot, activeReceiptPath };
-  const manifest = snapshotState({ activeRoot, settings, backupRoot, activeReceiptPath });
+  const managedRoots = [{ rootId: "plugin_private", path: activeRoot, ownership: "whole_tree" }];
+  const paths = { home, stateRoot, activeRoot, activeReceiptPath, managedRoots };
+  const manifest = snapshotState({ managedRoots, managedInventory: [], settings, backupRoot, activeReceiptPath, home });
   return { root, home, stateRoot, activeRoot, settingsPath, activeReceiptPath, backupRoot, outside, paths, manifest };
 }
 
@@ -330,7 +410,7 @@ test("clean lifecycle commands have durable receipts for every target seam", asy
   for (const target of TARGETS) {
     const box = sandbox();
     const installed = output(await invoke("install", target, box));
-    assert.equal(installed.ok, true, target);
+    assert.equal(installed.ok, true, `${target}: ${JSON.stringify(installed)}`);
     assert.equal(installed.code, 0, target);
     assert.equal(fs.existsSync(activePath(box, target)), true, target);
     assert.equal(output(await invoke("verify", target, box)).code, 0, target);
@@ -434,11 +514,11 @@ test("direct executeLifecycle rejects a forged portable-core hash before publish
   await assert.rejects(
     () => executeLifecycle("install", {
       target: "codex",
-      source: `local:${SOURCE_ROOT}`,
-      resolvedSourceRoot: SOURCE_ROOT,
+      source: `local:${box.sourceRoot}`,
+      resolvedSourceRoot: box.sourceRoot,
       home: box.home,
       env: box.env,
-      git: cleanGit,
+      git: box.git,
       overlayRoot: path.join(ROOT, "plugins/maister/overlays"),
       e3Attestation: forged,
     }),
@@ -841,7 +921,7 @@ test("candidate receipts bind complete provenance hashes to collected and evalua
   const hashFields = ["source_hash", "overlay_hash", "materialized_hash", "provenance_hash"];
 
   assert.equal(receipt.target.overlay_id, "maister/codex");
-  assert.deepEqual(Object.keys(receipt.provenance), hashFields);
+  assert.deepEqual(Object.keys(receipt.provenance), [...hashFields, "agent_projection"]);
   for (const field of hashFields) assert.match(receipt.provenance[field], /^[0-9a-f]{64}$/u);
   assert.equal(receipt.source.content_hash, receipt.provenance.source_hash);
   assert.deepEqual(receipt.evidence.map((record) => record.capability), ["E1", "E2", "E3", "E4", "E5", "E6"]);
@@ -913,7 +993,14 @@ test("supplied native evidence is accepted only when all provenance hashes match
     source_commit: previous.source.resolved_commit,
     source_version: previous.source.source_version,
     overlay_version: previous.target.overlay_version,
+    overlay_id: previous.target.overlay_id,
+    host: previous.target.id,
     scenario_version: previous.compatibility.scenario_version,
+    schema_version: previous.provenance.agent_projection.schema_version,
+    projector_version: previous.provenance.agent_projection.projector_version,
+    canonical_set_digest: previous.provenance.agent_projection.canonical_set_digest,
+    manifest_digest: previous.provenance.agent_projection.manifest_digest,
+    projected_tree_digest: previous.provenance.agent_projection.projected_tree_digest,
     source_hash: previous.provenance.source_hash,
     overlay_hash: previous.provenance.overlay_hash,
     materialized_hash: previous.provenance.materialized_hash,
@@ -992,4 +1079,251 @@ test("receipt provenance and evidence survive update, exact rollback, and uninst
   assert.deepEqual(uninstalledReceipt.provenance, rolledBackReceipt.provenance);
   assert.deepEqual(uninstalledReceipt.evidence, rolledBackReceipt.evidence);
   assert.deepEqual(uninstalledReceipt.compatibility, rolledBackReceipt.compatibility);
+});
+
+test("receipt and journal v2 bind managed roots, root-scoped inventory, and projection provenance", async () => {
+  const box = sandbox();
+  const installed = output(await invoke("install", "kiro-cli", box));
+  const paths = getTargetPaths({ target: "kiro-cli", home: box.home, env: box.env });
+  const receipt = JSON.parse(fs.readFileSync(installed.receipt_path, "utf8"));
+  const journal = JSON.parse(fs.readFileSync(installed.journal_path, "utf8"));
+
+  assert.equal(receipt.schema_version, 2);
+  assert.equal(journal.schema_version, 2);
+  assert.deepEqual(receipt.managed_roots, paths.managedRoots.map(({ rootId, path: rootPath, ownership }) => ({ root_id: rootId, path: rootPath, ownership })));
+  assert.deepEqual(journal.managed_roots, receipt.managed_roots);
+  assert.equal(receipt.managed_inventory.every((entry) => typeof entry.root_id === "string"), true);
+  assert.equal(new Set(receipt.managed_inventory.map((entry) => `${entry.root_id}\0${entry.path}`)).size, receipt.managed_inventory.length);
+  assert.deepEqual(receipt.provenance.agent_projection, journal.candidate_receipt.provenance.agent_projection);
+  assert.deepEqual(Object.keys(receipt.provenance.agent_projection), [
+    "schema_version", "projector_version", "canonical_set_digest", "manifest_digest", "projected_tree_digest",
+  ]);
+  assert.doesNotThrow(() => validateReceipt(receipt, { paths }));
+  assert.doesNotThrow(() => validateJournal(journal, { paths }));
+});
+
+test("Kiro installs canonical and support leaves into the native leaf-set root only", async () => {
+  const box = sandbox();
+  const unrelated = seedMultiRootHome(box);
+  const installed = output(await invoke("install", "kiro-cli", box));
+  const receipt = JSON.parse(fs.readFileSync(installed.receipt_path, "utf8"));
+  const nativeRoot = managedRootPath(box, "kiro-cli", "kiro_native_agents");
+  const privateRoot = managedRootPath(box, "kiro-cli", "plugin_private");
+
+  assert.equal(installed.code, 0);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "maister-advisor.json")), true);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "instructions/maister-advisor.md")), true);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "maister.json")), true);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "instructions/maister.md")), true);
+  assert.equal(fs.existsSync(path.join(privateRoot, "maister-advisor.json")), false);
+  assert.equal(fs.existsSync(path.join(privateRoot, "agents")), false);
+  assert.equal(receipt.managed_inventory.filter((entry) => entry.root_id === "kiro_native_agents").length, 60);
+  assert.equal(receipt.managed_inventory.some((entry) => entry.root_id === "kiro_native_agents" && entry.path.startsWith("agents/")), false);
+  assertUnrelatedKiroContent(box, unrelated);
+});
+
+test("status and verify both detect drift in a Kiro native managed leaf", async () => {
+  const box = sandbox();
+  await invoke("install", "kiro-cli", box);
+  const nativeLeaf = path.join(managedRootPath(box, "kiro-cli", "kiro_native_agents"), "maister-advisor.json");
+  fs.appendFileSync(nativeLeaf, "\n");
+
+  for (const command of ["status", "verify"]) {
+    const result = output(await invoke(command, "kiro-cli", box));
+    assert.equal(result.code, 5, command);
+    assert.equal(result.error.kind, "E_DRIFT_CONFLICT", command);
+  }
+});
+
+test("byte-identical unmanaged Kiro native leaves collide before any mutation", async () => {
+  const sourceBox = sandbox();
+  await invoke("install", "kiro-cli", sourceBox);
+  const identicalBytes = fs.readFileSync(path.join(managedRootPath(sourceBox, "kiro-cli", "kiro_native_agents"), "maister-advisor.json"));
+
+  const box = sandbox();
+  const unrelated = seedMultiRootHome(box);
+  const paths = prepareStateLayout(box);
+  fs.writeFileSync(path.join(paths.managedRoots.find(({ rootId }) => rootId === "kiro_native_agents").path, "maister-advisor.json"), identicalBytes);
+  const homeBefore = snapshotManagedHome(box);
+  const stateBefore = snapshotStateRoot(box);
+
+  const result = output(await invoke("install", "kiro-cli", box));
+  assert.equal(result.code, 5);
+  assert.equal(result.error.kind, "E_DRIFT_CONFLICT");
+  assert.deepEqual(snapshotManagedHome(box), homeBefore);
+  assert.deepEqual(snapshotStateRoot(box), stateBefore);
+  assert.equal(fs.existsSync(paths.lockPath), false);
+  assert.equal(fs.readdirSync(paths.journalsRoot).length, 0);
+  assertUnrelatedKiroContent(box, unrelated);
+});
+
+test("update removes an unchanged receipt-owned stale Kiro leaf", async () => {
+  const box = sandbox();
+  const installed = output(await invoke("install", "kiro-cli", box));
+  const stalePath = addReceiptOwnedStaleLeaf(
+    installed.receipt_path,
+    managedRootPath(box, "kiro-cli", "kiro_native_agents"),
+    { path: "maister-stale.json", bytes: Buffer.from("stale-owned\n") },
+  );
+
+  const updated = output(await invoke("update", "kiro-cli", box));
+  assert.equal(updated.code, 0);
+  assert.equal(fs.existsSync(stalePath), false);
+  const receipt = JSON.parse(fs.readFileSync(updated.receipt_path, "utf8"));
+  assert.equal(receipt.managed_inventory.some((entry) => entry.root_id === "kiro_native_agents" && entry.path === "maister-stale.json"), false);
+});
+
+test("modified receipt-owned stale Kiro leaves fail update with zero mutation", async () => {
+  const box = sandbox();
+  const unrelated = seedMultiRootHome(box);
+  const installed = output(await invoke("install", "kiro-cli", box));
+  const stalePath = addReceiptOwnedStaleLeaf(
+    installed.receipt_path,
+    managedRootPath(box, "kiro-cli", "kiro_native_agents"),
+    { path: "maister-stale.json", bytes: Buffer.from("receipt-owned\n") },
+  );
+  fs.writeFileSync(stalePath, "operator-modified\n");
+  const homeBefore = snapshotManagedHome(box);
+  const stateBefore = snapshotStateRoot(box);
+
+  const result = output(await invoke("update", "kiro-cli", box));
+  assert.equal(result.code, 5);
+  assert.equal(result.error.kind, "E_DRIFT_CONFLICT");
+  assert.deepEqual(snapshotManagedHome(box), homeBefore);
+  assert.deepEqual(snapshotStateRoot(box), stateBefore);
+  assertUnrelatedKiroContent(box, unrelated);
+});
+
+test("Kiro uninstall removes only receipt-owned leaves and restores minimum parent topology", async () => {
+  const box = sandbox();
+  const unrelated = seedMultiRootHome(box);
+  await invoke("install", "kiro-cli", box);
+  const nativeRoot = managedRootPath(box, "kiro-cli", "kiro_native_agents");
+
+  const result = output(await invoke("uninstall", "kiro-cli", box));
+  assert.equal(result.code, 0);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "maister-advisor.json")), false);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "instructions/maister-advisor.md")), false);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "maister.json")), false);
+  assert.equal(fs.existsSync(managedRootPath(box, "kiro-cli", "plugin_private")), false);
+  assert.equal(fs.existsSync(nativeRoot), true, "operator-owned siblings keep the shared native root present");
+  assertUnrelatedKiroContent(box, unrelated);
+});
+
+test("Kiro rollback restores both managed roots while preserving unrelated native agents", async () => {
+  const box = sandbox();
+  const unrelated = seedMultiRootHome(box);
+  await invoke("install", "kiro-cli", box);
+  const before = snapshotManagedHome(box);
+  await invoke("update", "kiro-cli", box);
+
+  const rolledBack = output(await invoke("rollback", "kiro-cli", box));
+  assert.equal(rolledBack.code, 0);
+  assert.deepEqual(snapshotManagedHome(box), before);
+  assertUnrelatedKiroContent(box, unrelated);
+});
+
+test("persisted v1 active receipt state is rejected before lifecycle mutation", async () => {
+  const box = sandbox();
+  const unrelated = seedMultiRootHome(box);
+  const paths = prepareStateLayout(box);
+  const receiptId = "00000000-0000-4000-8000-000000000001";
+  const receiptPath = path.join(paths.receiptsRoot, `${receiptId}.json`);
+  fs.writeFileSync(receiptPath, `${JSON.stringify({ schema_version: 1, receipt_id: receiptId })}\n`);
+  fs.writeFileSync(paths.activeReceiptPath, `${JSON.stringify({ schema_version: 1, receipt_id: receiptId, receipt_path: receiptPath })}\n`);
+  const homeBefore = snapshotManagedHome(box);
+  const stateBefore = snapshotStateRoot(box);
+
+  const result = output(await invoke("install", "kiro-cli", box));
+  assert.equal(result.code, 4);
+  assert.equal(result.error.kind, "E_CLEAN_INSTALL_REQUIRED");
+  assert.match(result.message, /clean install/i);
+  assert.deepEqual(snapshotManagedHome(box), homeBefore);
+  assert.deepEqual(snapshotStateRoot(box), stateBefore);
+  assertUnrelatedKiroContent(box, unrelated);
+});
+
+test("persisted v1 journal state is rejected before lock or recovery mutation", async () => {
+  const box = sandbox();
+  const unrelated = seedMultiRootHome(box);
+  const paths = prepareStateLayout(box);
+  fs.writeFileSync(path.join(paths.journalsRoot, "00000000-0000-4000-8000-000000000001.json"), `${JSON.stringify({ schema_version: 1 })}\n`);
+  const homeBefore = snapshotManagedHome(box);
+  const stateBefore = snapshotStateRoot(box);
+
+  const result = output(await invoke("recover", "kiro-cli", box));
+  assert.equal(result.code, 4);
+  assert.equal(result.error.kind, "E_CLEAN_INSTALL_REQUIRED");
+  assert.deepEqual(snapshotManagedHome(box), homeBefore);
+  assert.deepEqual(snapshotStateRoot(box), stateBefore);
+  assert.equal(fs.existsSync(paths.lockPath), false);
+  assertUnrelatedKiroContent(box, unrelated);
+});
+
+async function assertKiroFailureRestores(point) {
+  const box = sandbox();
+  const unrelated = seedMultiRootHome(box);
+  await invoke("install", "kiro-cli", box);
+  clearJournals(box, "kiro-cli");
+  const paths = getTargetPaths({ target: "kiro-cli", home: box.home, env: box.env });
+  const homeBefore = snapshotManagedHome(box);
+  const activeReceiptBefore = fs.readFileSync(paths.activeReceiptPath);
+
+  const result = output(await invoke("update", "kiro-cli", box, ["--failure-point", point]));
+  assert.equal(result.code, 7, point);
+  assert.deepEqual(snapshotManagedHome(box), homeBefore, point);
+  assert.deepEqual(fs.readFileSync(paths.activeReceiptPath), activeReceiptBefore, point);
+  assert.equal(fs.existsSync(result.journal_path), true, point);
+  assert.equal(fs.existsSync(JSON.parse(fs.readFileSync(result.journal_path, "utf8")).candidate_receipt?.transaction?.backup_root ?? path.dirname(result.journal_path)), true, point);
+  assertUnrelatedKiroContent(box, unrelated);
+}
+
+test("Kiro failure after snapshot restores every root and unrelated leaf", async () => {
+  await assertKiroFailureRestores("after-snapshot");
+});
+
+test("Kiro failure during private-root mutation restores every root and unrelated leaf", async () => {
+  await assertKiroFailureRestores("during-commit");
+});
+
+test("Kiro failure after the private root restores every root and unrelated leaf", async () => {
+  await assertKiroFailureRestores("after-root-plugin_private");
+});
+
+test("Kiro failure after the native leaf-set root restores every root and unrelated leaf", async () => {
+  await assertKiroFailureRestores("after-root-kiro_native_agents");
+});
+
+test("Kiro failure after all root mutations restores every root and unrelated leaf", async () => {
+  await assertKiroFailureRestores("after-tree-swap");
+});
+
+test("Kiro failure after settings mutation restores every root, setting, and unrelated leaf", async () => {
+  await assertKiroFailureRestores("after-settings");
+});
+
+test("Kiro failure after integrity verification restores every root and unrelated leaf", async () => {
+  await assertKiroFailureRestores("after-integrity");
+});
+
+test("Kiro failure after E4 construction restores every root and unrelated leaf", async () => {
+  await assertKiroFailureRestores("after-e4");
+});
+
+test("Kiro failure after receipt publication restores the prior receipt and every root", async () => {
+  await assertKiroFailureRestores("after-receipt");
+});
+
+test("one Kiro target lock protects both managed roots with stable busy semantics", async () => {
+  const box = sandbox();
+  const unrelated = seedMultiRootHome(box);
+  const paths = prepareStateLayout(box);
+  fs.writeFileSync(paths.lockPath, "held\n");
+  const homeBefore = snapshotManagedHome(box);
+
+  const result = output(await invoke("install", "kiro-cli", box));
+  assert.equal(result.code, 6);
+  assert.equal(result.error.kind, "E_LOCK_BUSY");
+  assert.deepEqual(snapshotManagedHome(box), homeBefore);
+  assertUnrelatedKiroContent(box, unrelated);
 });

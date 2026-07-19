@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
 
+import { validateDispatchTerminalResult } from "./agent-runtime/dispatch-contract.mjs";
+
 const ROOT_FIELDS = new Set(["orchestrator", "task", "phases"]);
 const PHASE_STATUSES = new Set(["pending", "in_progress", "completed", "skipped", "failed", "blocked"]);
 const GATE_STATUSES = new Set(["advisor_pending", "arbiter_pending", "user_pending", "decided", "blocked"]);
@@ -18,9 +20,9 @@ const GATE_FIELDS = [
   "error", "advisor", "arbiter", "continuation", "provenance_kind", "legacy_record", "created_at",
   "updated_at", "decided_at",
 ];
-const ROLE_FIELDS = ["logical_role_id", "agent", "model", "response", "attempts", "exhausted"];
+const ROLE_FIELDS = ["logical_role_id", "dispatch_id", "terminal_dispatch", "response", "attempts", "exhausted"];
 const RESPONSE_FIELDS = ["selected_option", "rationale", "confidence", "escalate_to_user"];
-const ATTEMPT_FIELDS = ["number", "status", "started_at", "completed_at", "error"];
+const ATTEMPT_FIELDS = ["number", "dispatch_id", "terminal_dispatch", "status", "started_at", "completed_at", "error"];
 const WORK_FIELDS = ["id", "ordinal", "status", "source_gate_key", "selected_option"];
 const OUTBOX_FIELDS = [
   "dispatch_id", "source_gate_key", "kind", "phase_id", "target_id", "status", "attempts",
@@ -355,9 +357,26 @@ function validateResponse(response, location, options) {
   boolean(response.escalate_to_user, `${location}.escalate_to_user`);
 }
 
+function validateTerminalDispatch(value, location, logicalRoleId, dispatchId) {
+  if (value === null) return;
+  let terminal;
+  try {
+    terminal = validateDispatchTerminalResult(value);
+  } catch (error) {
+    invalid(`${location} is not a validated terminal dispatch result: ${error.message}`);
+  }
+  if (terminal.requested_logical_role_id !== logicalRoleId || terminal.dispatch_id !== dispatchId) {
+    invalid(`${location} does not match its persisted role and dispatch identities`);
+  }
+}
+
 function validateRole(role, location, options) {
   exactFields(role, ROLE_FIELDS, location);
-  for (const field of ["logical_role_id", "agent", "model"]) nonEmptyString(role[field], `${location}.${field}`, { nullable: true });
+  nonEmptyString(role.logical_role_id, `${location}.logical_role_id`, { nullable: true });
+  if (role.logical_role_id !== null && !/^maister:[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(role.logical_role_id)) {
+    invalid(`${location}.logical_role_id must use exact maister:<role_id> grammar`);
+  }
+  nonEmptyString(role.dispatch_id, `${location}.dispatch_id`, { nullable: true, stable: true });
   validateResponse(role.response, `${location}.response`, options);
   if (!Array.isArray(role.attempts)) invalid(`${location}.attempts must be a sequence`);
   const numbers = new Set();
@@ -368,11 +387,17 @@ function validateRole(role, location, options) {
     if (numbers.has(attempt.number)) invalid(`${location}.attempts has duplicate number ${attempt.number}`);
     numbers.add(attempt.number);
     if (!ATTEMPT_STATUSES.has(attempt.status)) invalid(`${attemptLocation}.status is unsupported`);
+    nonEmptyString(attempt.dispatch_id, `${attemptLocation}.dispatch_id`, { stable: true });
+    validateTerminalDispatch(attempt.terminal_dispatch, `${attemptLocation}.terminal_dispatch`, role.logical_role_id, attempt.dispatch_id);
     timestamp(attempt.started_at, `${attemptLocation}.started_at`);
     timestamp(attempt.completed_at, `${attemptLocation}.completed_at`, true);
     nonEmptyString(attempt.error, `${attemptLocation}.error`, { nullable: true });
     if ((attempt.status === "started") !== (attempt.completed_at === null)) invalid(`${attemptLocation}.completed_at conflicts with status`);
+    if (attempt.status === "started" && attempt.terminal_dispatch !== null) invalid(`${attemptLocation}.started attempt cannot have terminal dispatch evidence`);
   });
+  if (role.terminal_dispatch !== null) {
+    validateTerminalDispatch(role.terminal_dispatch, `${location}.terminal_dispatch`, role.logical_role_id, role.attempts.at(-1)?.dispatch_id);
+  }
   boolean(role.exhausted, `${location}.exhausted`);
 }
 
@@ -416,6 +441,28 @@ function validateGate(gate, index, phaseIds) {
     invalid(`${location} pending or blocked gate must have null selection and system actor`);
   }
   if (gate.status === "arbiter_pending" && gate.advisor.response === null) invalid(`${location} requires completed Advisor provenance before Arbiter`);
+}
+
+function validateRoleTransition(previousRole, nextRole, location) {
+  for (const field of ["logical_role_id", "dispatch_id"]) {
+    if (previousRole[field] !== null && nextRole[field] !== previousRole[field]) invalid(`${location}.${field} is immutable once assigned`);
+  }
+  if (previousRole.terminal_dispatch !== null && JSON.stringify(previousRole.terminal_dispatch) !== JSON.stringify(nextRole.terminal_dispatch)) {
+    invalid(`${location}.terminal_dispatch is immutable once recorded`);
+  }
+  if (nextRole.attempts.length < previousRole.attempts.length) invalid(`${location}.attempts cannot be removed`);
+  previousRole.attempts.forEach((attempt, index) => {
+    const successor = nextRole.attempts[index];
+    if (!successor || successor.number !== attempt.number || successor.dispatch_id !== attempt.dispatch_id) {
+      invalid(`${location}.attempts[${index}] identity is immutable`);
+    }
+    if (attempt.status !== "started" && JSON.stringify(successor) !== JSON.stringify(attempt)) {
+      invalid(`${location}.attempts[${index}] is immutable after completion`);
+    }
+    if (attempt.terminal_dispatch !== null && JSON.stringify(successor.terminal_dispatch) !== JSON.stringify(attempt.terminal_dispatch)) {
+      invalid(`${location}.attempts[${index}].terminal_dispatch is immutable once recorded`);
+    }
+  });
 }
 
 function validateWork(work, gates) {
@@ -561,6 +608,8 @@ export function validateStateTransition(previous, next) {
     const successor = nextGates.get(key);
     if (!successor) invalid(`gate ${key} cannot be removed`);
     if (!GATE_TRANSITIONS[gate.status].has(successor.status)) invalid(`gate ${key} has illegal status transition`);
+    validateRoleTransition(gate.advisor, successor.advisor, `gate ${key}.advisor`);
+    validateRoleTransition(gate.arbiter, successor.arbiter, `gate ${key}.arbiter`);
     if (gate.status === "decided" || gate.status === "blocked") {
       const mutableProjectionFields = new Set(["continuation", "updated_at"]);
       const priorDecision = Object.fromEntries(Object.entries(gate).filter(([field]) => !mutableProjectionFields.has(field)));
@@ -669,15 +718,21 @@ function migrateLegacyRole(role, gate, location) {
     if (!isMapping(response) || RESPONSE_FIELDS.some((field) => !Object.hasOwn(response, field)) || Object.keys(response).some((field) => !RESPONSE_FIELDS.includes(field))) invalid(`${location}.response is not the exact four-field response`);
     if (!gate.options.includes(response.selected_option)) invalid(`${location}.response selects an illegal option`);
   }
-  const logicalRoleId = source.logical_role_id ?? (response !== null || migratedAttempts.length > 0
-    ? `sha256:${crypto.createHash("sha256").update(`${gate.idempotency_key}:${location}`).digest("hex")}`
+  const active = response !== null || migratedAttempts.length > 0;
+  const logicalRoleId = source.logical_role_id ?? (active ? "maister:advisor" : null);
+  const dispatchId = source.dispatch_id ?? (active
+    ? `legacy-${crypto.createHash("sha256").update(`${gate.idempotency_key}:${location}`).digest("hex")}`
     : null);
   return {
     logical_role_id: logicalRoleId,
-    agent: source.agent ?? null,
-    model: source.model ?? null,
+    dispatch_id: dispatchId,
+    terminal_dispatch: null,
     response: response === null ? null : structuredClone(response),
-    attempts: migratedAttempts,
+    attempts: migratedAttempts.map((attempt) => ({
+      ...attempt,
+      dispatch_id: `${dispatchId}-${attempt.number}`,
+      terminal_dispatch: null,
+    })),
     exhausted: source.exhausted ?? false,
   };
 }

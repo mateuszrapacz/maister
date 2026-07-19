@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Specification — Unified Agent Projections and Exact Invocation</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+header { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; flex-wrap:wrap; }
+header h1 { margin:4px 0; } .meta { color:var(--dim); font-size:12px; }
+.tldr { border-left:4px solid var(--accent); }
+.tldr p { font-size:15px; margin:0 0 12px; }
+.summary-grid,.scope-grid,.story-grid { display:grid; gap:14px; }
+.summary-grid { grid-template-columns:1fr 1fr; }
+.scope-grid { grid-template-columns:1fr 1fr; }
+.story-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.scope-in { border-top:3px solid var(--ok); } .scope-out { border-top:3px solid var(--warn); }
+.story { margin:0; } .story h3 { font-size:13px; margin:0 0 8px; color:var(--accent); }
+.toc { padding:10px 0; color:var(--dim); font-size:13px; }
+.toc a { margin:0 4px; }
+.req-table td:first-child { white-space:nowrap; font-weight:700; }
+.priority { font-size:10px; font-weight:700; padding:2px 7px; border-radius:99px; white-space:nowrap; }
+.priority.p0 { background:var(--crit-soft); color:var(--crit); } .priority.p1 { background:var(--info-soft); color:var(--info); }
+.flow { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--accent-soft); padding:12px; border-radius:8px; overflow:auto; }
+.checklist { padding-left:20px; } .checklist li { margin:6px 0; }
+.checklist li::marker { color:var(--ok); }
+.risk-list li { margin:7px 0; }
+details.card > summary { color:var(--accent); }
+@media (max-width:800px) {
+  .summary-grid,.scope-grid,.story-grid { grid-template-columns:1fr; }
+  table { display:block; overflow-x:auto; }
+}
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <span class="here">Spec</span>
+  <a href="spec.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <div>
+    <span class="badge">Development specification</span>
+    <h1>Unified Agent Projections and Exact Invocation</h1>
+    <div class="meta">Generated 2026-07-17 · Codex, Cursor, and Kiro CLI · clean-install cutover</div>
+  </div>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>35</b><span>requirements</span></div>
+  <div class="tile"><b>17</b><span>reuse seams</span></div>
+  <div class="tile"><b>7</b><span>new capabilities</span></div>
+  <div class="tile"><b>28</b><span>canonical roles</span></div>
+  <div class="tile"><b>High</b><span>risk level</span></div>
+</div>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Maister will derive every supported-host agent representation from the same 28 canonical Markdown roles and materialize those projections inside the existing validated transaction boundary. Workflows select exact <code>maister:&lt;role_id&gt;</code> identities through a fail-closed resolver: Codex injects the canonical prompt into a generic subagent, while Cursor and Kiro use deterministic native projections. Kiro native leaves participate in one multi-root, receipt-owned lifecycle that preserves unrelated user agents. Advisor follows the same contracts as every ordinary role; legacy Codex TOML topology is removed without migration compatibility.</p>
+  <div class="summary-grid">
+    <div>
+      <h2>Key decisions</h2>
+      <ul>
+        <li>The 28 canonical Markdown agents are the sole behavior owner.</li>
+        <li>A strict, sorted, versioned IR and manifest bind identity, mappings, and digests.</li>
+        <li>Projection runs inside staging before enumeration, validation, hashing, and provenance.</li>
+        <li>Codex uses injection; Cursor uses generated Markdown; Kiro uses generated descriptor/prompt pairs.</li>
+        <li>Exact dispatch has no aliases, fuzzy matching, built-in, inline, root, or default fallback.</li>
+        <li>Kiro uses narrow receipt-owned leaves inside one multi-root lifecycle.</li>
+        <li>Advisor has no special TOML, permissions, model, adapter, or evidence path.</li>
+        <li>Materialization, E5 discovery, and E6 invocation remain independent proof layers.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Open questions / risks</h2>
+      <ul class="risk-list">
+        <li><span class="sev warning">host</span>Codex spawn/model control, Cursor precedence, and Kiro observed identity vary by version and must fail closed when unprovable.</li>
+        <li><span class="sev critical">safety</span>Every receipt, journal, snapshot, drift, recovery, update, uninstall, verify, and status path must understand the same root registry.</li>
+        <li><span class="sev warning">evidence</span>Existing E5 may overstate support because <code>--version</code> currently passes discovery.</li>
+        <li><span class="sev info">scope</span>Legacy TOML and receipt-v1 compatibility are intentionally rejected, not migrated.</li>
+        <li><span class="sev warning">availability</span>E5/E6 may remain <code>unavailable</code> without runtime, authentication, a safe scenario, or observable identity.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="scope-grid" id="scope">
+  <div class="card scope-in">
+    <h2>In scope</h2>
+    <ul>
+      <li>Strict 28-role IR, manifest, support inventory, and validation.</li>
+      <li>Deterministic Codex, Cursor, and Kiro staging projections.</li>
+      <li>Projection provenance and receipt binding.</li>
+      <li>Multi-root transaction lifecycle with narrow Kiro leaf ownership.</li>
+      <li>Exact resolver, host adapters, execution records, and workflow bindings.</li>
+      <li>Genuine E5/E6 probes, topology, release gates, CI, and documentation.</li>
+      <li>Removal of both tracked legacy Codex TOML profiles and their special lifecycle during approved implementation.</li>
+    </ul>
+  </div>
+  <div class="card scope-out">
+    <h2>Out of scope</h2>
+    <ul>
+      <li>Legacy TOML or receipt-v1 migration, backup, runtime cleanup, or compatibility.</li>
+      <li>New canonical roles or treating support helpers as canonical.</li>
+      <li>A general workflow DSL or universal host file format.</li>
+      <li>Runtime/source-checkout generation or committed behavior copies.</li>
+      <li>Advisor-only permissions, model, sandbox, destination, or adapter behavior.</li>
+      <li>Any fuzzy, natural-language, default, built-in, root, or inline fallback.</li>
+      <li>Ownership of all <code>~/.kiro</code> or protection from malicious external writers.</li>
+      <li>Native support claims without safe observable scenarios.</li>
+      <li>Unrelated Cursor skill-projection cleanup and all UI/visual work.</li>
+    </ul>
+  </div>
+</section>
+
+<nav class="toc">Contents:
+  <a href="#goal">Goal</a> · <a href="#stories">User stories</a> · <a href="#requirements">Requirements</a> ·
+  <a href="#reuse">Reuse</a> · <a href="#technical">Technical approach</a> · <a href="#testing">Testing &amp; standards</a> ·
+  <a href="#success">Success criteria</a>
+</nav>
+
+<main>
+<section id="goal" class="card">
+  <h2>Goal</h2>
+  <p>Provide one deterministic, auditable agent-delivery and invocation contract across Codex, Cursor, and Kiro CLI so every canonical role—including Advisor—is transformed, installed, resolved, invoked, and evidenced consistently without weakening existing provenance or byte-exact transaction guarantees.</p>
+</section>
+
+<section id="stories">
+  <h2>User stories</h2>
+  <div class="story-grid">
+    <article class="card story"><h3>Maintainer · one behavior source</h3><p>Edit one canonical Markdown role and derive every selected host representation deterministically, preventing behavior drift.</p></article>
+    <article class="card story"><h3>Maintainer · honest inventory</h3><p>Validate canonical and support roles separately so a helper such as <code>explore</code> cannot hide a missing role.</p></article>
+    <article class="card story"><h3>Release maintainer · auditability</h3><p>Bind projection schema versions and digests into package and receipt provenance to reproduce exact delivered bytes.</p></article>
+    <article class="card story"><h3>Installer · fail before mutation</h3><p>Reject projection errors, collisions, and unsafe references before any target mutation.</p></article>
+    <article class="card story"><h3>Kiro operator · preserve ownership</h3><p>Manage only Maister's computed native leaves so unrelated agents remain byte-identical through every lifecycle.</p></article>
+    <article class="card story"><h3>Operator · typed outcomes</h3><p>Distinguish obsolete installation state, unavailable runtime prerequisites, and observed incorrect behavior.</p></article>
+    <article class="card story"><h3>Workflow operator · exact role</h3><p>Resolve each <code>maister:&lt;role_id&gt;</code> to exactly one verified representation or fail before dispatch.</p></article>
+    <article class="card story"><h3>Workflow operator · ordinary Advisor</h3><p>Run Advisor through the same role and execution-record path as every canonical role.</p></article>
+    <article class="card story"><h3>Auditor · separate runtime record</h3><p>Use append-only records binding requested and observed identity to digests without conflating install and runtime evidence.</p></article>
+  </div>
+</section>
+
+<section id="requirements">
+  <h2>Core requirements</h2>
+  <div class="card">
+  <table class="req-table">
+    <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td>R1</td><td>Treat exactly the 28 <code>plugins/maister/agents/*.md</code> files as canonical roles; inventory changes require an explicit revision.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R2</td><td>Parse a role only when filename stem, frontmatter <code>name</code>, and logical ID agree, the body is non-empty, and accepted metadata is valid.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R3</td><td>Reject unknown metadata, duplicates, normalized/case-fold collisions, unsafe paths/dependencies, malformed frontmatter, and empty behavior with typed zero-output failures.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R4</td><td>Produce a sorted versioned manifest binding source digest, presentation/model/skill metadata, host representation, external ID, transforms, tools profile, versions, and digest.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R5</td><td>Keep support agents in a separate inventory that cannot satisfy or replace canonical completeness.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R6</td><td>Make Advisor an ordinary row and reject Advisor-only TOML, readonly, sandbox, destination, permissions, model, adapter, evidence, or compatibility branches.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R7</td><td>Run projection only in isolated staging after trusted assembly/source revalidation and before enumeration, content validation, hashing, and provenance.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R8</td><td>Guarantee identical paths, UTF-8/newline/JSON bytes, modes, order, per-output hashes, and projected-tree digest for identical inputs.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R9</td><td>Allow semantic changes only through named, versioned, allowlisted, fixture-tested transforms; reject undeclared changes and behavior copies.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R10</td><td>Never mutate source, commit generated behavior trees, or generate host files at invocation time.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R11</td><td>Prove 28-row target bijection, support separation, safe destinations/collisions, and complete internal reference closure.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R12</td><td>Bind schema/projector versions and canonical-set, manifest, and projected-tree digests into provenance and receipt; reject stale bindings.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R13</td><td>Codex packages all prompts and injects the complete selected instruction into a generic subagent; no TOML profiles, built-in lookup, or truncation.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R14</td><td>Cursor receives 28 exact <code>maister-&lt;role_id&gt;</code> Markdown agents, including <code>e2e-test-verifier</code>; drift and Advisor-only metadata are removed, <code>explore</code> remains support.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R15</td><td>Kiro receives 28 exact descriptor/prompt pairs in its native leaf root with closed relative references; <code>maister</code>/<code>explore</code> remain explicit support.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R16</td><td>Declare and validate tools, permissions, and model requirements through common profiles with no role-name conditionals.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R17</td><td>Version receipts/journals around stable root IDs and <code>whole_tree</code>/<code>leaf_set</code>; inventory identity is root ID plus safe relative path.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R18</td><td>Use one target lock and journal for all roots across preflight, snapshot, mutation, verification, receipt, rollback/recovery, update/uninstall, drift, verify, and status.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R19</td><td>Own only computed Kiro leaves; unrelated user files remain outside ownership and byte-identical through success and injected failure.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R20</td><td>Reject unmanaged collisions before mutation even for matching bytes; remove stale leaves only when receipt-owned and unchanged in every recorded attribute.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R21</td><td>On failure, restore roots, settings, receipts, and state to exact bytes, modes, symlinks, existence, and topology; preserve code-7 diagnostics.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R22</td><td>Retain path-identity revalidation and document cooperative locking, operator quiescence, and the absence of arbitrary-writer atomicity claims.</td><td><span class="priority p1">P1</span></td></tr>
+      <tr><td>R23</td><td>Accept only exact <code>maister:&lt;role_id&gt;</code> and one manifest match; reject aliases, fuzzy/case-insensitive/natural-language/default selection.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R24</td><td>Before dispatch, validate receipt, role/manifest/projection digests, representation/external ID, collisions, adapter/host contract, and model controls.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R25</td><td>Return typed failures for every unknown/ambiguous/missing/stale/mismatched/collided/unavailable/unsupported/wrong-identity condition with zero fallback.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R26</td><td>Use common validated dispatch and terminal result contracts while preserving native target dispatch; Advisor follows the same resolver/adapter path.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R27</td><td>Append workflow-owned execution records separate from receipts, binding workflow/work item, role, digests, external/dispatch IDs, host/version, model, attempts, observed identity, timestamps, and result.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R28</td><td>Keep gate instance, idempotency, dispatch, and canonical role identities distinct; reuse audit patterns, not lookup identity.</td><td><span class="priority p1">P1</span></td></tr>
+      <tr><td>R29</td><td>E5 observes exact native external IDs; executable presence or successful <code>--version</code> alone never passes discovery.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R30</td><td>E6 invokes two distinguishable ordinary roles plus Advisor and verifies observed role identity and relevant digests.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R31</td><td>Missing prerequisites are <code>unavailable</code>; wrong/failed observations are <code>failed</code>; source/overlay/host/scenario/manifest/projection changes expire evidence.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R32</td><td>Ship Codex, Cursor, and Kiro CLI as one dependency-ordered scope; do not claim target-native support until required evidence passes; release independently gates projection, parity, support separation, closure, multi-root lifecycle, evidence, and topology.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R33</td><td>Package canonical sources, manifest inputs, projector logic, support assets, and deterministic materialization dependencies—not checked-in behavior copies or legacy TOML.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R34</td><td>Remove both tracked legacy TOML profiles—including the authorized dirty Advisor edit—and their init/reconciliation/tests/parity/docs/branches without migration or v1 interpretation; reject obsolete state before mutation.</td><td><span class="priority p0">P0</span></td></tr>
+      <tr><td>R35</td><td>Document exact IDs, destinations, support boundary, ownership, evidence semantics, clean-install assumptions, and staged-vs-committed projection distinction.</td><td><span class="priority p1">P1</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="reuse">
+  <h2>Reusable vs new components</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Existing seam</th><th>What it contributes</th><th>Feature use</th></tr></thead>
+      <tbody>
+        <tr><td><code>materializer.mjs</code></td><td>Sorted assembly, immutable source checks, isolated staging, validation, hashing</td><td>Projection insertion before enumeration and provenance; generated files become normal candidate inputs.</td></tr>
+        <tr><td><code>path-safety.mjs</code></td><td>Safe paths, collision keys, containment, symlink and identity defense</td><td>Shared grammar and race checks for roles, roots, leaves, and records.</td></tr>
+        <tr><td><code>hash-tree.mjs</code></td><td>Stable tree inventory and SHA-256</td><td>Canonical-set and projected-tree hashing.</td></tr>
+        <tr><td><code>provenance.mjs</code></td><td>Canonical JSON and validated digest bindings</td><td>Versioned agent-projection provenance.</td></tr>
+        <tr><td><code>overlay-loader.mjs</code></td><td>Strict allowlisted target contracts</td><td>Projection format, destination, support, transform, tools, and adapter declarations.</td></tr>
+        <tr><td><code>cursor-skill-projector.mjs</code></td><td>Sorted inputs, explicit transforms, fingerprints, check mode</td><td>Pattern reuse only; no checkout-writing lifecycle or blanket rewrites.</td></tr>
+        <tr><td><code>transaction-manager.mjs</code></td><td>Lock, journal, commit, receipt, evidence, lifecycle and failure seams</td><td>Generalize every operation over managed roots.</td></tr>
+        <tr><td><code>recovery.mjs</code></td><td>Exact bytes/modes/symlinks/topology restore</td><td>Root-parameterized snapshot and recovery with code-7 semantics.</td></tr>
+        <tr><td><code>receipt-schema.mjs</code></td><td>Strict persisted schema and inventory/source/provenance validation</td><td>Clean-install managed-root and projection bindings; v1 rejection.</td></tr>
+        <tr><td><code>journal-schema.mjs</code></td><td>Validated state transitions and receipt correlation</td><td>Version the same lifecycle for multi-root state.</td></tr>
+        <tr><td><code>drift-detector.mjs</code></td><td>Type/mode/bytes/link/settings comparison</td><td>Resolve inventory through root ID and protect generated leaves.</td></tr>
+        <tr><td><code>settings-owner.mjs</code></td><td>Narrow managed-key ownership</td><td>Preserve the existing shared-settings boundary alongside leaf ownership.</td></tr>
+        <tr><td><code>targets.mjs</code> + <code>target-paths.mjs</code></td><td>Target registry and state paths</td><td>Declare stable managed roots without changing target-scoped state.</td></tr>
+        <tr><td><code>evidence-schema.mjs</code> + <code>evidence-policy.mjs</code></td><td>E1–E6 outcome/freshness/capability model</td><td>Add projection bindings and accurate native semantics.</td></tr>
+        <tr><td><code>host-probes/*</code></td><td>Injectable command, timeout, version, record creation</td><td>Replace version-only E5 and add target scenarios.</td></tr>
+        <tr><td><code>gate-evaluator.mjs</code></td><td>Audit attempts, frozen context, idempotency, role ports</td><td>Reuse audit/port patterns while keeping role and decision IDs separate.</td></tr>
+        <tr><td><code>tests/platform-independent/*</code></td><td>Determinism, transaction, topology, parity, evidence, release fixtures</td><td>Extend real seams and byte-exact negative proofs.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <table>
+      <thead><tr><th>New capability</th><th>Why existing code cannot supply it</th><th>Boundary</th></tr></thead>
+      <tbody>
+        <tr><td>Canonical role IR / manifest validator</td><td>Tree copying does not parse or bind 28 identities, metadata, mappings, and digests.</td><td>Immutable canonical source → validated sorted role/support inventories.</td></tr>
+        <tr><td>Agent projector / projection validator</td><td>The skill projector serves a different artifact family and ownership lifecycle.</td><td>Target + manifest + staging → deterministic host artifacts/provenance.</td></tr>
+        <tr><td>Managed-root registry contract</td><td>Current receipt, journal, drift, transaction, and recovery assume one active root.</td><td>Stable root IDs and whole-tree/leaf-set policies for every lifecycle consumer.</td></tr>
+        <tr><td>Exact role resolver</td><td>Binding labels/callbacks do not verify manifest, receipt, digests, collisions, or controls.</td><td>Logical ID + installed state → one validated dispatch description or typed failure.</td></tr>
+        <tr><td>Host adapter ports</td><td>No common no-fallback Codex injection or exact Cursor/Kiro dispatch implementation exists.</td><td>Validated dispatch + context → native attempt/result observations.</td></tr>
+        <tr><td>Execution-record schema/writer</td><td>Receipts own installations and gate attempts own decisions; neither models workflow role execution.</td><td>Append-only workflow records with role, digest, host, attempts, identity, and result.</td></tr>
+        <tr><td>Versioned E5/E6 scenarios</td><td>Current E5 proves only version availability and no repository-owned exact E6 exists.</td><td>Native discovery/invocation observations → existing evidence schema.</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Minimality:</strong> every new component has an immediate caller. No general DSL, code-generation framework, universal host protocol, migration framework, or future-host abstraction is included.</p>
+  </div>
+</section>
+
+<section id="technical">
+  <h2>Technical approach</h2>
+  <div class="card">
+    <div class="flow">canonical Markdown → strict role IR/manifest → staged projector/validator → materializer/provenance → managed-root transaction/receipt</div>
+    <div class="flow">workflow logical ID → exact resolver + active receipt/projection → target adapter → append-only execution record</div>
+    <p>The role domain does not know mutable installation paths or host invocation. The projector does not inspect installed state. The resolver does not generate files. Adapters cannot bypass manifest/receipt validation. Evidence cannot infer discovery or invocation from materialization.</p>
+  </div>
+  <details class="card" open><summary>Canonical identity and manifest</summary>
+    <p>The parser consumes immutable resolved source, preserves the complete instruction body, and extracts only metadata required by active callers. Identity remains narrow: canonical filename/name defines the role, workflows add <code>maister:</code>, and target mappings declare exact external IDs. Canonical and support rows remain separate, and all consumers share normalized identity/path collision rules.</p>
+  </details>
+  <details class="card"><summary>Projection and materialization</summary>
+    <p>Normal assembly establishes trusted inputs in empty staging; projection then emits host roles into the same candidate. Existing enumeration, syntax/reference checks, modes, hashes, inventory, release closure, and receipts cover those exact bytes. Codex keeps prompt resources, Cursor receives generated Markdown, Kiro receives native descriptor/prompt leaves, and support assets remain separately inventoried.</p>
+  </details>
+  <details class="card"><summary>Managed roots and transaction safety</summary>
+    <p>The lifecycle becomes root-registry-driven, not a special Kiro copier. Dedicated roots use <code>whole_tree</code>; shared native roots use <code>leaf_set</code>. One journal snapshots all preconditions before mutation and publishes no receipt until every root verifies. Unmanaged collisions always fail; prior owned leaves require exact drift validation; recovery restores touched leaves and required parent topology without owning unrelated siblings.</p>
+  </details>
+  <details class="card"><summary>Exact runtime dispatch</summary>
+    <p>Workflows request logical IDs without native filenames. Resolution checks grammar, installed state, digests, mappings, collisions, host contract, and model control. Codex receives the complete canonical prompt; Cursor/Kiro receive exact native identities. Required controls must be provable or fail closed. Adapters return common terminal observations and the workflow recorder appends requested and observed identities.</p>
+  </details>
+  <details class="card"><summary>Evidence and support status</summary>
+    <p>Projection and transaction success are prerequisites, not E5/E6. E5 compares observed native IDs to the manifest. E6 invokes two distinguishable ordinary roles plus Advisor and binds results to active digests. Missing safe prerequisites are <code>unavailable</code>; contradictory observations are <code>failed</code>. Provisional packaging never becomes a native support claim.</p>
+  </details>
+  <details class="card"><summary>Clean topology cutover</summary>
+    <p>Legacy Advisor/Arbiter TOML files, reconciliation, init text, special tests, parity rows, and documentation are removed from source during approved implementation. The installer does not scan, back up, migrate, or clean historical runtime files. Persisted receipt-v1 state is rejected before mutation with an actionable error.</p>
+  </details>
+</section>
+
+<section id="testing">
+  <h2>Testing and standards</h2>
+  <div class="summary-grid">
+    <div class="card">
+      <h2>Testing approach</h2>
+      <ul>
+        <li>Use eight behavioral boundaries: IR/manifest; projection; materializer/provenance; managed-root lifecycle; host/support projections; resolver/adapters/records; E5/E6; topology/release/docs.</li>
+        <li>Add <strong>2–8 focused tests per implementation step group</strong>; run only new/directly affected tests per group, then broader suites at integration/final boundaries.</li>
+        <li>Use the real 28-role inventory plus malformed fixtures; assert exact IDs, mappings, digests, and support separation.</li>
+        <li>Compare independent projections for paths, bytes, modes, order, and hashes; prove typed zero-output negative cases.</li>
+        <li>Snapshot every affected root/topology before transaction failures and compare exact restored state plus unrelated Kiro agents.</li>
+        <li>Prove exact grammar, digest/collision/model preflight, no fallback, Advisor equality, and append-only records.</li>
+        <li>Distinguish all evidence outcomes/freshness; version availability cannot satisfy E5/E6.</li>
+        <li>Build each target twice, compare packages, inspect isolation/closure, and run clean extracted lifecycle across all roots.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Standards compliance</h2>
+      <ul>
+        <li><code>build-pipeline.md</code>: canonical ownership, explicit targets, reproducible three-host validation.</li>
+        <li><code>coding-style.md</code>: descriptive names, focused functions, shared identity helpers, no dead compatibility paths.</li>
+        <li><code>commenting.md</code>: comments only for non-obvious transaction/evidence/host constraints.</li>
+        <li><code>conventions.md</code>: minimal dependencies, proven support claims, clean release inputs, accurate concurrency boundary.</li>
+        <li><code>error-handling.md</code>: early typed errors, preserved code-7 diagnostics, no unpinned prerequisite installation.</li>
+        <li><code>minimal-implementation.md</code>: immediate callers only; no migration, future-host, or generic workflow scaffolding.</li>
+        <li><code>validation.md</code>: allowlists, containment, collision/provenance/freshness checks, extracted artifact verification.</li>
+        <li><code>test-writing.md</code>: behavior-focused host seams, byte-exact multi-root recovery, honest unavailable evidence.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="success">
+  <h2>Success criteria</h2>
+  <div class="card">
+    <ol class="checklist">
+      <li>Exactly 28 valid roles satisfy stem/name/ID equality; malformed, unsafe, duplicate, or colliding inputs fail before projection.</li>
+      <li>Advisor is structurally and operationally ordinary; negative topology tests reject prohibited exceptions.</li>
+      <li>Identical projections have identical paths, bytes, formatting, modes, order, hashes, manifest digest, and tree digest.</li>
+      <li>Codex has all prompts and no TOML; Cursor has exact 28/28 Markdown; Kiro has exact 28/28 closed pairs; support is separate.</li>
+      <li>Projection/reference/transform/path/collision failures are typed, mutation-free, and never write source.</li>
+      <li>Receipts and provenance bind canonical-set, manifest, schema/projector, and projected-tree digests; mismatch fails verification.</li>
+      <li>Every lifecycle command uses one managed-root registry and journal, including the Kiro native root.</li>
+      <li>Injected failures restore every managed attribute and leave unrelated Kiro agents byte-identical.</li>
+      <li>Only receipt-owned unchanged stale leaves are removed; drift and unmanaged collisions make zero changes.</li>
+      <li>Exact logical requests create validated dispatch plus append-only attempts/terminal outcome; all fallback paths are absent.</li>
+      <li>Codex injects complete prompts; Cursor/Kiro use exact IDs; unsupported required controls fail closed; Advisor shares the path.</li>
+      <li>E5 observes expected native inventory; E6 distinguishes two ordinary roles plus Advisor and verifies identity/digests.</li>
+      <li>Missing prerequisites are unavailable; wrong observations fail; binding changes invalidate old records.</li>
+      <li>No active legacy TOML lifecycle or compatibility remains; obsolete state fails clearly before mutation.</li>
+      <li>Deterministic isolated packages for all targets contain canonical/projector inputs, exclude forbidden copies, and pass extracted lifecycle.</li>
+    </ol>
+  </div>
+</section>
+</main>
+</body>
+</html>

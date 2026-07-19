@@ -79,3 +79,44 @@ test("maintained instructions do not contain active host-specific Claude wording
   }
   assert.deepEqual(violations, []);
 });
+
+test("gate runtime topology has no legacy Advisor profiles or host-foreign fallback branch", () => {
+  const legacyProfiles = [
+    ".codex/agents/advisor.toml",
+    ".codex/agents/arbiter.toml",
+    ".codex/agents/luna_smoke_agent.toml",
+  ];
+  for (const relativePath of legacyProfiles) {
+    assert.equal(fs.existsSync(path.join(ROOT, relativePath)), false, `${relativePath} must not exist`);
+  }
+
+  const materializer = fs.readFileSync(path.join(ROOT, "plugins/maister/lib/distribution/materializer.mjs"), "utf8");
+  const evaluator = fs.readFileSync(path.join(ROOT, "plugins/maister/skills/orchestrator-framework/bin/gate-evaluator.mjs"), "utf8");
+  const engine = fs.readFileSync(path.join(ROOT, "plugins/maister/skills/orchestrator-framework/references/gate-decision-engine.md"), "utf8");
+  const topology = `${materializer}\n${evaluator}\n${engine}`;
+
+  assert.doesNotMatch(topology, /reconcile-advisor-config|advisor\.toml|arbiter\.toml/iu);
+  assert.doesNotMatch(evaluator, /rolePort|invokeAdvisor|invokeArbiter/iu);
+  assert.doesNotMatch(evaluator, /advisor[^\n]{0,80}(?:agent|model|permission|destination|adapter|evidence)/iu);
+  assert.doesNotMatch(topology, /(?:advisor|arbiter)_(?:model|permission|destination|adapter|evidence|compatibility)|maister-advisor/iu);
+  assert.doesNotMatch(topology, /spawn_agent|subagent_type|app-server|multi-agent v[12]|native Codex custom-agent/iu);
+  assert.match(evaluator, /logical_role_id must be exactly maister:advisor/iu);
+  assert.match(evaluator, /durable terminal result/iu);
+});
+
+test("the shipped agent-gate owner closes the production runtime-to-gate call graph", () => {
+  const ownerPath = path.join(ROOT, "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/production-owner.mjs");
+  const cliPath = path.join(ROOT, "plugins/maister/bin/maister-agent-gate.mjs");
+  assert.equal(fs.existsSync(ownerPath), true, "the production owner module must be shipped");
+  assert.equal(fs.existsSync(cliPath), true, "the operator-facing production CLI must be shipped");
+
+  const owner = fs.readFileSync(ownerPath, "utf8");
+  const cli = fs.readFileSync(cliPath, "utf8");
+  assert.match(owner, /import \{ createProductionAgentRuntime \} from "\.\/production-runtime\.mjs"/u);
+  assert.match(owner, /import \{ evaluateGate \} from "\.\.\/gate-evaluator\.mjs"/u);
+  assert.match(owner, /const runtimePort = createProductionAgentRuntime\(/u);
+  assert.match(owner, /return evaluateGate\(\{/u);
+  assert.match(owner, /runtimePort,/u);
+  assert.match(cli, /import \{ runProductionAgentGate \} from "\.\.\/skills\/orchestrator-framework\/bin\/agent-runtime\/production-owner\.mjs"/u);
+  assert.match(cli, /await runProductionAgentGate\(/u);
+});

@@ -3,7 +3,7 @@ name: maister:reviews-code
 description: Run automated code quality, security, and performance analysis on your code
 ---
 
-**ACTION REQUIRED**: This command delegates to a subagent. The `<command-name>` tag refers to THIS command, not the target. Invoke the code-reviewer subagent via the Task tool NOW. Pass path and scope arguments. Do not read files, explore code, or execute workflow steps yourself.
+**ACTION REQUIRED**: This command delegates through the common exact-role runtime. The `<command-name>` tag refers to THIS command, not the target. Resolve and dispatch the code-reviewer now with the bounded path and scope. Do not execute the review inline.
 
 You are running a comprehensive code review using the `code-reviewer` subagent.
 
@@ -27,19 +27,21 @@ You are performing automated code analysis to identify quality, security, and pe
 
 ## Your Instructions
 
-**Invoke the code-reviewer subagent NOW using the Task tool:**
+**Resolve and dispatch exact code-reviewer NOW:**
 
 ```
-Use Task tool:
-  subagent_type: "maister:code-reviewer"
-  description: "Code quality review"
-  prompt: |
+resolveAgent({ logical_role_id: "maister:code-reviewer" })
+dispatchAgent:
+  actor: reviews-code
+  work_item: code-quality-review
+  output: "[path]/code-review-report.md"
+  bounded_task: |
     Analyze code at: [path from user or from AskUserQuestion]
     Scope: [quality|security|performance|all]
     Report path: [path]/code-review-report.md
 ```
 
-**Wait for the subagent to complete before proceeding.**
+**Wait for the exact dispatch to complete before proceeding.**
 
 The code-reviewer subagent will:
 1. Analyze code for complexity, duplication, and code smells

@@ -21,30 +21,21 @@ An interactive host asks `on` versus `off`, recommending the current valid
 `advisor.enabled` value (or `off` when absent). A host without that capability
 is non-interactive and resolves to `off`; do not infer interactivity from a TTY.
 
-The host adapter must invoke `bin/reconcile-advisor-config.sh init` with an
-authoritative `codex` or `non-codex` signal. Only the generated Codex adapter
-passes `codex`; never infer it from `.codex/`, an existing TOML file, or the
-environment. The pre-flight validates and stages all managed artifacts, then
-commits `.maister/config.yml` and, for Codex, `.codex/agents/advisor.toml` as
-one transaction. A Codex `on` creates or field-reconciles the strict current
-TOML; `off` atomically removes it. A non-Codex invocation never inspects or
-touches that file.
+Ensure `.maister/config.yml` exists with the documented project defaults, then
+invoke `bin/reconcile-gate-config.sh reconcile .maister/config.yml on|off`.
+This is a project-only configuration transaction. A missing `advisor:` mapping
+receives the complete exact defaults. A present mapping must already be
+complete and canonical; legacy actor-model fields, unknown fields, unsafe YAML,
+and any role value other than exact `maister:advisor` fail before replacement.
+The managed top-level key must be the canonical plain `advisor:` mapping.
 
-Advisor model values are either YAML `null` (inherit the host default) or a
-portable, unquoted identifier matching `[A-Za-z][A-Za-z0-9._/-]*`. Quoted,
-escaped, whitespace-bearing, and Unicode representations are rejected so the
-same model bytes have one meaning in YAML and generated TOML. The managed
-top-level key must be the canonical plain `advisor:` mapping; directives,
-document markers, explicit keys, tags, and quoted aliases are rejected.
-
-If staging, replacement, deletion, or rollback fails, stop initialization and
+If staging, replacement, or restoration fails, stop initialization and
 show the actionable diagnostic. Never continue to Phase 1 after a failed or
 partial transaction. On success, display the effective enabled value, all five
-gate policies, logical Advisor/Arbiter roles and models, disagreement and retry
-settings, managed-field removals, Codex TOML outcome, and capability-matrix
-posture before continuing.
+gate policies, exact logical Advisor/Arbiter roles, disagreement and retry
+settings, and capability-matrix posture before continuing.
 
-**NOTE**: This skill invokes other skills and subagents at specific phases. Use the **Task tool with `docs-operator` subagent** (subagent_type: `maister:docs-operator`) for all docs-manager operations, and **Task tool** for project-analyzer. Use the **Skill tool** only for standards-discover (Phase 8, last phase). The Task tool returns control to this skill after completion; the Skill tool does not.
+**NOTE**: This skill invokes exact logical roles and other skills at specific phases. Resolve each role through the common runtime and retain its actor, work item, output, and bounded task context. Use the **Skill tool** only for standards-discover (Phase 8, last phase).
 
 ## Phase Configuration
 
@@ -84,7 +75,7 @@ Check if `.maister/` directory already exists.
 
 ## PHASE 2: Project Analysis
 
-Invoke `project-analyzer` subagent via the Task tool.
+Resolve `resolveAgent({ logical_role_id: "maister:project-analyzer" })`, then dispatch with the Phase 2 actor, project-analysis work item, conversation output contract, and bounded project context.
 
 Wait for completion. Store analysis results for use in Phases 3 and 6.
 
@@ -149,7 +140,7 @@ Store selection for Phase 5.
 
 ## PHASE 5: Initialize Documentation Structure
 
-**Invoke `docs-operator` subagent** via Task tool (subagent_type: `maister:docs-operator`) with prompt:
+Resolve `resolveAgent({ logical_role_id: "maister:docs-operator" })`, then dispatch with the init actor, documentation-structure work item, filesystem output contract, and this bounded task:
 
 > "Initialize documentation structure. Standards selection: [array from Phase 4]. [If --standards-from was provided: Standards source path: [resolved path]/.maister/docs/standards/. Copy standards from this external path instead of built-in defaults.] Only copy selected standard categories. Do NOT copy project templates — only create the project/ directory. Project documentation will be generated in Phase 6 with real content from project analysis. Create placeholder sections in INDEX.md for skipped categories."
 
@@ -172,10 +163,8 @@ html_output: true
 advisor:
   enabled: false
   gate_policies: {}
-  advisor_agent: advisor
-  advisor_model: null
-  arbiter_agent: advisor
-  arbiter_model: null
+  advisor_agent: maister:advisor
+  arbiter_agent: maister:advisor
   arbiter_enabled_on_disagreement: true
   retry:
     advisor_attempts: 3
@@ -183,9 +172,9 @@ advisor:
     backoff: exponential
 ```
 
-Advisor configuration is not scaffolded here. It was already committed by the
-pre-flight transaction, including the generated Codex adapter's bundled TOML
-template when applicable.
+Advisor configuration was already committed by the project-only pre-flight
+transaction. Verify the exact block above and do not overwrite unrelated
+project configuration.
 
 ---
 
@@ -210,7 +199,7 @@ Write each file to `.maister/docs/project/`.
 
 ## PHASE 7: Validate
 
-**Step 1**: Invoke `docs-operator` subagent via Task tool (subagent_type: `maister:docs-operator`) with prompt:
+**Step 1**: Resolve `resolveAgent({ logical_role_id: "maister:docs-operator" })`, then dispatch with the validation actor, documentation-index work item, filesystem output contract, and this bounded task:
 
 > "Regenerate INDEX.md to include all newly created project documentation. Then verify project instructions are properly integrated with `.maister/docs/` documentation."
 

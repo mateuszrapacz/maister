@@ -1,18 +1,18 @@
 ---
 name: codebase-analyzer
-description: Analyzes codebase using adaptive parallel Explore subagents based on task complexity. Selects agent roles from a pool, launches Explore agents, then delegates report generation to codebase-analysis-reporter subagent.
+description: Analyzes a codebase through adaptive parallel exact-role dispatches, then delegates report generation to the codebase-analysis-reporter role.
 user-invocable: false
 ---
 
 # Codebase Analyzer Skill
 
-Orchestrates parallel codebase analysis using built-in Explore subagents. Adaptively selects which agent roles to activate based on task complexity, then delegates report synthesis to a specialized subagent.
+Orchestrates parallel codebase analysis using exact `maister:project-analyzer` dispatches with distinct bounded concerns, then delegates report synthesis to exact `maister:codebase-analysis-reporter`.
 
 ## Core Principles
 
 1. **Adaptive Agent Selection**: Select roles from a pool based on task complexity — no fixed count
 2. **Task-Type Awareness**: Adapt prompts and focus based on task type
-3. **Delegated Reporting**: Raw findings go to `codebase-analysis-reporter` subagent for synthesis
+3. **Delegated Reporting**: Raw findings go to exact `maister:codebase-analysis-reporter` for synthesis
 
 ---
 
@@ -78,7 +78,7 @@ State which roles you selected and why (1 sentence).
 
 > **STOP — Do NOT skip this step. Do NOT write prompts from memory.**
 >
-> Before launching ANY Explore agent, you MUST use the Read tool to load the prompt template for each selected role. This is non-negotiable.
+> Before dispatching ANY analysis work item, you MUST use the Read tool to load the prompt template for each selected concern. This is non-negotiable.
 
 **3a. Read templates** — Use the Read tool to load ONLY the files for your selected roles:
 
@@ -94,7 +94,7 @@ If combining roles into one agent, also read `references/combined.md` for mergin
 
 **3b. Adapt templates** — Replace `[description]` with the actual task description. Select the correct task-type section (Bug / Enhancement / Feature).
 
-**3c. Launch agents** — Use the Task tool with `subagent_type="Explore"` — one call per selected role, all in ONE message.
+**3c. Launch analysis work** — For each selected concern, use `resolveAgent({ logical_role_id: "maister:project-analyzer" })`, then dispatch actor `codebase-analyzer`, a stable concern-specific work item, response-only findings output, and the adapted bounded prompt. Dispatch all selected concerns as one parallel batch.
 
 **IMPORTANT**: Every Explore agent prompt MUST include this instruction:
 > IMPORTANT: Do NOT create, write, or modify any files. Output all findings as text in your response only.
@@ -103,13 +103,15 @@ If combining roles into one agent, also read `references/combined.md` for mergin
 
 ### Step 4: Delegate Report Generation
 
-After all Explore agents complete, delegate to `codebase-analysis-reporter` subagent via Task tool:
+After all analysis dispatches complete, resolve exact `maister:codebase-analysis-reporter` and provide the collected response outputs:
 
 ```
-Task tool:
-  subagent_type: "maister:codebase-analysis-reporter"
-  description: "Merge findings into analysis report"
-  prompt: |
+resolveAgent({ logical_role_id: "maister:codebase-analysis-reporter" })
+dispatchAgent:
+  actor: codebase-analyzer
+  work_item: merge-analysis-findings
+  output: "[task_path]/analysis/[artifact_name]"
+  bounded_task: |
     You are the codebase-analysis-reporter. Merge these raw findings into a structured analysis report.
 
     Task description: [description]

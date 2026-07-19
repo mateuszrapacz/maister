@@ -5,8 +5,8 @@
 This is the normative, host-neutral contract for evaluating every Maister
 orchestrator gate. The executable state machine is
 `bin/gate-evaluator.mjs`; this document defines its human-readable policy and
-host-port contract. The host adapter supplies read-only Advisor, Arbiter, and
-user-gate primitives. The evaluator owns the complete schema-v2 gate envelope,
+host-port contract. The shared runtime dispatches both decision actors and the
+host supplies only the user-gate primitive. The evaluator owns the complete schema-v2 gate envelope,
 while workflow code owns reporting, work selection, and dispatch.
 
 ## Key Decisions
@@ -26,8 +26,8 @@ while workflow code owns reporting, work selection, and dispatch.
   state. A supported host continues from the normalized result without
   synthesizing UI input.
 - Every executable transition uses `readState` and `commitState` from the
-  shared repository. Role calls happen outside its lock, after a durable
-  `started` attempt and before a revision-checked outcome commit.
+  shared repository. Exact runtime dispatch happens outside its lock, after a
+  durable `started` attempt and before a revision-checked outcome commit.
 
 ## Open Questions & Risks
 
@@ -47,10 +47,11 @@ native continuation support.
 
 ## 1. Contract inputs and strict normalized schemas
 
-Read `enabled`, every gate policy, both logical role names and models,
+Read `enabled`, every gate policy, both exact logical role names,
 `arbiter_enabled_on_disagreement`, retry attempt limits, and backoff only from
 the complete `orchestrator.options.advisor` workflow snapshot. The logical role
-names remain `advisor`; native role resolution belongs to the host adapter.
+names are both `maister:advisor`; native role resolution belongs to the common
+runtime adapter selected by the resolved dispatch plan.
 Invalid or incomplete workflow snapshots fail closed to a manual user gate, or
 to persisted `blocked` when no user gate is available. They are never repaired
 from `.maister/config.yml` during resume.
@@ -69,7 +70,7 @@ evaluateGate({
   statePath,
   gateContext,
   roleConfig,
-  rolePort,
+  runtimePort,
   userPort,
   automaticContinuationSupported,
   interactive,
@@ -91,9 +92,12 @@ Pending and blocked records have a null selection and `final_actor: system`;
 older normalized-result examples below describe the host protocol vocabulary;
 they do not add a `failed` status or alternate persisted shape to schema v2.
 
-Each role has one stable `logical_role_id`, its configured agent/model, one
-optional exact four-field response, ordered attempts, and exhaustion state.
-An attempt is exactly `{number, status, started_at, completed_at, error}` with
+Each decision actor has one stable `logical_role_id`, one distinct decision
+`dispatch_id`, one optional exact four-field response, ordered attempts, and
+exhaustion state. Each attempt records its distinct dispatch ID and frozen
+validated terminal dispatch result before a gate decision can advance. An
+attempt is exactly `{number, dispatch_id, terminal_dispatch, status, started_at,
+completed_at, error}` with
 status `started | completed | failed | interrupted`. The evaluator commits a
 `started` attempt before calling a role, then commits its completion/failure
 before retry, fallback, arbitration, or terminal selection. Exponential wait
@@ -193,14 +197,16 @@ normalized_gate_result:
   final_actor: advisor # user | advisor | arbiter | system
   original_recommendation: "Manual fallback for every platform"
   advisor:
-    agent: advisor
-    model: null
+    logical_role_id: maister:advisor
+    dispatch_id: gate-advisor-...
+    terminal_dispatch: null
     response: null
     attempts: []
     exhausted: false
   arbiter:
-    agent: advisor
-    model: null
+    logical_role_id: maister:advisor
+    dispatch_id: gate-arbiter-...
+    terminal_dispatch: null
     response: null
     attempts: []
     exhausted: false
@@ -546,17 +552,14 @@ execution is added by this contract.
 
 ## 8. Host adapter primitives
 
-The host adapter supplies five primitives: `invoke_advisor`,
-`invoke_arbiter`, `present_user_gate`, `write_state`, and `refresh_dashboard`.
-Every host must map these core primitives and the additional lifecycle
-primitives below explicitly:
-Every host must map these primitives explicitly:
+The common runtime supplies exact resolution and dispatch. Hosts map only the
+user-gate and lifecycle primitives below explicitly:
 
 | Primitive | Required contract |
 |---|---|
 | `read_state` | Read `orchestrator-state.yml`; never read dashboard data as state. |
-| `invoke_advisor` | Read-only call with the complete `gate_context`; return raw response plus timeout/unavailable status. |
-| `invoke_arbiter` | One logical call on disagreement; retries stay in the same arbiter record and receive the same context. |
+| `resolve_agent` | Resolve the exact `maister:advisor` logical role to one immutable common dispatch plan. Both decision actors use this same resolver path. |
+| `dispatch_agent` | Dispatch the resolved plan with actor, gate context, work item, idempotency context, output schema, and bounded task. It returns a validated terminal result only after durable event recording. |
 | `present_user_gate` | Present the exact supplied options and return one exact option or cancel/block. |
 | `write_state` / `write_state_atomic` | Persist attempt, pending, and terminal records before any continuation; reject partial writes. |
 | `refresh_dashboard` | Project current persisted state only; never make decisions. |
@@ -598,8 +601,8 @@ Required host mapping:
 
 | Capability | Cursor | Kiro | Codex |
 |---|---|---|---|
-| Invoke advisor | custom `maister-advisor` agent | `maister-advisor` JSON agent | native subagent or documented fallback |
-| Invoke arbiter | configured custom agent/model | configured agent/model | configured native role |
+| Invoke advisor | `resolveAgent` then `dispatchAgent` for `maister:advisor` | `resolveAgent` then `dispatchAgent` for `maister:advisor` | `resolveAgent` then `dispatchAgent` for `maister:advisor` |
+| Invoke arbiter | `resolveAgent` then `dispatchAgent` for `maister:advisor` | `resolveAgent` then `dispatchAgent` for `maister:advisor` | `resolveAgent` then `dispatchAgent` for `maister:advisor` |
 | User gate | `AskUserQuestion` | chat gate | plain-text user question |
 | State write | orchestrator writes YAML atomically | orchestrator writes YAML atomically | orchestrator writes YAML atomically |
 | Resume | `maister:resume` state read | `maister-resume`/chat state read | `$maister:resume` state read |

@@ -1,0 +1,28 @@
+{
+  "canonical-body-v1": {
+    "required": [
+      "# Advisor",
+      "You are Maister's read-only gate advisor."
+    ]
+  },
+  "codex-output-schema-v1": {
+    "path": "skills/orchestrator-framework/agent-schemas/advisor.schema.json",
+    "requiredRole": "maister:advisor"
+  },
+  "cursor-frontmatter-v1": {
+    "path": "agents/advisor.md",
+    "required": [
+      "name: maister-advisor",
+      "model: inherit",
+      "color: purple"
+    ],
+    "forbidden": [
+      "readonly:"
+    ]
+  },
+  "kiro-descriptor-v1": {
+    "path": "maister-advisor.json",
+    "requiredName": "maister-advisor",
+    "requiredPrompt": "file://./instructions/maister-advisor.md"
+  }
+}

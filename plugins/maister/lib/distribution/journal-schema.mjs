@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { distributionError, readFileNoFollow } from "./path-safety.mjs";
 import { validateReceipt, SHA256, UUID, contained } from "./receipt-schema.mjs";
-import { SUPPORTED_TARGET_IDS } from "./targets.mjs";
+import { getTargetDefinition, SUPPORTED_TARGET_IDS } from "./targets.mjs";
 
 const STATES = new Set([
   "prepared", "staged", "snapshotted", "committing", "committed", "verified",
@@ -29,6 +29,16 @@ const TRANSITIONS = Object.freeze({
 
 function invalid(message, details = {}) {
   throw distributionError("E_JOURNAL_SCHEMA", message, details);
+}
+
+function rejectLegacySchema(value) {
+  if (value?.schema_version === 1) {
+    throw distributionError(
+      "E_CLEAN_INSTALL_REQUIRED",
+      "journal schema v1 is unsupported; a clean install with empty Maister target state is required",
+      { persisted_schema_version: 1, required_schema_version: 2, artifact: "journal" },
+    );
+  }
 }
 
 function object(value, location) {
@@ -107,6 +117,30 @@ function validateFailure(failure) {
   if (typeof failure.retryable !== "boolean") invalid("failure.retryable must be boolean");
 }
 
+function validateManagedRoots(roots, target, paths) {
+  if (!Array.isArray(roots) || roots.length === 0) invalid("journal.managed_roots must be a non-empty array");
+  const definition = getTargetDefinition(target);
+  const seen = new Set();
+  for (const [index, root] of roots.entries()) {
+    const location = `managed_roots[${index}]`;
+    exactFields(root, ["root_id", "path", "ownership"], location);
+    string(root.root_id, `${location}.root_id`);
+    if (seen.has(root.root_id)) invalid("journal managed root IDs must be unique", { root_id: root.root_id });
+    seen.add(root.root_id);
+    absolutePath(root.path, `${location}.path`);
+    if (!new Set(["whole_tree", "leaf_set"]).has(root.ownership)) invalid(`${location}.ownership is unsupported`);
+    const expected = definition?.managedRoots[index];
+    if (!expected || expected.rootId !== root.root_id || expected.ownership !== root.ownership) {
+      invalid("journal managed roots do not match the target registry", { target });
+    }
+    if (paths) {
+      const resolved = paths.managedRoots.find(({ rootId }) => rootId === root.root_id);
+      if (!resolved || resolved.path !== root.path || resolved.ownership !== root.ownership) invalid("journal managed root path does not match target paths", { root_id: root.root_id });
+    }
+  }
+  if (roots.length !== definition?.managedRoots.length) invalid("journal managed roots are incomplete", { target });
+}
+
 export function isTerminal(journal) {
   return journal.state === "rolled_back" || journal.state === "recovered"
     || (journal.state === "verified" && journal.steps.some((entry) => entry.name === "receipt-published" && entry.status === "completed"));
@@ -117,24 +151,25 @@ export function isUnresolved(journal) {
 }
 
 export function validateJournal(journal, { paths = null } = {}) {
+  rejectLegacySchema(journal);
   const fields = [
     "schema_version", "journal_id", "command", "target", "started_at", "updated_at", "state",
-    "state_history", "stage_root", "destination_root", "previous_receipt", "candidate_receipt", "lock", "steps", "failure",
+    "state_history", "stage_root", "managed_roots", "previous_receipt", "candidate_receipt", "lock", "steps", "failure",
   ];
   exactFields(journal, fields, "journal");
-  if (journal.schema_version !== 1) invalid("journal schema_version must be 1");
+  if (journal.schema_version !== 2) invalid("journal schema_version must be 2");
   string(journal.journal_id, "journal_id");
   if (!UUID.test(journal.journal_id)) invalid("journal_id must be a UUID");
   string(journal.command, "command");
   if (!COMMANDS.has(journal.command)) invalid(`unsupported journal command: ${journal.command}`);
   string(journal.target, "target");
   if (!SUPPORTED_TARGET_IDS.includes(journal.target)) invalid("journal target is unsupported");
+  validateManagedRoots(journal.managed_roots, journal.target, paths);
   timestamp(journal.started_at, "started_at");
   timestamp(journal.updated_at, "updated_at");
   if (!STATES.has(journal.state)) invalid(`unsupported journal state: ${journal.state}`);
   validateHistory(journal.state_history, journal.state);
   absolutePath(journal.stage_root, "stage_root");
-  absolutePath(journal.destination_root, "destination_root");
   if (journal.previous_receipt !== null) {
     absolutePath(journal.previous_receipt, "previous_receipt");
     if (!UUID.test(path.basename(journal.previous_receipt, ".json")) || path.extname(journal.previous_receipt) !== ".json") invalid("previous_receipt must name a UUID receipt");
@@ -155,7 +190,6 @@ export function validateJournal(journal, { paths = null } = {}) {
     const expectedStage = path.join(paths.stagingRoot, journal.journal_id);
     if (journal.target !== paths.target) invalid("journal target does not match the requested target");
     if (path.resolve(journal.stage_root) !== path.resolve(expectedStage)) invalid("journal stage_root is outside the staging root");
-    if (path.resolve(journal.destination_root) !== path.resolve(paths.activeRoot)) invalid("journal destination_root does not match active_root");
     if (path.resolve(journal.lock.path) !== path.resolve(paths.lockPath)) invalid("journal lock path does not match target lock");
     if (journal.previous_receipt !== null) contained(paths.receiptsRoot, journal.previous_receipt, "previous_receipt");
     if (journal.candidate_receipt) {
@@ -183,7 +217,7 @@ export function readJournal(filePath, context = {}) {
     }));
     return validateJournal(journal, { paths });
   } catch (error) {
-    if (error?.kind === "E_JOURNAL_SCHEMA" || error?.kind === "E_JOURNAL_IO") throw error;
+    if (["E_JOURNAL_SCHEMA", "E_JOURNAL_IO", "E_CLEAN_INSTALL_REQUIRED"].includes(error?.kind)) throw error;
     throw distributionError("E_JOURNAL_IO", `could not read journal: ${filePath}`, { filePath }, { cause: error });
   }
 }

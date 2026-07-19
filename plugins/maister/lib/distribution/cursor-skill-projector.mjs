@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const TEXT_EXTENSIONS = new Set(['.md', '.mdc', '.json', '.sh', '.yml', '.yaml']);
@@ -12,6 +12,37 @@ const TODO_TARGETS = new Set([
   'maister-product-design',
   'maister-research',
   'maister-standards-discover',
+]);
+
+const LOGICAL_ROLE_IDS = new Set([
+  'advisor',
+  'bottleneck-analyzer',
+  'code-quality-pragmatist',
+  'code-reviewer',
+  'codebase-analysis-reporter',
+  'docs-operator',
+  'e2e-test-verifier',
+  'gap-analyzer',
+  'html-companion-writer',
+  'implementation-completeness-checker',
+  'implementation-planner',
+  'information-gatherer',
+  'production-readiness-checker',
+  'project-analyzer',
+  'reality-assessor',
+  'research-planner',
+  'research-synthesizer',
+  'solution-brainstormer',
+  'solution-designer',
+  'spec-auditor',
+  'specification-creator',
+  'task-classifier',
+  'task-group-implementer',
+  'test-suite-runner',
+  'thermo-nuclear-code-quality-review-subagent',
+  'thermo-nuclear-review-subagent',
+  'ui-mockup-generator',
+  'user-docs-generator',
 ]);
 
 const SKILL_REFERENCE_REPLACEMENTS = [
@@ -91,6 +122,75 @@ function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
 
+function validateCommandMappings(commandMappings) {
+  if (!Array.isArray(commandMappings)) {
+    throw new Error('Cursor skill projection manifest must declare command_mappings');
+  }
+
+  const sources = new Set();
+  const targets = new Set();
+  for (const mapping of commandMappings) {
+    const keys = Object.keys(mapping).sort();
+    if (JSON.stringify(keys) !== JSON.stringify(['source', 'source_sha256', 'target'])) {
+      throw new Error('Each command mapping must declare only source, target, and source_sha256');
+    }
+    if (!/^plugins\/maister\/commands\/[a-z][a-z0-9-]*\.md$/u.test(mapping.source)) {
+      throw new Error(`Invalid canonical command source: ${mapping.source}`);
+    }
+    if (!/^maister-[a-z][a-z0-9-]*\/SKILL\.md$/u.test(mapping.target)) {
+      throw new Error(`Invalid Cursor command target: ${mapping.target}`);
+    }
+    if (!/^[a-f0-9]{64}$/u.test(mapping.source_sha256)) {
+      throw new Error(`Invalid canonical command digest for ${mapping.source}`);
+    }
+    if (sources.has(mapping.source)) throw new Error(`Duplicate canonical command source: ${mapping.source}`);
+    if (targets.has(mapping.target)) throw new Error(`Duplicate Cursor command target: ${mapping.target}`);
+    sources.add(mapping.source);
+    targets.add(mapping.target);
+  }
+
+  const sortedSources = [...sources].sort();
+  if (JSON.stringify([...sources]) !== JSON.stringify(sortedSources)) {
+    throw new Error('Canonical command mappings must be sorted by source');
+  }
+}
+
+function validatePreservedExceptions(preservedExceptions) {
+  if (!Array.isArray(preservedExceptions)) {
+    throw new Error('Cursor skill projection manifest must declare preserved_exceptions');
+  }
+
+  const targets = new Set();
+  for (const exception of preservedExceptions) {
+    const keys = Object.keys(exception).sort();
+    const expectedKeys = ['mapping_rationale', 'mode', 'sha256', 'source', 'target'];
+    if (JSON.stringify(keys) !== JSON.stringify(expectedKeys)) {
+      throw new Error('Each preserved exception must declare only target, source, mapping_rationale, sha256, and mode');
+    }
+    if (!/^maister-[a-z][a-z0-9-]*\/SKILL\.md$/u.test(exception.target)) {
+      throw new Error(`Invalid preserved exception target: ${exception.target}`);
+    }
+    if (typeof exception.source !== 'string' || exception.source.length === 0) {
+      throw new Error(`Invalid preserved exception source for ${exception.target}`);
+    }
+    if (typeof exception.mapping_rationale !== 'string' || exception.mapping_rationale.length === 0) {
+      throw new Error(`Invalid preserved exception rationale for ${exception.target}`);
+    }
+    if (!/^[a-f0-9]{64}$/u.test(exception.sha256)) {
+      throw new Error(`Invalid preserved exception digest for ${exception.target}`);
+    }
+    if (!/^(?:0644|0755)$/u.test(exception.mode)) {
+      throw new Error(`Invalid preserved exception mode for ${exception.target}: ${exception.mode}`);
+    }
+    if (targets.has(exception.target)) throw new Error(`Duplicate preserved exception target: ${exception.target}`);
+    targets.add(exception.target);
+  }
+}
+
+async function normalizedSourceMode(source) {
+  return ((await stat(source)).mode & 0o111) === 0 ? 0o644 : 0o755;
+}
+
 async function listFiles(root) {
   const files = [];
   async function visit(directory) {
@@ -128,7 +228,15 @@ function applyCursorTransforms(buffer, targetRelative, transformationIds, observ
     }
   };
 
-  apply('cursor-skill-name-v1', 'maister:', 'maister-');
+  value = value.replace(/\bmaister:\[([a-z][a-z0-9]*(?:-[a-z0-9]+)*)\]/gu, (_match, identifier) => {
+    applied.add('cursor-skill-name-v1');
+    return `maister-[${identifier}]`;
+  });
+  value = value.replace(/\bmaister:([a-z][a-z0-9]*(?:-[a-z0-9]+)*)\b/gu, (match, identifier) => {
+    if (LOGICAL_ROLE_IDS.has(identifier)) return match;
+    applied.add('cursor-skill-name-v1');
+    return `maister-${identifier}`;
+  });
   value = value.replace(/^name: (?!maister-)([^\r\n]+)$/m, (_match, name) => {
     applied.add('cursor-skill-name-v1');
     return `name: maister-${name}`;
@@ -207,6 +315,8 @@ export async function projectCursorSkills({ repositoryRoot, check = false }) {
   if (manifest.schema_version !== 1 || manifest.projection_version !== 'cursor-skill-projection-v1') {
     throw new Error(`Unsupported Cursor skill projection manifest: ${manifestPath}`);
   }
+  validateCommandMappings(manifest.command_mappings);
+  validatePreservedExceptions(manifest.preserved_exceptions);
 
   const sourceRoot = path.join(repositoryRoot, manifest.source_root);
   const outputRoot = path.join(repositoryRoot, manifest.output_root);
@@ -217,6 +327,7 @@ export async function projectCursorSkills({ repositoryRoot, check = false }) {
     'cursor-skill-references-v1', 'cursor-todowrite-v1', 'cursor-init-rule-v1',
     'cursor-host-neutralization-v1',
   ]);
+  const dormantTransformationIds = new Set(['cursor-host-neutralization-v1']);
   for (const id of transformationIds) {
     if (!knownTransformationIds.has(id)) throw new Error(`Unknown allowlisted transformation: ${id}`);
   }
@@ -244,13 +355,37 @@ export async function projectCursorSkills({ repositoryRoot, check = false }) {
       const targetRelative = `${mapping.target}/${relative}`;
       const exception = preserved.get(targetRelative);
       if (exception) continue;
-      const source = await readFile(path.join(sourceDirectory, relative));
-      desired.set(targetRelative, applyCursorTransforms(source, targetRelative, transformationIds, observedTransformationIds));
+      const sourceAbsolute = path.join(sourceDirectory, relative);
+      const source = await readFile(sourceAbsolute);
+      desired.set(targetRelative, {
+        content: applyCursorTransforms(source, targetRelative, transformationIds, observedTransformationIds),
+        mode: await normalizedSourceMode(sourceAbsolute),
+      });
     }
   }
 
+  for (const mapping of manifest.command_mappings) {
+    if (preserved.has(mapping.target)) {
+      throw new Error(`Cursor command target cannot also be a preserved exception: ${mapping.target}`);
+    }
+    if (desired.has(mapping.target)) throw new Error(`Duplicate projected target: ${mapping.target}`);
+    const sourceAbsolute = path.join(repositoryRoot, mapping.source);
+    const source = await readFile(sourceAbsolute);
+    const sourceDigest = sha256(source);
+    if (mapping.source_sha256 !== sourceDigest) {
+      throw new Error(`Canonical command drift for ${mapping.source}: expected ${mapping.source_sha256}, got ${sourceDigest}`);
+    }
+    desired.set(
+      mapping.target,
+      {
+        content: applyCursorTransforms(source, mapping.target, transformationIds, observedTransformationIds),
+        mode: await normalizedSourceMode(sourceAbsolute),
+      },
+    );
+  }
+
   const unmatchedTransformationIds = [...transformationIds]
-    .filter((id) => !observedTransformationIds.has(id));
+    .filter((id) => !observedTransformationIds.has(id) && !dormantTransformationIds.has(id));
   if (unmatchedTransformationIds.length > 0) {
     throw new Error(`Allowlisted transformations matched no canonical content: ${unmatchedTransformationIds.join(', ')}`);
   }
@@ -263,7 +398,10 @@ export async function projectCursorSkills({ repositoryRoot, check = false }) {
     if (actual !== exception.sha256) {
       throw new Error(`Preserved exception drift for ${exception.target}: expected ${exception.sha256}, got ${actual}`);
     }
-    desired.set(exception.target, content);
+    desired.set(exception.target, {
+      content,
+      mode: Number.parseInt(exception.mode, 8),
+    });
   }
 
   const desiredPaths = [...desired.keys()].sort();
@@ -272,8 +410,15 @@ export async function projectCursorSkills({ repositoryRoot, check = false }) {
   if (JSON.stringify(currentPaths) !== JSON.stringify(desiredPaths)) differences.push('file inventory');
   for (const relative of desiredPaths) {
     const absolute = path.join(outputRoot, relative);
-    if (!(await pathExists(absolute)) || !(await readFile(absolute)).equals(desired.get(relative))) {
+    if (!(await pathExists(absolute))) {
       differences.push(relative);
+      continue;
+    }
+    const expected = desired.get(relative);
+    if (!(await readFile(absolute)).equals(expected.content)) differences.push(relative);
+    const actualMode = (await stat(absolute)).mode & 0o7777;
+    if (actualMode !== expected.mode) {
+      differences.push(`${relative} (mode ${actualMode.toString(8)} != ${expected.mode.toString(8)})`);
     }
   }
 
@@ -283,10 +428,11 @@ export async function projectCursorSkills({ repositoryRoot, check = false }) {
   }
 
   await rm(outputRoot, { recursive: true, force: true });
-  for (const [relative, content] of [...desired.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+  for (const [relative, entry] of [...desired.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
     const absolute = path.join(outputRoot, relative);
     await mkdir(path.dirname(absolute), { recursive: true });
-    await writeFile(absolute, content);
+    await writeFile(absolute, entry.content);
+    await chmod(absolute, entry.mode);
   }
   return { mode: 'write', files: desired.size, changed: differences.length };
 }

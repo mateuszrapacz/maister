@@ -148,14 +148,15 @@ Examples:
 
 **For new task descriptions:**
 
-1. **Invoke task-classifier subagent** to determine workflow type:
+1. **Resolve and dispatch exact task-classifier** to determine workflow type:
 
 ```
-Use Task tool:
-  subagent_type: "maister-task-classifier"
-  description: "Classify task type"
-  prompt: "Classify this task into a workflow type: [task description].
-           Return structured YAML classification result."
+resolveAgent({ logical_role_id: "maister:task-classifier" })
+dispatchAgent:
+  actor: work
+  work_item: classify-new-task
+  output: structured YAML classification result
+  bounded_task: "Classify this task into a workflow type: [task description]."
 
 The subagent will:
 - Detect issue identifiers (GitHub, Jira)
@@ -240,7 +241,7 @@ Display:
 
 ### With Task Classifier
 
-The `/work` command delegates classification to the task-classifier subagent via Task tool, which:
+The `/work` command delegates classification through exact `maister:task-classifier` dispatch, which:
 - Fetches issue details from GitHub/Jira/Azure DevOps (via MCP, CLI tools, or WebFetch)
 - Analyzes codebase context for better classification
 - Uses confidence-based user confirmation

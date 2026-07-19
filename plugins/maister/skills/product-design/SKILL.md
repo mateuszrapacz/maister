@@ -71,7 +71,7 @@ Cross-cutting rules from `orchestrator-patterns.md` (same as the development and
 
 1. **Artifact Summary Contract (§ 7)**: every artifact opens with TL;DR / Key Decisions / Open Questions & Risks. This applies to subagent prompts (solution-brainstormer, information-gatherer already comply) AND to the artifacts this orchestrator writes directly (`problem-statement.md`, `personas.md`, `design-decisions.md`, `feature-spec.md`, `outputs/product-brief.md`). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` — verbatim, never re-summarized.
 2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark `in_progress` before executing), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks — the operator reviews them on the dashboard while answering; status stays `in_progress` until the gate passes), after every phase completion (including skipped phases 3/7, with reason), every gate decision, after each refinement-loop iteration that changes an artifact, and at finalization. Every rewrite starts with `date -u` (one call per turn). Register Phase 7 mockups as artifacts (`analysis/mockups/{slug}.html` — they ARE html; set both `path` and `html` to the mockup path).
-3. **HTML companions (§ 9) — delegated, because this orchestrator writes its hero artifacts INLINE** (no producing subagent to attach a companion to). Right after each hero md is finalized, invoke the `maister:html-companion-writer` subagent (Task tool) to write its sibling `.html`: `analysis/design-decisions.md` (Phase 5), `analysis/feature-spec.md` (Phase 6), `outputs/product-brief.md` (Phase 8, after final approval). Pass `md_path`, `html_style_guide_path` (absolute path to `../orchestrator-framework/references/html-report-style.md`), `artifact_label`, and `report_suite` (the sibling reports that exist, hrefs relative to the md's directory, for the breadcrumb). Register the returned `html_path` in `phase_summaries.[phase].artifacts[].html` so the dashboard hero cards link HTML first. Companion generation never blocks — on `status: failed` keep the md and continue. (`analysis/alternatives.md` already gets a companion from the solution-brainstormer subagent in Phase 4; `problem-statement.md`/`personas.md` are secondary — companion them too if cheap, but the three hero artifacts are the priority.)
+3. **HTML companions (§ 9) — delegated, because this orchestrator writes its hero artifacts INLINE**. Right after each hero md is finalized, use `resolveAgent({ logical_role_id: "maister:html-companion-writer" })`, then dispatch actor `product-design`, a stable companion work item, the sibling `.html` output contract, and bounded `md_path`, `html_style_guide_path`, `artifact_label`, and `report_suite` context. Apply this to `analysis/design-decisions.md` (Phase 5), `analysis/feature-spec.md` (Phase 6), and `outputs/product-brief.md` (Phase 8, after final approval). Register the returned `html_path` in `phase_summaries.[phase].artifacts[].html` so dashboard hero cards link HTML first. Companion generation never blocks — on `status: failed` keep the md and continue. (`analysis/alternatives.md` already gets a companion from exact `maister:solution-brainstormer` in Phase 4; `problem-statement.md`/`personas.md` are secondary.)
 4. **Advisor gates (§ 2.2)**: classify every design decision gate, resolve it through the configured manual/advisor/fully_automatic policy, persist the full record in `orchestrator.gate_history` after each decision, and never let advisor output modify artifacts or implementation scope. Generate `outputs/decision-summary.md` and its HTML companion at completion or blocked/failed termination.
 
 Every design direction, persona, convergence, refinement, optional-phase,
@@ -175,7 +175,7 @@ Use for **product and feature design**: defining what to build before building i
 | 1 | "Synthesize all context sources" | "Synthesizing context" | Always (scope adapts) | codebase-analyzer (if enhancement), information-gatherer (if mini-research) |
 | 2 | "Explore problem space" | "Exploring problem space" | Always (depth adapts) | Direct (interactive) |
 | 3 | "Explore users & personas" | "Exploring users & personas" | When `is_greenfield` OR `is_complex` | Direct (interactive) |
-| 4 | "Generate design alternatives" | "Generating design alternatives" | Always | solution-brainstormer (Task tool) |
+| 4 | "Generate design alternatives" | "Generating design alternatives" | Always | exact `maister:solution-brainstormer` dispatch |
 | 5 | "Converge on design direction" | "Converging on direction" | Always | Direct (interactive) |
 | 6 | "Specify features section-by-section" | "Specifying features" | Always (depth adapts) | Direct (interactive) |
 | 7 | "Create visual prototypes" | "Creating visual prototypes" | When `is_ui_focused` | Visual companion + ui-mockup-generator fallback |
@@ -344,12 +344,12 @@ Invoke `phase-0-characteristics` through the engine — "I detected these design
    - "Let me research that topic..." -- STOP. Delegate to information-gatherer.
    - "I'll look that up..." -- STOP. Delegate to information-gatherer.
 
-   **INVOKE NOW** -- Task tool call (parallel, one per topic):
-   Task tool - `maister:information-gatherer` subagent per research topic
+   **INVOKE NOW** -- common runtime calls (parallel, one per topic):
+   `resolveAgent({ logical_role_id: "maister:information-gatherer" })`, then dispatch actor `product-design`, one stable work item per topic, that topic's findings output, and bounded topic/scope context.
 
    **Context to pass**: research topic, scope constraints, task_path
 
-   **SELF-CHECK**: Did you invoke the Task tool with information-gatherer for each research topic? Or did you start searching yourself? If the latter, STOP and invoke the Task tool.
+   **SELF-CHECK**: Did you resolve and dispatch exact `maister:information-gatherer` for each research topic? Or did you start searching yourself? If the latter, STOP and use the common runtime.
 
 5. **Synthesize ALL sources** into `analysis/design-context.md`:
    - Project documentation: vision, roadmap, tech stack, architecture, and any user-added project docs (from `design_context.project_doc_paths` discovered in Phase 0)
@@ -469,7 +469,7 @@ Invoke the engine as `phase-3-exit` with question "Personas defined. Continue to
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Generate unbiased design alternatives using the solution-brainstormer agent
-**Execute**: Agent via Task tool (deliberately non-interactive to avoid anchoring bias)
+**Execute**: Exact common-runtime dispatch (deliberately non-interactive to avoid anchoring bias)
 **Resume check**: If `analysis/alternatives.md` exists, skip to Phase 5
 
 **ANTI-PATTERN -- DO NOT DO THIS:**
@@ -477,9 +477,9 @@ Invoke the engine as `phase-3-exit` with question "Personas defined. Continue to
 - "Here are some alternatives I see..." -- STOP. Delegate to solution-brainstormer.
 - "The obvious approach would be..." -- STOP. Anchoring bias. Delegate to solution-brainstormer.
 
-**INVOKE NOW** -- Task tool call:
+**INVOKE NOW** -- common runtime call:
 
-Task tool - `maister:solution-brainstormer` subagent
+`resolveAgent({ logical_role_id: "maister:solution-brainstormer" })`, then dispatch actor `product-design`, work item `design-alternatives`, output `analysis/alternatives.md`, and the bounded context below.
 
 **Context to pass** (Pattern 7):
 - `task_path`
@@ -496,7 +496,7 @@ Task tool - `maister:solution-brainstormer` subagent
 - `analysis/problem-statement.md` (refined problem + constraints)
 - `analysis/personas.md` (if exists — persona cards + journeys)
 
-**SELF-CHECK**: After Task tool returns, verify `analysis/alternatives.md` exists and contains alternatives with trade-off analysis. If missing: re-invoke brainstormer with corrected context. If second attempt fails, invoke `design-failure-recovery` through the engine with exact options `["Retry design", "Skip design", "Stop workflow"]`.
+**SELF-CHECK**: After dispatch returns, verify `analysis/alternatives.md` exists and contains alternatives with trade-off analysis. If missing: re-dispatch the exact role with corrected bounded context. If second attempt fails, invoke `design-failure-recovery` through the engine with exact options `["Retry design", "Skip design", "Stop workflow"]`.
 
 **Output**: `analysis/alternatives.md`
 **State**: Update `phase_summaries.idea_generation` with summary of alternatives generated
@@ -545,7 +545,7 @@ Invoke `design-direction` through the engine with exact options:
 
 6. **Write artifact**: Write the selected approach, rationale, alternatives considered (brief summary referencing `analysis/alternatives.md` for full detail), trade-offs accepted, and key design decisions per area to `analysis/design-decisions.md`.
 
-7. **HTML companion** *(skip when `options.html_output` is false)*: invoke `maister:html-companion-writer` (Task tool) for `analysis/design-decisions.md` (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.idea_convergence.artifacts`.
+7. **HTML companion** *(skip when `options.html_output` is false)*: dispatch exact `maister:html-companion-writer` per Operator Visibility § 3 for `analysis/design-decisions.md`. Register the returned `html_path` in `phase_summaries.idea_convergence.artifacts`.
 
 **Output**: `analysis/design-decisions.md` (+ `.html` companion)
 **State**: Update `phase_summaries.idea_convergence` with `selected_approach`, `trade_offs_accepted`, `key_decisions`
@@ -620,7 +620,7 @@ If no gaps: proceed to Phase 7/8.
 
 > **ANTI-PATTERN**: Do NOT skip depth verification because "the user already approved." Approval confirms direction; depth verification ensures implementation-readiness.
 
-**HTML companion** *(skip when `options.html_output` is false)*: once `analysis/feature-spec.md` is complete (all sections written, depth verification passed), invoke `maister:html-companion-writer` (Task tool) for it (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.feature_specification.artifacts`.
+**HTML companion** *(skip when `options.html_output` is false)*: once `analysis/feature-spec.md` is complete (all sections written, depth verification passed), dispatch exact `maister:html-companion-writer` per Operator Visibility § 3. Register the returned `html_path` in `phase_summaries.feature_specification.artifacts`.
 
 **Output**: `analysis/feature-spec.md` (+ `.html` companion)
 **State**: Update `phase_summaries.feature_specification` with `spec_sections` (individually approved), `sections_count`
@@ -688,8 +688,8 @@ The visual companion is the **default and preferred** rendering method. Always a
 
 > You should only reach this section if Step 1 failed (server could not start on any port) or the user explicitly passed `--no-visual`. If the visual companion is running, do NOT use this fallback.
 
-**INVOKE NOW** -- Task tool call:
-Task tool - `maister:ui-mockup-generator` subagent
+**INVOKE NOW** -- common runtime call:
+`resolveAgent({ logical_role_id: "maister:ui-mockup-generator" })`, then dispatch actor `product-design`, work item `visual-prototypes`, the mockup output contract, and the bounded context below.
 
 **Context to pass**: task_path, spec sections from Phase 6, design context from Phase 1, selected approach from Phase 5
 
@@ -775,7 +775,7 @@ Invoke `brief-approval` through the engine with exact options:
 
 5. **Shut down visual companion server** (if it was used): `curl -s -X POST http://localhost:[port]/shutdown`
 
-5b. **HTML companion** *(skip when `options.html_output` is false)* (after final approval, so it reflects the approved brief — do NOT regenerate on each refinement iteration): invoke `maister:html-companion-writer` (Task tool) for `outputs/product-brief.md` (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.review_handoff.artifacts` and rewrite `dashboard-data.js` so the Product Brief hero card links the HTML.
+5b. **HTML companion** *(skip when `options.html_output` is false)* (after final approval, so it reflects the approved brief — do NOT regenerate on each refinement iteration): dispatch exact `maister:html-companion-writer` per Operator Visibility § 3 for `outputs/product-brief.md`. Register the returned `html_path` in `phase_summaries.review_handoff.artifacts` and rewrite `dashboard-data.js` so the Product Brief hero card links the HTML.
 
 6. On the terminal `brief-approval` option "Approve product brief", generate `outputs/decision-summary.md` from `orchestrator.gate_history`, including every design decision, rationale, confidence, arbitration, user override, and full-context link. Generate `outputs/decision-summary.html` when `options.html_output` is true. Only then update task status and suggest next steps.
 
@@ -849,10 +849,8 @@ orchestrator:
         clarify: manual
         convergence: manual
         verify-matrix: manual
-      advisor_agent: advisor
-      advisor_model: null
-      arbiter_agent: advisor
-      arbiter_model: null
+      advisor_agent: maister:advisor
+      arbiter_agent: maister:advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3

@@ -1,0 +1,1873 @@
+orchestrator:
+  started_phase: phase-1
+  current_phase: phase-14
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-5
+    - phase-6
+    - phase-7
+    - phase-8
+    - phase-10
+    - phase-11
+    - phase-12
+    - phase-13
+    - phase-14
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+    phase-7: 0
+    phase-8: 0
+    phase-9: 0
+    phase-10: 0
+    phase-11: 0
+    phase-12: 0
+    phase-13: 0
+    phase-14: 0
+  options:
+    html_output: true
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: true
+    user_docs_enabled: true
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+    sequential: false
+    advisor:
+      enabled: true
+      gate_policies:
+        phase-exit: fully_automatic
+        optional-phase: fully_automatic
+        clarify: fully_automatic
+        convergence: fully_automatic
+        verify-matrix: fully_automatic
+      advisor_agent: advisor
+      advisor_model: gpt-5.6-sol
+      arbiter_agent: arbiter
+      arbiter_model: gpt-5.6-sol
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
+  created: "2026-07-17T20:07:04Z"
+  updated: "2026-07-19T11:39:42Z"
+  task_path: .maister/tasks/development/2026-07-17-unify-agent-projections
+  task_ids:
+    phase-1: development-phase-1
+    phase-2: development-phase-2
+    phase-3: development-phase-3
+    phase-4: development-phase-4
+    phase-5: development-phase-5
+    phase-6: development-phase-6
+    phase-7: development-phase-7
+    phase-8: development-phase-8
+    phase-9: development-phase-9
+    phase-10: development-phase-10
+    phase-11: development-phase-11
+    phase-12: development-phase-12
+    phase-13: development-phase-13
+    phase-14: development-phase-14
+  gate_history:
+    - schema_version: 1
+      idempotency_key: sha256:7b8703f1b02eed4dd864c8aef4a2c2f4df5dbde9b3745cef55ade8b1973b0ede
+      phase_id: phase-1
+      gate_type: phase-1-clarification
+      question: The approved clean-install scope removes both tracked legacy Codex TOML profiles. I assume the unstaged user edit in .codex/agents/advisor.toml may be discarded and both files deleted during implementation. Is that correct?
+      options:
+        - Confirm assumptions
+        - Correct assumptions
+        - Provide more context
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Confirm assumptions
+      final_actor: user
+      original_recommendation: Provide more context
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user explicitly confirmed that the unstaged Advisor-profile edit may be discarded and both tracked legacy Codex TOML profiles may be deleted within the approved implementation scope.
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:ba5d887d0c4265cbcbe1c13696ffdc0cf70e09b9b115fd0cea577002cb7aee7a
+      phase_id: phase-1
+      gate_type: phase-1-exit
+      question: Continue to Phase 2?
+      options:
+        - Continue to Phase 2
+        - Pause workflow
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to Phase 2
+      final_actor: user
+      original_recommendation: Continue to Phase 2
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user explicitly chose to continue the workflow into Phase 2 after reviewing the Phase 1 analysis and clarification outcome.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:cb8d23e0e7ad2eb2968a831e300e4a2f2c77b56b18216abfeff974cd16f1ab52
+      phase_id: phase-2
+      gate_type: phase-2-routing
+      question: "Continue to Phase 5: Technical Approach, Requirements & Specification?"
+      options:
+        - "Continue to Phase 5: Technical Approach, Requirements & Specification"
+        - Pause workflow
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+      final_actor: user
+      original_recommendation: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user explicitly approved the recommended direct route from Phase 2 to Phase 5 after reviewing the high-risk gap analysis and detected task characteristics.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:84272475cddac57014e270bf05cf9dc3de4f1a4a9248c141dc0f07ef60179799
+      phase_id: phase-5
+      gate_type: requirements-clarification
+      question: "I assume the Phase 5 requirements are: (1) primary users are Maister maintainers, installers, and workflow operators, with workflows selecting exact logical role IDs transparently; (2) reuse and extend the existing materializer, transaction, receipt, recovery, overlay, gate, and evidence patterns rather than creating parallel lifecycles; (3) this is non-UI work with no visual assets; (4) clean-install scope intentionally excludes v1 receipt migration and legacy Codex TOML compatibility, with old state failing clearly; (5) E5/E6 report unavailable when native prerequisites are absent and failed when observed identity is wrong; (6) execution records are append-only per workflow and separate from installation receipts; (7) support agents such as maister and explore remain outside the 28 canonical roles under explicit support ownership; and (8) all three hosts ship as one dependency-ordered scope, with no support claim until its evidence passes. Are these assumptions correct?"
+      options:
+        - Confirm assumptions
+        - Correct assumptions
+        - Provide more context
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Confirm assumptions
+      final_actor: user
+      original_recommendation: Confirm assumptions
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user explicitly confirmed all eight Phase 5 specification assumptions without correction or additional context.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:8358f6a9980394365c8e29349d3538166c7645e2aeb8875de965b725f22f292f
+      phase_id: phase-5
+      gate_type: phase-5-exit
+      question: Continue to specification audit?
+      options:
+        - Continue to specification audit
+        - Pause workflow
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to specification audit
+      final_actor: user
+      original_recommendation: Continue to specification audit
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user explicitly approved leaving Phase 5 and proceeding to the specification-audit stage after reviewing the completed specification summary and artifacts.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:b66ecde1bdbaf9d80d199f3ca24671ad3def87cb26ad975642a9e10bedd8f51d
+      phase_id: phase-6
+      gate_type: optional-phase-selection/spec-audit
+      question: Run specification audit? (Recommended)
+      options:
+        - Yes, run audit (Recommended)
+        - No, skip audit
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Yes, run audit (Recommended)
+      final_actor: user
+      original_recommendation: Yes, run audit (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user explicitly selected the recommended independent specification audit.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:881cc3c3b8774ec5669a7601b19f580c294159ccb3f7c6f5c0693278d460538a
+      phase_id: phase-6
+      gate_type: technical-clarification
+      question: How should Codex satisfy E5 discovery when it uses a generic subagent rather than 28 native per-role agents?
+      options:
+        - Prove generic adapter discovery (Recommended)
+        - Keep Codex E5 unavailable
+        - Require 28 native Codex role IDs
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: failed
+      selected_option: null
+      final_actor: system
+      original_recommendation: Prove generic adapter discovery (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: Verified Codex runtime evidence invalidated the gate premise because the required custom-agent selector is unavailable and generic subagents cannot enforce per-role model policy.
+      confidence: high
+      escalate_to_user: true
+      user_override: false
+      error: Gate superseded after its option set no longer represented the verified executable alternatives.
+    - schema_version: 1
+      idempotency_key: sha256:f0ebf2a68ef61aee146ba552d2ab8c312e761ccdf3bef82c410d1ad832b231e8
+      phase_id: phase-6
+      gate_type: technical-clarification
+      question: Should Codex use managed codex exec workers as the primary backend for roles that require enforceable per-agent model and reasoning effort?
+      options:
+        - Adopt managed codex exec workers (Recommended)
+        - Keep native-only Codex scope
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Adopt managed codex exec workers (Recommended)
+      final_actor: user
+      original_recommendation: Adopt managed codex exec workers (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user explicitly approved the tested managed codex exec worker architecture after reviewing the native custom-agent runtime limitation.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:295694c7e58ff16843475feffefae6b80f4caff759cade03b012e15b57f67660
+      phase_id: phase-6
+      gate_type: phase-6-exit
+      question: Continue to Phase 7?
+      options:
+        - Continue to Phase 7
+        - Pause workflow
+      policy: fully_automatic
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to Phase 7
+      final_actor: advisor
+      original_recommendation: Continue to Phase 7
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response:
+          selected_option: Continue to Phase 7
+          rationale: The revised audit is compliant for implementation planning, all 35 requirements pass with no remaining findings, the Codex backend choice is separately approved, and Phase 7 authorizes planning only—not implementation.
+          confidence: high
+          escalate_to_user: false
+        attempts:
+          - actor: advisor
+            attempt: 1
+            started_at: "2026-07-18T11:10:36Z"
+            finished_at: "2026-07-18T11:13:39Z"
+            status: completed
+            raw_response: |-
+              selected_option: "Continue to Phase 7"
+              rationale: "The revised audit is compliant for implementation planning, all 35 requirements pass with no remaining findings, the Codex backend choice is separately approved, and Phase 7 authorizes planning only—not implementation."
+              confidence: high
+              escalate_to_user: false
+            validation_errors: []
+            backoff:
+              strategy: exponential
+              delay_ms: 0
+              scheduled_at: "2026-07-18T11:10:36Z"
+              completed_at: "2026-07-18T11:10:36Z"
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The revised audit is compliant for implementation planning, all 35 requirements pass with no remaining findings, the Codex backend choice is separately approved, and Phase 7 authorizes planning only—not implementation.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:af970351e2970c2bf16e748b26a239e52c7b0819c78aeb28cbbb494562bc4448
+      phase_id: phase-7
+      gate_type: phase-7-exit
+      question: Continue to implementation approval?
+      options:
+        - Continue to implementation approval
+        - Pause workflow
+      policy: fully_automatic
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to implementation approval
+      final_actor: advisor
+      original_recommendation: Continue to implementation approval
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response:
+          selected_option: Continue to implementation approval
+          rationale: The plan is complete, dependency-safe, risk-based, and explicitly covers R1-R35, with the prior specification audit compliant at 35/35. Under fully_automatic policy, this configurable Phase 7 exit gate may continue; doing so only opens the separate denylisted implementation-approval gate and neither approves nor begins implementation.
+          confidence: high
+          escalate_to_user: false
+        attempts:
+          - actor: advisor
+            attempt: 1
+            started_at: "2026-07-18T11:36:35Z"
+            finished_at: "2026-07-18T11:38:36Z"
+            status: completed
+            raw_response: |-
+              selected_option: "Continue to implementation approval"
+              rationale: "The plan is complete, dependency-safe, risk-based, and explicitly covers R1-R35, with the prior specification audit compliant at 35/35. Under fully_automatic policy, this configurable Phase 7 exit gate may continue; doing so only opens the separate denylisted implementation-approval gate and neither approves nor begins implementation."
+              confidence: high
+              escalate_to_user: false
+            validation_errors: []
+            backoff:
+              strategy: exponential
+              delay_ms: 0
+              scheduled_at: "2026-07-18T11:36:35Z"
+              completed_at: "2026-07-18T11:36:35Z"
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The plan is complete, dependency-safe, risk-based, and explicitly covers R1-R35, with the prior specification audit compliant at 35/35. Continuing opens only the separate user-controlled implementation approval gate.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:63ef9a836410cfa217481a15b7b3c675dd0fbed46387e93757503d0bf84204bc
+      phase_id: phase-7
+      gate_type: implementation-approval
+      question: Approve this complete implementation scope?
+      options:
+        - Approve complete implementation scope
+        - Reject implementation scope
+        - Request scope changes
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: denylisted
+      status: decided
+      selected_option: Approve complete implementation scope
+      final_actor: user
+      original_recommendation: Approve complete implementation scope
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user explicitly selected option 1 and approved the complete 11-group implementation scope defined in implementation/implementation-plan.md.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:9c3c88f325cf7eda99d4fa7caf2544ef9ba605d07f623075a0298ffb1245a682
+      phase_id: phase-8
+      gate_type: group-failure-recovery
+      question: "Group 1 implementation failed: the managed codex exec worker terminated during analysis before editing files and without a completion report. How to proceed?"
+      options:
+        - Try suggested fix
+        - Retry group
+        - Complete manually
+        - Rollback changes
+        - Stop
+      policy: manual
+      configured_policy: manual
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Try suggested fix
+      final_actor: user
+      original_recommendation: Try suggested fix
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user selected option 1 and explicitly required process-aware monitoring: resume only after confirming the prior worker is not running, then wait for natural completion rather than terminating it blindly."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:9510d96b68907cc2efeb23662e9943791be2b4a778bf5ee61d6757f9de8e71c6
+      phase_id: phase-8
+      gate_type: group-failure-recovery
+      question: "Group 8 implementation stopped: Cursor asset regeneration requires refreshing pinned source fingerprints in plugins/maister/overlays/cursor/skill-projection-v1.json, but that manifest was omitted from the authorized Group 8 file boundary. How to proceed?"
+      options:
+        - Try suggested fix
+        - Retry group
+        - Complete manually
+        - Rollback changes
+        - Stop
+      policy: manual
+      configured_policy: manual
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Try suggested fix
+      final_actor: user
+      original_recommendation: Try suggested fix
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user selected option 1 and authorized plugins/maister/overlays/cursor/skill-projection-v1.json as the single Group 8 scope expansion so the worker can refresh affected fingerprints, mechanically regenerate Cursor assets, and rerun the focused checks."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:3bed2eaa9726b4538aad5a7bd632691c4710b66b91e81431576d314f0a672e1b
+      phase_id: phase-8
+      gate_type: group-failure-recovery
+      question: "Group 9 implementation stopped: the managed workspace-write sandbox rejected deletion of the two explicitly approved tracked legacy profiles .codex/agents/advisor.toml and .codex/agents/arbiter.toml. How to proceed?"
+      options:
+        - Try suggested fix
+        - Retry group
+        - Complete manually
+        - Rollback changes
+        - Stop
+      policy: manual
+      configured_policy: manual
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Try suggested fix
+      final_actor: user
+      original_recommendation: Try suggested fix
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user selected option 1 and explicitly expanded Group 9 to delete .codex/agents/luna_smoke_agent.toml in addition to the two tracked legacy profiles. Resume the same Codex thread with danger-full-access, delete exactly those three files, preserve every other agent file, and complete focused verification."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:460ea4dc4508fc3dd4c442c6e34778b5f05608c832717ea5f57d135d912b464f
+      phase_id: phase-8
+      gate_type: group-failure-recovery
+      question: "Group 11 release verification stopped: the Codex overlay rejects intentional shared multi-target runtime vocabulary, and the legacy GitHub source fixture lacks the now-required agent_projection contract. How to proceed?"
+      options:
+        - Try suggested fix
+        - Retry group
+        - Complete manually
+        - Rollback changes
+        - Stop
+      policy: manual
+      configured_policy: manual
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Try suggested fix
+      final_actor: user
+      original_recommendation: Try suggested fix
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user selected option 1 and authorized exactly plugins/maister/overlays/codex/overlay.yml and tests/fixtures/platform-independent/source-repos/basic/overlay.yml for the existing Group 11 worker. Remove obsolete whole-tree bans on the names of supported targets while retaining foreign asset/topology isolation, add the required projection contract to the stale fixture, then rerun the complete dependency-ordered release matrix."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:28dfb1958fe7f09f810473dcfec18f885c0111a7aff3fccbab762d3826a0def4
+      phase_id: phase-8
+      gate_type: group-failure-recovery
+      question: "Group 11 recovery attempt 1 exposed the same obsolete supported-target vocabulary policy in the Cursor and Kiro overlay contracts. How to proceed?"
+      options:
+        - Try suggested fix
+        - Retry group
+        - Complete manually
+        - Rollback changes
+        - Stop
+      policy: manual
+      configured_policy: manual
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Try suggested fix
+      final_actor: user
+      original_recommendation: Try suggested fix
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: "The user selected option 1 and authorized exactly plugins/maister/overlays/cursor/overlay.yml and plugins/maister/overlays/kiro-cli/overlay.yml for the same narrow supported-target vocabulary correction. Keep foreign plugin-path, Claude/Anthropic, inventory, archive, and topology isolation intact. Use the already-approved tests/platform-independent/release-package.test.mjs boundary to assemble the injected GitHub checkout from existing production projection inputs, avoiding any further fixture-tree scope expansion."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 2
+      idempotency_key: sha256:ee442a3c081088ade46ded7595d85a808f81c866263e063668ecdbbb30bcede3
+      phase_id: phase-8
+      gate_type: phase-8-exit
+      question: Continue to verification?
+      options:
+        - Continue to verification
+        - Pause workflow
+      original_recommendation: Continue to verification
+      configured_policy: fully_automatic
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to verification
+      final_actor: user
+      rationale: The user selected option 1 and explicitly approved continuation to verification after all 11 implementation groups and release proofs completed.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-18T21:02:49Z"
+      updated_at: "2026-07-18T21:07:55Z"
+      decided_at: "2026-07-18T21:07:55Z"
+    - schema_version: 1
+      idempotency_key: sha256:d47f2f50fe5505a025641edd3b9b79a6710eb20497f5dc052998f532181266d9
+      phase_id: phase-10
+      gate_type: verification-options
+      question: Which standard verifications to run?
+      options:
+        - Code review (Recommended)
+        - Pragmatic review (Recommended)
+        - Reality check (Recommended)
+        - Production readiness (Recommended)
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option:
+        - Code review (Recommended)
+        - Pragmatic review (Recommended)
+        - Reality check (Recommended)
+        - Production readiness (Recommended)
+      final_actor: user
+      original_recommendation: Run all recommended standard verifications
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected all four recommended standard verifications.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:34cce265eda09f436a43d6b72836538989085978c141600488ec4b76d9178521
+      phase_id: phase-10
+      gate_type: optional-phase-selection/e2e
+      question: Enable E2E browser verification?
+      options:
+        - Yes (Recommended)
+        - No, skip
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Yes (Recommended)
+      final_actor: user
+      original_recommendation: Yes (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and enabled the recommended E2E verification phase.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:4b763aeb43ef6d7ffb33b8632004cd13d29c22b7a84917928c83d1e9e8aec0cf
+      phase_id: phase-10
+      gate_type: optional-phase-selection/user-docs
+      question: Generate user documentation?
+      options:
+        - Yes (Recommended)
+        - No, skip
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Yes (Recommended)
+      final_actor: user
+      original_recommendation: Yes (Recommended)
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and enabled the recommended user-documentation phase.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:b38801fbc024277030edaf7d11b3461eac96c4fcb2402dda48ee0d161f5f1f01
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: Which issues should I fix?
+      options:
+        - Fix all fixable issues
+        - Let me choose specific issues
+        - Skip fixes, proceed as-is
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Fix all fixable issues
+      final_actor: user
+      original_recommendation: Fix all fixable issues
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1, authorizing fixes for all 16 fixable verification findings before re-verification.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:5cbab11ecd9360df47f31184e027357a81547b96f72315f7a4180c3a9ddea2ca
+      phase_id: phase-11
+      gate_type: verification-rerun
+      question: Re-run verification to check fixes?
+      options:
+        - Yes, re-run verification
+        - No, proceed to next phase
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Yes, re-run verification
+      final_actor: user
+      original_recommendation: Yes, re-run verification
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: All selected fixes are implemented and independently pass runtime 92/92 plus the critical installer, Make, release, and composition matrix 72/72; independent re-verification is required before Phase 11 completion.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:092cb129a33464a3e3c2eed586f7d870cc5f5cf7506026ddcef2bb3ca74ae3f5
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: Which remaining issues should I fix?
+      options:
+        - Fix all fixable issues
+        - Let me choose specific issues
+        - Skip fixes, proceed as-is
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Fix all fixable issues
+      final_actor: user
+      original_recommendation: Fix all fixable issues
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and explicitly authorized fixing all nine remaining findings, continuing until every issue is resolved, and following the verifier recommendations.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:93784f2bc541f676ef005d1f7bc4d65df5e6ff6df23dfdf038f2474a574c843a
+      phase_id: phase-11
+      gate_type: verification-rerun
+      question: Re-run verification to check fixes?
+      options:
+        - Yes, re-run verification
+        - No, proceed to next phase
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Yes, re-run verification
+      final_actor: user
+      original_recommendation: Yes, re-run verification
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and explicitly approved the recommended second independent re-verification of all residual repairs and canonical report regeneration.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:16a41fd13c87d401f930258630a446012a5803659c6bdf974273539e118af05e
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: Which Re-verification 2 remaining issues should I fix?
+      options:
+        - Fix all fixable issues
+        - Let me choose specific issues
+        - Skip fixes, proceed as-is
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Fix all fixable issues
+      final_actor: user
+      original_recommendation: Fix all fixable issues
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and authorized the recommended final repair of the production owner/entrypoint plus the exact public bridge contract.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:cfd046bad9a9a8e71709ce1401f50038fa2b0bb40356c8413d4a21d8f95d4399
+      phase_id: phase-11
+      gate_type: verification-rerun
+      question: Re-run verification 3 to check final fixes?
+      options:
+        - Yes, re-run verification
+        - No, proceed to next phase
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Yes, re-run verification
+      final_actor: user
+      original_recommendation: Yes, re-run verification
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and explicitly approved the final canonical re-verification after the production owner and public bridge contract fixes.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:b29ebef8a3a9fdd2cecfdfecf1f802a9f537ad700ba1dfdd46a5aaed7a2a95ab
+      phase_id: phase-11
+      gate_type: verification-known-issues
+      question: Re-verification 3 reached the maximum cycle count with 0 critical and 2 warnings. Proceed with known issues?
+      options:
+        - Proceed with known issues
+        - Stop workflow
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: user-controlled
+      status: decided
+      selected_option: Proceed with known issues
+      final_actor: user
+      original_recommendation: Proceed with known issues
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and explicitly approved proceeding with the two documented non-critical warnings after the maximum three verification cycles.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:7d8b345581eca78d6755eb9072429028773d2472afdbd11447a1496d05dba5a5
+      phase_id: phase-11
+      gate_type: phase-11-exit
+      question: Continue to Phase 12?
+      options:
+        - Continue to Phase 12
+        - Pause workflow
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to Phase 12
+      final_actor: user
+      original_recommendation: Continue to Phase 12
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and explicitly approved leaving Phase 11 for Phase 12 E2E verification after accepting the two known warnings.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:38692de680f1b01c10a3dfc6a337ef34a5c16d09ce13ac377fac5fc65465107c
+      phase_id: phase-12
+      gate_type: phase-12-exit
+      question: E2E complete. Continue to Phase 13?
+      options:
+        - Continue to Phase 13
+        - Pause workflow
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to Phase 13
+      final_actor: user
+      original_recommendation: Continue to Phase 13
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and explicitly approved proceeding to Phase 13 after the E2E verifier reported the browser track as inapplicable with zero observed product discrepancies.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:18d7ef3d9fe7a518e3e7121e6ff494d14e49e5c50b554fc82633232346fb165a
+      phase_id: phase-13
+      gate_type: phase-13-exit
+      question: Documentation complete. Continue to Phase 14?
+      options:
+        - Continue to Phase 14
+        - Pause workflow
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to Phase 14
+      final_actor: user
+      original_recommendation: Continue to Phase 14
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and explicitly approved proceeding to final workflow summary and handoff approval after the validated operator guide was completed.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+    - schema_version: 1
+      idempotency_key: sha256:3276f39fcb309d426238c77fa775b19340c9ad92f14660320a2939c15bf4cad1
+      phase_id: phase-14
+      gate_type: final-handoff-approval
+      question: Complete this workflow?
+      options:
+        - Complete workflow
+        - Keep workflow open
+      policy: manual
+      configured_policy: fully_automatic
+      safety_classification: denylisted
+      status: decided
+      selected_option: Complete workflow
+      final_actor: user
+      original_recommendation: Complete workflow
+      advisor:
+        agent: advisor
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        agent: arbiter
+        model: gpt-5.6-sol
+        response: null
+        attempts: []
+        exhausted: false
+      rationale: The user selected option 1 and explicitly approved completing the workflow after reviewing the final verification status, known warnings, operator documentation, and complete decision artifacts.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+  active_gate: null
+  implementation_approval:
+    status: approved
+    approved_by: user
+    approved_at: "2026-07-18T11:46:18Z"
+    approved_scope:
+      - group-1
+      - group-2
+      - group-3
+      - group-4
+      - group-5
+      - group-6
+      - group-7
+      - group-8
+      - group-9
+      - group-10
+      - group-11
+
+task:
+  title: Unify agent projections across supported hosts
+  description: How should Maister transform, install, discover, and invoke all canonical agents consistently on Codex, Cursor, and Kiro CLI when maister-advisor follows the same rules as every other agent?
+  status: completed
+  tags: [development, architecture, agents, codex, cursor, kiro]
+  priority: high
+
+project_context:
+  project_doc_paths:
+    - .maister/docs/project/vision.md
+    - .maister/docs/project/roadmap.md
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/project/architecture.md
+
+task_context:
+  risk_level: high
+  clarifications_resolved: true
+  scope_expanded: true
+  architecture_decision: null
+  tech_clarified: true
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: true
+    involves_data_operations: false
+    ui_heavy: false
+  research_reference:
+    path: .maister/tasks/research/2026-07-17-unify-agent-projections
+    research_question: How should Maister transform, install, discover, and invoke all canonical agents consistently on Codex, Cursor, and Kiro CLI when maister-advisor follows the same rules as every other agent?
+    research_type: mixed
+    confidence_level: high
+  design_reference:
+    source: null
+    product_design_path: null
+    mockup_count: 0
+    has_brief: false
+    index_path: null
+  phase_summaries:
+    research:
+      summary: The research recommends one canonical 28-role Markdown inventory parsed into a versioned manifest, deterministic per-host projections in transaction staging, exact fail-closed runtime dispatch, narrow multi-root Kiro ownership, and no special Advisor or legacy Codex TOML path.
+      key_findings:
+        - Canonical Markdown remains the only behavior owner for all 28 roles.
+        - Codex injects canonical prompts into generic subagents; Cursor and Kiro receive deterministic native projections.
+        - Logical role resolution and runtime dispatch must be exact and fail closed with auditable execution records.
+        - Kiro needs receipt-owned native leaf entries without taking ownership of unrelated user agents.
+        - Clean installation removes legacy Advisor and Arbiter TOML topology without migration code.
+      recommended_approach: Implement in dependency order from IR and manifest through projector, materializer and transaction integration, host projections, exact resolver and adapters, clean topology, evidence, tests, and documentation.
+      decisions:
+        - decision: Keep 28 canonical Markdown roles as the only behavior source.
+          rationale: Eliminates manually maintained host copies and role drift.
+        - decision: Project host representations deterministically inside transaction staging.
+          rationale: Preserves immutable source provenance, validation, receipts, drift detection, and rollback.
+        - decision: Treat advisor as an ordinary manifest row and runtime role.
+          rationale: Removes special permissions, TOML lifecycle, and divergent behavior.
+      risks:
+        - Codex per-spawn model control and stable programmatic spawn schema are not confirmed.
+        - Cursor collision precedence and Kiro exact identity observation require versioned native probes.
+        - Multi-root Kiro transactions must preserve byte-exact rollback and unrelated user files.
+      artifacts:
+        - path: analysis/research-context/research-report.md
+          label: Research report
+          html: null
+        - path: analysis/research-context/high-level-design.md
+          label: High-level design
+          html: null
+        - path: analysis/research-context/decision-log.md
+          label: Decision log
+          html: null
+    design:
+      summary: null
+      screen_count: 0
+      component_count: 0
+      index_path: null
+      decisions: []
+      risks: []
+      artifacts: []
+    codebase_analysis:
+      key_files:
+        - plugins/maister/lib/distribution/materializer.mjs
+        - plugins/maister/lib/distribution/transaction-manager.mjs
+        - plugins/maister/lib/distribution/recovery.mjs
+        - plugins/maister/lib/distribution/receipt-schema.mjs
+        - plugins/maister/lib/distribution/target-paths.mjs
+        - plugins/maister/lib/distribution/host-probes/base.mjs
+        - plugins/maister/agents/
+        - plugins/maister/overlays/cursor/assets/agents/
+        - plugins/maister/overlays/kiro-cli/assets/agents/
+        - plugins/maister/skills/orchestrator-framework/bin/gate-evaluator.mjs
+        - plugins/maister/skills/init/bin/reconcile-advisor-config.sh
+      primary_language: JavaScript ESM
+      summary: The repository has strong deterministic materialization and transactional-install foundations, but agent parity and delegation are declarative rather than operational. The work is complex and high risk because it adds staged role projection, multi-root Kiro ownership, exact host dispatch, stronger native evidence, and removal of legacy Advisor/Arbiter lifecycle paths.
+      decisions:
+        - decision: Keep plugins/maister/agents/*.md as the sole behavior owner and derive all host projections in transaction staging.
+          rationale: Prevents manually maintained host copies and keeps generated bytes inside the validated transaction boundary.
+        - decision: Dispatch through an exact fail-closed resolver and host adapter with no fallback.
+          rationale: Makes role identity and failures executable and auditable rather than prose-only.
+        - decision: Extend Kiro installation through receipt-owned leaf entries under its native agent root.
+          rationale: Enables native discovery without taking ownership of unrelated user agents.
+      risks:
+        - "resolved: the user explicitly authorized discarding the unstaged .codex/agents/advisor.toml edit and deleting both tracked legacy Codex TOML profiles during implementation."
+        - Codex generic-subagent spawn and per-spawn model control are not proven by the repository.
+        - Cursor precedence and Kiro exact-name identity require pinned native probes.
+        - Multi-root rollback must preserve byte-exact state and unrelated Kiro agent leaves.
+      artifacts:
+        - path: analysis/codebase-analysis.md
+          label: Codebase analysis
+          html: null
+    clarifications:
+      - question: The approved clean-install scope removes both tracked legacy Codex TOML profiles. I assume the unstaged user edit in .codex/agents/advisor.toml may be discarded and both files deleted during implementation. Is that correct?
+        status: resolved
+        answer: Confirm assumptions
+        resolution: The user authorized discarding the unstaged Advisor-profile edit and deleting both tracked legacy Codex TOML profiles during implementation.
+        recommendation: Provide more context
+        artifact: analysis/clarifications.md
+    gap_analysis:
+      integration_points:
+        - Canonical role parsing from plugins/maister/agents/*.md
+        - Staged projection inside materializer.mjs before staging enumeration and hashing
+        - Overlay contracts and normalized canonical/support inventories
+        - Versioned receipt, journal, recovery, drift, verify, update, uninstall, and status contracts
+        - Narrow Kiro native leaf ownership under ~/.kiro/agents
+        - Exact logical-role resolution and active-receipt validation
+        - Codex, Cursor, and Kiro host adapter ports
+        - Execution records and corrected E5/E6 evidence producers
+        - Legacy Codex Advisor/Arbiter topology removal
+        - Platform-independent tests, packaging, release gates, and documentation
+      summary: Maister has strong deterministic materialization and transactional-install foundations, but lacks an operational role projection and exact-dispatch layer. The task modifies existing distribution behavior while adding a strict role IR and manifest, staged projectors, multi-root Kiro ownership, exact resolver and adapters, execution records, and genuine native evidence.
+      decisions:
+        - decision: Treat the work as both modification of existing code and creation of new capabilities.
+          rationale: Existing distribution and evidence contracts change while the role IR, projector, resolver, adapters, and execution record do not exist.
+        - decision: Classify the dominant change as modificative with moderate compatibility requirements.
+          rationale: Current safety and ownership guarantees remain strict, while legacy Codex TOML compatibility is explicitly excluded.
+        - decision: Preserve the accepted research architecture as binding scope.
+          rationale: Canonical ownership, host projections, Kiro leaf ownership, exact dispatch, Advisor equality, and evidence semantics are already decided.
+        - decision: Route directly to specification after Phase 2.
+          rationale: The task has neither a reproducible defect requiring TDD Red nor UI-heavy work requiring mockups.
+      risks:
+        - Multi-root Kiro lifecycle changes can weaken byte-exact rollback or delete unrelated user agents if implemented incompletely.
+        - Codex per-spawn controls, Cursor collision precedence, and Kiro exact identity observation remain host-version-dependent.
+        - Partial evidence changes could continue overstating native support.
+        - Resolver or adapter errors could execute the wrong role unless every ambiguity and digest mismatch fails closed.
+        - Existing release and topology baselines span many affected integration points.
+      artifacts:
+        - path: analysis/gap-analysis.md
+          label: Gap analysis
+          html: null
+    scope_clarifications:
+      scope_expanded: false
+      summary: No scope decisions needed. The accepted research and resolved Phase 1 clarification already bind all material scope choices.
+      decisions: []
+      risks:
+        - Host capability unknowns remain fail-closed or unavailable evidence outcomes rather than scope choices.
+      artifacts:
+        - path: analysis/scope-clarifications.md
+          label: Scope clarifications
+          html: null
+    ui_mockups:
+      components_designed: []
+      summary: null
+      decisions: []
+      risks: []
+      artifacts: []
+    specification:
+      summary: The revised specification defines one deterministic and auditable 28-role delivery and exact-invocation contract across Codex, Cursor, and Kiro CLI. Codex uses managed codex exec workers with enforceable per-role execution policy; Advisor and Arbiter bind exact maister:advisor through the common resolver. It contains 35 requirements, 17 reuse seams, 8 justified new capabilities, and risk-driven test groups.
+      decisions:
+        - decision: Keep the 28 canonical Markdown agents as the sole behavior owner.
+          rationale: Host-maintained behavior copies have already drifted or become incomplete.
+        - decision: Use a strict, versioned role IR and projection manifest.
+          rationale: Every projector, resolver, topology check, and probe needs the same identity and digest contract.
+        - decision: Generate host projections inside materializer staging.
+          rationale: Projected bytes must participate in validation, hashing, provenance, receipts, rollback, and release closure.
+        - decision: Use target-specific execution under common semantics.
+          rationale: Codex requires managed process workers, Cursor native Markdown agents, and Kiro native descriptor/prompt pairs.
+        - decision: Resolve only exact maister:<role_id> identities and fail closed.
+          rationale: Fallback or fuzzy selection could execute an unintended role and conceal unsupported behavior.
+        - decision: Generalize the existing transaction lifecycle around narrow managed roots.
+          rationale: Kiro requires native discovery without granting Maister ownership of unrelated user agents.
+        - decision: Treat Advisor exactly like every ordinary canonical role.
+          rationale: Special TOML, permissions, model, destination, adapter, and evidence paths are prohibited.
+        - decision: Keep materialization, E5 discovery, and E6 invocation as separate evidence layers.
+          rationale: Structural presence cannot prove native discovery or exact execution.
+      risks:
+        - Codex exec controls/model availability, Cursor collision precedence, and Kiro observed identity remain host-version-dependent.
+        - Multi-root persistence and recovery must ship as one complete lifecycle.
+        - Existing E5 records may overstate native discovery support.
+        - Legacy Codex TOML and receipt-v1 compatibility are intentionally excluded and obsolete state must fail clearly.
+        - Target E5/E6 may legitimately remain unavailable when prerequisites are absent.
+      artifacts:
+        - path: analysis/requirements.md
+          label: Confirmed requirements
+          html: null
+        - path: analysis/technical-clarifications.md
+          label: Technical clarifications
+          html: null
+        - path: implementation/spec.md
+          label: Specification
+          html: null
+    spec_audit:
+      summary: The revised pre-implementation audit is Compliant for planning. Codex now has an executable managed-process identity and E5/E6 contract; Advisor/Arbiter exact binding, the closed Agent IR schema, durable execution events, and risk-driven test guidance resolve all previous findings.
+      compliance_status: Compliant
+      requirements_checked: 35
+      requirements_passed: 35
+      finding_counts:
+        critical: 0
+        high: 0
+        medium: 0
+        low: 0
+      decisions:
+        - Current implementation absence is baseline evidence, not an audit finding.
+        - Codex uses adapter identity codex.exec with no invented native per-role ID; E5 proves the required process-control surface and E6 proves exact logical-role execution.
+        - Advisor and Arbiter actors both bind maister:advisor and use the common execution profile while retaining separate decision-attempt identities.
+        - The Agent IR allowlist, skill resolution, hash-chained execution-event stream, and risk-based test contract are normative.
+      risks:
+        - Codex CLI controls, model catalogs, authentication, and effective-policy observations remain version-sensitive and must fail unavailable when the probe cannot prove them.
+        - Workspace-writing Codex workers remain serialized until isolated worktree ownership is separately specified.
+      artifacts:
+        - path: verification/spec-audit.md
+          label: Specification audit
+          html: null
+        - path: analysis/codex-agent-runtime-experiment.md
+          label: Codex agent runtime experiment
+          html: null
+    implementation_plan:
+      summary: The implementation plan contains 11 dependency-safe tracer groups, 92 tracked steps, and 9 execution waves. It preserves all 35 requirements, uses managed codex exec workers, keeps the multi-root Kiro lifecycle atomic, and places corrected E5/E6 evidence and release claims last.
+      task_groups: 11
+      total_steps: 92
+      execution_waves: 9
+      expected_tests: Risk-based non-redundant scenarios with no fixed maximum; the current plan identifies at least 120 distinct focused scenarios.
+      decisions:
+        - decision: Freeze the canonical Agent IR, projection manifest, and execution profiles before every downstream seam.
+          rationale: Projection, runtime resolution, evidence, and gate binding must share one exact identity and policy contract.
+        - decision: Run deterministic projection and durable dispatch-event persistence as the first safe parallel wave.
+          rationale: Their files are disjoint after the canonical contract stabilizes, and both must precede live dispatch.
+        - decision: Deliver receipt and journal schema v2 plus every Kiro managed-root lifecycle operation as one atomic group.
+          rationale: Partial multi-root support could overwrite unrelated user agents or make rollback unrecoverable.
+        - decision: Run host adapters and exact workflow-configuration cutover as the second safe parallel wave.
+          rationale: They share resolver contracts but own disjoint runtime and configuration files before gate integration.
+        - decision: Keep E5/E6 evidence, parity baselines, release wiring, support claims, and documentation last.
+          rationale: Structural or packaging success cannot authorize runtime support claims before exact adapters and lifecycle safety pass.
+      risks:
+        - Codex CLI controls, authentication, model availability, and effective-policy observations remain version-sensitive and fail closed before spawn.
+        - Cursor precedence and Kiro exact identity observation may legitimately remain unavailable on unsupported host versions.
+        - Kiro multi-root ownership remains the highest-risk atomic delivery group.
+        - Workspace-writing Codex workers against one checkout remain serialized.
+        - Unrelated untracked worktree files, including .codex/agents/luna_smoke_agent.toml, must be preserved.
+      groups:
+        - id: group-1
+          name: Canonical Agent IR, Manifest, and Execution Profiles
+          dependencies: []
+          steps: 8
+          status: completed
+          recovery_attempt: 2
+          resumed_session: 019f750e-f04d-7a20-9c7d-2da78aadfee2
+          wave: 1
+          completed_at: "2026-07-18T12:09:17Z"
+          tests_passed: 27
+          tests_failed: 0
+          summary: "Implemented and independently verified the strict 28-role Agent IR, closed projection/profile contract, deterministic 84-row manifest, overlay bindings, support separation, and Advisor equality."
+        - id: group-2
+          name: Pure Deterministic Projector and Host Representations
+          dependencies: [group-1]
+          steps: 8
+          status: completed
+          started_at: "2026-07-18T12:10:42Z"
+          wave: 2
+          completed_at: "2026-07-18T12:29:07Z"
+          tests_passed: 43
+          tests_failed: 0
+          summary: "Implemented and independently verified pure deterministic all-host projection, exact 28-role representations, support separation, collision/reference/drift validation, and isolated project-agents --check."
+        - id: group-3
+          name: Materializer Boundary and Projection Provenance
+          dependencies: [group-2]
+          steps: 8
+          status: completed
+          started_at: "2026-07-18T12:46:11Z"
+          wave: 3
+          completed_at: "2026-07-18T13:06:09Z"
+          tests_passed: 39
+          tests_failed: 0
+          summary: "Implemented and independently verified projection at the trusted post-assembly/pre-enumeration materializer seam, complete projection provenance, ordinary candidate validation, closed Kiro prompt references, and staging-only generation."
+        - id: group-4
+          name: Atomic Managed-Root v2 Lifecycle and Kiro Leaf Ownership
+          dependencies: [group-3]
+          steps: 11
+          status: completed
+          started_at: "2026-07-18T13:07:33Z"
+          wave: 4
+          completed_at: "2026-07-18T14:02:07Z"
+          tests_passed: 61
+          tests_failed: 0
+          summary: "Implemented and independently verified the atomic managed-root v2 lifecycle, typed pre-mutation v1 rejection, exact multi-root snapshot/restore/recovery, Kiro native leaf ownership, collision/stale-leaf safety, projection provenance, and code-6/code-7 semantics."
+        - id: group-5
+          name: Durable Dispatch Event Schema and Writer
+          dependencies: [group-1]
+          steps: 8
+          status: completed
+          started_at: "2026-07-18T12:30:11Z"
+          wave: 2
+          completed_at: "2026-07-18T12:44:54Z"
+          tests_passed: 15
+          tests_failed: 0
+          summary: "Implemented and independently verified closed durable dispatch events with canonical hash chaining, private append-only persistence, per-dispatch locking, idempotent reuse, recovery, and fail-closed side-effect recording semantics."
+        - id: group-6
+          name: Exact Resolver and Common Dispatch Contracts
+          dependencies: [group-1, group-3, group-4, group-5]
+          steps: 8
+          status: completed
+          started_at: "2026-07-18T14:04:00Z"
+          wave: 5
+          completed_at: "2026-07-18T14:27:36Z"
+          tests_passed: 23
+          tests_failed: 0
+          summary: "Implemented and independently verified exact namespaced role resolution, immutable shared dispatch contracts, receipt/projection/root-inventory and capability preflight, ordinary Advisor equality, common terminal observations, and strict no-fallback dispatch."
+        - id: group-7
+          name: Managed Codex Workers and Native Host Adapters
+          dependencies: [group-5, group-6]
+          steps: 9
+          status: completed
+          started_at: "2026-07-18T14:34:24Z"
+          wave: 6
+          completed_at: "2026-07-18T15:04:07Z"
+          tests_passed: 44
+          tests_failed: 0
+          summary: "Implemented and independently verified managed Codex exec workers with pinned GPT-5.6 Terra/high policy, real CLI JSONL/session semantics, durable process events, fail-closed structured identity validation, per-checkout concurrency control, and exact no-fallback Cursor/Kiro native adapters."
+        - id: group-8
+          name: Exact Workflow Requests and Gate Configuration Cutover
+          dependencies: [group-6]
+          steps: 7
+          status: completed
+          started_at: "2026-07-18T15:05:41Z"
+          wave: 6
+          completed_at: "2026-07-18T16:26:16Z"
+          tests_passed: 33
+          tests_failed: 0
+          summary: "Implemented and independently verified exact namespaced gate/workflow role requests, project-only gate normalization, removal of actor model fields and Codex TOML lifecycle behavior, canonical Cursor command projection, and deterministic content/inventory/mode drift checks."
+        - id: group-9
+          name: Gate Evaluator Integration and Clean Legacy Topology
+          dependencies: [group-2, group-3, group-7, group-8]
+          steps: 8
+          status: completed
+          started_at: "2026-07-18T16:28:08Z"
+          wave: 7
+          completed_at: "2026-07-18T17:00:01Z"
+          tests_passed: 28
+          tests_failed: 0
+          summary: "Implemented and independently verified exact common-role gate dispatch, distinct decision and attempt identities, immutable terminal dispatch provenance bound to durable success/error payloads, fail-closed gate advancement, deterministic legacy-state migration, and removal of exactly the three user-authorized Codex agent profiles plus obsolete Advisor topology."
+        - id: group-10
+          name: Correct E5/E6 Discovery and Invocation Evidence
+          dependencies: [group-4, group-7, group-9]
+          steps: 8
+          status: completed
+          started_at: "2026-07-18T17:01:52Z"
+          wave: 8
+          completed_at: "2026-07-18T17:20:49Z"
+          tests_passed: 40
+          tests_failed: 0
+          summary: "Implemented and independently verified target-specific E5 discovery, production-shaped three-role E6 scenarios, strict passed/failed provenance freshness, unavailable prerequisite semantics, exact native inventory and identity checks, and fail-closed capability policy; corrected namespaced manifest resolution and preserved clean installer receipt creation."
+        - id: group-11
+          name: Release, Documentation, and Cross-Feature Verification
+          dependencies: [group-1, group-2, group-3, group-4, group-5, group-6, group-7, group-8, group-9, group-10]
+          steps: 9
+          status: completed
+          recovery_attempt: 2
+          resumed_session: 019f7642-a713-7c21-aaa3-555254973924
+          authorized_scope_expansion:
+            - plugins/maister/overlays/codex/overlay.yml
+            - tests/fixtures/platform-independent/source-repos/basic/overlay.yml
+            - plugins/maister/overlays/cursor/overlay.yml
+            - plugins/maister/overlays/kiro-cli/overlay.yml
+          started_at: "2026-07-18T17:24:12Z"
+          completed_at: "2026-07-18T21:02:49Z"
+          tests_passed: 60
+          tests_failed: 0
+          latest_test_result: "coordinator cross-feature suite 60 passed / 0 failed; strict clean-copy parity 159/113/459 expected and 0 unresolved"
+          summary: "Implemented and independently verified release/package closure, dependency-ordered Make/CI wiring, R1-R35 and SC1-SC15 coverage, reviewed exact parity baselines, deterministic all-target packages and sidecars, extracted multi-root lifecycle, accurate documentation, and explicit unavailable native-host evidence semantics."
+          wave: 9
+      artifacts:
+        - path: implementation/implementation-plan.md
+          label: Implementation plan
+          html: implementation/implementation-plan.html
+    implementation:
+      summary: "All 11 implementation groups are complete. The final coordinator audit passed 60/60 cross-feature tests, strict clean-copy parity with zero unresolved differences for all targets, deterministic double-build hashes, sidecar verification, and extracted install/verify/uninstall across every managed root."
+      groups_completed: 11
+      groups_total: 11
+      final_cross_feature_tests_passed: 60
+      final_cross_feature_tests_failed: 0
+      decisions:
+        - Registered supported-target vocabulary is allowed in intentional shared runtime content while foreign host assets and plugin paths remain isolated.
+        - Parity baselines are exact reviewed observations against the immutable legacy oracle; no wildcard or relearning rule is accepted.
+        - Native E5/E6 remains unavailable or provisional without native-host proof and cannot become a passed support claim.
+      risks:
+        - Native Cursor and Kiro identity proof remains host-version-dependent and unavailable when its runtime prerequisites are absent.
+        - Codex authentication, model availability, and effective managed-worker controls remain version-sensitive and fail closed.
+      artifacts:
+        - path: implementation/work-log.md
+          label: Implementation work log
+          html: null
+    verification:
+      summary: "Re-verification 3 is Passed with Issues / GO after 304/304 independent tests and arbitration. All prior critical findings are closed; two warnings remain for truly bounded CLI stdin ingestion/typed read failure and the exact versioned optional cancel callback contract."
+      status: passed_with_issues
+      issue_counts:
+        critical: 0
+        warning: 2
+        info: 0
+      decisions:
+        - decision: Accept the production owner and all prior critical findings as resolved.
+          rationale: The shipped executable and extracted package tracers prove the real CLI-to-owner-to-runtime-to-gate path, while the independent suite passes 304/304.
+        - decision: Classify the two remaining contract defects as warnings.
+          rationale: Arbitration found local availability and contract-completeness impact without privilege escalation, data corruption, fallback, or cross-boundary mutation.
+      risks:
+        - CLI stdin is fully buffered before the documented one-mebibyte limit is checked, and a read error can bypass the typed envelope.
+        - The optional exact-native cancel callback lacks a closed versioned request, exact trigger timing, and return contract.
+      artifacts:
+        - path: verification/implementation-verification.md
+          label: Implementation verification
+          html: verification/implementation-verification.html
+        - path: verification/code-review-report.md
+          label: Code review
+          html: null
+        - path: verification/pragmatic-review.md
+          label: Pragmatic review
+          html: null
+        - path: verification/production-readiness-report.md
+          label: Production readiness
+          html: null
+        - path: verification/reality-check.md
+          label: Reality check
+          html: null
+    e2e:
+      summary: "Phase 12 is GO WITH CAVEATS: 4/4 assessed browser scenarios are blocked as inapplicable because the approved CLI/plugin/runtime change has no product browser endpoint or user-facing web journey. No browser evidence was fabricated and no product discrepancy was observed."
+      status: passed_with_caveats
+      scenarios:
+        planned: 4
+        executed: 4
+        passed: 0
+        failed: 0
+        blocked: 4
+      issue_counts:
+        critical: 0
+        major: 0
+        minor: 0
+        cosmetic: 0
+      risks:
+        - Browser E2E cannot establish the CLI, filesystem, process, host-adapter, evidence, and release success criteria; those remain covered by the independent Phase 11 evidence.
+        - Any future operator-facing web integration will require its own base URL, runtime fixture, authentication context, and browser scenarios.
+      artifacts:
+        - path: verification/e2e-verification-report.md
+          label: E2E verification report
+          html: verification/e2e-verification-report.html
+    user_documentation:
+      summary: "Created and validated a 337-line operator guide for Maister maintainers, installers, workflow operators, and auditors. It covers lifecycle, exact 28-role selection, owner-v1 CLI/bridge requests, host-specific execution, model/effort policy, evidence, no-fallback behavior, troubleshooting, and both accepted warnings."
+      status: completed
+      screenshot_count: 0
+      decisions:
+        - decision: Publish CLI-first operational documentation without screenshots.
+          rationale: The feature has no product browser surface and Phase 12 produced no real screenshots to reuse; fabricating UI evidence would mislead operators.
+      risks:
+        - Operational examples depend on the installed package, authenticated host, and a compatible registered bridge module.
+        - RV3-W1 and RV3-W2 remain documented follow-up warnings.
+      artifacts:
+        - path: documentation/user-guide.md
+          label: Operator guide
+          html: null
+    finalization:
+      summary: "Completed the workflow after explicit final user approval. The regenerated decision summary and self-contained HTML companion contain all 31 terminal gates, 15 required fields per gate, correct full-context links, and the final completed status."
+      status: completed
+      artifacts:
+        - path: outputs/decision-summary.md
+          label: Decision summary
+          html: outputs/decision-summary.html
+    architecture_decision:
+      decision: Implement the dependency-ordered canonical role IR, staged projection, multi-root transaction, exact resolver, managed codex exec worker backend, native Cursor/Kiro adapters, legacy topology removal, and target-specific evidence architecture.
+      summary: Runtime research invalidated generic/native Codex role selection on the current surface. The user explicitly selected managed codex exec workers as the binding enforceable per-agent model architecture, and the revised audit confirms planning readiness.
+      decisions:
+        - decision: Use managed codex exec workers for enforceable per-role model and reasoning policy.
+          rationale: This is the only tested current Codex mechanism that applies explicit model and effort while preserving a deterministic fail-closed adapter contract.
+      risks:
+        - Host capability gaps must remain explicit typed failures or unavailable evidence.
+        - Multi-root Kiro lifecycle changes must preserve unrelated user files and byte-exact recovery.
+      artifacts:
+        - path: analysis/technical-clarifications.md
+          label: Technical clarifications
+          html: null
+    advisor:
+      summary: null
+      decisions: []
+      risks: []
+      artifacts: []
+
+verification_context:
+  last_status: passed_with_issues
+  issues_found:
+    - {id: RV3-W1, severity: warning, category: input_contract, description: "The CLI buffers all stdin before checking the one-mebibyte limit, and stdin read failures can bypass the typed JSON envelope.", location: "plugins/maister/bin/maister-agent-gate.mjs:19", fixable: true, fixed: false}
+    - {id: RV3-W2, severity: warning, category: integration_contract, description: "The optional exact-native cancel callback lacks a closed versioned request, exact trigger timing, and return semantics.", location: "README.md:195", fixable: true, fixed: false}
+  fixes_applied:
+    - "2026-07-18T22:43:11Z: Applied C1-C5, W1-W8, and I1-I3; coordinator confirmed runtime 92/92, critical integration 72/72, composition 2/2, make validate exit 0, parity 164/0 Codex, 113/0 Cursor, 464/0 Kiro, and clean diff checks."
+    - "2026-07-19T00:16:53Z: Applied all nine residual fixes test-first; independent coordinator confirmed make test-runtime exit 0, evidence/Make/release/topology 61/61, extracted Cursor and Codex production tracers, diagnostic parity 165/0 Codex, 113/0 Cursor, 465/0 Kiro, syntax checks, and clean diff checks."
+    - "2026-07-19T10:17:57Z: Shipped the production agent-gate CLI and closed v1 owner/bridge contract test-first; independent coordinator confirmed runtime/gate exit 0, critical matrix 62/62, extracted subprocess tracers 2/2, call graph closure, diagnostic parity 166/0 Codex, 113/0 Cursor, 466/0 Kiro, syntax, executable mode, and clean diff checks."
+  decisions_made:
+    - "2026-07-18T22:04:43Z: User selected Fix all fixable issues (C1-C5, W1-W8, I1-I3); the full test suite is required after code changes."
+    - "2026-07-18T23:18:21Z: Re-verification 1 is NO-GO; C2 and C3 are resolved, while residual C1, C4, and C5 plus four warnings and two infos require a new fix-selection decision."
+    - "2026-07-19T09:03:15Z: User selected Yes, re-run verification after all nine residual findings passed local and independent coordinator validation."
+    - "2026-07-19T09:32:33Z: Re-verification 2 is NO-GO after a 2:1 reviewer split was resolved by call-graph arbitration; one critical production-owner gap and one bridge-documentation warning remain."
+    - "2026-07-19T10:23:51Z: User selected Yes, re-run verification for the final canonical Re-verification 3 after both remaining findings were fixed and locally validated."
+    - "2026-07-19T10:48:20Z: Re-verification 3 is Passed with Issues / GO after 304/304 tests and arbitration; all criticals are closed, with two warnings remaining at the maximum cycle count."
+    - "2026-07-19T10:55:02Z: User selected Proceed with known issues and accepted RV3-W1 and RV3-W2 as documented non-critical follow-up work."
+  reverify_count: 3
+
+phases:
+  - id: phase-1
+    name: Analyze codebase & clarify requirements
+    status: completed
+    blocked_by: []
+    started: "2026-07-17T20:07:04Z"
+    completed: "2026-07-17T20:31:22Z"
+    gate:
+      idempotency_key: sha256:ba5d887d0c4265cbcbe1c13696ffdc0cf70e09b9b115fd0cea577002cb7aee7a
+      gate_type: phase-1-exit
+      question: Continue to Phase 2?
+      options:
+        - Continue to Phase 2
+        - Pause workflow
+      recommendation: Continue to Phase 2
+      answer: Continue to Phase 2
+      status: decided
+  - id: phase-2
+    name: Analyze gaps & clarify scope
+    status: completed
+    blocked_by: [phase-1]
+    started: "2026-07-17T20:31:22Z"
+    completed: "2026-07-17T20:49:05Z"
+    gate:
+      idempotency_key: sha256:cb8d23e0e7ad2eb2968a831e300e4a2f2c77b56b18216abfeff974cd16f1ab52
+      gate_type: phase-2-routing
+      question: "Continue to Phase 5: Technical Approach, Requirements & Specification?"
+      options:
+        - "Continue to Phase 5: Technical Approach, Requirements & Specification"
+        - Pause workflow
+      recommendation: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+      answer: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+      status: decided
+  - id: phase-3
+    name: Write failing test (TDD Red)
+    status: skipped
+    blocked_by: [phase-2]
+    started: null
+    completed: "2026-07-17T20:49:05Z"
+    skip_reason: Skipped by routing because the gap analyzer found no reproducible defect.
+    gate: null
+  - id: phase-4
+    name: Generate UI mockups
+    status: skipped
+    blocked_by: [phase-2]
+    started: null
+    completed: "2026-07-17T20:49:05Z"
+    skip_reason: Skipped by routing because the gap analyzer found no UI-heavy scope.
+    gate: null
+  - id: phase-5
+    name: Gather requirements & create specification
+    status: completed
+    blocked_by: [phase-2, phase-3, phase-4]
+    started: "2026-07-17T20:49:05Z"
+    completed: "2026-07-17T21:17:05Z"
+    gate:
+      idempotency_key: sha256:8358f6a9980394365c8e29349d3538166c7645e2aeb8875de965b725f22f292f
+      gate_type: phase-5-exit
+      question: Continue to specification audit?
+      options:
+        - Continue to specification audit
+        - Pause workflow
+      recommendation: Continue to specification audit
+      answer: Continue to specification audit
+      status: decided
+  - id: phase-6
+    name: Audit specification
+    status: completed
+    blocked_by: [phase-5]
+    started: "2026-07-17T21:17:05Z"
+    completed: "2026-07-18T11:15:13Z"
+    gate:
+      idempotency_key: sha256:295694c7e58ff16843475feffefae6b80f4caff759cade03b012e15b57f67660
+      gate_type: phase-6-exit
+      question: Continue to Phase 7?
+      options:
+        - Continue to Phase 7
+        - Pause workflow
+      recommendation: Continue to Phase 7
+      answer: Continue to Phase 7
+      status: decided
+  - id: phase-7
+    name: Plan implementation
+    status: completed
+    blocked_by: [phase-6]
+    started: "2026-07-18T11:15:13Z"
+    completed: "2026-07-18T11:46:18Z"
+    gate:
+      idempotency_key: sha256:af970351e2970c2bf16e748b26a239e52c7b0819c78aeb28cbbb494562bc4448
+      gate_type: phase-7-exit
+      question: Continue to implementation approval?
+      options:
+        - Continue to implementation approval
+        - Pause workflow
+      recommendation: Continue to implementation approval
+      answer: Continue to implementation approval
+      status: decided
+  - id: phase-8
+    name: Execute implementation
+    status: completed
+    blocked_by: [phase-7]
+    started: "2026-07-18T11:46:18Z"
+    completed: "2026-07-18T21:02:49Z"
+    gate:
+      idempotency_key: sha256:ee442a3c081088ade46ded7595d85a808f81c866263e063668ecdbbb30bcede3
+      gate_type: phase-8-exit
+      question: Continue to verification?
+      options:
+        - Continue to verification
+        - Pause workflow
+      recommendation: Continue to verification
+      answer: Continue to verification
+      status: decided
+  - id: phase-9
+    name: Verify test passes (TDD Green)
+    status: skipped
+    blocked_by: [phase-8]
+    started: null
+    completed: "2026-07-18T21:07:55Z"
+    skip_reason: Phase 3 was skipped because the task had no separately reproducible defect, so no dedicated TDD Green gate is required.
+    gate: null
+  - id: phase-10
+    name: Prompt verification options
+    status: completed
+    blocked_by: [phase-8, phase-9]
+    started: "2026-07-18T21:07:55Z"
+    completed: "2026-07-18T21:22:27Z"
+    gate:
+      idempotency_key: sha256:4b763aeb43ef6d7ffb33b8632004cd13d29c22b7a84917928c83d1e9e8aec0cf
+      gate_type: optional-phase-selection/user-docs
+      question: Generate user documentation?
+      options:
+        - Yes (Recommended)
+        - No, skip
+      recommendation: Yes (Recommended)
+      answer: Yes (Recommended)
+      status: decided
+  - id: phase-11
+    name: Verify implementation & resolve issues
+    status: completed
+    blocked_by: [phase-10]
+    started: "2026-07-18T21:22:27Z"
+    completed: "2026-07-19T11:06:53Z"
+    gate:
+      idempotency_key: sha256:7d8b345581eca78d6755eb9072429028773d2472afdbd11447a1496d05dba5a5
+      gate_type: phase-11-exit
+      question: Continue to Phase 12?
+      options:
+        - Continue to Phase 12
+        - Pause workflow
+      recommendation: Continue to Phase 12
+      answer: Continue to Phase 12
+      status: decided
+  - id: phase-12
+    name: Run E2E tests
+    status: completed
+    blocked_by: [phase-11]
+    started: "2026-07-19T11:06:53Z"
+    completed: "2026-07-19T11:12:16Z"
+    gate:
+      idempotency_key: sha256:38692de680f1b01c10a3dfc6a337ef34a5c16d09ce13ac377fac5fc65465107c
+      gate_type: phase-12-exit
+      question: E2E complete. Continue to Phase 13?
+      options:
+        - Continue to Phase 13
+        - Pause workflow
+      recommendation: Continue to Phase 13
+      answer: Continue to Phase 13
+      status: decided
+  - id: phase-13
+    name: Generate user documentation
+    status: completed
+    blocked_by: [phase-12]
+    started: "2026-07-19T11:18:35Z"
+    completed: "2026-07-19T11:24:53Z"
+    gate:
+      idempotency_key: sha256:18d7ef3d9fe7a518e3e7121e6ff494d14e49e5c50b554fc82633232346fb165a
+      gate_type: phase-13-exit
+      question: Documentation complete. Continue to Phase 14?
+      options:
+        - Continue to Phase 14
+        - Pause workflow
+      recommendation: Continue to Phase 14
+      answer: Continue to Phase 14
+      status: decided
+  - id: phase-14
+    name: Finalize workflow
+    status: completed
+    blocked_by: [phase-13]
+    started: "2026-07-19T11:27:58Z"
+    completed: "2026-07-19T11:39:42Z"
+    gate:
+      idempotency_key: sha256:3276f39fcb309d426238c77fa775b19340c9ad92f14660320a2939c15bf4cad1
+      gate_type: final-handoff-approval
+      question: Complete this workflow?
+      options:
+        - Complete workflow
+        - Keep workflow open
+      recommendation: Complete workflow
+      answer: Complete workflow
+      status: decided

@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
 
+import { validateDispatchPlan, validateDispatchTerminalResult } from "./agent-runtime/dispatch-contract.mjs";
+import { canonicalExecutionEventJson } from "./agent-runtime/execution-event-schema.mjs";
 import { commitState, readState, StateRepositoryError } from "./orchestrator-state-repository.mjs";
 
 const CONTEXT_FIELDS = [
@@ -75,9 +77,8 @@ function validateGateContext(gateContext) {
 }
 
 function validateRoleDefinition(role, location) {
-  exactFields(role, ["agent", "model", "max_attempts"], location);
-  nonEmptyString(role.agent, `${location}.agent`);
-  if (role.model !== null) nonEmptyString(role.model, `${location}.model`);
+  exactFields(role, ["logical_role_id", "max_attempts"], location);
+  if (role.logical_role_id !== "maister:advisor") fail(`${location}.logical_role_id must be exactly maister:advisor`, "INVALID_ROLE_CONFIG");
   if (!Number.isInteger(role.max_attempts) || role.max_attempts < 1) fail(`${location}.max_attempts must be a positive integer`, "INVALID_ROLE_CONFIG");
 }
 
@@ -100,15 +101,19 @@ function idempotencyKey(gateContext) {
   return `sha256:${crypto.createHash("sha256").update(canonical, "utf8").digest("hex")}`;
 }
 
-function roleIdentity(actor, key) {
-  return `${actor}:${crypto.createHash("sha256").update(`${actor}:${key}`, "utf8").digest("hex")}`;
+function decisionDispatchId(actor, key) {
+  return `gate-${actor}-${crypto.createHash("sha256").update(`${actor}:${key}`, "utf8").digest("hex").slice(0, 24)}`;
+}
+
+function attemptDispatchId(actor, key, attempt) {
+  return `${decisionDispatchId(actor, key)}-${attempt}`;
 }
 
 function blankRole() {
   return {
     logical_role_id: null,
-    agent: null,
-    model: null,
+    dispatch_id: null,
+    terminal_dispatch: null,
     response: null,
     attempts: [],
     exhausted: false,
@@ -204,13 +209,26 @@ function deepFreeze(value) {
   return value;
 }
 
-function roleInvocationContext(gateContext, actor, logicalRoleId, attempt, extra = {}) {
+function dispatchTask(gateContext, key, actor, attempt, extra = {}) {
   return deepFreeze({
     gate_context: structuredClone(gateContext),
     actor,
-    logical_role_id: logicalRoleId,
-    attempt,
-    ...structuredClone(extra),
+    work_item: {
+      id: `${key}:${actor}:${attempt.dispatch_id}`,
+      actor,
+      attempt: attempt.number,
+      dispatch_id: attempt.dispatch_id,
+      ...structuredClone(extra),
+    },
+    idempotency_context: {
+      idempotency_key: key,
+      gate_decision_id: decisionDispatchId(actor, key),
+    },
+    output_schema: {
+      schema_id: "maister.gate-decision.v1",
+      fields: structuredClone(RESPONSE_FIELDS),
+    },
+    bounded_task: "Return only the gate decision response for the supplied read-only gate context.",
   });
 }
 
@@ -257,9 +275,8 @@ async function finishUserGate({ statePath, key, interactive, userPort, gateConte
 async function prepareAttempt({ statePath, key, actor, definition, now }) {
   return commitGate(statePath, key, (gate) => {
     const role = gate[actor];
-    role.logical_role_id ??= roleIdentity(actor, key);
-    role.agent ??= definition.agent;
-    role.model ??= definition.model;
+    role.logical_role_id ??= definition.logical_role_id;
+    role.dispatch_id ??= decisionDispatchId(actor, key);
     const unfinished = role.attempts.find((attempt) => attempt.status === "started");
     if (unfinished) {
       unfinished.status = "interrupted";
@@ -272,6 +289,8 @@ async function prepareAttempt({ statePath, key, actor, definition, now }) {
     }
     role.attempts.push({
       number: role.attempts.length + 1,
+      dispatch_id: attemptDispatchId(actor, key, role.attempts.length + 1),
+      terminal_dispatch: null,
       status: "started",
       started_at: now(),
       completed_at: null,
@@ -282,7 +301,61 @@ async function prepareAttempt({ statePath, key, actor, definition, now }) {
   });
 }
 
-async function invokeRole({ statePath, key, actor, definition, invoke, allowedOptions, invocationExtra, gateContext, now, wait, backoffMs }) {
+function durableEvidenceDigest(value) {
+  return crypto.createHash("sha256").update(canonicalExecutionEventJson(value), "utf8").digest("hex");
+}
+
+function sameDurableEvidence(left, right) {
+  return durableEvidenceDigest(left) === durableEvidenceDigest(right);
+}
+
+function durableSuccessEvidence(event, terminalResult) {
+  if (!isMapping(event.result) || !isMapping(event.result.data) || !Object.hasOwn(event.result.data, "output")) {
+    fail("successful dispatch terminal event has no durable output", "INVALID_DISPATCH_RESULT");
+  }
+  if (!sameDurableEvidence(terminalResult.output, event.result.data.output)) {
+    fail("successful dispatch output differs from durable terminal evidence", "INVALID_DISPATCH_RESULT");
+  }
+  if (terminalResult.adapter_id === "codex.exec") {
+    const durableNativeObservations = { ...event.result.data };
+    delete durableNativeObservations.output;
+    const terminalNativeObservations = structuredClone(terminalResult.native_observations);
+    if (Object.hasOwn(terminalNativeObservations, "reused")) {
+      if (terminalNativeObservations.reused !== true) fail("Codex reused observation is invalid", "INVALID_DISPATCH_RESULT");
+      delete terminalNativeObservations.reused;
+    }
+    if (!sameDurableEvidence(terminalNativeObservations, durableNativeObservations)) {
+      fail("Codex native observations differ from durable terminal evidence", "INVALID_DISPATCH_RESULT");
+    }
+    return;
+  }
+  const expectedFields = ["native_observations", "output"];
+  if (Object.keys(event.result.data).sort().join(",") !== expectedFields.join(",")) {
+    fail("native dispatch terminal event has an invalid durable evidence shape", "INVALID_DISPATCH_RESULT");
+  }
+  if (!sameDurableEvidence(terminalResult.native_observations, event.result.data.native_observations)) {
+    fail("native observations differ from durable terminal evidence", "INVALID_DISPATCH_RESULT");
+  }
+}
+
+function durableTerminal(stream, terminalResult) {
+  if (!isMapping(stream) || stream.complete !== true || !Array.isArray(stream.events)) fail("dispatch stream has no durable terminal result", "INVALID_DISPATCH_RESULT");
+  const event = stream.events.at(-1);
+  if (!isMapping(event) || event.event_type !== "dispatch_terminal" || event.dispatch_id !== terminalResult.dispatch_id) {
+    fail("dispatch stream terminal does not match the dispatch result", "INVALID_DISPATCH_RESULT");
+  }
+  if (terminalResult.status === "succeeded") {
+    if (event.error !== null) fail("successful dispatch has no durable successful terminal event", "INVALID_DISPATCH_RESULT");
+    durableSuccessEvidence(event, terminalResult);
+    return;
+  }
+  if (event.error === null || event.result !== null) fail("failed dispatch has no durable failed terminal event", "INVALID_DISPATCH_RESULT");
+  if (!sameDurableEvidence(terminalResult.error, event.error)) {
+    fail("failed dispatch error differs from durable terminal evidence", "INVALID_DISPATCH_RESULT");
+  }
+}
+
+async function invokeRole({ statePath, key, actor, definition, runtimePort, allowedOptions, invocationExtra, gateContext, now, wait, backoffMs }) {
   while (true) {
     const prepared = await prepareAttempt({ statePath, key, actor, definition, now });
     if (prepared.reused) return prepared;
@@ -291,9 +364,28 @@ async function invokeRole({ statePath, key, actor, definition, invoke, allowedOp
     const attempt = preparedRole.attempts.at(-1);
     let validResponse = null;
     let responseError = null;
+    let terminalDispatch = null;
     try {
-      const rawResponse = await invoke(roleInvocationContext(gateContext, actor, preparedRole.logical_role_id, attempt.number, invocationExtra));
-      validResponse = validateRoleResponse(rawResponse, allowedOptions);
+      const plan = validateDispatchPlan(await runtimePort.resolveAgent({
+        logical_role_id: preparedRole.logical_role_id,
+        dispatch_id: attempt.dispatch_id,
+      }));
+      if (plan.requested_logical_role_id !== preparedRole.logical_role_id || plan.dispatch_id !== attempt.dispatch_id) {
+        fail("resolver returned a dispatch plan for a different gate identity", "INVALID_DISPATCH_RESULT");
+      }
+      const candidateTerminalDispatch = validateDispatchTerminalResult(await runtimePort.dispatchAgent({
+        plan,
+        task: dispatchTask(gateContext, key, actor, attempt, invocationExtra),
+      }));
+      if (candidateTerminalDispatch.dispatch_id !== plan.dispatch_id || candidateTerminalDispatch.requested_logical_role_id !== plan.requested_logical_role_id) {
+        fail("dispatcher returned a terminal result for a different dispatch plan", "INVALID_DISPATCH_RESULT");
+      }
+      const taskPath = gateContext.context.task_path;
+      if (typeof taskPath !== "string" || taskPath.length === 0) fail("gate context has no task_path for durable dispatch evidence", "INVALID_DISPATCH_RESULT");
+      durableTerminal(runtimePort.readExecutionEventStream({ taskPath, dispatchId: attempt.dispatch_id }), candidateTerminalDispatch);
+      terminalDispatch = candidateTerminalDispatch;
+      if (terminalDispatch.status === "succeeded") validResponse = validateRoleResponse(terminalDispatch.output, allowedOptions);
+      else responseError = terminalDispatch.error.message;
     } catch (error) {
       responseError = error instanceof Error ? error.message : String(error);
     }
@@ -303,6 +395,8 @@ async function invokeRole({ statePath, key, actor, definition, invoke, allowedOp
       durableAttempt.status = validResponse ? "completed" : "failed";
       durableAttempt.completed_at = now();
       durableAttempt.error = responseError;
+      durableAttempt.terminal_dispatch = terminalDispatch;
+      if (validResponse) role.terminal_dispatch = terminalDispatch;
       if (validResponse) role.response = validResponse;
       if (!validResponse && role.attempts.length >= definition.max_attempts) role.exhausted = true;
       gate.updated_at = now();
@@ -332,7 +426,7 @@ export async function evaluateGate({
   statePath,
   gateContext,
   roleConfig,
-  rolePort,
+  runtimePort,
   userPort = null,
   automaticContinuationSupported = false,
   interactive = true,
@@ -342,7 +436,10 @@ export async function evaluateGate({
   if (typeof statePath !== "string" || statePath.length === 0) fail("statePath must be a non-empty string", "INVALID_STATE_PATH");
   const context = validateGateContext(gateContext);
   const roles = validateRoleConfig(roleConfig);
-  if (!isMapping(rolePort)) fail("rolePort must be a mapping", "INVALID_ROLE_PORT");
+  if (!isMapping(runtimePort)) fail("runtime_port must be a mapping", "INVALID_RUNTIME_PORT");
+  for (const field of ["resolveAgent", "dispatchAgent", "readExecutionEventStream"]) {
+    if (typeof runtimePort[field] !== "function") fail(`runtime_port.${field} must be a function`, "INVALID_RUNTIME_PORT");
+  }
   if (typeof now !== "function" || typeof wait !== "function") fail("now and wait must be functions", "INVALID_RUNTIME_PORT");
   if (typeof automaticContinuationSupported !== "boolean" || typeof interactive !== "boolean") fail("host capability flags must be boolean", "INVALID_RUNTIME_PORT");
 
@@ -385,7 +482,6 @@ export async function evaluateGate({
     return finishUserGate({ statePath, key, interactive, userPort, gateContext: context, now });
   }
 
-  if (typeof rolePort.invokeAdvisor !== "function") fail("rolePort.invokeAdvisor is required", "INVALID_ROLE_PORT");
   let advisorState = readState(statePath);
   let advisorGate = findGate(advisorState, key);
   if (advisorGate.advisor.response === null && !advisorGate.advisor.exhausted) {
@@ -394,7 +490,7 @@ export async function evaluateGate({
       key,
       actor: "advisor",
       definition: roles.advisor,
-      invoke: rolePort.invokeAdvisor,
+      runtimePort,
       allowedOptions: context.options,
       invocationExtra: {},
       gateContext: context,
@@ -445,7 +541,7 @@ export async function evaluateGate({
     return result(decided.state, decided.gate);
   }
 
-  if (!roles.arbiter_enabled_on_disagreement || typeof rolePort.invokeArbiter !== "function") {
+  if (!roles.arbiter_enabled_on_disagreement) {
     const failed = await failClosedAfterRole({ statePath, key, interactive, reason: "Advisor disagreement requires an available Arbiter.", now });
     return interactive
       ? finishUserGate({ statePath, key, interactive, userPort, gateContext: context, now })
@@ -461,7 +557,7 @@ export async function evaluateGate({
       key,
       actor: "arbiter",
       definition: roles.arbiter,
-      invoke: rolePort.invokeArbiter,
+      runtimePort,
       allowedOptions: competingOptions,
       invocationExtra: {
         competing_options: competingOptions,

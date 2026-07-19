@@ -1,6 +1,0 @@
-name = "advisor"
-description = "old description"
-model = "old-model"
-sandbox_mode = "read-only"
-developer_instructions = "old instructions"
-obsolete = "remove me"

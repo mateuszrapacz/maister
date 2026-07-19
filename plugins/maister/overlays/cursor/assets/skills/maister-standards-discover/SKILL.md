@@ -98,7 +98,7 @@ Use the Read tool to load ONLY the reference files for phases you will execute:
 
 **Step 3: Adapt templates** — Replace `[scope]`, `[confidence]`, and other placeholders with actual values. Replace the `[output_file]` placeholder in each template with the actual temp file path for that phase (e.g., `{tmpdir}/config.yml`).
 
-**Step 4: Launch subagents in parallel** — Use the Task tool with `subagent_type: general-purpose` for each phase.
+**Step 4: Launch bounded discovery in parallel** — For each phase, use `resolveAgent({ logical_role_id: "maister:information-gatherer" })`, then dispatch actor `standards-discover`, a stable phase work item, response-only findings output, and that phase's bounded read-only discovery context.
 
 > ❌ **WRONG** — launching one agent per message, waiting for result, then launching the next.
 > ✅ **CORRECT** — launching ALL applicable agents (2–4 Task calls) in a SINGLE message.
@@ -164,17 +164,17 @@ If `--auto-apply` is set, automatically approve findings with confidence >= 90% 
 
 ### Phase 8: Application
 
-> **DELEGATION REQUIRED**: Do NOT write standard files directly using Write/Edit tools. ALL file operations MUST go through the `docs-operator` subagent (Task tool).
+> **DELEGATION REQUIRED**: Do NOT write standard files directly using Write/Edit tools. ALL file operations MUST go through exact `maister:docs-operator` dispatch.
 >
-> **SELF-CHECK before each file operation**: "Am I about to write a file directly? STOP — invoke docs-operator via Task tool instead."
+> **SELF-CHECK before each file operation**: "Am I about to write a file directly? STOP — dispatch exact docs-operator instead."
 
 For each approved standard:
 
 1. **Prepare content** — Standard name, description, examples (preferred/avoid), rationale from evidence, source citations. Format each standard as a `###` heading with 1-10 lines description (excluding code snippets). Group related standards into the same topic file. Add brief code examples only when they clarify the practice.
 2. **Check if file exists** — Determine create vs update action
-3. **Invoke `docs-operator` subagent** via Task tool (subagent_type: `maister-docs-operator`) — Pass prepared content. For creates: new file. For updates: merge new findings with existing. Wait for completion, then continue with the next standard.
-4. **After all standards applied, invoke `docs-operator` subagent** via Task tool to regenerate INDEX.md. Wait for completion, then continue with step 5.
-5. **Invoke `docs-operator` subagent** via Task tool to verify project-instruction integration — ensure the standards directory is referenced. Wait for completion, then display the application summary.
+3. Resolve `resolveAgent({ logical_role_id: "maister:docs-operator" })`, then dispatch actor `standards-discover`, one stable apply-standard work item, the standard file output, and bounded prepared content. For updates, include the existing content and merge requirement. Wait for completion before the next standard.
+4. After all standards are applied, dispatch exact `maister:docs-operator` with actor `standards-discover`, work item `regenerate-index`, output `.maister/docs/INDEX.md`, and bounded index context.
+5. Dispatch exact `maister:docs-operator` with actor `standards-discover`, work item `verify-project-instructions`, response-only verification output, and bounded integration context. Then display the application summary.
 
 Display application summary: created count, updated count, total active.
 

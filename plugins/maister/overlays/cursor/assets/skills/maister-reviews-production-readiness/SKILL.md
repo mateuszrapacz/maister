@@ -3,7 +3,7 @@ name: maister-reviews-production-readiness
 description: Verify production deployment readiness with comprehensive checks
 ---
 
-**ACTION REQUIRED**: This command delegates to a subagent. The `<command-name>` tag refers to THIS command, not the target. Invoke the production-readiness-checker subagent via the Task tool NOW. Pass path and target arguments. Do not read files, explore code, or execute workflow steps yourself.
+**ACTION REQUIRED**: This command delegates through the common exact-role runtime. The `<command-name>` tag refers to THIS command, not the target. Resolve and dispatch production-readiness-checker now with bounded path and target arguments. Do not execute the check inline.
 
 You are verifying production deployment readiness using the `production-readiness-checker` subagent.
 
@@ -26,19 +26,21 @@ You are performing comprehensive production readiness analysis covering configur
 
 ## Your Instructions
 
-**Invoke the production-readiness-checker subagent NOW using the Task tool:**
+**Resolve and dispatch exact production-readiness-checker NOW:**
 
 ```
-Use Task tool:
-  subagent_type: "maister-production-readiness-checker"
-  description: "Production readiness check"
-  prompt: |
+resolveAgent({ logical_role_id: "maister:production-readiness-checker" })
+dispatchAgent:
+  actor: reviews-production-readiness
+  work_item: production-readiness
+  output: "[path]/production-readiness-report.md"
+  bounded_task: |
     Verify production readiness at: [path from user or from AskQuestion]
     Target: [production|staging]
     Report path: [path]/production-readiness-report.md
 ```
 
-**Wait for the subagent to complete before proceeding.**
+**Wait for the exact dispatch to complete before proceeding.**
 
 The production-readiness-checker subagent will:
 1. Verify configuration management (env vars, secrets, feature flags)

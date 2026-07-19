@@ -20,6 +20,7 @@ const ROOT = path.resolve(import.meta.dirname, "../..");
 const COMMIT = "0123456789abcdef0123456789abcdef01234567";
 const REPO_COMMIT = execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
 const TEST_SOURCE_DATE_EPOCH = 1784073600;
+const TEST_EVIDENCE_NOW = "2026-07-15T00:00:01.000Z";
 
 function tempDirectory(prefix) {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
@@ -51,7 +52,7 @@ function makeTestAttestation(directory) {
     sourceVersion: "test",
     testCommand: "make test-core",
     result: "passed",
-    sourceDateEpoch: TEST_SOURCE_DATE_EPOCH,
+    sourceDateEpoch: Math.floor(Date.now() / 1000),
   }).output;
 }
 
@@ -88,7 +89,7 @@ function invokeArchive(extractedRoot, target, command, home, state) {
     "--json",
   ], {
     cwd: extractedRoot,
-    env: { ...process.env, XDG_STATE_HOME: state },
+    env: { ...process.env, XDG_STATE_HOME: state, MAISTER_EVIDENCE_NOW: TEST_EVIDENCE_NOW },
     encoding: "utf8",
   });
   return JSON.parse(output);
@@ -108,11 +109,141 @@ function invokeArchiveAttempt(extractedRoot, target, command, home, state, extra
     "--json",
   ], {
     cwd: extractedRoot,
-    env: { ...process.env, XDG_STATE_HOME: state, ...env },
+    env: { ...process.env, XDG_STATE_HOME: state, MAISTER_EVIDENCE_NOW: TEST_EVIDENCE_NOW, ...env },
     encoding: "utf8",
   });
   return { status: result.status, response: JSON.parse(result.stdout) };
 }
+
+function writeTracerState(statePath, taskId) {
+  fs.writeFileSync(statePath, `orchestrator:\n  schema_version: 2\n  revision: 0\n  initial_phase: phase-1\n  current_phase: phase-1\n  completed_phases: []\n  failed_phases: []\n  gate_history: []\n  work: {}\n  dispatch_outbox: []\ntask:\n  id: ${taskId}\nphases:\n  - id: phase-1\n    status: in_progress\n`, "utf8");
+}
+
+function invokePackagedAgentGate(extractedRoot, request) {
+  const result = spawnSync(process.execPath, [path.join(extractedRoot, "plugins/maister/bin/maister-agent-gate.mjs")], {
+    cwd: extractedRoot,
+    env: { ...process.env, XDG_STATE_HOME: request.state_root },
+    input: `${JSON.stringify(request)}\n`,
+    encoding: "utf8",
+  });
+  assert.equal(result.stderr, "", result.stderr);
+  return { status: result.status, response: JSON.parse(result.stdout) };
+}
+
+function productionGateRequest({ target, home, stateRoot, workingRoot, statePath, bridgeModule }) {
+  return {
+    schema_version: 1,
+    operation: "evaluate_gate",
+    target,
+    home,
+    state_root: stateRoot,
+    working_root: workingRoot,
+    state_path: statePath,
+    bridge_module: bridgeModule,
+    gate_context: { schema_version: 1, phase_id: "phase-1", gate_type: "phase-exit", question: "Continue?", options: ["Continue", "Pause"], original_recommendation: "Continue", policy: "fully_automatic", safety_classification: "configurable", context: { task_path: path.dirname(statePath), workflow_id: "development" } },
+    role_config: { advisor: { logical_role_id: "maister:advisor", max_attempts: 1 }, arbiter: { logical_role_id: "maister:advisor", max_attempts: 1 }, arbiter_enabled_on_disagreement: true, backoff_ms: 0 },
+    automatic_continuation_supported: true,
+    interactive: false,
+  };
+}
+
+test("extracted package drives a gate through production bootstrap, exact native dispatch, and durable terminal evidence", async (t) => {
+  const packageDirectory = tempDirectory("maister-runtime-tracer-package-");
+  const attestation = makeTestAttestation(tempDirectory("maister-runtime-tracer-e3-"));
+  const archive = makePackage(packageDirectory, "cursor", { attestation });
+  const extractedRoot = tempDirectory("maister-runtime-tracer-extract-");
+  const sandboxRoot = fs.realpathSync(tempDirectory("maister-runtime-tracer-sandbox-"));
+  t.after(() => fs.rmSync(packageDirectory, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(extractedRoot, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(sandboxRoot, { recursive: true, force: true }));
+  extractArchive(archive, extractedRoot);
+  const home = path.join(sandboxRoot, "home");
+  const state = path.join(sandboxRoot, "state");
+  const taskPath = path.join(sandboxRoot, "task");
+  fs.mkdirSync(home);
+  fs.mkdirSync(state);
+  fs.mkdirSync(taskPath, { mode: 0o700 });
+  assert.equal(invokeArchive(extractedRoot, "cursor", "install", home, state).ok, true);
+
+  const activePointer = JSON.parse(fs.readFileSync(path.join(state, "maister/cursor/active-receipt.json"), "utf8"));
+  const activeReceipt = JSON.parse(fs.readFileSync(activePointer.receipt_path, "utf8"));
+  const statePath = path.join(taskPath, "orchestrator-state.yml");
+  writeTracerState(statePath, "production-runtime-tracer");
+  const unavailable = invokePackagedAgentGate(extractedRoot, productionGateRequest({ target: "cursor", home, stateRoot: state, workingRoot: extractedRoot, statePath, bridgeModule: null }));
+  assert.equal(unavailable.status, 0, JSON.stringify(unavailable.response));
+  assert.equal(unavailable.response.result.directive, "blocked");
+  assert.match(unavailable.response.result.gate.advisor.attempts[0].error, /E_AGENT_UNAVAILABLE/u);
+
+  const bridgeModule = path.join(sandboxRoot, "cursor-bridge-v1.mjs");
+  fs.writeFileSync(bridgeModule, `export async function createMaisterAgentBridgeV1(request) {\n  if (request.schema_version !== 1 || request.target !== "cursor") throw new Error("bad owner request");\n  return { schema_version: 1, target: "cursor", credentials_owner: "host", version_owner: "host", native_port: { hostVersion: ${JSON.stringify(activeReceipt.target.host_version)}, authenticated: true, externalCollisions: [], async inspect(input) { if (input.schema_version !== 1) throw new Error("bad inspect request"); return { schema_version: 1, exact_launch: true, observable_identity: true }; }, async launch(input) { return { schema_version: 1, observed_native_role_external_id: input.native_role_external_id, output: { selected_option: "Continue", rationale: "Production tracer", confidence: "high", escalate_to_user: false }, native_observations: { launch_id: "production-tracer-1" } }; } } };\n}\n`, "utf8");
+  writeTracerState(statePath, "production-runtime-tracer");
+  const invoked = invokePackagedAgentGate(extractedRoot, productionGateRequest({ target: "cursor", home, stateRoot: state, workingRoot: extractedRoot, statePath, bridgeModule }));
+  assert.equal(invoked.status, 0, JSON.stringify(invoked.response));
+  assert.equal(invoked.response.result.directive, "continue", JSON.stringify(invoked.response));
+  assert.equal(invoked.response.result.gate.selected_option, "Continue");
+  assert.equal(invoked.response.result.gate.advisor.terminal_dispatch.native_observations.launch_id, "production-tracer-1");
+});
+
+test("extracted package drives a gate through production bootstrap and the managed Codex adapter", async (t) => {
+  const packageDirectory = tempDirectory("maister-codex-tracer-package-");
+  const attestation = makeTestAttestation(tempDirectory("maister-codex-tracer-e3-"));
+  const archive = makePackage(packageDirectory, "codex", { attestation });
+  const extractedRoot = tempDirectory("maister-codex-tracer-extract-");
+  const sandboxRoot = fs.realpathSync(tempDirectory("maister-codex-tracer-sandbox-"));
+  t.after(() => fs.rmSync(packageDirectory, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(extractedRoot, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(sandboxRoot, { recursive: true, force: true }));
+  extractArchive(archive, extractedRoot);
+  const home = path.join(sandboxRoot, "home");
+  const state = path.join(sandboxRoot, "state");
+  const taskPath = path.join(sandboxRoot, "task");
+  fs.mkdirSync(home);
+  fs.mkdirSync(state);
+  fs.mkdirSync(taskPath, { mode: 0o700 });
+  assert.equal(invokeArchive(extractedRoot, "codex", "install", home, state).ok, true);
+
+  const activePointer = JSON.parse(fs.readFileSync(path.join(state, "maister/codex/active-receipt.json"), "utf8"));
+  const activeReceipt = JSON.parse(fs.readFileSync(activePointer.receipt_path, "utf8"));
+  const executable = path.join(sandboxRoot, "codex-fixture.mjs");
+  fs.writeFileSync(executable, `#!/usr/bin/env node
+import fs from "node:fs";
+const chunks = [];
+for await (const chunk of process.stdin) chunks.push(chunk);
+const input = Buffer.concat(chunks).toString("utf8");
+const contract = JSON.parse(input.trim().split("\\n").at(-1));
+const lastIndex = process.argv.indexOf("--output-last-message");
+const output = {
+  logical_role_id: contract.logical_role_id,
+  status: "completed",
+  summary: "Production Codex tracer",
+  details: {
+    dispatch_id: contract.dispatch_id,
+    session_id: "codex-production-session",
+    canonical_source_digest: contract.canonical_source_digest,
+    manifest_digest: contract.manifest_digest,
+    projection_digest: contract.projection_digest,
+    nonce: contract.nonce,
+    terminal_output: "Production Codex tracer",
+    gate_response: { selected_option: "Continue", rationale: "Production Codex tracer", confidence: "high", escalate_to_user: false },
+  },
+};
+fs.writeFileSync(process.argv[lastIndex + 1], JSON.stringify(output));
+process.stdout.write(JSON.stringify({ type: "thread.started", thread_id: "codex-production-session" }) + "\\n");
+process.stdout.write(JSON.stringify({ type: "turn.started" }) + "\\n");
+process.stdout.write(JSON.stringify({ type: "item.completed", item: { id: "item-1", type: "agent_message", text: "Production Codex tracer" } }) + "\\n");
+process.stdout.write(JSON.stringify({ type: "turn.completed", usage: { input_tokens: 1, cached_input_tokens: 0, output_tokens: 1 } }) + "\\n");
+`, { mode: 0o755 });
+  fs.chmodSync(executable, 0o755);
+  const statePath = path.join(taskPath, "orchestrator-state.yml");
+  writeTracerState(statePath, "production-codex-runtime-tracer");
+  const bridgeModule = path.join(sandboxRoot, "codex-bridge-v1.mjs");
+  fs.writeFileSync(bridgeModule, `export async function createMaisterAgentBridgeV1(request) {\n  if (request.schema_version !== 1 || request.target !== "codex") throw new Error("bad owner request");\n  return { schema_version: 1, target: "codex", credentials_owner: "host", version_owner: "host", capability_port: { async inspect(input) { return { schema_version: 1, executable: { available: true, path: ${JSON.stringify(executable)} }, authentication: { available: true, authenticated: true }, version: { value: ${JSON.stringify(activeReceipt.target.host_version)}, allowed: true }, controls: { working_root: true, model: true, reasoning_effort: true, sandbox: true, jsonl: true, output_schema: true, last_message: true, ignore_user_config: true }, model: { available: true, supported: true, value: input.required_model ?? "gpt-5.6-terra" }, reasoning: { available: true, supported: true, value: input.required_reasoning_effort ?? "high" } }; } } };\n}\n`, "utf8");
+  const invoked = invokePackagedAgentGate(extractedRoot, productionGateRequest({ target: "codex", home, stateRoot: state, workingRoot: extractedRoot, statePath, bridgeModule }));
+  assert.equal(invoked.status, 0, JSON.stringify(invoked.response));
+  assert.equal(invoked.response.result.directive, "continue", JSON.stringify(invoked.response));
+  assert.equal(invoked.response.result.gate.advisor.terminal_dispatch.adapter_id, "codex.exec");
+  assert.equal(invoked.response.result.gate.advisor.terminal_dispatch.output.selected_option, "Continue");
+});
 
 test("target archives are deterministic, self-contained, and support a clean lifecycle", () => {
   const archives = packageArchives();
@@ -131,11 +262,14 @@ test("target archives are deterministic, self-contained, and support a clean lif
     assert.match(listing, new RegExp(`plugins/maister/overlays/${target}/overlay\\.yml\\n`, "u"), target);
     assert.match(listing, /plugins\/maister\/.maister-e3-attestation\.json\n/u, target);
     for (const otherTarget of SUPPORTED_TARGET_IDS.filter((candidate) => candidate !== target)) {
-      assert.doesNotMatch(listing, new RegExp(`plugins/maister/overlays/${otherTarget}/overlay\\.yml\\n`, "u"), target);
+      assert.match(listing, new RegExp(`plugins/maister/overlays/${otherTarget}/overlay\\.yml\\n`, "u"), target);
+      assert.match(listing, new RegExp(`plugins/maister/overlays/${otherTarget}/inventory\\.yml\\n`, "u"), target);
+      assert.doesNotMatch(listing, new RegExp(`plugins/maister/overlays/${otherTarget}/assets/`, "u"), target);
     }
 
     const extractedRoot = tempDirectory(`maister-package-${target}-extract-`);
     extractArchive(firstArchive, extractedRoot);
+    assert.equal(fs.statSync(path.join(extractedRoot, "plugins/maister/bin/maister-agent-gate.mjs")).mode & 0o777, 0o755, `${target} agent-gate owner must be executable`);
     const sandboxRoot = tempDirectory(`maister-package-${target}-sandbox-`);
     const home = path.join(sandboxRoot, "home");
     const state = path.join(sandboxRoot, "state");
@@ -145,6 +279,48 @@ test("target archives are deterministic, self-contained, and support a clean lif
     assert.equal(installed.ok, true, target);
     assert.equal(invokeArchive(extractedRoot, target, "verify", home, state).ok, true, target);
     assert.equal(invokeArchive(extractedRoot, target, "uninstall", home, state).ok, true, target);
+  }
+});
+
+test("target archives contain the canonical projection contract and runtime closure without foreign behavior trees", () => {
+  const archives = packageArchives();
+
+  for (const target of SUPPORTED_TARGET_IDS) {
+    const packageValue = archives[target];
+    const archive = typeof packageValue === "string" ? packageValue : packageValue.first;
+    const entries = execFileSync("tar", ["-tzf", archive], { encoding: "utf8" }).trim().split(/\r?\n/u);
+    const entrySet = new Set(entries);
+
+    for (const required of [
+      "plugins/maister/agent-projection-v1.json",
+      "plugins/maister/agents/advisor.md",
+      "plugins/maister/bin/maister-install.mjs",
+      "plugins/maister/bin/project-agents.mjs",
+      "plugins/maister/lib/distribution/agent-projector.mjs",
+      "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/agent-resolver.mjs",
+      "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/create-runtime.mjs",
+      "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/production-runtime.mjs",
+      "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/production-owner.mjs",
+      "plugins/maister/bin/maister-agent-gate.mjs",
+      "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/dispatch-task-preparer.mjs",
+      "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/node-process-port.mjs",
+      "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/host-adapters/exact-native.mjs",
+      "plugins/maister/.maister-source.json",
+      "plugins/maister/.maister-e3-attestation.json",
+      `plugins/maister/overlays/${target}/inventory.yml`,
+      `plugins/maister/overlays/${target}/overlay.yml`,
+    ]) {
+      assert.equal(entrySet.has(required), true, `${target} package is missing ${required}`);
+    }
+
+    assert.equal(entries.some((entry) => /plugins\/maister\/overlays\/cursor\/assets\/agents\//u.test(entry)), false, target);
+    assert.equal(entries.some((entry) => /plugins\/maister\/overlays\/kiro-cli\/assets\/agents\//u.test(entry)), false, target);
+    assert.equal(entries.some((entry) => /plugins\/maister\/\.codex\/agents\/.*\.toml$/u.test(entry)), false, target);
+    assert.equal(entries.some((entry) => /plugins\/maister\/overlays\/[^/]+\/parity-baseline\.json$/u.test(entry)), false, target);
+
+    for (const otherTarget of SUPPORTED_TARGET_IDS.filter((candidate) => candidate !== target)) {
+      assert.equal(entries.some((entry) => entry.startsWith(`plugins/maister/overlays/${otherTarget}/assets/`)), false, `${target} contains ${otherTarget} assets`);
+    }
   }
 });
 
@@ -266,28 +442,16 @@ test("release metadata binds checksums, parity, and self-declared limitations", 
 test("the public CLI keeps one injected GitHub checkout for source and overlay resolution", async () => {
   const { runCli } = await import("../../plugins/maister/bin/maister-install.mjs");
   const sourceRoot = tempDirectory("maister-github-source-");
-  fs.cpSync(
-    path.join(ROOT, "tests/fixtures/platform-independent/source-repos/basic/common"),
-    path.join(sourceRoot, "common"),
-    { recursive: true },
-  );
-  const overlayRoot = path.join(sourceRoot, "plugins/maister/overlays/codex");
-  fs.mkdirSync(overlayRoot, { recursive: true });
-  fs.copyFileSync(
-    path.join(ROOT, "tests/fixtures/platform-independent/source-repos/basic/overlay.yml"),
-    path.join(overlayRoot, "overlay.yml"),
-  );
-  fs.copyFileSync(
-    path.join(ROOT, "tests/fixtures/platform-independent/source-repos/basic/inventory.yml"),
-    path.join(overlayRoot, "inventory.yml"),
-  );
-  fs.cpSync(
-    path.join(ROOT, "tests/fixtures/platform-independent/source-repos/basic/assets"),
-    path.join(overlayRoot, "assets"),
-    { recursive: true },
-  );
+  const productionPluginRoot = path.join(ROOT, "plugins/maister");
+  const injectedPluginRoot = path.join(sourceRoot, "plugins/maister");
+  fs.cpSync(path.join(productionPluginRoot, "common"), path.join(sourceRoot, "common"), { recursive: true });
+  for (const entry of ["agent-projection-v1.json", "agents", "skills", "overlays"]) {
+    fs.cpSync(path.join(productionPluginRoot, entry), path.join(injectedPluginRoot, entry), { recursive: true });
+  }
   const attestationPath = path.join(sourceRoot, "e3-portable-core.json");
   const portableCoreHash = portableCoreTreeHash(sourceRoot);
+  const testedAt = new Date();
+  const expiresAt = new Date(testedAt.getTime() + (60 * 60 * 1000));
   fs.writeFileSync(attestationPath, `${JSON.stringify({
     schema_version: 1,
     kind: "maister/e3-portable-core",
@@ -298,8 +462,8 @@ test("the public CLI keeps one injected GitHub checkout for source and overlay r
     portable_core_tree_hash: portableCoreHash,
     scenario: "portable-core-v1",
     scenario_version: "1.0.0",
-    tested_at: "2026-07-15T10:00:00.000Z",
-    expires_at: "2026-07-16T10:00:00.000Z",
+    tested_at: testedAt.toISOString(),
+    expires_at: expiresAt.toISOString(),
     artifact_digest: portableCoreHash,
   }, null, 2)}\n`);
   const root = tempDirectory("maister-github-cli-");
@@ -331,7 +495,7 @@ test("the public CLI keeps one injected GitHub checkout for source and overlay r
     "--home",
     home,
     "--json",
-  ], { env: { ...process.env, XDG_STATE_HOME: state }, github });
+  ], { env: { ...process.env, XDG_STATE_HOME: state, MAISTER_EVIDENCE_NOW: TEST_EVIDENCE_NOW }, github });
 
   assert.equal(result.status, 0, result.output);
   const response = JSON.parse(result.output);

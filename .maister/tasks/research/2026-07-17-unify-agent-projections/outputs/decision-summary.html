@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Summary — ujednolicone projekcje agentów Maister</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { border-left:4px solid var(--accent); }
+.risk { border-left:4px solid var(--warn); }
+.gate-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+.gate h3 { margin-top:0; font-size:14px; }
+.gate dl { display:grid; grid-template-columns:110px 1fr; gap:5px 9px; margin:0; }
+.gate dt { color:var(--dim); font-size:12px; }
+.gate dd { margin:0; }
+.toc { margin:16px 0; color:var(--dim); }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="research-report.html">Report</a>
+  <a href="high-level-design.html">Design</a>
+  <a href="decision-log.html">Decision Log</a>
+  <span class="here">Summary</span>
+  <a href="decision-summary.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+<header>
+  <span class="badge">Research handoff</span>
+  <h1>Ujednolicone projekcje agentów Maister</h1>
+  <p>Końcowe decyzje i wejście do <code>maister:development</code> · 2026-07-17</p>
+</header>
+<div class="tiles">
+  <div class="tile"><b>28</b><span>canonical roles</span></div>
+  <div class="tile"><b>3</b><span>host targets</span></div>
+  <div class="tile"><b>6</b><span>accepted ADRs</span></div>
+  <div class="tile"><b>6</b><span>decided gates</span></div>
+  <div class="tile"><b>High</b><span>design confidence</span></div>
+</div>
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Jedno kanoniczne źródło 28 ról zasila wersjonowany IR, manifest i deterministyczny projector. Codex używa generic prompt injection, Cursor natywnych Markdownów, a Kiro natywnych par JSON + prompt. Exact resolver działa fail-closed, a <code>advisor</code> nie ma żadnej specjalnej ścieżki.</p>
+  <h2>Key Decisions</h2>
+  <ul>
+    <li>Portable core + ports and adapters + transactional staged projection.</li>
+    <li>Jedno źródło zachowania i dokładne <code>maister:&lt;role_id&gt;</code>.</li>
+    <li>Clean install: legacy Codex TOML znika bez migracji runtime.</li>
+    <li>Materialization, discovery i invocation pozostają osobnymi dowodami.</li>
+  </ul>
+</section>
+<section class="card risk">
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li>Codex spawn/model control, Cursor precedence i Kiro identity observation wymagają host-versioned probes.</li>
+    <li>Kiro multi-root transaction wymaga pełnego rollback i race coverage.</li>
+    <li>Upgrade środowisk z legacy TOML jest celowo poza zakresem.</li>
+  </ul>
+</section>
+<nav class="toc">Contents: <a href="#outcome">Outcome</a> · <a href="#history">Decision history</a> · <a href="#artifacts">Artifacts</a> · <a href="#handoff">Development handoff</a></nav>
+<main>
+<section id="outcome">
+  <h2>Outcome</h2>
+  <table>
+    <tr><th>Area</th><th>Outcome</th></tr>
+    <tr><td>Brainstorming</td><td>Skipped — no competing architecture remained</td></tr>
+    <tr><td>High-level design</td><td class="pass">Completed</td></tr>
+    <tr><td>Architecture</td><td>Portable core, native host adapters, transactional delivery</td></tr>
+    <tr><td>Workflow status</td><td class="pass">Completed and approved by the user</td></tr>
+    <tr><td>Production implementation</td><td>Not started; next workflow is <code>maister:development</code></td></tr>
+  </table>
+</section>
+<section id="history">
+  <h2>Decision History</h2>
+  <p>Full audit context: <a href="../orchestrator-state.yml" target="_blank" rel="noopener">orchestrator-state.yml</a>.</p>
+  <div class="gate-grid">
+    <article class="card gate"><h3>1 · Research foundation</h3><dl><dt>Gate</dt><dd><code>phase-1-exit</code></dd><dt>Selected</dt><dd>Continue to brainstorming evaluation</dd><dt>Recommendation</dt><dd>Continue to brainstorming evaluation</dd><dt>Actor / status</dt><dd>user / decided</dd><dt>Confidence</dt><dd>high</dd><dt>Models</dt><dd>advisor + arbiter, gpt-5.6-sol; 0 attempts; no arbitration</dd></dl><details><summary>Full audit fields</summary><p><b>Question:</b> Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?</p><p><b>Options:</b> Continue to brainstorming evaluation; Pause workflow.</p><p><b>Rationale:</b> The user approved continuing the research workflow.</p><p><b>Policy:</b> manual; configured fully_automatic. User override: false. Terminal error: none.</p><p><code>sha256:8dc80ac772693c815f0dfac96f7baa45a3cded3e406f16c6f5a42756f1e157d4</code></p></details></article>
+    <article class="card gate"><h3>2 · Brainstorming</h3><dl><dt>Gate</dt><dd><code>optional-phase-selection</code></dd><dt>Selected</dt><dd>No, skip brainstorming</dd><dt>Recommendation</dt><dd>No, skip brainstorming</dd><dt>Actor / status</dt><dd>user / decided</dd><dt>Confidence</dt><dd>high</dd><dt>Models</dt><dd>advisor + arbiter, gpt-5.6-sol; 0 attempts; no arbitration</dd></dl><details><summary>Full audit fields</summary><p><b>Question:</b> Research converged on one architecture and did not identify competing alternatives, so brainstorming is unlikely to add value. Would you like to explore solution alternatives?</p><p><b>Options:</b> Yes, explore alternatives; No, skip brainstorming.</p><p><b>Rationale:</b> The user chose to skip brainstorming after the research converged on one architecture.</p><p><b>Policy:</b> manual; configured fully_automatic. User override: false. Terminal error: none.</p><p><code>sha256:99f3113cd7105936bc727db4bf0cb86d5ef197d114aaaaf2278ad15e56713dac</code></p></details></article>
+    <article class="card gate"><h3>3 · Design selection</h3><dl><dt>Gate</dt><dd><code>optional-phase-selection</code></dd><dt>Selected</dt><dd>Yes, generate design</dd><dt>Recommendation</dt><dd>Yes, generate design</dd><dt>Actor / status</dt><dd>user / decided</dd><dt>Confidence</dt><dd>high</dd><dt>Models</dt><dd>advisor + arbiter, gpt-5.6-sol; 0 attempts; no arbitration</dd></dl><details><summary>Full audit fields</summary><p><b>Question:</b> Research identifies architectural decisions across parsing, projection, installation, dispatch, migration, and verification, and the design will feed maister:development. Would you like to generate a high-level design?</p><p><b>Options:</b> Yes, generate design; No, skip design.</p><p><b>Rationale:</b> The user approved generating a high-level design as the development handoff.</p><p><b>Policy:</b> manual; configured fully_automatic. User override: false. Terminal error: none.</p><p><code>sha256:9b2ddc4d107ba91823dbe96461fee0cf7e83bbc3e977a797aa6c644d34c3cf89</code></p></details></article>
+    <article class="card gate"><h3>4 · Assumption correction</h3><dl><dt>Gate</dt><dd><code>research-clarification</code></dd><dt>Selected</dt><dd>Correct assumptions</dd><dt>Recommendation</dt><dd>Confirm assumptions</dd><dt>Actor / status</dt><dd>user / decided</dd><dt>Confidence</dt><dd>high</dd><dt>Correction</dt><dd>No TOML migration; clean install only</dd></dl><details><summary>Full audit fields</summary><p><b>Question:</b> Proposed design assumptions included one canonical role source, native host projections, exact fail-closed resolution and hash-gated legacy Codex TOML cleanup. Confirm these assumptions?</p><p><b>Options:</b> Confirm assumptions; Correct assumptions; Provide more context.</p><p><b>Rationale:</b> The user removed backward-compatibility requirements; old Codex TOML agent files are deleted because all installations start clean.</p><p><b>Policy:</b> manual; configured fully_automatic. Advisor + arbiter model gpt-5.6-sol; 0 attempts; no arbitration. User override: false. Terminal error: none.</p><p><code>sha256:08d897407996d017ff889aaf062a92e49e6cd9aa9d9cd5942601cd8ea1002e91</code></p></details></article>
+    <article class="card gate"><h3>5 · Design exit</h3><dl><dt>Gate</dt><dd><code>phase-5-exit</code></dd><dt>Selected</dt><dd>Continue to output generation</dd><dt>Recommendation</dt><dd>Continue to output generation</dd><dt>Actor / status</dt><dd>user / decided</dd><dt>Confidence</dt><dd>high</dd><dt>Models</dt><dd>advisor + arbiter, gpt-5.6-sol; 0 attempts; no arbitration</dd></dl><details><summary>Full audit fields</summary><p><b>Question:</b> Design complete. Continue to output generation?</p><p><b>Options:</b> Continue to output generation; Pause workflow.</p><p><b>Rationale:</b> The user approved generating the final research summary and development handoff.</p><p><b>Policy:</b> manual; configured fully_automatic. User override: false. Terminal error: none.</p><p><code>sha256:6bdf08499f5ea52adcb109887df08612b87fed5c1a2a6ba779d4fc70c9cb160e</code></p></details></article>
+    <article class="card gate"><h3>6 · Final handoff approval</h3><dl><dt>Gate</dt><dd><code>final-handoff-approval</code></dd><dt>Selected</dt><dd>Complete workflow</dd><dt>Recommendation</dt><dd>Complete workflow</dd><dt>Actor / status</dt><dd>user / decided</dd><dt>Confidence</dt><dd>high</dd><dt>Models</dt><dd>advisor + arbiter, gpt-5.6-sol; 0 attempts; no arbitration</dd></dl><details><summary>Full audit fields</summary><p><b>Question:</b> Research summary and development handoff are complete. Complete the workflow?</p><p><b>Options:</b> Complete workflow; Keep workflow open.</p><p><b>Rationale:</b> The user explicitly confirmed completion of the research workflow and requested context compaction before development.</p><p><b>Policy:</b> manual; configured fully_automatic. User override: false. Terminal error: none.</p><p><code>sha256:d80f674bb46ee9bc4ab3f4827a639076174888b935b69a4d0c8ad83216fb4ee0</code></p></details></article>
+  </div>
+</section>
+<section id="artifacts">
+  <h2>Artifact Inventory</h2>
+  <table>
+    <tr><th>Artifact</th><th>Markdown</th><th>HTML</th></tr>
+    <tr><td>Research report</td><td><a href="research-report.md" target="_blank" rel="noopener">research-report.md</a></td><td><a href="research-report.html">research-report.html</a></td></tr>
+    <tr><td>High-level design</td><td><a href="high-level-design.md" target="_blank" rel="noopener">high-level-design.md</a></td><td><a href="high-level-design.html">high-level-design.html</a></td></tr>
+    <tr><td>Decision log</td><td><a href="decision-log.md" target="_blank" rel="noopener">decision-log.md</a></td><td><a href="decision-log.html">decision-log.html</a></td></tr>
+  </table>
+</section>
+<section id="handoff">
+  <h2>Development Handoff</h2>
+  <ol>
+    <li>Parser/IR, versioned manifest and 28/28 invariants.</li>
+    <li>Deterministic staged projector, validation and provenance.</li>
+    <li>Cursor/Kiro projections and Kiro managed leaf-set transaction.</li>
+    <li>Exact resolver, host adapter ports and execution record.</li>
+    <li>Remove legacy Codex TOML from source/init/docs without migration runtime.</li>
+    <li>Structural, transactional, native and release verification.</li>
+  </ol>
+  <div class="card"><code>$maister:development .maister/tasks/research/2026-07-17-unify-agent-projections</code></div>
+  <p>The high-level design and decision log are authoritative where they supersede the earlier migration recommendation.</p>
+</section>
+</main>
+</body>
+</html>

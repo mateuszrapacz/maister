@@ -6,6 +6,7 @@ Use the target-aware entry points:
 
 ```sh
 make test-core
+make test-runtime
 make test-overlay TARGET=codex
 make test-materializer TARGET=cursor
 make test-install TARGET=kiro-cli

@@ -1,5 +1,8 @@
 name: Validate Portable Distribution
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [master]
@@ -31,8 +34,8 @@ jobs:
           make test-overlay TARGET=codex
           make test-overlay TARGET=cursor
           make test-overlay TARGET=kiro-cli
-      - name: Run portable and distribution tests
-        run: make test-core test-evidence
+      - name: Run portable runtime and distribution tests
+        run: make test-core test-runtime test-evidence
       - name: Verify repository topology
         run: make test-topology
       - name: Run reviewed three-target parity release gate

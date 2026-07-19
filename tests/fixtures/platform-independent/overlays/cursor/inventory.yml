@@ -16,3 +16,57 @@ forbidden:
   - "agents/*.json"
   - ".claude-plugin/**"
   - "**/*claude*"
+agent_projection:
+  schema_version: 1
+  contract: agent-projection-v1.json
+  projector_version: 1.0.0
+  adapter_id: cursor.native
+  representation: cursor-markdown
+  canonical_roles:
+    - advisor
+    - bottleneck-analyzer
+    - code-quality-pragmatist
+    - code-reviewer
+    - codebase-analysis-reporter
+    - docs-operator
+    - e2e-test-verifier
+    - gap-analyzer
+    - html-companion-writer
+    - implementation-completeness-checker
+    - implementation-planner
+    - information-gatherer
+    - production-readiness-checker
+    - project-analyzer
+    - reality-assessor
+    - research-planner
+    - research-synthesizer
+    - solution-brainstormer
+    - solution-designer
+    - spec-auditor
+    - specification-creator
+    - task-classifier
+    - task-group-implementer
+    - test-suite-runner
+    - thermo-nuclear-code-quality-review-subagent
+    - thermo-nuclear-review-subagent
+    - ui-mockup-generator
+    - user-docs-generator
+  destinations:
+    - kind: agent
+      path_template: agents/{role_id}.md
+      mode: "0644"
+  transform_ids:
+    - canonical-body-v1
+    - cursor-frontmatter-v1
+  execution_profile_ids:
+    - cursor.read-only
+    - cursor.read-only-shell
+    - cursor.workspace-write
+  support_inventory:
+    - support_id: explore
+      native_role_external_id: explore
+      assets:
+        - kind: agent
+          source: assets/support-agents/explore.md
+          destination: agents/explore.md
+          mode: "0644"

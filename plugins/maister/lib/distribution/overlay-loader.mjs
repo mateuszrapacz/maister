@@ -16,6 +16,42 @@ const OWNERSHIP = new Set(["whole_file", "managed_keys"]);
 const SETTING_FORMATS = new Set(["json", "toml", "yaml", "shell"]);
 const CAPABILITY_CLASSES = new Set(["semantic", "safety", "persistence", "rollback", "packaging"]);
 const EVIDENCE_IDS = new Set(["E1", "E2", "E3", "E4", "E5", "E6"]);
+const PROFILE_ID = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
+const CANONICAL_ROLE_IDS = [
+  "advisor",
+  "bottleneck-analyzer",
+  "code-quality-pragmatist",
+  "code-reviewer",
+  "codebase-analysis-reporter",
+  "docs-operator",
+  "e2e-test-verifier",
+  "gap-analyzer",
+  "html-companion-writer",
+  "implementation-completeness-checker",
+  "implementation-planner",
+  "information-gatherer",
+  "production-readiness-checker",
+  "project-analyzer",
+  "reality-assessor",
+  "research-planner",
+  "research-synthesizer",
+  "solution-brainstormer",
+  "solution-designer",
+  "spec-auditor",
+  "specification-creator",
+  "task-classifier",
+  "task-group-implementer",
+  "test-suite-runner",
+  "thermo-nuclear-code-quality-review-subagent",
+  "thermo-nuclear-review-subagent",
+  "ui-mockup-generator",
+  "user-docs-generator",
+];
+const TARGET_PROJECTION_IDENTITIES = Object.freeze({
+  codex: { adapter: "codex.exec", representation: "codex-prompt-schema", supportIds: [] },
+  cursor: { adapter: "cursor.native", representation: "cursor-markdown", supportIds: ["explore"] },
+  "kiro-cli": { adapter: "kiro-cli.native", representation: "kiro-descriptor-prompt", supportIds: ["explore", "maister"] },
+});
 const REQUIRED_PRIMITIVES = [
   "user_gate",
   "delegate_agent",
@@ -36,6 +72,7 @@ const OVERLAY_FIELDS = [
   "validation",
   "capabilities",
   "native_assets",
+  "agent_projection",
 ];
 const TARGET_FIELDS = ["id", "host_version_constraint", "discovery_roots"];
 const LAYOUT_FIELDS = ["source", "destination", "kind", "mode", "ownership"];
@@ -46,7 +83,22 @@ const INVENTORY_FIELDS = ["required", "optional", "forbidden"];
 const VALIDATION_FIELDS = ["forbidden_vocabulary", "executable_paths", "syntax_checks"];
 const CAPABILITY_FIELDS = ["class", "required_evidence"];
 const NATIVE_ASSET_FIELDS = ["source", "destination", "mode", "sha256"];
-const INVENTORY_FIXTURE_FIELDS = ["schema_version", "target", "overlay_version", ...INVENTORY_FIELDS];
+const AGENT_PROJECTION_FIELDS = [
+  "schema_version",
+  "contract",
+  "projector_version",
+  "adapter_id",
+  "representation",
+  "canonical_roles",
+  "destinations",
+  "transform_ids",
+  "execution_profile_ids",
+  "support_inventory",
+];
+const PROJECTION_DESTINATION_FIELDS = ["kind", "path_template", "mode"];
+const SUPPORT_ROLE_FIELDS = ["support_id", "native_role_external_id", "assets"];
+const SUPPORT_ASSET_FIELDS = ["kind", "source", "destination", "mode"];
+const INVENTORY_FIXTURE_FIELDS = ["schema_version", "target", "overlay_version", ...INVENTORY_FIELDS, "agent_projection"];
 
 function isMapping(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -294,6 +346,107 @@ function validateNativeAssets(nativeAssets) {
   ensureUnique(destinations.map((value) => value.toLocaleLowerCase("en-US")), "native asset destinations", "E_OVERLAY_COLLISION");
 }
 
+function ensureProjectionPathTemplate(value, location) {
+  ensureString(value, location, "E_OVERLAY_PATH");
+  if (!/^([^{}]|\{role_id\})+$/u.test(value) || !value.includes("{role_id}")) {
+    throwOverlayError("E_OVERLAY_PATH", `${location} must contain only the {role_id} template token`, { location, value });
+  }
+  ensureRelativePath(value.replaceAll("{role_id}", "role-id"), location);
+  return value;
+}
+
+function validateAgentProjection(agentProjection, targetId, location = "agent_projection") {
+  ensureFields(agentProjection, AGENT_PROJECTION_FIELDS, location);
+  ensureInteger(agentProjection.schema_version, `${location}.schema_version`);
+  if (agentProjection.schema_version !== 1) {
+    throwOverlayError("E_OVERLAY_SCHEMA", `${location}.schema_version must be 1`, { location });
+  }
+  if (agentProjection.contract !== "agent-projection-v1.json") {
+    throwOverlayError("E_OVERLAY_SCHEMA", `${location}.contract must reference agent-projection-v1.json`, { location });
+  }
+  ensureSemver(agentProjection.projector_version, `${location}.projector_version`);
+  const identity = TARGET_PROJECTION_IDENTITIES[targetId];
+  if (!identity || agentProjection.adapter_id !== identity.adapter || agentProjection.representation !== identity.representation) {
+    throwOverlayError("E_OVERLAY_TARGET", `${location} adapter or representation does not match ${targetId}`, {
+      location,
+      target: targetId,
+    });
+  }
+  ensureArray(agentProjection.canonical_roles, `${location}.canonical_roles`);
+  agentProjection.canonical_roles.forEach((roleId, index) => ensureString(roleId, `${location}.canonical_roles[${index}]`));
+  if (JSON.stringify(agentProjection.canonical_roles) !== JSON.stringify(CANONICAL_ROLE_IDS)) {
+    throwOverlayError("E_OVERLAY_INVENTORY", `${location}.canonical_roles must be the exact sorted 28-role inventory`, {
+      location,
+      actual: agentProjection.canonical_roles,
+    });
+  }
+  ensureArray(agentProjection.destinations, `${location}.destinations`);
+  if (agentProjection.destinations.length === 0) {
+    throwOverlayError("E_OVERLAY_SCHEMA", `${location}.destinations must not be empty`, { location });
+  }
+  const destinations = [];
+  agentProjection.destinations.forEach((destination, index) => {
+    const destinationLocation = `${location}.destinations[${index}]`;
+    ensureFields(destination, PROJECTION_DESTINATION_FIELDS, destinationLocation);
+    ensureString(destination.kind, `${destinationLocation}.kind`);
+    destinations.push(ensureProjectionPathTemplate(destination.path_template, `${destinationLocation}.path_template`));
+    ensureMode(destination.mode, `${destinationLocation}.mode`);
+  });
+  ensureUnique(destinations.map((value) => value.toLocaleLowerCase("en-US")), `${location}.destinations`, "E_OVERLAY_COLLISION");
+  for (const field of ["transform_ids", "execution_profile_ids"]) {
+    ensureArray(agentProjection[field], `${location}.${field}`);
+    if (agentProjection[field].length === 0) {
+      throwOverlayError("E_OVERLAY_SCHEMA", `${location}.${field} must not be empty`, { location });
+    }
+    agentProjection[field].forEach((value, index) => {
+      ensureString(value, `${location}.${field}[${index}]`);
+      if (!PROFILE_ID.test(value)) {
+        throwOverlayError("E_OVERLAY_SCHEMA", `${location}.${field}[${index}] is not a safe ID`, { location, value });
+      }
+      if (field === "execution_profile_ids" && !value.startsWith(`${targetId}.`)) {
+        throwOverlayError("E_OVERLAY_TARGET", `${location}.${field}[${index}] does not match ${targetId}`, { location, value });
+      }
+    });
+    ensureUnique(agentProjection[field], `${location}.${field}`, "E_OVERLAY_COLLISION");
+  }
+  ensureArray(agentProjection.support_inventory, `${location}.support_inventory`);
+  const supportIds = [];
+  const supportDestinations = [];
+  agentProjection.support_inventory.forEach((support, index) => {
+    const supportLocation = `${location}.support_inventory[${index}]`;
+    ensureFields(support, SUPPORT_ROLE_FIELDS, supportLocation);
+    ensureString(support.support_id, `${supportLocation}.support_id`);
+    ensureString(support.native_role_external_id, `${supportLocation}.native_role_external_id`);
+    if (!/^[a-z][a-z0-9-]*$/u.test(support.support_id) || CANONICAL_ROLE_IDS.includes(support.support_id)) {
+      throwOverlayError("E_OVERLAY_INVENTORY", `${supportLocation}.support_id must be separate from canonical roles`, {
+        location: supportLocation,
+        supportId: support.support_id,
+      });
+    }
+    ensureArray(support.assets, `${supportLocation}.assets`);
+    if (support.assets.length === 0) {
+      throwOverlayError("E_OVERLAY_INVENTORY", `${supportLocation}.assets must not be empty`, { location: supportLocation });
+    }
+    support.assets.forEach((asset, assetIndex) => {
+      const assetLocation = `${supportLocation}.assets[${assetIndex}]`;
+      ensureFields(asset, SUPPORT_ASSET_FIELDS, assetLocation);
+      ensureString(asset.kind, `${assetLocation}.kind`);
+      ensureRelativePath(asset.source, `${assetLocation}.source`);
+      supportDestinations.push(ensureRelativePath(asset.destination, `${assetLocation}.destination`));
+      ensureMode(asset.mode, `${assetLocation}.mode`);
+    });
+    supportIds.push(support.support_id);
+  });
+  if (JSON.stringify(supportIds) !== JSON.stringify(identity.supportIds)) {
+    throwOverlayError("E_OVERLAY_INVENTORY", `${location}.support_inventory differs from the target support contract`, {
+      target: targetId,
+      supportIds,
+    });
+  }
+  ensureUnique(supportDestinations.map((value) => value.toLocaleLowerCase("en-US")), `${location}.support destinations`, "E_OVERLAY_COLLISION");
+  return agentProjection;
+}
+
 function stringsForVocabularyScan(overlay) {
   return [
     overlay.overlay_id,
@@ -309,6 +462,18 @@ function stringsForVocabularyScan(overlay) {
     ...overlay.validation.syntax_checks,
     ...Object.keys(overlay.capabilities),
     ...overlay.native_assets.flatMap((entry) => [entry.source, entry.destination]),
+    overlay.agent_projection.contract,
+    overlay.agent_projection.projector_version,
+    overlay.agent_projection.adapter_id,
+    overlay.agent_projection.representation,
+    ...overlay.agent_projection.destinations.flatMap((entry) => [entry.kind, entry.path_template]),
+    ...overlay.agent_projection.transform_ids,
+    ...overlay.agent_projection.execution_profile_ids,
+    ...overlay.agent_projection.support_inventory.flatMap((entry) => [
+      entry.support_id,
+      entry.native_role_external_id,
+      ...entry.assets.flatMap((asset) => [asset.kind, asset.source, asset.destination]),
+    ]),
   ];
 }
 
@@ -360,6 +525,7 @@ export function validateOverlay(overlay, { sourcePath = "<overlay>" } = {}) {
   validateValidation(overlay.validation);
   validateCapabilities(overlay.capabilities);
   validateNativeAssets(overlay.native_assets);
+  validateAgentProjection(overlay.agent_projection, overlay.target.id);
   validateForbiddenVocabulary(overlay);
   return overlay;
 }
@@ -379,6 +545,7 @@ export function validateInventoryFixture(inventory, { sourcePath = "<inventory>"
     optional: inventory.optional,
     forbidden: inventory.forbidden,
   }, "inventory fixture");
+  validateAgentProjection(inventory.agent_projection, inventory.target, "inventory fixture.agent_projection");
   return inventory;
 }
 
@@ -405,6 +572,9 @@ export function loadOverlay({ overlayPath, inventoryPath }) {
     throwOverlayError("E_OVERLAY_INVENTORY", "inventory fixture identity does not match overlay", { overlayPath, inventoryPath });
   }
   compareInventory(overlay.inventory, inventoryFixture);
+  if (JSON.stringify(overlay.agent_projection) !== JSON.stringify(inventoryFixture.agent_projection)) {
+    throwOverlayError("E_OVERLAY_INVENTORY", "overlay agent projection differs from the versioned inventory fixture", {});
+  }
   return {
     overlay,
     inventory: inventoryFixture,

@@ -3,7 +3,7 @@ name: maister-reviews-reality-check
 description: Comprehensive reality assessment of completed work to verify it actually works and is production-ready
 ---
 
-**ACTION REQUIRED**: This command delegates to a different skill. The `<command-name>` tag refers to THIS command, not the target. Call the Task tool with subagent_type="maister-reality-assessor" NOW. Pass the task path in the prompt. Do not read files, explore code, or execute workflow steps yourself.
+**ACTION REQUIRED**: This command delegates through the common exact-role runtime. The `<command-name>` tag refers to THIS command, not the target. Resolve and dispatch reality-assessor now with the bounded task path. Do not execute the assessment inline.
 
 You are running a comprehensive reality check using the `reality-assessor` agent.
 
@@ -21,13 +21,15 @@ You are performing no-nonsense reality assessment to determine if completed work
 
 ## Your Instructions
 
-**Invoke the reality-assessor agent NOW using the Task tool:**
+**Resolve and dispatch exact reality-assessor NOW:**
 
 ```
-Task Tool:
-- subagent_type: maister-reality-assessor
-- description: Reality assessment
-- prompt: |
+resolveAgent({ logical_role_id: "maister:reality-assessor" })
+dispatchAgent:
+  actor: reviews-reality-check
+  work_item: reality-assessment
+  output: verification/reality-check.md
+  bounded_task: |
     You are the reality-assessor agent. Assess the reality of completion for: [task-path]
 
     Your task:

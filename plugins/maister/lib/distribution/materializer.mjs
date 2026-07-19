@@ -6,7 +6,20 @@ import {
   loadOverlay,
   validateOverlay,
 } from "./overlay-loader.mjs";
-import { createProvenance } from "./provenance.mjs";
+import {
+  AgentIrValidationError,
+  loadCanonicalAgentIr,
+} from "./agent-ir.mjs";
+import {
+  AgentManifestValidationError,
+  buildAgentManifest,
+  loadAgentProjectionContract,
+} from "./agent-manifest.mjs";
+import {
+  AgentProjectionError,
+  projectAgents,
+} from "./agent-projector.mjs";
+import { canonicalJson, createProvenance } from "./provenance.mjs";
 import { revalidateResolvedSource, resolveSource } from "./source-resolver.mjs";
 import { hashFile, hashTree } from "./hash-tree.mjs";
 import {
@@ -19,9 +32,12 @@ import {
   ensureDirectoryPath,
   normalizeRelativePath,
   normalizedPathKey,
+  readFileNoFollow,
   resolveInside,
   throwDistributionError,
 } from "./path-safety.mjs";
+
+const AGENT_PROJECTION_TARGETS = Object.freeze(["codex", "cursor", "kiro-cli"]);
 
 const HISTORICAL_TEMPLATE_EXCEPTIONS = Object.freeze({
   codex: Object.freeze({
@@ -58,7 +74,6 @@ const HISTORICAL_VOCABULARY_EXCEPTIONS = Object.freeze({
   "kiro-cli": Object.freeze({
     "skills/docs-manager/docs/INDEX.md": Object.freeze(["claude"]),
     "skills/docs-manager/SKILL.md": Object.freeze(["claude"]),
-    "skills/init/bin/reconcile-advisor-config.sh": Object.freeze(["codex"]),
     "skills/init/SKILL.md": Object.freeze(["codex", "claude"]),
     "skills/migration/references/migration-strategies.md": Object.freeze(["claude"]),
     "skills/migration/references/migration-types.md": Object.freeze(["claude"]),
@@ -390,6 +405,20 @@ function validateFrontmatterSyntax(source) {
 
 function validateSyntax(stagingRoot, checks, files) {
   validateFrontmatter(stagingRoot, files);
+  for (const entry of files) {
+    if (!entry.path.endsWith(".json")) continue;
+    const filePath = resolveInside(stagingRoot, entry.path, "JSON syntax path");
+    const text = readText(filePath);
+    try {
+      if (text === null) throw new Error("not a text file");
+      JSON.parse(text);
+    } catch (error) {
+      throwDistributionError("E_MATERIALIZE_SYNTAX", `invalid json syntax in ${entry.path}`, {
+        path: entry.path,
+        format: "json",
+      }, { cause: error });
+    }
+  }
   for (const check of checks) {
     const separator = check.indexOf(":");
     const format = check.slice(0, separator);
@@ -433,13 +462,25 @@ function validateInventory(stagingRoot, inventory, files) {
   return { ok: true, files: paths.sort() };
 }
 
-function validateModes(stagingRoot, executablePaths, files) {
+function validateModes(stagingRoot, executablePaths, files, projectedOutputs = []) {
   for (const pattern of executablePaths) {
     const selected = files.filter((entry) => matches(pattern, entry.path));
     for (const entry of selected) {
       if ((Number.parseInt(entry.mode, 8) & 0o111) === 0) {
         throwDistributionError("E_MATERIALIZE_MODE", `executable inventory entry is not executable: ${entry.path}`, { path: entry.path });
       }
+    }
+  }
+  const entriesByPath = new Map(files.map((entry) => [entry.path, entry]));
+  for (const output of projectedOutputs) {
+    const entry = entriesByPath.get(output.path);
+    if (!entry) continue;
+    if (entry.mode !== output.mode) {
+      throwDistributionError("E_MATERIALIZE_MODE", `projected inventory mode differs from its manifest: ${output.path}`, {
+        path: output.path,
+        expected: output.mode,
+        actual: entry?.mode ?? null,
+      });
     }
   }
   return { ok: true };
@@ -631,10 +672,7 @@ function isHistoricalReferenceException(target, entryPath, reference) {
   }
   if (target === "codex" && entryPath === "skills/orchestrator-framework/agents/e2e-test-verifier.md" && exceptions.includes(reference)) return true;
   if (target === "codex" && entryPath === "skills/orchestrator-framework/agents/user-docs-generator.md" && exceptions.includes(reference)) return true;
-  if (target === "cursor" && entryPath === "agents/user-docs-generator.md" && exceptions.includes(reference)) return true;
-  return target === "kiro-cli"
-    && entryPath.startsWith("agents/")
-    && /^file:\/\/\.\/instructions\/[A-Za-z0-9._/-]+\.md$/u.test(reference);
+  return target === "cursor" && entryPath === "agents/user-docs-generator.md" && exceptions.includes(reference);
 }
 
 function validateInternalReferences(stagingRoot, target, files, entries) {
@@ -642,7 +680,17 @@ function validateInternalReferences(stagingRoot, target, files, entries) {
   for (const entry of files) {
     const text = readText(resolveInside(stagingRoot, entry.path, "reference path"));
     if (text === null) continue;
-    for (const rawReference of referencesInText(text, entry.path)) {
+    const references = referencesInText(text, entry.path);
+    if (target === "kiro-cli" && entry.path.endsWith(".json")) {
+      let descriptor;
+      try {
+        descriptor = JSON.parse(text);
+      } catch {
+        descriptor = null;
+      }
+      if (descriptor && typeof descriptor.prompt === "string") references.push(descriptor.prompt);
+    }
+    for (const rawReference of references) {
       const reference = normalizedReference(rawReference, entry.path);
       if (isHistoricalReferenceException(target, entry.path, reference)) continue;
       if (reference.startsWith("file://") && !reference.startsWith("file://./")) {
@@ -755,6 +803,27 @@ function validateNativeAssets(stagingRoot, overlay, plan, sourceRoot, overlayBas
   return { ok: true };
 }
 
+function validateProjectedHashes(stagingRoot, projectedOutputs, files) {
+  const entriesByPath = new Map(files.map((entry) => [entry.path, entry]));
+  for (const output of projectedOutputs) {
+    const entry = entriesByPath.get(output.path);
+    if (!entry || entry.type !== "file") {
+      throwDistributionError("E_MATERIALIZE_HASH", `projected inventory entry is missing: ${output.path}`, {
+        path: output.path,
+      });
+    }
+    const actual = hashFile(resolveInside(stagingRoot, output.path, "projected hash path"));
+    if (actual !== output.sha256) {
+      throwDistributionError("E_MATERIALIZE_HASH", `projected inventory hash differs from its manifest: ${output.path}`, {
+        path: output.path,
+        expected: output.sha256,
+        actual,
+      });
+    }
+  }
+  return { ok: true, files: projectedOutputs.map(({ path: outputPath }) => outputPath).sort() };
+}
+
 function copyPlan(plan, stagingRoot, stagingIdentity) {
   for (const entry of plan) {
     assertPathIdentity(stagingIdentity, { label: "staging root", errorCode: "E_MATERIALIZE_SYMLINK" });
@@ -839,6 +908,95 @@ function loadMaterializerOverlay({ overlay, overlayPath, inventoryPath, overlayC
   return loadOverlay({ overlayPath, inventoryPath });
 }
 
+function projectionPluginRoot(sourceRoot) {
+  const candidates = [
+    path.join(sourceRoot, "plugins/maister"),
+    sourceRoot,
+  ];
+  const pluginRoot = candidates.find((candidate) =>
+    fs.lstatSync(path.join(candidate, "agent-projection-v1.json"), { throwIfNoEntry: false })?.isFile()
+    && fs.lstatSync(path.join(candidate, "agents"), { throwIfNoEntry: false })?.isDirectory());
+  if (!pluginRoot) {
+    throwDistributionError("E_AGENT_MANIFEST_IO", "immutable source does not contain the agent projection inputs", {
+      sourceRoot,
+    });
+  }
+  return ensureDirectoryRoot(pluginRoot, "agent projection plugin root");
+}
+
+function loadProjectionOverlays(pluginRoot) {
+  return Object.fromEntries(AGENT_PROJECTION_TARGETS.map((target) => {
+    const overlayRoot = path.join(pluginRoot, "overlays", target);
+    const loaded = loadOverlay({
+      overlayPath: path.join(overlayRoot, "overlay.yml"),
+      inventoryPath: path.join(overlayRoot, "inventory.yml"),
+    });
+    return [target, loaded.overlay];
+  }));
+}
+
+function loadProjectionSupportAssets(pluginRoot, manifest, target) {
+  const overlayRoot = path.join(pluginRoot, "overlays", target);
+  return manifest.support_inventory
+    .filter((support) => support.target === target)
+    .flatMap((support) => support.assets.map((asset) => {
+      const sourcePath = resolveInside(overlayRoot, asset.source, "projection support source");
+      return {
+        support_id: support.support_id,
+        kind: asset.kind,
+        source: asset.source,
+        destination: asset.destination,
+        mode: asset.mode,
+        content: readFileNoFollow(sourcePath, {
+          root: overlayRoot,
+          label: "projection support source",
+          encoding: "utf8",
+          errorCode: "E_AGENT_PROJECTION_IO",
+        }),
+      };
+    }));
+}
+
+function canonicalProjectionPaths(overlay) {
+  const paths = new Set();
+  for (const roleId of overlay.agent_projection.canonical_roles) {
+    for (const destination of overlay.agent_projection.destinations) {
+      paths.add(normalizedPathKey(destination.path_template.replaceAll("{role_id}", roleId)));
+    }
+  }
+  return paths;
+}
+
+function withoutProjectionOwnedLeaves(plan, overlay) {
+  const projectedPaths = canonicalProjectionPaths(overlay);
+  return Object.freeze(plan.filter((entry) =>
+    entry.type === "directory" || !projectedPaths.has(normalizedPathKey(entry.destination))));
+}
+
+function projectCanonicalAgents({ sourceRoot, selectedOverlay, stagingRoot }) {
+  const pluginRoot = projectionPluginRoot(sourceRoot);
+  const projectionContract = loadAgentProjectionContract({
+    projectionPath: path.join(pluginRoot, "agent-projection-v1.json"),
+  });
+  const overlays = loadProjectionOverlays(pluginRoot);
+  const target = selectedOverlay.target.id;
+  if (canonicalJson(overlays[target].agent_projection) !== canonicalJson(selectedOverlay.agent_projection)) {
+    throwDistributionError("E_AGENT_MANIFEST_TARGET", "selected overlay projection differs from immutable source", { target });
+  }
+  const agentIr = loadCanonicalAgentIr({
+    agentsRoot: path.join(pluginRoot, "agents"),
+    skillsRoot: path.join(pluginRoot, "skills"),
+    expectedRoleIds: projectionContract.expected_role_ids,
+  });
+  const manifest = buildAgentManifest({ agentIr, projectionContract, overlays });
+  const supportAssets = loadProjectionSupportAssets(pluginRoot, manifest, target);
+  return projectAgents({ agentIr, manifest, target, stagingRoot, supportAssets });
+}
+
+function announcePhase(options, phase, details = {}) {
+  options.testHooks?.onPhase?.(phase, details);
+}
+
 export async function materialize(options) {
   const loaded = loadMaterializerOverlay(options);
   if (options.target && loaded.overlay.target.id !== options.target) {
@@ -848,6 +1006,7 @@ export async function materialize(options) {
     ? await revalidateResolvedSource(options.resolvedSource, options)
     : await resolveSource(options.source, options);
   if (!source.root) throwDistributionError("E_SOURCE_CONTENT", "resolved source does not have a checkout root", { source: source.requestedSource });
+  announcePhase(options, "source-revalidated", { source });
   const stagingRoot = path.resolve(options.stagingRoot ?? "");
   if (!options.stagingRoot) throwDistributionError("E_MATERIALIZE_IO", "stagingRoot is required", {});
   const stagingParent = path.dirname(stagingRoot);
@@ -886,56 +1045,85 @@ export async function materialize(options) {
   try {
     assertPathIdentity(stagingParentIdentity, { label: "staging parent", errorCode: "E_MATERIALIZE_SYMLINK" });
     assertPathIdentity(stagingIdentity, { label: "staging root", errorCode: "E_MATERIALIZE_SYMLINK" });
-    plan = buildAssemblyPlan({ sourceRoot: source.root, overlay: loaded.overlay, overlayBase, stagingRoot });
+    plan = withoutProjectionOwnedLeaves(
+      buildAssemblyPlan({ sourceRoot: source.root, overlay: loaded.overlay, overlayBase, stagingRoot }),
+      loaded.overlay,
+    );
     const sourceBeforeAssembly = await revalidateResolvedSource(source, options);
     copyPlan(plan, stagingRoot, stagingIdentity);
+    announcePhase(options, "assembly-complete", { stagingRoot, plan });
     options.testHooks?.afterAssembly?.({ source: sourceBeforeAssembly, stagingRoot, plan });
     const sourceAfterAssembly = await revalidateResolvedSource(sourceBeforeAssembly, options);
+    announcePhase(options, "source-revalidated-after-assembly", { source: sourceAfterAssembly });
+    assertPathIdentity(stagingParentIdentity, { label: "staging parent", errorCode: "E_MATERIALIZE_SYMLINK" });
+    assertPathIdentity(stagingIdentity, { label: "staging root", errorCode: "E_MATERIALIZE_SYMLINK" });
+    const projection = projectCanonicalAgents({
+      sourceRoot: sourceAfterAssembly.root,
+      selectedOverlay: loaded.overlay,
+      stagingRoot,
+    });
+    announcePhase(options, "projection-complete", { stagingRoot, projection });
+    options.testHooks?.afterProjection?.({ source: sourceAfterAssembly, stagingRoot, plan, projection });
+    const sourceAfterProjection = await revalidateResolvedSource(sourceAfterAssembly, options);
     assertPathIdentity(stagingParentIdentity, { label: "staging parent", errorCode: "E_MATERIALIZE_SYMLINK" });
     assertPathIdentity(stagingIdentity, { label: "staging root", errorCode: "E_MATERIALIZE_SYMLINK" });
     const staged = stagingEntries(stagingRoot);
+    announcePhase(options, "staging-enumerated", { stagingRoot, entries: staged.entries });
     const validation = {
       inventory: validateInventory(stagingRoot, loaded.inventory, staged.entries),
       syntax: validateSyntax(stagingRoot, loaded.overlay.validation.syntax_checks, staged.files),
-      modes: validateModes(stagingRoot, loaded.overlay.validation.executable_paths, staged.files),
+      modes: validateModes(stagingRoot, loaded.overlay.validation.executable_paths, staged.files, projection.outputs),
       references: validateInternalReferences(stagingRoot, loaded.overlay.target.id, staged.files, staged.entries),
-      hashes: validateNativeAssets(stagingRoot, loaded.overlay, plan, source.root, overlayBase),
+      hashes: Object.freeze({
+        ok: true,
+        native: validateNativeAssets(stagingRoot, loaded.overlay, plan, source.root, overlayBase),
+        projected: validateProjectedHashes(stagingRoot, projection.outputs, staged.files),
+      }),
       content: validateContent(stagingRoot, loaded.overlay, staged.files),
     };
+    announcePhase(options, "candidate-validated", { stagingRoot, validation });
     assertPathIdentity(stagingParentIdentity, { label: "staging parent", errorCode: "E_MATERIALIZE_SYMLINK" });
     assertPathIdentity(stagingIdentity, { label: "staging root", errorCode: "E_MATERIALIZE_SYMLINK" });
     const contentHash = staged.tree.contentHash;
     const provenance = createProvenance({
-      source: sourceAfterAssembly,
+      source: sourceAfterProjection,
       overlay: { ...loaded.overlay, contractHash: loaded.contractHash },
       hostVersion: options.hostVersion,
       contentHash,
+      agentProjection: projection,
     });
+    announcePhase(options, "provenance-finalized", { stagingRoot, provenance });
     return {
       stagingRoot,
       target: loaded.overlay.target.id,
       overlayVersion: loaded.overlay.overlay_version,
       plan,
       validation,
+      projection,
       provenance,
       sourceBinding: Object.freeze({
-        kind: sourceAfterAssembly.kind,
-        root: sourceAfterAssembly.root,
-        archive: sourceAfterAssembly.archive === true,
-        requestedSource: sourceAfterAssembly.requestedSource,
-        requestedRef: sourceAfterAssembly.requestedRef,
-        resolvedCommit: sourceAfterAssembly.resolvedCommit,
-        sourceVersion: sourceAfterAssembly.sourceVersion,
-        contentHash: sourceAfterAssembly.contentHash,
-        dirty: sourceAfterAssembly.dirty,
-        statusFingerprint: sourceAfterAssembly.statusFingerprint,
-        statusEntries: Object.freeze([...(sourceAfterAssembly.statusEntries ?? [])]),
+        kind: sourceAfterProjection.kind,
+        root: sourceAfterProjection.root,
+        archive: sourceAfterProjection.archive === true,
+        requestedSource: sourceAfterProjection.requestedSource,
+        requestedRef: sourceAfterProjection.requestedRef,
+        resolvedCommit: sourceAfterProjection.resolvedCommit,
+        sourceVersion: sourceAfterProjection.sourceVersion,
+        contentHash: sourceAfterProjection.contentHash,
+        dirty: sourceAfterProjection.dirty,
+        statusFingerprint: sourceAfterProjection.statusFingerprint,
+        statusEntries: Object.freeze([...(sourceAfterProjection.statusEntries ?? [])]),
       }),
       contentHash,
     };
   } catch (error) {
     if (createdStaging) fs.rmSync(stagingRoot, { recursive: true, force: true });
-    if (error instanceof DistributionError) throw error;
+    if (
+      error instanceof DistributionError
+      || error instanceof AgentIrValidationError
+      || error instanceof AgentManifestValidationError
+      || error instanceof AgentProjectionError
+    ) throw error;
     throwDistributionError("E_MATERIALIZE_FAILED", `materialization failed: ${error.message}`, { stagingRoot }, { cause: error });
   }
 }
