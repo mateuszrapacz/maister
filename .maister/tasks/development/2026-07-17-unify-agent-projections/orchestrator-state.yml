@@ -58,7 +58,7 @@ orchestrator:
         arbiter_attempts: 3
         backoff: exponential
   created: "2026-07-17T20:07:04Z"
-  updated: "2026-07-19T11:39:42Z"
+  updated: "2026-07-19T11:54:03Z"
   task_path: .maister/tasks/development/2026-07-17-unify-agent-projections
   task_ids:
     phase-1: development-phase-1
@@ -1560,20 +1560,22 @@ task_context:
           label: Implementation work log
           html: null
     verification:
-      summary: "Re-verification 3 is Passed with Issues / GO after 304/304 independent tests and arbitration. All prior critical findings are closed; two warnings remain for truly bounded CLI stdin ingestion/typed read failure and the exact versioned optional cancel callback contract."
-      status: passed_with_issues
+      summary: "Post-completion remediation is Passed / GO. RV3-W1 and RV3-W2 are closed by incremental capped stdin ingestion, typed read failures, a closed cancel-v1 contract, focused 68/68 regressions, and successful full runtime and repository validation."
+      status: passed
       issue_counts:
         critical: 0
-        warning: 2
+        warning: 0
         info: 0
       decisions:
         - decision: Accept the production owner and all prior critical findings as resolved.
           rationale: The shipped executable and extracted package tracers prove the real CLI-to-owner-to-runtime-to-gate path, while the independent suite passes 304/304.
         - decision: Classify the two remaining contract defects as warnings.
           rationale: Arbitration found local availability and contract-completeness impact without privilege escalation, data corruption, fallback, or cross-boundary mutation.
+        - decision: Close RV3-W1 and RV3-W2 in post-completion remediation.
+          rationale: The user explicitly authorized both fixes; focused regressions, the full runtime suite, and make validate all pass.
       risks:
-        - CLI stdin is fully buffered before the documented one-mebibyte limit is checked, and a read error can bypass the typed envelope.
-        - The optional exact-native cancel callback lacks a closed versioned request, exact trigger timing, and return contract.
+        - "resolved: CLI stdin is incrementally capped and read errors use a typed envelope."
+        - "resolved: optional exact-native cancel has a closed v1 request, exact trigger timing, and return contract."
       artifacts:
         - path: verification/implementation-verification.md
           label: Implementation verification
@@ -1612,7 +1614,7 @@ task_context:
           label: E2E verification report
           html: verification/e2e-verification-report.html
     user_documentation:
-      summary: "Created and validated a 337-line operator guide for Maister maintainers, installers, workflow operators, and auditors. It covers lifecycle, exact 28-role selection, owner-v1 CLI/bridge requests, host-specific execution, model/effort policy, evidence, no-fallback behavior, troubleshooting, and both accepted warnings."
+      summary: "Created and validated a CLI-first operator guide covering lifecycle, exact 28-role selection, owner-v1 CLI/bridge requests, host-specific execution, model/effort policy, evidence, no-fallback behavior, troubleshooting, and the resolved RV3-W1/RV3-W2 contracts."
       status: completed
       screenshot_count: 0
       decisions:
@@ -1620,7 +1622,7 @@ task_context:
           rationale: The feature has no product browser surface and Phase 12 produced no real screenshots to reuse; fabricating UI evidence would mislead operators.
       risks:
         - Operational examples depend on the installed package, authenticated host, and a compatible registered bridge module.
-        - RV3-W1 and RV3-W2 remain documented follow-up warnings.
+        - "resolved: RV3-W1 and RV3-W2 are documented as closed post-completion warnings."
       artifacts:
         - path: documentation/user-guide.md
           label: Operator guide
@@ -1652,14 +1654,15 @@ task_context:
       artifacts: []
 
 verification_context:
-  last_status: passed_with_issues
+  last_status: passed
   issues_found:
-    - {id: RV3-W1, severity: warning, category: input_contract, description: "The CLI buffers all stdin before checking the one-mebibyte limit, and stdin read failures can bypass the typed JSON envelope.", location: "plugins/maister/bin/maister-agent-gate.mjs:19", fixable: true, fixed: false}
-    - {id: RV3-W2, severity: warning, category: integration_contract, description: "The optional exact-native cancel callback lacks a closed versioned request, exact trigger timing, and return semantics.", location: "README.md:195", fixable: true, fixed: false}
+    - {id: RV3-W1, severity: warning, category: input_contract, description: "The CLI buffered stdin before checking the one-mebibyte limit and read failures could bypass the typed JSON envelope.", location: "plugins/maister/bin/maister-agent-gate.mjs", fixable: true, fixed: true}
+    - {id: RV3-W2, severity: warning, category: integration_contract, description: "The optional exact-native cancel callback lacked a closed versioned request, exact trigger timing, and return semantics.", location: "README.md", fixable: true, fixed: true}
   fixes_applied:
     - "2026-07-18T22:43:11Z: Applied C1-C5, W1-W8, and I1-I3; coordinator confirmed runtime 92/92, critical integration 72/72, composition 2/2, make validate exit 0, parity 164/0 Codex, 113/0 Cursor, 464/0 Kiro, and clean diff checks."
     - "2026-07-19T00:16:53Z: Applied all nine residual fixes test-first; independent coordinator confirmed make test-runtime exit 0, evidence/Make/release/topology 61/61, extracted Cursor and Codex production tracers, diagnostic parity 165/0 Codex, 113/0 Cursor, 465/0 Kiro, syntax checks, and clean diff checks."
     - "2026-07-19T10:17:57Z: Shipped the production agent-gate CLI and closed v1 owner/bridge contract test-first; independent coordinator confirmed runtime/gate exit 0, critical matrix 62/62, extracted subprocess tracers 2/2, call graph closure, diagnostic parity 166/0 Codex, 113/0 Cursor, 466/0 Kiro, syntax, executable mode, and clean diff checks."
+    - "2026-07-19T11:54:03Z: Closed RV3-W1 and RV3-W2 test-first; focused regressions passed 68/68, make test-runtime exited 0, and make validate exited 0."
   decisions_made:
     - "2026-07-18T22:04:43Z: User selected Fix all fixable issues (C1-C5, W1-W8, I1-I3); the full test suite is required after code changes."
     - "2026-07-18T23:18:21Z: Re-verification 1 is NO-GO; C2 and C3 are resolved, while residual C1, C4, and C5 plus four warnings and two infos require a new fix-selection decision."
@@ -1668,6 +1671,7 @@ verification_context:
     - "2026-07-19T10:23:51Z: User selected Yes, re-run verification for the final canonical Re-verification 3 after both remaining findings were fixed and locally validated."
     - "2026-07-19T10:48:20Z: Re-verification 3 is Passed with Issues / GO after 304/304 tests and arbitration; all criticals are closed, with two warnings remaining at the maximum cycle count."
     - "2026-07-19T10:55:02Z: User selected Proceed with known issues and accepted RV3-W1 and RV3-W2 as documented non-critical follow-up work."
+    - "2026-07-19T11:54:03Z: User explicitly requested both accepted warnings be fixed; both are now resolved without changing the historical gate decision."
   reverify_count: 3
 
 phases:

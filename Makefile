@@ -36,7 +36,7 @@ test-core:
 	node --test tests/platform-independent/overlay-contract.test.mjs tests/platform-independent/source-materializer.test.mjs tests/platform-independent/installer-transaction.test.mjs
 
 test-runtime:
-	node --test tests/platform-independent/agent-execution-events.test.mjs tests/platform-independent/agent-resolver.test.mjs tests/platform-independent/agent-adapters.test.mjs tests/platform-independent/agent-runtime-composition.test.mjs
+	node --test tests/platform-independent/agent-execution-events.test.mjs tests/platform-independent/agent-resolver.test.mjs tests/platform-independent/agent-adapters.test.mjs tests/platform-independent/agent-gate-cli.test.mjs tests/platform-independent/agent-runtime-composition.test.mjs
 	bash tests/gate-evaluator.test.sh
 
 generate-e3-attestation:

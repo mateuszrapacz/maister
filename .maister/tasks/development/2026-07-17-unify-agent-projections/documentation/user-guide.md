@@ -230,7 +230,9 @@ The owner request is closed: unknown or missing fields are rejected. `interactiv
 `bridge_module` is either an existing, real, non-symlinked ESM file registered by the host integration or `null`. A real module exports `async createMaisterAgentBridgeV1(request)` and owns host credentials, host-version discovery, and compatibility with the host API.
 
 - A Codex bridge supplies the required capability inspection port. The runtime itself launches the managed `codex exec` process after verifying the executable, authentication, version, controls, model, and effort.
-- A Cursor or Kiro bridge supplies exact-native `inspect` and `launch` functions plus host version, authentication state, and external collision data. Its optional `cancel` function is best-effort.
+- A Cursor or Kiro bridge supplies exact-native `inspect` and `launch` functions plus host version, authentication state, and external collision data. Its optional `cancel` function follows the closed cancel-v1 contract below and remains best-effort.
+
+`cancel` runs only after `launch` was called and the durable append of `attempt_completed` or `dispatch_terminal` then failed. Its exact request is `{schema_version: 1, adapter_id, dispatch_id, native_role_external_id, trigger: "post_launch_durable_write_failure", failed_event_type, launch_outcome}`. `failed_event_type` names the failed append. `launch_outcome` is either `{status: "observed", observation: <closed launch-v1 result>}` or `{status: "failed", error: {code, message}}`. Only a fulfilled boolean `true` means confirmed cancellation; `false`, any other return value, or a thrown/rejected error means cancellation was not confirmed. In every case, the original durable-write failure remains authoritative.
 
 Maister does not cache bridge code or credentials. Register the module explicitly on every invocation, replace it when host compatibility changes, and renew E5/E6 evidence for that exact bridge and host version. Passing `null` is valid input, but live dispatch then resolves to typed unavailable/blocked rather than another execution route.
 
@@ -307,14 +309,9 @@ Stop. Preserve the complete target-scoped state directory, journals, receipts, a
 
 Run the release gate from a clean checkout. `PARITY_ALLOW_DIRTY_LOCAL=1` is diagnostic only; its output cannot authorize publication.
 
-## Accepted known limitations
+## Support boundaries
 
-The final implementation verification accepted two warnings. They remain follow-up work and should be included in operational risk reviews:
-
-- **RV3-W1 — stdin ingestion:** the CLI checks the advertised 1 MiB limit only after `fs.readFileSync(0)` has already read all input. A very large local input can therefore consume more than 1 MiB of memory, and a read failure during default argument evaluation can occur before the typed-envelope handler. Send only a small, trusted request object and apply an upstream input cap until incremental bounded reading is implemented.
-- **RV3-W2 — optional native cancellation:** Cursor/Kiro `cancel` is optional and best-effort, but v1 does not yet publish a complete closed request shape, exact invocation timing, or return/throw semantics. Do not depend on cancellation as a transactional guarantee. Durable event and gate state determine the outcome.
-
-Additional support boundaries:
+The previously accepted RV3-W1 and RV3-W2 warnings are resolved: stdin is incrementally capped with typed read failures, and optional exact-native cancellation now has a closed, tested v1 request/timing/return contract. Cancellation remains best-effort rather than a transactional guarantee.
 
 - Native behavior depends on the exact installed host version and authentication state.
 - Cursor agent precedence in the presence of colliding unmanaged agents is not universally guaranteed; collisions remain blocking unless a versioned probe proves safe behavior.

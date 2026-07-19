@@ -4,7 +4,7 @@
 
 The workflow is complete with 31 persisted terminal decision gates.
 The implementation unifies 28 canonical roles across Codex, Cursor, and Kiro CLI, using managed codex exec workers where enforceable per-role model and effort are required.
-Final implementation verification is **Passed with Issues / GO**: 304/304 independent tests passed, all critical findings are closed, and two warnings were explicitly accepted.
+Final implementation verification is now **Passed / GO**: the historical 304/304 verification passed with two accepted warnings, and both warnings were subsequently fixed with focused 68/68 plus full runtime and repository validation.
 Browser E2E is **GO WITH CAVEATS** because the approved CLI/plugin/runtime scope has no web endpoint; the validated operator guide contains no fabricated screenshots.
 The user approved the final handoff and selected Complete workflow.
 
@@ -12,9 +12,9 @@ The user approved the final handoff and selected Complete workflow.
 
 - **Workflow:** completed by explicit final user approval.
 - **Implementation:** 11/11 groups complete; exact 28-role projections, atomic lifecycle, durable dispatch, exact adapters, evidence, release packaging, and the shipped production gate owner are implemented.
-- **Verification:** Passed with Issues / GO; 0 critical, 2 warning, 0 info.
-- **Known warning RV3-W1:** CLI stdin is fully buffered before the one-mebibyte check, and read failure can bypass the typed JSON envelope.
-- **Known warning RV3-W2:** optional exact-native cancellation lacks a closed versioned request/timing/return contract.
+- **Verification:** Passed / GO; 0 critical, 0 warning, 0 info after post-completion remediation.
+- **Resolved RV3-W1:** CLI stdin is incrementally capped at 1 MiB and read failures produce the typed JSON envelope.
+- **Resolved RV3-W2:** optional exact-native cancellation has a closed, documented, and contract-tested v1 request/timing/return contract.
 - **E2E:** GO WITH CAVEATS; 4/4 browser scenarios blocked as inapplicable, with zero observed browser product discrepancies.
 - **Documentation:** validated CLI-first operator guide covering lifecycle, all roles, owner-v1, bridges, model/effort policy, evidence, and troubleshooting.
 
@@ -590,4 +590,4 @@ The user approved the final handoff and selected Complete workflow.
 
 ## Workflow Status
 
-**Completed.** The user explicitly approved the final handoff. All enabled phases and required artifacts are complete. RV3-W1 and RV3-W2 remain accepted, documented follow-up warnings; no critical issue remains.
+**Completed.** The user explicitly approved the final handoff. All enabled phases and required artifacts are complete. The later user-authorized remediation closes RV3-W1 and RV3-W2; no critical, warning, or informational issue remains.

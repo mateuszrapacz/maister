@@ -596,10 +596,12 @@ function nativePlan(target) {
   });
 }
 
-function nativePort({ exactLaunch = true, observableIdentity = true, observedIdentity = "maister-project-analyzer", launchError = null } = {}) {
+function nativePort({ exactLaunch = true, observableIdentity = true, observedIdentity = "maister-project-analyzer", launchError = null, cancelResult = true } = {}) {
   const launches = [];
+  const cancellations = [];
   return {
     launches,
+    cancellations,
     async inspect() {
       return { schema_version: 1, exact_launch: exactLaunch, observable_identity: observableIdentity };
     },
@@ -612,6 +614,10 @@ function nativePort({ exactLaunch = true, observableIdentity = true, observedIde
         output: { logical_role_id: request.plan.requested_logical_role_id, status: "completed" },
         native_observations: { session_id: "native-session-001" },
       };
+    },
+    async cancel(request) {
+      cancellations.push(structuredClone(request));
+      return cancelResult;
     },
   };
 }
@@ -668,6 +674,41 @@ for (const [target, moduleName, exportName] of [
     assert.equal(result.status, "failed");
     assert.equal(result.error.code, "E_NATIVE_LAUNCH_FAILED");
     assert.deepEqual(events.events.map(({ event_type }) => event_type), ["dispatch_started", "attempt_started", "attempt_completed", "dispatch_terminal"]);
+  });
+
+  test(`${target} sends the closed cancel-v1 request only after a post-launch durable write failure`, async () => {
+    const runtime = await adapterRuntime(moduleName);
+    const beforeLaunch = nativePort();
+    const beforeLaunchResult = await runtime[exportName]({ nativePort: beforeLaunch, eventPort: eventPort({ failAt: 1 }) })({ plan: nativePlan(target), task: task() });
+    assert.equal(beforeLaunchResult.error.code, "E_EXECUTION_RECORD_FAILURE");
+    assert.equal(beforeLaunch.launches.length, 0);
+    assert.deepEqual(beforeLaunch.cancellations, []);
+
+    for (const [failAt, failedEventType] of [[3, "attempt_completed"], [4, "dispatch_terminal"]]) {
+      const native = nativePort();
+      const result = await runtime[exportName]({ nativePort: native, eventPort: eventPort({ failAt }) })({ plan: nativePlan(target), task: task() });
+      assert.equal(result.status, "failed");
+      assert.equal(result.error.code, "E_EXECUTION_RECORD_FAILURE");
+      assert.deepEqual(native.cancellations, [{
+        schema_version: 1,
+        adapter_id: target === "cursor" ? "cursor.native" : "kiro-cli.native",
+        dispatch_id: "dispatch-001",
+        native_role_external_id: "maister-project-analyzer",
+        trigger: "post_launch_durable_write_failure",
+        failed_event_type: failedEventType,
+        launch_outcome: {
+          status: "observed",
+          observation: {
+            schema_version: 1,
+            observed_native_role_external_id: "maister-project-analyzer",
+            output: { logical_role_id: "maister:project-analyzer", status: "completed" },
+            native_observations: { session_id: "native-session-001" },
+          },
+        },
+      }]);
+      assert.equal(result.native_observations.cancellation_requested, true);
+      assert.equal(result.native_observations.cancellation_succeeded, true);
+    }
   });
 }
 

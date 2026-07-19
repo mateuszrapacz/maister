@@ -328,6 +328,18 @@ test("a post-side-effect recording failure requests cancellation and never repor
   });
 });
 
+test("only an exact true cancel result counts as successful best-effort cancellation", async () => {
+  for (const cancel of [async () => false, async () => "true", async () => { throw new Error("host rejected cancellation"); }]) {
+    const result = await recordAfterSideEffect(
+      () => { throw new ExecutionEventWriterError("E_EVENT_FSYNC", "fsync failed"); },
+      cancel,
+    );
+    assert.equal(result.cancellation_requested, true);
+    assert.equal(result.cancellation_succeeded, false);
+    assert.deepEqual(result.error, { code: "E_EVENT_FSYNC", message: "fsync failed" });
+  }
+});
+
 test("stream validation rejects a missing terminal when completeness is required", () => {
   const started = createExecutionEvent({
     ...eventPayload("dispatch_started"),

@@ -1,24 +1,22 @@
-# Implementation Verification — Re-Verification 3
+# Implementation Verification — Post-Completion Remediation
 
 ## TL;DR
 
-**Verdict: Passed with Issues / GO.** Re-verification 3 leaves **0 critical, 2 warning, and 0 informational** findings.
+**Verdict: Passed / GO.** Post-completion remediation leaves **0 critical, 0 warning, and 0 informational** findings.
 The former production-owner blocker is closed by a shipped CLI → owner → runtime → `evaluateGate()` call graph exercised from extracted Cursor and Codex packages.
-Remaining warnings cover genuinely bounded/typed stdin ingestion and the incomplete optional native-cancel request/timing/return contract.
-Mandatory evidence is green at 304/304; strict parity correctly refused the dirty checkout and remains a clean-release condition.
+RV3-W1 and RV3-W2 are now closed by bounded incremental stdin ingestion, typed read failures, and a published/tested exact-native cancel-v1 contract.
+The focused regression suite passes 68/68, `make test-runtime` and `make validate` exit 0; strict parity remains a clean-release condition.
 
 ## Key Decisions
 
-- Advance Phase 11 with a **Passed with Issues / GO** verdict; neither remaining finding invalidates the exact role, runtime, durable-event, package, or fail-closed architecture.
+- Preserve the historical Phase 11 **Passed with Issues / GO** decision while recording the later user-authorized remediation as the new canonical **Passed / GO** verdict.
 - Accept the Re-verification 2 critical C1 as fully resolved: shipped non-test code now owns runtime construction and gate invocation.
-- Deduplicate the reviewers' stdin findings into RV3-W1 and their optional-cancel findings into RV3-W2.
-- Classify both as warnings, not criticals: they are localized, fixable boundary/contract defects with no demonstrated fallback, source mutation, identity bypass, or incorrect durable success.
+- Close RV3-W1 with incremental capped stdin reading inside the typed-envelope boundary and focused injected/subprocess regressions.
+- Close RV3-W2 with one closed cancel-v1 request, exact post-launch durable-write-failure timing, and explicit boolean/throw semantics.
 - Keep clean strict parity and live E5/E6 as separate publication gates; diagnostic parity and deterministic bridges do not replace them.
 
 ## Open Questions / Risks
 
-- The CLI currently reads all fd 0 input before enforcing its advertised 1 MiB maximum, and a read failure can occur before the typed-envelope `try` boundary.
-- Exact-native cancellation is correctly optional and best-effort, but the public v1 contract does not define one closed request, invocation timing, or callback return semantics.
 - Release publication still requires strict parity from a clean checkout or release commit; this shared dirty checkout correctly returns `E_SOURCE_DIRTY`.
 - Native support remains conditional on current E5/E6 evidence for the exact bridge, host version, authentication state, scenario, and observable identity/policy.
 
@@ -26,19 +24,19 @@ Mandatory evidence is green at 304/304; strict parity correctly refused the dirt
 
 The final repair closes the only Re-verification 2 critical gap. `plugins/maister/bin/maister-agent-gate.mjs` is a shipped executable; it calls `runProductionAgentGate()`, which validates the owner request and bridge, constructs `createProductionAgentRuntime()`, and passes the runtime to `evaluateGate()`. Both extracted-package tracers invoke the CLI as a subprocess, so test code no longer owns the factory-to-gate integration edge.
 
-The implementation remains functionally complete and all mandatory verification is green: `make validate` exits 0, the platform-independent suite passes 297/297, the gate harness passes 7/7, and the non-overlapping aggregate is 304/304. Independent tracks found two localized issues at the new public boundary. Arbitration accepts GO because both are warnings with straightforward remedies and do not undermine the approved runtime semantics, while preserving them prominently for follow-up.
+The implementation remains functionally complete and all mandatory verification is green. The historical Re-verification 3 aggregate passed 304/304 and accepted two localized warnings. The user later authorized both fixes: the new focused regression suite passes 68/68, the full runtime suite passes, and `make validate` exits 0. No implementation warning remains.
 
 ## Verification Matrix
 
 | Track | Track verdict | Canonical adjudication |
 |---|---|---|
 | Test suite | PASS | 304/304 non-overlapping assertions; both extracted CLI tracers pass. |
-| Completeness | NO-GO pending warning | RV3-W1 accepted as a warning; plan and requirement completeness otherwise confirmed. |
-| Code/security | NO-GO with warning | RV3-W1 accepted and retained; no additional security issue. |
-| Pragmatic review | NO-GO pending two fixes | RV3-W1 and RV3-W2 deduplicated and classified as warnings. |
-| Production readiness | NO-GO pending two fixes | Confirms the same two localized boundary/contract issues; former critical owner gap resolved. |
+| Completeness | PASS after remediation | RV3-W1 is covered by incremental-limit, read-error, and shipped-subprocess regressions. |
+| Code/security | PASS after remediation | The CLI no longer fully buffers unbounded stdin and transport errors remain typed. |
+| Pragmatic review | PASS after remediation | RV3-W1 and RV3-W2 are fixed with narrow contracts and no new fallback. |
+| Production readiness | PASS after remediation | The public cancel-v1 contract and stdin boundary are implemented, documented, and tested. |
 | Reality assessment | GO | Confirms shipped owner, package inclusion, executable mode, extracted subprocess paths, and no fallback. |
-| Arbitration | **Passed with Issues / GO** | 0 critical, 2 warning, 0 info; Phase 11 may advance with follow-up work recorded. |
+| Post-completion verification | **Passed / GO** | 0 critical, 0 warning, 0 info; focused 68/68, runtime and full validation pass. |
 
 ## Overall Assessment
 
@@ -48,30 +46,28 @@ The implementation remains functionally complete and all mandatory verification 
 | Requirements traceability | 35/35 requirements; 15/15 success criteria | Named evidence remains credible; production ownership is now explicit. |
 | Tests | PASS | 297/297 Node + 7/7 gate = 304/304 non-overlapping assertions. |
 | Production call graph | PASS | Packaged CLI → owner → runtime factory → gate evaluator, exercised in subprocess tracers. |
-| Security/fail closure | PASS with warning | No shell/fallback/identity bypass; stdin ingestion resource bound needs correction. |
-| Public integration contract | PASS with warning | Required bridge schemas are published; optional cancellation remains underspecified. |
+| Security/fail closure | PASS | No shell/fallback/identity bypass; stdin is incrementally capped and read errors are typed. |
+| Public integration contract | PASS | Required bridge schemas and the optional cancel-v1 timing/return contract are published and tested. |
 | Release evidence | CONDITIONAL | Strict parity must pass on a clean checkout; live native support remains E5/E6-qualified. |
-| Overall | **PASSED WITH ISSUES / GO** | No critical blocker; two follow-up warnings remain. |
+| Overall | **PASSED / GO** | No critical, warning, or informational finding remains. |
 
-## Remaining Issues
+## Resolved Post-Completion Warnings
 
 ### RV3-W1 — CLI stdin ingestion is not actually bounded and read failures can bypass the typed envelope
 
 - **Severity:** warning
 - **Category:** resource safety / boundary validation / contract accuracy
 - **Location:** `plugins/maister/bin/maister-agent-gate.mjs:19-22`; public promises at `README.md:167,186`
-- **Evidence:** `runCli({ input = fs.readFileSync(0), ... } = {})` evaluates the default read before the function body and before its `try`. The entire stream is allocated before the subsequent `bytes.length > MAX_INPUT_BYTES` check. A read error during default-parameter evaluation bypasses the code that emits the documented single typed failure envelope.
-- **Impact:** a buggy or hostile local integration can force memory growth beyond the advertised 1 MiB owner boundary. Input-read failures can also violate the stable machine-readable stdout contract. No dispatch fallback, source mutation, or identity bypass results.
-- **Recommendation:** move stdin acquisition inside the `try`; consume it incrementally with a hard retained cap of `MAX_INPUT_BYTES + 1`; stop immediately on overflow without reading/concatenating the remainder; preserve injectable bytes or streams for focused tests. Add an oversized-input subprocess regression asserting exit 2 and exactly one `E_AGENT_OWNER_INPUT` envelope, plus an injected read-error regression asserting the same typed-envelope contract.
+- **Resolution:** `runCli` now acquires stdin inside its `try`, consumes the async stream incrementally, stops immediately above 1 MiB, and maps transport errors to `E_AGENT_OWNER_STDIN` with the standard failure envelope.
+- **Evidence:** injected overflow/read-error tests and a shipped-executable oversized-stdin subprocess regression pass.
 
 ### RV3-W2 — Optional exact-native cancellation lacks a closed versioned request/timing/return contract
 
 - **Severity:** warning
 - **Category:** integration contract / resilience / developer experience
 - **Locations:** `README.md:195`; `plugins/maister/skills/orchestrator-framework/bin/agent-runtime/host-adapters/exact-native.mjs:37,57,59,67,69`
-- **Evidence:** documentation correctly makes `cancel` optional and best-effort, but does not specify its argument, exact invocation points, or return/throw semantics. The adapter invokes cancellation only after a native side effect when a durable append fails, and currently passes either the validated launch observation or an ad-hoc `{error}` mapping through `appendAfter`.
-- **Impact:** bridge authors must reverse-engineer source and may lack stable dispatch/native identity or reason fields needed for predictable compensation. Optionality itself is correct and does not make a bridge invalid.
-- **Recommendation:** define and publish one closed `cancel` request v1 with schema version, dispatch ID, native identity, cancellation reason/recording phase, and stable observation identifiers; define exact trigger timing and how resolved/rejected callback outcomes map to `cancellation_requested`/`cancellation_succeeded`. Alternatively publish the exact current variants, though one request shape is preferable. Add a public bridge contract test.
+- **Resolution:** exact-native adapters now send one closed cancel-v1 request only when an `attempt_completed` or `dispatch_terminal` durable append fails after launch. The request carries adapter/dispatch/native identity, trigger, failed event, and a closed launch outcome.
+- **Evidence:** Cursor and Kiro contract tests assert the exact request; event-writer tests prove that only boolean `true` confirms cancellation while false, non-boolean, and thrown/rejected outcomes preserve the original recording failure.
 
 ## Resolved Findings
 
@@ -165,14 +161,19 @@ The decisive difference from Re-verification 2 is ownership: this chain now exis
 - Fresh evidence passed `make validate`, 297/297 Node, 7/7 gate, and 304/304 aggregate assertions.
 - Independent reviews confirmed C1 closure and identified the stdin-ingestion and optional-cancel contract limitations.
 - Arbitration deduplicated them as RV3-W1 and RV3-W2, classified both as warnings, and found no critical or informational residual.
-- **Canonical verdict:** **Passed with Issues / GO — 0 critical, 2 warning, 0 info.**
+- **Historical verdict at that gate:** **Passed with Issues / GO — 0 critical, 2 warning, 0 info.**
+
+### Post-completion remediation — 2026-07-19
+
+- Closed RV3-W1 with incremental capped stdin ingestion, typed read failures, and injected plus shipped-subprocess regressions.
+- Closed RV3-W2 with the closed optional cancel-v1 request, exact post-launch durable-write-failure timing, and explicit success/failure semantics.
+- Focused tests pass 68/68; `make test-runtime` and `make validate` exit 0.
+- **Current canonical verdict:** **Passed / GO — 0 critical, 0 warning, 0 info.**
 
 ## Recommendations
 
-1. Fix RV3-W1 with incremental capped stdin reading inside the typed-envelope `try`, plus oversized/read-error regressions.
-2. Fix RV3-W2 with one closed versioned cancel request and explicit timing/return semantics, plus a public bridge contract test.
-3. Retain the shipped owner call graph, executable mode, package closure, extracted Cursor/Codex CLI tracers, and all fail-closed defaults.
-4. Before publication, obtain strict parity from the clean release job and current E5/E6 evidence for any native-support claim.
+1. Retain the shipped owner call graph, executable mode, package closure, extracted Cursor/Codex CLI tracers, bounded stdin, cancel-v1 contract, and all fail-closed defaults.
+2. Before publication, obtain strict parity from the clean release job and current E5/E6 evidence for any native-support claim.
 
 ## Verification Checklist
 
@@ -182,8 +183,8 @@ The decisive difference from Re-verification 2 is ownership: this chain now exis
 - [x] Extracted Cursor and Codex CLI subprocess tracers pass.
 - [x] Mandatory 304/304 non-overlapping assertions pass.
 - [x] No critical or informational finding remains.
-- [ ] Stdin ingestion is bounded during reading and read failures always use the typed envelope.
-- [ ] Optional native cancellation has a closed request/timing/return contract test.
+- [x] Stdin ingestion is bounded during reading and read failures always use the typed envelope.
+- [x] Optional native cancellation has a closed request/timing/return contract test.
 - [ ] Strict parity passes in the clean release environment.
 - [ ] Native-support claims have current passed E5/E6 for the exact environment.
 
@@ -199,32 +200,18 @@ The decisive difference from Re-verification 2 is ownership: this chain now exis
 ## Structured Result
 
 ```yaml
-status: passed_with_issues
+status: passed
 decision: go
 reverification: 3
 report_path: verification/implementation-verification.md
 html_path: verification/implementation-verification.html
 issue_counts:
   critical: 0
-  warning: 2
+  warning: 0
   info: 0
-issues:
-  - source: code_review
-    severity: warning
-    id: RV3-W1
-    description: CLI stdin is fully read before the 1 MiB check, and read failure can bypass the typed envelope.
-    location: plugins/maister/bin/maister-agent-gate.mjs:19-22
-    fixable: true
-    suggestion: Read incrementally inside try with a hard cap; add oversized and read-error regressions.
-  - source: pragmatic
-    severity: warning
-    id: RV3-W2
-    description: Optional exact-native cancel lacks a closed versioned request, trigger timing, and callback return contract.
-    location: plugins/maister/skills/orchestrator-framework/bin/agent-runtime/host-adapters/exact-native.mjs:37
-    fixable: true
-    suggestion: Publish one closed cancel request v1 and contract-test its timing and outcome mapping.
+issues: []
 resolved_reverification_2: [C1, W1_required_contract]
-residual_reverification_3: [RV3-W1, RV3-W2]
+resolved_post_completion: [RV3-W1, RV3-W2]
 prior_findings_remaining_closed: true
 tests:
   mandatory_validation_exit_code: 0

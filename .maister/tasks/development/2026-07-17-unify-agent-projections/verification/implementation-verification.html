@@ -73,30 +73,30 @@ ul,ol { padding-left:22px; } li + li { margin-top:4px; }
 </nav>
 
 <header>
-  <span class="badge">Re-verification 3</span>
+  <span class="badge">Post-completion remediation</span>
   <h1>Implementation Verification</h1>
   <p class="muted">Unified Agent Projections and Exact Invocation · 2026-07-19</p>
 </header>
 
 <div class="verdict">
-  <strong>⚠ Passed with Issues / GO</strong>
-  The production-owner blocker is resolved. Two localized warnings remain at the CLI input and optional native-cancel contract boundaries.
+  <strong>✓ Passed / GO</strong>
+  The production-owner blocker and both post-verification warnings are resolved and validated.
 </div>
 
 <div class="tiles">
   <div class="tile"><b class="warn-text">GO</b><span>verdict</span></div>
   <div class="tile"><b>0</b><span>critical</span></div>
-  <div class="tile"><b class="warn-text">2</b><span>warning</span></div>
+  <div class="tile"><b class="pass">0</b><span>warning</span></div>
   <div class="tile"><b>0</b><span>info</span></div>
   <div class="tile"><b class="pass">304/304</b><span>assertions</span></div>
 </div>
 
 <section class="card tldr">
   <h2 style="margin-top:0">TL;DR</h2>
-  <p><strong>Passed with Issues / GO</strong> with 0 critical, 2 warning, and 0 informational findings. A shipped CLI now owns the complete runtime-to-gate edge and both extracted package tracers invoke it as a subprocess. Remaining warnings are genuinely bounded/typed stdin ingestion and a closed optional-cancel request/timing/return contract. Strict dirty-checkout parity remains a separate release condition.</p>
+  <p><strong>Passed / GO</strong> with 0 critical, 0 warning, and 0 informational findings. RV3-W1 is closed by incremental capped stdin ingestion and typed transport failures. RV3-W2 is closed by the published and contract-tested optional cancel-v1 request, timing, and return semantics. Focused regressions pass 68/68; full runtime and repository validation pass.</p>
   <div class="summary-grid">
-    <div class="card"><strong>Key decisions</strong><ul><li>Advance Phase 11 with warnings.</li><li>Accept the production-owner critical as resolved.</li><li>Deduplicate findings as RV3-W1 and RV3-W2.</li></ul></div>
-    <div class="card"><strong>Open risks</strong><ul><li>stdin is capped only after complete read.</li><li>cancel is optional but its callback contract is incomplete.</li><li>Clean strict parity and live E5/E6 remain publication gates.</li></ul></div>
+    <div class="card"><strong>Key decisions</strong><ul><li>Preserve historical gate decisions.</li><li>Close RV3-W1 and RV3-W2 after explicit user authorization.</li><li>Keep cancellation best-effort and fail-closed.</li></ul></div>
+    <div class="card"><strong>Open risks</strong><ul><li>Clean strict parity and live E5/E6 remain publication gates.</li></ul></div>
   </div>
 </section>
 
@@ -106,7 +106,7 @@ ul,ol { padding-left:22px; } li + li { margin-top:4px; }
 <section id="summary" class="card">
   <h2 style="margin-top:0">Executive summary</h2>
   <p>The final repair ships <code>maister-agent-gate.mjs</code>, which calls the production owner, constructs the verified installed-state runtime, and supplies it to <code>evaluateGate()</code>. Extracted Cursor and Codex packages enter this path by spawning the CLI, so the test no longer owns the formerly missing integration edge.</p>
-  <p>Mandatory evidence is fully green: <code>make validate</code> exits 0, Node passes 297/297, gate evaluation passes 7/7, and the non-overlapping aggregate is 304/304. Arbitration retains two independent review findings as warnings because they are localized, fixable, and do not undermine identity, no-fallback, durable-success, or source-mutation safety.</p>
+  <p>The historical mandatory evidence remains green at 304/304. Post-completion remediation adds a 68/68 focused regression pass, a successful full runtime suite, and <code>make validate</code> exit 0. No warning remains.</p>
 </section>
 
 <section id="matrix" class="card wide">
@@ -115,12 +115,12 @@ ul,ol { padding-left:22px; } li + li { margin-top:4px; }
     <thead><tr><th>Track</th><th>Track verdict</th><th>Canonical adjudication</th></tr></thead>
     <tbody>
       <tr><td>Test suite</td><td class="pass">PASS</td><td>304/304; both extracted CLI tracers pass.</td></tr>
-      <tr><td>Completeness</td><td class="warn-text">NO-GO pending warning</td><td>RV3-W1 retained as warning; plan/requirements otherwise complete.</td></tr>
-      <tr><td>Code/security</td><td class="warn-text">NO-GO with warning</td><td>RV3-W1 retained; no additional issue.</td></tr>
-      <tr><td>Pragmatic</td><td class="warn-text">NO-GO pending two fixes</td><td>RV3-W1 and RV3-W2 deduplicated as warnings.</td></tr>
-      <tr><td>Production readiness</td><td class="warn-text">NO-GO pending two fixes</td><td>Same localized issues; former critical owner gap closed.</td></tr>
+      <tr><td>Completeness</td><td class="pass">PASS</td><td>RV3-W1 has focused injected and subprocess regressions.</td></tr>
+      <tr><td>Code/security</td><td class="pass">PASS</td><td>stdin is incrementally capped and read errors remain typed.</td></tr>
+      <tr><td>Pragmatic</td><td class="pass">PASS</td><td>Both fixes are narrow, versioned, and add no fallback.</td></tr>
+      <tr><td>Production readiness</td><td class="pass">PASS</td><td>The public stdin and cancel-v1 contracts are implemented and tested.</td></tr>
       <tr><td>Reality</td><td class="pass">GO</td><td>Shipped owner, package inclusion, executable mode, subprocess paths, no fallback.</td></tr>
-      <tr><td>Arbitration</td><td class="pass">Passed with Issues / GO</td><td>0 critical, 2 warning, 0 info.</td></tr>
+      <tr><td>Post-completion verification</td><td class="pass">Passed / GO</td><td>0 critical, 0 warning, 0 info.</td></tr>
     </tbody>
   </table>
 </section>
@@ -134,26 +134,22 @@ ul,ol { padding-left:22px; } li + li { margin-top:4px; }
       <tr><td>Traceability</td><td class="pass">35/35 · 15/15</td><td>Requirements and success criteria have named evidence.</td></tr>
       <tr><td>Tests</td><td class="pass">304/304</td><td>297 Node plus 7 gate scenarios.</td></tr>
       <tr><td>Production owner</td><td class="pass">PASS</td><td>Packaged CLI → owner → runtime → gate.</td></tr>
-      <tr><td>Security/fail closure</td><td class="warn-text">PASS + warning</td><td>No fallback/bypass; stdin ingestion bound needs repair.</td></tr>
-      <tr><td>Bridge contract</td><td class="warn-text">PASS + warning</td><td>Required v1 contract published; optional cancel underspecified.</td></tr>
-      <tr><td>Overall</td><td class="pass">PASSED WITH ISSUES / GO</td><td>No critical blocker remains.</td></tr>
+      <tr><td>Security/fail closure</td><td class="pass">PASS</td><td>No fallback/bypass; stdin is incrementally bounded.</td></tr>
+      <tr><td>Bridge contract</td><td class="pass">PASS</td><td>Required bridge and optional cancel-v1 contracts are published and tested.</td></tr>
+      <tr><td>Overall</td><td class="pass">PASSED / GO</td><td>No critical, warning, or informational finding remains.</td></tr>
     </tbody>
   </table>
 </section>
 
 <section id="findings">
-  <h2>Remaining findings</h2>
+  <h2>Resolved post-completion warnings</h2>
   <article class="card">
-    <h3><span class="sev warning">Warning</span>RV3-W1 — stdin ingestion is not bounded and read failures can bypass the typed envelope</h3>
-    <p><strong>Location:</strong> <code>plugins/maister/bin/maister-agent-gate.mjs:19-22</code>; promises at <code>README.md:167,186</code>.</p>
-    <p>The default <code>input = fs.readFileSync(0)</code> runs before the function body and before its <code>try</code>. The entire stream is allocated before the 1 MiB length check, and a read failure can skip the documented one-envelope failure path.</p>
-    <p><strong>Recommendation:</strong> acquire stdin inside <code>try</code>, read incrementally with a hard retained cap of <code>MAX_INPUT_BYTES + 1</code>, stop immediately on overflow, and add oversized subprocess plus injected read-error regressions that assert exit 2 and one <code>E_AGENT_OWNER_INPUT</code> envelope.</p>
+    <h3><span class="sev info">Resolved</span>RV3-W1 — bounded incremental stdin and typed read failures</h3>
+    <p><code>runCli</code> now reads stdin incrementally inside its typed-envelope boundary, stops above 1 MiB, and maps transport errors to <code>E_AGENT_OWNER_STDIN</code>. Injected overflow/read-error tests and the shipped subprocess regression pass.</p>
   </article>
   <article class="card">
-    <h3><span class="sev warning">Warning</span>RV3-W2 — optional native cancellation lacks a closed v1 callback contract</h3>
-    <p><strong>Locations:</strong> <code>README.md:195</code>; <code>host-adapters/exact-native.mjs:37,57,59,67,69</code>.</p>
-    <p>Optionality and best-effort semantics are correct, but the public contract does not define the request shape, exact post-side-effect durability-failure trigger, or callback return/throw mapping. Code currently passes either a launch observation or an ad-hoc <code>{error}</code> mapping.</p>
-    <p><strong>Recommendation:</strong> publish one closed request v1 with dispatch/native identity, reason, recording phase, and observation identifiers; define timing and outcome mapping; add a public bridge contract test.</p>
+    <h3><span class="sev info">Resolved</span>RV3-W2 — closed optional cancel-v1 callback contract</h3>
+    <p>Exact-native adapters now send one closed cancel-v1 request only after a post-launch durable append fails. Cursor/Kiro tests assert the exact request; event-writer tests prove only boolean <code>true</code> confirms cancellation while other outcomes preserve the original write failure.</p>
   </article>
 </section>
 
@@ -212,16 +208,15 @@ ul,ol { padding-left:22px; } li + li { margin-top:4px; }
     <article><h3>Repair 2 · 2026-07-19</h3><p>Added installed-state factory, containment, exact bounds, honest E6, internal tracers, claim/traceability repairs, dead-export removal, decomposition, and two tracer bug fixes.</p></article>
     <article><h3>Re-verification 2 · 2026-07-19</h3><p><strong class="fail">Failed / NO-GO</strong> · 1 critical, 1 warning, 0 info. Arbitration found no shipped owner and incomplete bridge documentation.</p></article>
     <article><h3>Repair 3 · 2026-07-19</h3><p>Shipped CLI/owner, closed the call graph and required v1 bridge contract, package/mode closure, and two extracted subprocess tracers.</p></article>
-    <article><h3>Re-verification 3 + arbitration · 2026-07-19</h3><p>304/304 passed. Findings deduplicated as stdin-boundary RV3-W1 and optional-cancel RV3-W2. <strong class="pass">Canonical: Passed with Issues / GO · 0 critical, 2 warning, 0 info.</strong></p></article>
+    <article><h3>Re-verification 3 + arbitration · 2026-07-19</h3><p>304/304 passed. Findings deduplicated as stdin-boundary RV3-W1 and optional-cancel RV3-W2. <strong>Historical gate verdict: Passed with Issues / GO · 0 critical, 2 warning, 0 info.</strong></p></article>
+    <article><h3>Post-completion remediation · 2026-07-19</h3><p>RV3-W1 and RV3-W2 closed. Focused tests pass 68/68; full runtime and repository validation pass. <strong class="pass">Current canonical verdict: Passed / GO · 0 critical, 0 warning, 0 info.</strong></p></article>
   </div>
 </section>
 
 <section id="recommendations" class="card">
   <h2 style="margin-top:0">Recommendations and limitations</h2>
   <ol>
-    <li>Implement capped incremental stdin reading inside the typed-envelope boundary and add overflow/read-error tests.</li>
-    <li>Publish and contract-test one closed optional cancel request with exact timing and outcome mapping.</li>
-    <li>Preserve the shipped owner, package closure, executable mode, subprocess tracers, and fail-closed defaults.</li>
+    <li>Preserve the shipped owner, package closure, executable mode, subprocess tracers, bounded stdin, cancel-v1 contract, and fail-closed defaults.</li>
     <li>Before release, obtain clean strict parity and current passed E5/E6 for any claimed native support.</li>
   </ol>
 </section>

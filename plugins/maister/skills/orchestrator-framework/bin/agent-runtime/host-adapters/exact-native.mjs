@@ -29,12 +29,27 @@ function recordFailure(recording) {
   return common("failed", null, { code: "E_EXECUTION_RECORD_FAILURE", message: recording.error.message, nativeObservations: { recording_phase: recording.phase, recording_error_code: recording.error.code, recording_error_message: recording.error.message, cancellation_requested: recording.cancellation_requested, cancellation_succeeded: recording.cancellation_succeeded } });
 }
 
+function cancelRequest(plan, failedEventType, launchOutcome) {
+  return Object.freeze({
+    schema_version: 1,
+    adapter_id: plan.adapter_id,
+    dispatch_id: plan.dispatch_id,
+    native_role_external_id: plan.native_role_external_id,
+    trigger: "post_launch_durable_write_failure",
+    failed_event_type: failedEventType,
+    launch_outcome: structuredClone(launchOutcome),
+  });
+}
+
 export function createExactNativeAdapter({ adapterId, target, nativePort, eventPort, clock = () => new Date().toISOString() } = {}) {
   if (typeof adapterId !== "string" || typeof target !== "string") throw new TypeError("exact native adapter requires identity");
   if (!nativePort || typeof nativePort.inspect !== "function" || typeof nativePort.launch !== "function") throw new TypeError("exact native adapter requires injected inspect and launch ports");
   if (!eventPort || typeof eventPort.append !== "function") throw new TypeError("exact native adapter requires an injected durable event port");
   const payload = (plan, task, eventType, extra = {}) => createExecutionEventPayload({ plan, task, eventType, clock, ...extra });
-  const appendAfter = (request, observation) => recordAfterSideEffect(() => eventPort.append(request), typeof nativePort.cancel === "function" ? () => nativePort.cancel(observation) : null);
+  const appendAfter = (request, failedEventType, launchOutcome, plan) => recordAfterSideEffect(
+    () => eventPort.append(request),
+    typeof nativePort.cancel === "function" ? () => nativePort.cancel(cancelRequest(plan, failedEventType, launchOutcome)) : null,
+  );
   return async ({ plan: candidatePlan, task } = {}) => {
     const plan = validateDispatchPlan(candidatePlan);
     if (plan.target !== target || plan.adapter_id !== adapterId || typeof plan.native_role_external_id !== "string") throw new TypeError(`${adapterId} adapter received a mismatched dispatch plan`);
@@ -54,9 +69,10 @@ export function createExactNativeAdapter({ adapterId, target, nativePort, eventP
     try { launch = validateLaunch(await started.value); }
     catch (error) {
       const code = "E_NATIVE_LAUNCH_FAILED"; const message = `${adapterId} exact launch failed: ${error.message}`;
-      const attempt = await appendAfter({ taskPath: task.task_path, dispatchId: plan.dispatch_id, event: payload(plan, task, "attempt_completed", { attempt: { number: 1 }, result: { status: "failed", data: { error: { code, message, retryable: false } } } }) }, { error: message });
+      const launchOutcome = { status: "failed", error: { code, message } };
+      const attempt = await appendAfter({ taskPath: task.task_path, dispatchId: plan.dispatch_id, event: payload(plan, task, "attempt_completed", { attempt: { number: 1 }, result: { status: "failed", data: { error: { code, message, retryable: false } } } }) }, "attempt_completed", launchOutcome, plan);
       if (attempt.status !== "recorded") return recordFailure(attempt);
-      const terminal = await appendAfter({ taskPath: task.task_path, dispatchId: plan.dispatch_id, event: payload(plan, task, "dispatch_terminal", { error: { code, message, retryable: false } }) }, { error: message });
+      const terminal = await appendAfter({ taskPath: task.task_path, dispatchId: plan.dispatch_id, event: payload(plan, task, "dispatch_terminal", { error: { code, message, retryable: false } }) }, "dispatch_terminal", launchOutcome, plan);
       return terminal.status === "recorded" ? common("failed", null, { code, message }) : recordFailure(terminal);
     }
     const matches = launch.observed_native_role_external_id === plan.native_role_external_id;
@@ -64,9 +80,10 @@ export function createExactNativeAdapter({ adapterId, target, nativePort, eventP
     const message = matches ? null : "observed native identity differs from the exact dispatch plan";
     const outcome = matches ? { result: { status: "completed", data: { output: launch.output, native_observations: launch.native_observations } } } : { error: { code, message, retryable: false } };
     const attemptOutcome = matches ? outcome : { result: { status: "failed", data: { error: outcome.error, native_observations: launch.native_observations } } };
-    const attempt = await appendAfter({ taskPath: task.task_path, dispatchId: plan.dispatch_id, event: payload(plan, task, "attempt_completed", { attempt: { number: 1 }, ...attemptOutcome }) }, launch);
+    const launchOutcome = { status: "observed", observation: launch };
+    const attempt = await appendAfter({ taskPath: task.task_path, dispatchId: plan.dispatch_id, event: payload(plan, task, "attempt_completed", { attempt: { number: 1 }, ...attemptOutcome }) }, "attempt_completed", launchOutcome, plan);
     if (attempt.status !== "recorded") return recordFailure(attempt);
-    const terminal = await appendAfter({ taskPath: task.task_path, dispatchId: plan.dispatch_id, event: payload(plan, task, "dispatch_terminal", outcome) }, launch);
+    const terminal = await appendAfter({ taskPath: task.task_path, dispatchId: plan.dispatch_id, event: payload(plan, task, "dispatch_terminal", outcome) }, "dispatch_terminal", launchOutcome, plan);
     if (terminal.status !== "recorded") return recordFailure(terminal);
     return matches ? common("succeeded", launch.observed_native_role_external_id, { output: launch.output, nativeObservations: launch.native_observations }) : common("failed", launch.observed_native_role_external_id, { code, message, nativeObservations: launch.native_observations });
   };
