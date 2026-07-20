@@ -4,6 +4,17 @@
   "target": "codex",
   "rules": [
     {
+      "id": "codex-plugin-distribution-metadata",
+      "category": "packaging",
+      "observed_category": "semantic",
+      "rationale": "The maintained Codex plugin manifest carries the current canonical repository metadata while the immutable migration oracle retains its reviewed historical manifest bytes.",
+      "path": ".codex-plugin/plugin.json",
+      "observation": {
+        "legacy": { "present": true, "type": "file", "mode": "0644", "sha256": "936cfe01de0c6320ff9e4b76c19d9432e926d6c7ed24a97d50c0178d73da605e" },
+        "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "55316e9c665651eb2b97071f2fe5c8b7229bf24f4b5c9261e3d007749ef282c1" }
+      }
+    },
+    {
       "id": "codex-legacy-inventory-deletions",
       "category": "expected-deletion",
       "observed_category": "inventory",
@@ -1997,7 +2008,7 @@
         },
         "skills/orchestrator-framework/bin/agent-runtime/host-adapters/exact-native.mjs": {
           "legacy": { "present": false },
-          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "cfadc6994b2ef920dcd168bc4ce0836a7ca7c0268c0367e1282f99a7ae2aecba" }
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "4cb92ff10193a0762e6b34c3cd4f5ea3fa0c314ad817b48101093603932d041f" }
         },
         "skills/orchestrator-framework/bin/agent-runtime/node-process-port.mjs": {
           "legacy": { "present": false },

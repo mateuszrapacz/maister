@@ -18,6 +18,64 @@ The old generated host trees, marketplace projections, and legacy host support w
 
 ## Installation
 
+### Exact GitHub package launcher
+
+Maister is not published to npmjs, GitHub Packages, or another package registry. npm is used only as a Git-package client and to acquire the exact locked third-party dependency `tar@7.5.20`. Use the canonical repository with a literal stable tag or lowercase full commit:
+
+```sh
+npm exec --yes --package='github:mateuszrapacz/maister#v2.2.1' -- maister install --target codex
+npm exec --yes --package='github:mateuszrapacz/maister#0123456789abcdef0123456789abcdef01234567' -- maister update --target cursor
+npm install --save-exact 'github:mateuszrapacz/maister#v2.2.1'
+./node_modules/.bin/maister status --target kiro-cli --json
+```
+
+Do not use a branch, default ref, `latest`, semver range, prerelease, short SHA, arbitrary repository/URL, token-bearing URL, or `--ignore-scripts`. The prepare step records the actual full checkout commit; omitting scripts makes the package invalid. The public CLI accepts only `install`, `update`, `status`, `verify`, `uninstall`, `rollback`, or `recover`, one explicit target (`codex`, `cursor`, or `kiro-cli`), optional `--json`, and an exact `--journal-id <uuid>` only for `recover`.
+
+For the currently public repository, Git and Release acquisition work anonymously. Release metadata is tried anonymously before credentials are considered. If the repository becomes private, Git-package credentials remain owned by Git/npm (SSH agent/key or an HTTPS credential helper), while Release API credentials resolve strictly as `GH_TOKEN`, then `GITHUB_TOKEN`, then the bounded non-shell `gh auth token --hostname github.com` fallback. Never place a token in the package URL. Authorization is allowed only on approved `api.github.com` routes and is stripped before cross-host redirects.
+
+State-only commands do not perform launcher DNS, HTTP, GitHub, release-asset, or update-check calls. They use only the active receipt and its verified receipt-bound installer closure under:
+
+```text
+$XDG_STATE_HOME/maister/<target>/control-planes/<receipt-id>/plugins/maister/...
+```
+
+If `XDG_STATE_HOME` is unset, the default is `~/.local/state`. This offline guarantee starts after npm/Git has acquired the exact repository package. A receipt from before receipt-bound control planes is intentionally rejected; run one verified exact-tag/full-commit install or update while connected to migrate it. The launcher never searches `PATH`, npm cache, the current checkout, sibling receipts, or GitHub for an installer.
+
+If an install ends with code 7 and reports an unresolved transaction, the launcher retains its private operation root so the original verified installer and journal remain available for recovery. Preserve that exact path and follow the command printed by the installer/operator runbook; do not delete it until the journal is terminal. Cleanup warnings after a child has started never replace the child result.
+
+### Release publication and recovery runbook
+
+The protected GitHub-only release workflow is a one-way state machine:
+
+```text
+BUILT -> GITHUB_PUBLISHED -> GITHUB_VERIFIED
+  -> PUBLIC_NO_AUTH_SMOKE_VERIFIED
+  -> HERMETIC_PRIVATE_TRANSPORT_VERIFIED
+```
+
+The workflow proves the exact protected tag target, full commit selector, prepare manifest, sidecar/archive/source/E3 identity, and extracted lifecycle receipt. It uploads and byte-verifies only GitHub Release archives and sidecars, then runs anonymous exact-tag/full-commit Git-package smoke for every target. Hermetic credential and private API tests are release-blocking. There is no Maister registry publication, observation, promotion, credential, or fallback.
+
+For an operator recovery after a partial run:
+
+1. Preserve the failed run's GitHub release-evidence artifact and inspect its last terminal state.
+2. Re-run the same tag only when GitHub asset names, hashes, release identity, tag target, and candidate bytes reconcile exactly.
+3. If public bytes or metadata disagree, stop. Do not delete or replace the
+   GitHub release. Open a release incident and publish a new immutable patch-forward tag after correcting the source.
+4. Never repair by replacing assets under an existing tag/version and never route a repair through a package registry.
+5. Retain the selector evidence, public asset hashes, source commit, release tag, sidecars, E3, receipt identity, and anonymous network observations.
+
+### Future private-repository migration checklist (normative)
+
+A visibility change blocks releases until all items pass against the same canonical repository—no substitute repository is allowed:
+
+1. Configure operator-equivalent Git credentials for exact tag and full-commit npm/Git acquisition; keep credentials out of package URLs.
+2. Test `GH_TOKEN`, `GITHUB_TOKEN`, and bounded `gh auth token --hostname github.com` fallback, including strict precedence and malformed-explicit-token failure.
+3. Protect secrets and the release environment from untrusted pull requests and forks.
+4. Run real authenticated exact-tag and full-commit Git-package acquisition plus private GitHub Release metadata/API-asset lifecycle smoke for all three targets.
+5. Prove redaction, no token persistence, API-route-only authorization, and permanent authorization stripping on cross-host redirects.
+6. Re-run the complete selector/manifest/tag/sidecar/archive/source/E3/receipt identity chain and all GitHub-only release evidence.
+7. Keep the release blocked until this real private E2E is green; hermetic private tests alone are insufficient after visibility changes.
+
 The public installer supports a clean local Git checkout, a self-contained Maister archive, or a GitHub source. Production source must resolve to one full commit and must be free of untracked or ignored inputs. For `github:owner/repo`, the bounded resolver uses Git to resolve the requested safe ref, creates a temporary detached checkout at the resolved commit, verifies `HEAD`, status, and content hash, and removes the checkout after the transaction. The overlay is selected from that same checkout, so source and host contract cannot silently come from different revisions.
 
 ```sh
@@ -37,7 +95,7 @@ For an immutable GitHub install, prefer the full commit SHA:
 ```sh
 node plugins/maister/bin/maister-install.mjs install \
   --target codex \
-  --source github:SkillPanel/maister \
+  --source github:mateuszrapacz/maister \
   --ref 0123456789012345678901234567890123456789 \
   --home "$HOME" \
   --json
@@ -66,6 +124,7 @@ $XDG_STATE_HOME/maister/<target>/active-receipt.json
 $XDG_STATE_HOME/maister/<target>/receipts/
 $XDG_STATE_HOME/maister/<target>/journals/
 $XDG_STATE_HOME/maister/<target>/backups/
+$XDG_STATE_HOME/maister/<target>/control-planes/<receipt-id>/
 ```
 
 If `XDG_STATE_HOME` is unset, the default is `~/.local/state`. State roots, journals, receipts, backups, staging directories, and lock files should be private to the operator (`0700` directories and `0600` files). A journal records transaction boundaries. Recovery and rollback are safety-sensitive operations; see the runbook below and preserve the state directory whenever a transaction does not complete.
@@ -96,7 +155,7 @@ The JSON envelope includes the same numeric `code` as the process exit status:
 1. Stop concurrent Maister operations for the affected target and preserve the complete target state directory.
 2. Check `$XDG_STATE_HOME/maister/<target>/install.lock` (or `~/.local/state/maister/<target>/install.lock`). Do not remove it while an installer process is alive. If the process is confirmed gone, preserve a copy of the lock and journals before any cleanup.
 3. Inspect `journals/`, `active-receipt.json`, `receipts/`, and `backups/`. These are audit and recovery inputs; do not hand-edit them.
-4. Run `recover --target <target> --home <home> --json` only after the process is stopped and the backup/journal paths are readable. Verify the returned journal path and receipt before retrying install/update.
+4. Run the exact recovery command printed by the failed installer/launcher (it includes `--journal-id <uuid>` when the failed journal was returned). Use `recover --target <target> --home <home> --journal-id <uuid> --json` only after the process is stopped and the backup/journal paths are readable. Verify the returned journal path and receipt before retrying install/update. The unqualified `recover` form remains a compatibility fallback that selects the newest unresolved journal.
 5. For a rollback failure, do not repeatedly invoke `rollback`. Preserve the failing journal and backup, copy the target-scoped state directory for support, and repair the underlying permission, missing-backup, or drift condition first.
 6. If recovery or rollback returns code 7, stop. A successful command exit is not evidence that the prior state was restored unless `verify` succeeds and the receipt/journal record the expected target.
 

@@ -1,5 +1,14 @@
 # Command Reference
 
+## Git-package launcher
+
+```sh
+npm exec --yes --package='github:mateuszrapacz/maister#v2.2.1' -- maister install --target codex
+npm exec --yes --package='github:mateuszrapacz/maister#0123456789abcdef0123456789abcdef01234567' -- maister verify --target cursor --json
+```
+
+Commands are exactly `install`, `update`, `status`, `verify`, `uninstall`, `rollback`, and `recover`; targets are exactly `codex`, `cursor`, and `kiro-cli`. `recover` alone may receive `--journal-id <uuid>`. Branches, `latest`, ranges, short SHAs, package-registry Maister specs, custom source/ref/URL flags, and token-bearing Git URLs are rejected or unsupported. `status`, `verify`, `uninstall`, `rollback`, and `recover` delegate through the validated active receipt and make no launcher acquisition call.
+
 ## Exact agent dispatch
 
 Workflow configuration uses exact `maister:<role_id>` values only. `advisor_agent` and `arbiter_agent` both default to `maister:advisor`, while Advisor and Arbiter retain separate decision/attempt identities. Bare `advisor`, aliases, legacy model fields, and legacy Codex TOML profiles are rejected; a v1 receipt is a clean-install rejection before mutation. A managed Codex worker receives the complete canonical prompt with pinned policy. Cursor and Kiro require exact observed native identities; if a safe runtime, authentication, or scenario is absent, E5/E6 is `unavailable`, never passed.

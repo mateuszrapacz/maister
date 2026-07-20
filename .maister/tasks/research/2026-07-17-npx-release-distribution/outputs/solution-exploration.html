@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maister release distribution — solution exploration</title>
+  <style>
+    :root { --bg:#f6f7f9; --surface:#fff; --surface-2:#eef2ff; --text:#1a1d23; --muted:#667085; --border:#dfe3e8; --accent:#4f46e5; --good:#15803d; --warn:#b45309; --radius:12px; }
+    @media (prefers-color-scheme:dark) { :root { --bg:#111418; --surface:#1a1f26; --surface-2:#26294a; --text:#e7eaf0; --muted:#9ca6b5; --border:#303844; --accent:#a5b4fc; --good:#4ade80; --warn:#fbbf24; } }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    .page { width:min(1180px, calc(100% - 32px)); margin:auto; padding:24px 0 64px; }
+    a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+    nav { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; font-size:13px; } nav .md { margin-left:auto; }
+    header { padding:26px; border:1px solid var(--border); border-radius:var(--radius); background:linear-gradient(135deg,var(--surface),var(--surface-2)); }
+    h1 { margin:8px 0; font-size:clamp(26px,4vw,42px); line-height:1.12; } h2 { margin:34px 0 12px; font-size:21px; } h3 { margin:0 0 8px; font-size:17px; }
+    p { margin:8px 0 12px; } ul { padding-left:21px; } li + li { margin-top:5px; }
+    .badge { display:inline-block; padding:3px 9px; border-radius:999px; background:var(--surface-2); color:var(--accent); font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+    .summary, .grid { display:grid; gap:14px; } .summary { grid-template-columns:repeat(3,1fr); margin-top:16px; } .grid { grid-template-columns:repeat(2,1fr); }
+    .card { padding:18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+    .recommend { border-left:4px solid var(--good); } .risk { border-left:4px solid var(--warn); }
+    .scope { color:var(--accent); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+    table { width:100%; min-width:760px; border-collapse:collapse; } th,td { padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; } tr:last-child td { border-bottom:0; } th { color:var(--muted); font-size:11px; letter-spacing:.05em; text-transform:uppercase; }
+    code { padding:1px 5px; border-radius:4px; background:var(--surface-2); font:13px ui-monospace,SFMono-Regular,Menlo,monospace; } pre { overflow:auto; padding:16px; border-radius:9px; background:var(--surface-2); font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .muted { color:var(--muted); } .good { color:var(--good); font-weight:700; }
+    footer { margin-top:36px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; }
+    @media (max-width:780px) { .summary,.grid { grid-template-columns:1fr; } nav .md { margin-left:0; } header { padding:20px; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <nav><a href="../dashboard.html">← Research dashboard</a><a class="md" href="solution-exploration.md">Markdown companion ↗</a></nav>
+  <header>
+    <span class="badge">Solution exploration</span>
+    <h1>Maister release distribution</h1>
+    <p>How to provide one-command installation while preserving Maister's transactional, multi-host lifecycle.</p>
+  </header>
+
+  <div class="summary">
+    <section class="card recommend"><h2>TL;DR</h2><p>Ship a thin public <code>@mateuszrapacz/maister</code> launcher now. It verifies the matching <code>mateuszrapacz/maister</code> release archive and delegates all host mutation to <code>maister-install.mjs</code>. Add host-native marketplaces later.</p></section>
+    <section class="card"><h2>Key Decisions</h2><ul><li>GitHub Releases hold payloads.</li><li>npm supplies the entry point.</li><li>The existing installer remains sole lifecycle authority.</li><li>Targets and reproducible versions stay explicit.</li></ul></section>
+    <section class="card risk"><h2>Open Questions / Risks</h2><ul><li>Publisher authentication.</li><li>Safe cross-platform extraction.</li><li>npm/release version alignment.</li><li>Marketplace parity and ownership.</li></ul></section>
+  </div>
+
+  <main>
+    <h2>Observed installer patterns</h2>
+    <p class="muted">Verified facts from the supplied evidence brief; recommendations appear separately below.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Project / tool</th><th>Unit and scope</th><th>Lifecycle pattern</th><th>Maister implication</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://github.com/mattpocock/skills">mattpocock/skills</a></td><td><code>npx skills@latest add</code> copies editable skills into selected agents/projects; Claude has a managed read-only plugin.</td><td>Copies and managed releases are separate channels.</td><td>Editable and managed distribution require different ownership models.</td></tr>
+        <tr><td><a href="https://github.com/obra/superpowers">obra/superpowers</a></td><td>Installation is separate per harness: marketplace/plugin, direct repository install, or Pi git package.</td><td>Each host owns its integration path.</td><td>Do not assume one universal mutation layer.</td></tr>
+        <tr><td><a href="https://github.com/gsd-build/gsd-2/blob/main/docs/user-docs/skills.md">gsd-build/gsd-2</a></td><td>Delegates skills to <code>npx skills</code>; supports global and project scope.</td><td>Catalog recommendations plus check/update lifecycle.</td><td>A product may delegate skills while retaining its own lifecycle.</td></tr>
+        <tr><td><a href="https://github.com/vercel-labs/skills">vercel-labs/skills</a></td><td>Git/URL/local sources, agent selection, project/global scope, symlink or copy.</td><td>List, update, remove, and use.</td><td>Broad skill distribution remains skill-oriented.</td></tr>
+        <tr><td><a href="https://cli.github.com/manual/gh_skill_install">gh skill install</a></td><td>Copies skills and injects source-tracking metadata.</td><td>Latest tag, then default HEAD unless pinned.</td><td>Copy provenance helps, but does not create a plugin transaction model.</td></tr>
+        <tr><td>Maister today</td><td><code>maister-{codex,cursor,kiro-cli}.tar.gz</code></td><td>Transactional <code>maister-install.mjs</code>.</td><td>Wrap this authority; do not reproduce it.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Alternatives</h2>
+    <div class="grid">
+      <article class="card recommend"><div class="scope">In scope · Recommended now</div><h3>1. Thin npx release launcher</h3><p>Resolve an exact or latest release, map the explicit target, verify and extract privately, then delegate to <code>maister-install.mjs</code>.</p><p><strong>Pros:</strong> one command, small surface, exact pinning, existing guarantees preserved.</p><p><strong>Cons:</strong> requires npm/Node and safe download/extraction logic.</p><p><strong>Risks:</strong> version skew, unsafe archives, hidden moving versions. Mitigate with allowlists, bounded extraction, alignment tests, and visible provenance.</p></article>
+      <article class="card"><div class="scope">Stretch for skills · Primary installer out of scope</div><h3>2. Agent Skills copy/symlink package</h3><p>Expose standalone Maister skills through generic project/global copy or symlink workflows.</p><p><strong>Pros:</strong> familiar, discoverable, editable, generic update tools.</p><p><strong>Cons:</strong> does not model target overlays, settings, receipts, rollback, or recovery.</p><p><strong>Risks:</strong> drift and confusion between “skills installed” and “Maister installed.”</p></article>
+      <article class="card"><div class="scope">Stretch · Later channel</div><h3>3. Per-host managed marketplaces</h3><p>Publish separately through each host's native plugin channel.</p><p><strong>Pros:</strong> native discovery, trust, updates, uninstall, and managed read-only bundles.</p><p><strong>Cons:</strong> duplicated packaging, review, metadata, and compatibility work.</p><p><strong>Risks:</strong> release lag and behavioral divergence across hosts.</p></article>
+      <article class="card"><div class="scope">Stretch after launcher validation</div><h3>4. Universal bootstrap plus host adapters</h3><p>Use one bootstrap that dispatches to a certified native adapter when available, with the verified archive path as fallback.</p><p><strong>Pros:</strong> one documented command and gradual native-channel adoption.</p><p><strong>Cons:</strong> more branching, contracts, and compatibility tests.</p><p><strong>Risks:</strong> conflicting state or lifecycle ownership between paths.</p></article>
+    </div>
+
+    <h2>Five-perspective evaluation</h2>
+    <p class="muted">Design inference; 5 is strongest, and risk 5 means lowest risk.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Alternative</th><th>Feasibility</th><th>User impact</th><th>Simplicity</th><th>Risk</th><th>Scalability</th></tr></thead>
+      <tbody>
+        <tr><td>Thin npx launcher</td><td>5</td><td>4</td><td>5</td><td>4</td><td>4</td></tr>
+        <tr><td>Agent Skills package</td><td>4</td><td>3</td><td>3</td><td>2</td><td>4</td></tr>
+        <tr><td>Per-host marketplaces</td><td>3</td><td>5</td><td>2</td><td>3</td><td>3</td></tr>
+        <tr><td>Hybrid bootstrap/adapters</td><td>3</td><td>5</td><td>2</td><td>2</td><td>5</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="grid">
+      <section class="card"><h2>How might we…</h2><ul><li>Make installation one command while preserving one mutation authority?</li><li>Make <code>latest</code> convenient yet auditable?</li><li>Offer standalone skills without implying full installation?</li><li>Add marketplaces without conflicting receipts or update ownership?</li><li>Bind npm version, GitHub tag, archive, manifest, and installed source?</li></ul></section>
+      <section class="card"><h2>SCAMPER ideas</h2><ul><li><strong>Substitute:</strong> npx for manual download, not for the installer.</li><li><strong>Combine:</strong> npm execution, GitHub payloads, transactional mutation.</li><li><strong>Adapt:</strong> source pinning and tracking to Maister receipts.</li><li><strong>Modify:</strong> persist the version resolved from <code>latest</code>.</li><li><strong>Put to use:</strong> a clearly labeled “skills only” catalog.</li><li><strong>Eliminate:</strong> mutation logic in distribution adapters.</li><li><strong>Reverse:</strong> adapters call Maister's contract, rather than Maister mimicking every host.</li></ul></section>
+    </div>
+
+    <section class="card recommend">
+      <h2>Recommendation</h2>
+      <p class="good">Implement the thin <code>@mateuszrapacz/maister</code> launcher first.</p>
+      <pre>@mateuszrapacz/maister
+  → mateuszrapacz/maister GitHub Release
+  → maister-&lt;target&gt;.tar.gz
+  → maister-install.mjs
+  → host state</pre>
+      <p>Limit the launcher to resolution, verified download, safe temporary extraction, delegation, cleanup, and result forwarding. Add host-native marketplaces later.</p>
+      <p><strong>Why generic <code>npx skills</code> is insufficient:</strong> it installs skills by copy or symlink. Maister's full plugin lifecycle also owns target overlays, managed settings, staging, receipts, journals, drift detection, verification, update, uninstall, rollback, and recovery. A skills channel can complement that lifecycle, but cannot replace it without losing or duplicating guarantees.</p>
+    </section>
+
+    <section><h2>Deferred ideas</h2><ul><li>Host-native marketplace packages.</li><li>Certified host adapters behind a universal bootstrap.</li><li>A catalog entry for standalone Maister skills.</li><li>Stronger publisher authentication or trusted publishing.</li><li>Advisory host auto-detection while explicit <code>--target</code> remains authoritative.</li></ul></section>
+  </main>
+
+  <footer>
+    <p><strong>Fact / inference boundary:</strong> installer behaviors in the matrix are verified facts from the supplied evidence brief. Classifications, scores, risks, ideas, and the recommendation are Maister-specific design inferences.</p>
+    <p>Official sources: <a href="https://github.com/mattpocock/skills">mattpocock/skills</a> · <a href="https://github.com/obra/superpowers">obra/superpowers</a> · <a href="https://github.com/gsd-build/gsd-2/blob/main/docs/user-docs/skills.md">gsd-2 skills</a> · <a href="https://github.com/vercel-labs/skills">vercel-labs/skills</a> · <a href="https://cli.github.com/manual/gh_skill_install">gh skill install</a> · <a href="solution-exploration.md">Markdown companion</a></p>
+  </footer>
+</div>
+</body>
+</html>

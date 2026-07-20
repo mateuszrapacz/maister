@@ -4,6 +4,17 @@
   "target": "cursor",
   "rules": [
     {
+      "id": "cursor-plugin-distribution-metadata",
+      "category": "packaging",
+      "observed_category": "semantic",
+      "rationale": "The maintained Cursor plugin manifest carries the current canonical repository metadata while the immutable migration oracle retains its reviewed historical manifest bytes.",
+      "path": ".cursor-plugin/plugin.json",
+      "observation": {
+        "legacy": { "present": true, "type": "file", "mode": "0644", "sha256": "8222d44532879c67f0d9b55bc0446e59cd64bd7f00e313527a8e192df1ee5539" },
+        "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "9306574f24e7c3c50495f94465a54254349ec845b41c6a2336e2673d77af118d" }
+      }
+    },
+    {
       "id": "cursor-legacy-inventory-deletions",
       "category": "expected-deletion",
       "observed_category": "inventory",

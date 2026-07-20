@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maister npx research — decision summary</title>
+  <style>
+    :root{color-scheme:light dark;--bg:#0b1020;--card:#151d33;--text:#edf2ff;--muted:#aab6d3;--accent:#79a8ff;--ok:#68d391;--warn:#f6c85f;--line:#2b3858}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,sans-serif}main{max-width:1180px;margin:auto;padding:24px}.crumbs,a{color:var(--accent)}h1{font-size:clamp(1.8rem,4vw,3rem);margin:.35rem 0}h2{margin-top:2rem}.lead{font-size:1.1rem;max-width:900px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}.status{display:inline-block;padding:5px 10px;border-radius:999px;background:#3b3217;color:#ffe39a}.ok{color:var(--ok)}.muted{color:var(--muted)}table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}th,td{text-align:left;vertical-align:top;padding:11px;border-bottom:1px solid var(--line)}th{color:var(--muted)}details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:10px 0}summary{cursor:pointer;font-weight:700}code{background:#090d18;padding:2px 5px;border-radius:5px}ul{padding-left:20px}@media(max-width:720px){main{padding:16px}table{display:block;overflow-x:auto}}@media print{body{background:#fff;color:#111}.card,details,table{background:#fff;border-color:#bbb}a{color:#0645ad}}
+  </style>
+</head>
+<body><main>
+  <nav class="crumbs"><a href="../dashboard.html">← Dashboard</a> · <a href="decision-summary.md">Markdown twin</a></nav>
+  <p class="status">Workflow completed · handoff approved</p>
+  <h1>npx release distribution — decision summary</h1>
+  <p class="lead">Use a thin public <code>@mateuszrapacz/maister</code> launcher to resolve and verify target-specific GitHub Release archives, then delegate every host mutation to the existing transactional installer.</p>
+
+  <section class="grid">
+    <article class="card"><h2>TL;DR</h2><p>Brainstorming and design ran. The selected architecture preserves one mutation authority and provides one-command installation for Codex, Cursor, and Kiro CLI.</p></article>
+    <article class="card"><h2>Confidence</h2><p><span class="ok">High</span> for the local installer/release boundary; medium for npm publication, extraction implementation, and publisher authentication.</p></article>
+    <article class="card"><h2>Canonical context</h2><p><a href="../orchestrator-state.yml">orchestrator-state.yml</a><br><a href="../dashboard.html">workflow dashboard</a></p></article>
+  </section>
+
+  <h2>Key decisions</h2>
+  <ul><li>Thin npm launcher; existing installer owns host mutation.</li><li>GitHub Release payloads and closed target allowlist.</li><li>Exact version baseline with visible <code>latest</code> resolution.</li><li>Fail-closed verification and safe private extraction.</li><li>Coordinated npm/GitHub publication with honest provenance claims.</li></ul>
+
+  <h2>Artifacts</h2>
+  <div class="grid">
+    <article class="card"><a href="research-report.html">Research report</a><p class="muted">Foundation, evidence, and recommendation.</p></article>
+    <article class="card"><a href="solution-exploration.html">Solution exploration</a><p class="muted">External pattern comparison and four alternatives.</p></article>
+    <article class="card"><a href="high-level-design.html">High-level design</a><p class="muted">Components, flows, trust boundaries, rollout, and tests.</p></article>
+    <article class="card"><a href="decision-log.html">Decision log</a><p class="muted">Five accepted MADR records.</p></article>
+  </div>
+
+  <h2>Gate ledger</h2>
+  <p class="muted">Configured policy was fully automatic; effective policy was manual because the host did not advertise safe automatic continuation. Advisor/Arbiter were not invoked; attempts are zero and confidence is null.</p>
+  <table><thead><tr><th>#</th><th>Gate</th><th>Recommendation</th><th>Selection</th><th>Override</th><th>Status</th></tr></thead><tbody>
+    <tr><td>1</td><td>Research foundation exit</td><td>Continue</td><td>Continue</td><td>No</td><td>Decided by user</td></tr>
+    <tr><td>2</td><td>Brainstorming selection</td><td>Skip</td><td>Explore alternatives</td><td>Yes</td><td>Decided by user</td></tr>
+    <tr><td>3</td><td>First Phase 3 recovery</td><td>Retry</td><td>Retry</td><td>No</td><td>Decided by user</td></tr>
+    <tr><td>4</td><td>Second Phase 3 recovery</td><td>Skip</td><td>Retry</td><td>Yes</td><td>Decided by user</td></tr>
+    <tr><td>5</td><td>Solution generation exit</td><td>Continue</td><td>Continue</td><td>No</td><td>Decided by user</td></tr>
+    <tr><td>6</td><td>Primary architecture</td><td>Thin launcher</td><td>Thin launcher</td><td>No</td><td>Decided by user</td></tr>
+    <tr><td>7</td><td>Design selection</td><td>Generate design</td><td>Generate design</td><td>No</td><td>Decided by user</td></tr>
+    <tr><td>8</td><td>Convergence exit</td><td>Continue</td><td>Continue</td><td>No</td><td>Decided by user</td></tr>
+    <tr><td>9</td><td>Design assumptions</td><td>Confirm</td><td>Confirm</td><td>No</td><td>Decided by user</td></tr>
+    <tr><td>10</td><td>Design exit</td><td>Continue</td><td>Continue</td><td>No</td><td>Decided by user</td></tr>
+    <tr><td>11</td><td>Final handoff approval</td><td>Complete workflow</td><td>Complete workflow</td><td>No</td><td>Decided by user</td></tr>
+  </tbody></table>
+
+  <h2>Full gate details</h2>
+  <details><summary>1 · Research foundation exit</summary><p>Question: Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?</p><p>Options: Continue to brainstorming evaluation; Pause workflow. Recommendation and selection: Continue. Rationale: exact user selection. Created 2026-07-17T21:55:16Z; decided 2026-07-17T22:17:30Z.</p></details>
+  <details><summary>2 · Brainstorming selection</summary><p>Options: Yes, explore alternatives; No, skip brainstorming. Recommendation: skip. Selection: explore. User override: true. Created 2026-07-17T22:18:11Z; decided 2026-07-17T22:28:03Z.</p></details>
+  <details><summary>3–4 · Recovery decisions</summary><p>Both offered Retry design, Skip design, and Stop workflow. The user selected Retry twice; the second selection overrode the skip recommendation. Later review established that the agents were interrupted while running, not terminally errored. See the canonical state for complete records.</p></details>
+  <details><summary>5 · Solution generation exit</summary><p>Options: Continue to solution convergence; Pause workflow. Recommendation and selection: Continue. Decided 2026-07-17T23:27:31Z.</p></details>
+  <details><summary>6 · Primary architecture convergence</summary><p>Options: thin launcher, Agent Skills package, per-host marketplaces, hybrid bootstrap/adapters, or more information. Recommendation and selection: Thin npx release launcher. Decided 2026-07-18T09:58:57Z.</p></details>
+  <details><summary>7–10 · Design decisions and exits</summary><p>The user enabled design, continued from convergence, confirmed assumptions, and continued to output generation. Every gate was manual, terminal, and selected by the user. See <a href="../orchestrator-state.yml">canonical state</a> for exact questions, options, timestamps, rationale, retry, model, and arbitration fields.</p></details>
+  <details><summary>11 · Final handoff approval</summary><p>Question: Research outputs are complete. Approve final handoff? Options: Complete workflow; Keep workflow open. Recommendation and selection: Complete workflow. This denylisted gate required explicit user approval and was decided at 2026-07-18T11:51:51.390Z.</p></details>
+
+  <h2>Next step</h2>
+  <p>Start development in a fresh session with <code>$maister:development .maister/tasks/research/2026-07-17-npx-release-distribution</code>.</p>
+</main></body></html>

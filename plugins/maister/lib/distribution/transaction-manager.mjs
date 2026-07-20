@@ -10,7 +10,7 @@ import { hashFile, hashTree } from "./hash-tree.mjs";
 import { assertNoDrift, describe } from "./drift-detector.mjs";
 import { atomicWriteSetting, formatMode, prepareSetting, removeManagedKeys } from "./settings-owner.mjs";
 import { getTargetPaths } from "./target-paths.mjs";
-import { validateReceipt, readReceipt, UUID } from "./receipt-schema.mjs";
+import { requireControlPlane, validateReceipt, readReceipt, UUID } from "./receipt-schema.mjs";
 import { appendTransition, isUnresolved, readJournal, validateJournal } from "./journal-schema.mjs";
 import { collectEvidence, evaluateTarget, FAIL_CLOSED_CLASSES } from "./evidence-policy.mjs";
 import { createEvidenceRecord, normalizeEvidenceProvenance, validateEvidenceRecord } from "./evidence-schema.mjs";
@@ -22,6 +22,7 @@ import {
   copyTreeEntry,
   ensureDirectoryTree,
   readManifest,
+  pruneUnreferencedControlPlanes,
   recoverJournal,
   removeEntry,
   restoreFullBackup,
@@ -29,6 +30,25 @@ import {
 } from "./recovery.mjs";
 
 const INSTALLER_VERSION = "1.0.0";
+const CONTROL_PLANE_SCHEMA_VERSION = 1;
+const CLI_CONTRACT_VERSION = 1;
+const DURABLE_BOUNDARY_MARKERS = Object.freeze([
+  "lock-created",
+  "journal-created",
+  "target-staged",
+  "control-plane-staged",
+  "backup-captured",
+  "control-plane-promoted",
+  "verification-completed",
+  "candidate-receipt-written",
+  "active-pointer-transitioned",
+  "rollback-started",
+  "rollback-completed",
+  "cleanup-prune-started",
+  "cleanup-prune-completed",
+  "terminal-journal-written",
+]);
+const DURABLE_BOUNDARY_MARKER_SET = new Set(DURABLE_BOUNDARY_MARKERS);
 const DEFAULT_SCENARIO_VERSION = "1.0.0";
 const BASE_EVIDENCE = Object.freeze([
   ["E1", "overlay-contract-v1"],
@@ -285,7 +305,7 @@ function ensureDirectories(paths) {
   const stateBase = path.dirname(path.dirname(paths.stateRoot));
   ensureDirectoryTree(stateBase, { root: path.dirname(stateBase), label: "state base", mode: 0o755 });
   ensureDirectoryTree(paths.stateRoot, { root: stateBase, label: "state root", mode: 0o700, privateMode: true });
-  for (const directory of [paths.journalsRoot, paths.receiptsRoot, paths.backupsRoot, paths.stagingRoot]) {
+  for (const directory of [paths.journalsRoot, paths.receiptsRoot, paths.backupsRoot, paths.stagingRoot, paths.controlPlanesRoot]) {
     ensureDirectoryTree(directory, { root: paths.stateRoot, label: "private state directory", mode: 0o700, privateMode: true });
   }
   for (const filePath of [paths.activeReceiptPath, paths.lockPath]) assertSafePath(filePath, { root: paths.stateRoot, label: "state file" });
@@ -374,13 +394,49 @@ function readStableFile(filePath, { root, label }) {
   return bytes;
 }
 
-function acquireLock(lockPath) {
+function lockOwnerIsAlive(pid, processKill = process.kill.bind(process)) {
+  try {
+    processKill(pid, 0);
+    return true;
+  } catch (error) {
+    if (error?.code === "ESRCH") return false;
+    return true;
+  }
+}
+
+function removeStaleLock(lockPath, lockParent, existing, processKill) {
+  if (!existing.isFile() || existing.isSymbolicLink() || (existing.mode & 0o777) !== 0o600 || existing.size > 8_192) return false;
+  let value;
+  try {
+    value = JSON.parse(readFileNoFollow(lockPath, {
+      root: lockParent,
+      label: "lock path",
+      encoding: "utf8",
+      errorCode: "E_PATH_SECURITY",
+    }));
+  } catch {
+    return false;
+  }
+  if (!value || Object.keys(value).sort().join(",") !== "acquired_at,pid"
+    || !Number.isSafeInteger(value.pid) || value.pid < 1
+    || typeof value.acquired_at !== "string" || !Number.isFinite(Date.parse(value.acquired_at))
+    || lockOwnerIsAlive(value.pid, processKill)) return false;
+  const identity = capturePathIdentity(lockPath, { root: lockParent, label: "stale lock", allowMissing: false, errorCode: "E_PATH_SECURITY" });
+  assertPathIdentity(identity, { label: "stale lock", errorCode: "E_PATH_SECURITY" });
+  removeEntry(lockPath, { root: lockParent, label: "stale lock" });
+  flushDirectory(lockParent);
+  return true;
+}
+
+function acquireLock(lockPath, { processKill = process.kill.bind(process) } = {}) {
   assertSafePath(lockPath, { root: path.dirname(lockPath), label: "lock path" });
   const lockParent = path.dirname(lockPath);
   const lockParentIdentity = capturePathIdentity(lockParent, { root: path.dirname(lockParent), label: "lock parent", allowMissing: false, errorCode: "E_PATH_SECURITY" });
   assertPathIdentity(lockParentIdentity, { label: "lock parent", errorCode: "E_PATH_SECURITY" });
   const existing = fs.lstatSync(lockPath, { throwIfNoEntry: false });
-  if (existing) throwDistributionError("E_LOCK_BUSY", "target installation lock is held", { lockPath }, { retryable: true });
+  if (existing && !removeStaleLock(lockPath, lockParent, existing, processKill)) {
+    throwDistributionError("E_LOCK_BUSY", "target installation lock is held", { lockPath }, { retryable: true });
+  }
   try {
     assertPathIdentity(lockParentIdentity, { label: "lock parent", errorCode: "E_PATH_SECURITY" });
     const descriptor = fs.openSync(lockPath, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL, 0o600);
@@ -523,6 +579,16 @@ function transition(paths, journal, state, details = {}) {
 
 function failureInjection(options, point) {
   if (options.failurePoint === point) throwDistributionError("E_TX_FAILURE", `injected transaction failure at ${point}`, { point });
+}
+
+function durableBoundary(options, marker, details = {}) {
+  if (!DURABLE_BOUNDARY_MARKER_SET.has(marker)) {
+    throwDistributionError("E_TRANSACTION", "unknown durable transaction boundary", { marker });
+  }
+  options.onDurableBoundary?.(Object.freeze({ marker, ...details }));
+  if (options.failurePoint === marker || options.failurePoint === `after-${marker}`) {
+    throwDistributionError("E_TX_FAILURE", `injected transaction failure at ${marker}`, { point: marker });
+  }
 }
 
 function sourcePathValue(source) {
@@ -880,7 +946,120 @@ function verifyReceipt(receiptState, paths, overlay, expectedProjection = null) 
   }
 }
 
-function newJournal({ command, paths, journalId, stageRoot, previousReceipt, candidateReceipt = null }) {
+function normalizePrivateControlPlane(root) {
+  const visit = (current) => {
+    const stat = fs.lstatSync(current);
+    if (stat.isSymbolicLink() || (!stat.isDirectory() && !stat.isFile())) {
+      throwDistributionError("E_CONTROL_PLANE_TYPE", "verified control-plane closure contains an unsupported entry", { path: current });
+    }
+    if (stat.isDirectory()) {
+      fs.chmodSync(current, 0o700);
+      for (const name of fs.readdirSync(current).sort()) visit(path.join(current, name));
+      return;
+    }
+    fs.chmodSync(current, 0o600);
+  };
+  visit(root);
+}
+
+function stageControlPlane({ sourceRoot, stageRoot, paths, journalId, source }) {
+  const sourcePluginRoot = path.join(sourceRoot, "plugins", "maister");
+  const stagePath = path.join(stageRoot, "control-plane");
+  const destinationPath = path.join(paths.controlPlanesRoot, journalId);
+  ensureDirectoryTree(stagePath, { root: stageRoot, label: "control-plane staging root", mode: 0o700, privateMode: true });
+  ensureDirectoryTree(path.join(stagePath, "plugins"), { root: stageRoot, label: "control-plane staging plugins root", mode: 0o700, privateMode: true });
+  copyTreeEntry(sourcePluginRoot, path.join(stagePath, "plugins", "maister"), { sourceRoot, destinationRoot: stageRoot });
+  normalizePrivateControlPlane(stagePath);
+  const tree = hashTree(stagePath);
+  if (tree.entries.some((entry) => entry.type === "symlink")) {
+    throwDistributionError("E_CONTROL_PLANE_TYPE", "verified control-plane closure contains a symlink", { source: sourcePluginRoot });
+  }
+  const installerPath = path.join(stagePath, "plugins", "maister", "bin", "maister-install.mjs");
+  const installerStat = fs.lstatSync(installerPath, { throwIfNoEntry: false });
+  if (!installerStat?.isFile() || installerStat.isSymbolicLink()) throwDistributionError("E_CONTROL_PLANE_TOPOLOGY", "verified control-plane installer is missing or unsafe", { path: installerPath });
+  const installerSha256 = hashFile(installerPath);
+  return Object.freeze({
+    schema_version: CONTROL_PLANE_SCHEMA_VERSION,
+    root_ref: `control-planes/${journalId}`,
+    installer_ref: `control-planes/${journalId}/plugins/maister/bin/maister-install.mjs`,
+    stage_path: stagePath,
+    destination_path: destinationPath,
+    tree_hash: tree.contentHash,
+    installer_sha256: installerSha256,
+    cli_contract_version: CLI_CONTRACT_VERSION,
+    source_version: source.sourceVersion,
+    source_commit: source.resolvedCommit,
+    source_content_hash: source.sourceHash,
+    cleanup_owner: "transaction",
+  });
+}
+
+function stageExistingControlPlane({ previous, stageRoot, paths, journalId }) {
+  const sourceRoot = path.join(paths.stateRoot, previous.root_ref);
+  const stagePath = path.join(stageRoot, "control-plane");
+  const destinationPath = path.join(paths.controlPlanesRoot, journalId);
+  assertSafePath(sourceRoot, { root: paths.controlPlanesRoot, label: "previous control-plane root", allowMissing: false });
+  ensureDirectoryTree(stagePath, { root: stageRoot, label: "control-plane staging root", mode: 0o700, privateMode: true });
+  copyTreeEntry(sourceRoot, stagePath, { sourceRoot: paths.controlPlanesRoot, destinationRoot: paths.stagingRoot });
+  normalizePrivateControlPlane(stagePath);
+  const tree = hashTree(stagePath);
+  const installerPath = path.join(stagePath, "plugins", "maister", "bin", "maister-install.mjs");
+  const installerStat = fs.lstatSync(installerPath, { throwIfNoEntry: false });
+  if (!installerStat?.isFile() || installerStat.isSymbolicLink()) throwDistributionError("E_CONTROL_PLANE_TOPOLOGY", "previous control-plane installer is missing or unsafe", { path: installerPath });
+  return Object.freeze({
+    schema_version: previous.schema_version,
+    root_ref: `control-planes/${journalId}`,
+    installer_ref: `control-planes/${journalId}/plugins/maister/bin/maister-install.mjs`,
+    stage_path: stagePath,
+    destination_path: destinationPath,
+    tree_hash: tree.contentHash,
+    installer_sha256: hashFile(installerPath),
+    cli_contract_version: previous.cli_contract_version,
+    source_version: previous.source_version,
+    source_commit: previous.source_commit,
+    source_content_hash: previous.source_content_hash,
+    cleanup_owner: "transaction",
+  });
+}
+
+function receiptControlPlane(controlPlane) {
+  return {
+    schema_version: controlPlane.schema_version,
+    root_ref: controlPlane.root_ref,
+    installer_ref: controlPlane.installer_ref,
+    tree_hash: controlPlane.tree_hash,
+    installer_sha256: controlPlane.installer_sha256,
+    cli_contract_version: controlPlane.cli_contract_version,
+    source_version: controlPlane.source_version,
+    source_commit: controlPlane.source_commit,
+    source_content_hash: controlPlane.source_content_hash,
+  };
+}
+
+function promoteControlPlane(controlPlane, paths) {
+  if (fs.lstatSync(controlPlane.destination_path, { throwIfNoEntry: false })) {
+    throwDistributionError("E_CONTROL_PLANE_COLLISION", "receipt-bound control-plane destination already exists", { destination: controlPlane.destination_path });
+  }
+  const stageIdentity = capturePathIdentity(controlPlane.stage_path, { root: paths.stagingRoot, label: "control-plane staging root", allowMissing: false, errorCode: "E_PATH_SECURITY" });
+  const destinationParent = path.dirname(controlPlane.destination_path);
+  ensureDirectoryTree(destinationParent, { root: paths.controlPlanesRoot, label: "control-plane destination parent", mode: 0o700, privateMode: true });
+  const destinationParentIdentity = capturePathIdentity(destinationParent, { root: paths.controlPlanesRoot, label: "control-plane destination parent", allowMissing: false, errorCode: "E_PATH_SECURITY" });
+  assertPathIdentity(stageIdentity, { label: "control-plane staging root", errorCode: "E_PATH_SECURITY" });
+  assertPathIdentity(destinationParentIdentity, { label: "control-plane destination parent", errorCode: "E_PATH_SECURITY" });
+  try {
+    fs.renameSync(controlPlane.stage_path, controlPlane.destination_path);
+  } catch (error) {
+    throwDistributionError("E_CONTROL_PLANE_ATOMIC", "control-plane promotion must be an atomic same-filesystem rename", { source: controlPlane.stage_path, destination: controlPlane.destination_path }, { cause: error, retryable: true });
+  }
+  flushDirectory(destinationParent);
+  const tree = hashTree(controlPlane.destination_path);
+  const installerPath = path.join(controlPlane.destination_path, "plugins", "maister", "bin", "maister-install.mjs");
+  if (tree.contentHash !== controlPlane.tree_hash || hashFile(installerPath) !== controlPlane.installer_sha256) {
+    throwDistributionError("E_CONTROL_PLANE_INTEGRITY", "promoted control-plane does not match its staged hashes", { destination: controlPlane.destination_path });
+  }
+}
+
+function newJournal({ command, paths, journalId, stageRoot, previousReceipt, candidateReceipt = null, controlPlane = null, backupRoot = null, backupManifestHash = null }) {
   const started = now();
   return {
     schema_version: 2,
@@ -895,6 +1074,9 @@ function newJournal({ command, paths, journalId, stageRoot, previousReceipt, can
     managed_roots: persistedManagedRoots(paths),
     previous_receipt: previousReceipt?.receiptPath ?? null,
     candidate_receipt: candidateReceipt,
+    control_plane: controlPlane,
+    backup_root: backupRoot,
+    backup_manifest_hash: backupManifestHash,
     lock: { path: paths.lockPath },
     steps: [],
     failure: null,
@@ -937,6 +1119,7 @@ async function installOrUpdate(command, options, paths) {
   let backupRoot;
   let backupManifestHash = null;
   let settings = [];
+  let controlPlane = null;
   try {
     const materialized = await materialize({
       source: options.source, target: paths.target, overlayPath: overlayFiles.overlayPath, inventoryPath: overlayFiles.inventoryPath,
@@ -969,8 +1152,25 @@ async function installOrUpdate(command, options, paths) {
     }
     journal = newJournal({ command, paths, journalId, stageRoot, previousReceipt: active });
     journalPath = writeJournal(paths, journal);
-    journal = transition(paths, journal, "staged", { steps: [...journal.steps, { name: "materialize", status: "completed", timestamp: now(), before_ref: null, after_hash: materialized.contentHash }] });
-    journal = transition(paths, journal, "snapshotted", { steps: [...journal.steps, { name: "stage-validated", status: "completed", timestamp: now(), before_ref: null, after_hash: materialized.contentHash }] });
+    durableBoundary(options, "journal-created", { journal_id: journalId, journal_path: journalPath });
+    journal = transition(paths, journal, "staged", { steps: [
+      ...journal.steps,
+      { name: "materialize", status: "completed", timestamp: now(), before_ref: null, after_hash: materialized.contentHash },
+      { name: "stage-validated", status: "completed", timestamp: now(), before_ref: null, after_hash: materialized.contentHash },
+    ] });
+    durableBoundary(options, "target-staged", { journal_id: journalId, stage_root: stageRoot });
+    controlPlane = stageControlPlane({
+      sourceRoot,
+      stageRoot,
+      paths,
+      journalId,
+      source: materialized.provenance,
+    });
+    journal = transition(paths, journal, "staged", { control_plane: controlPlane, steps: [
+      ...journal.steps,
+      { name: "control-plane-staged", status: "completed", timestamp: now(), before_ref: controlPlane.stage_path, after_hash: controlPlane.tree_hash },
+    ] });
+    durableBoundary(options, "control-plane-staged", { journal_id: journalId, tree_hash: controlPlane.tree_hash });
     backupRoot = path.join(paths.backupsRoot, journalId);
     const snapshotInventory = persistedInventory([...candidateInventory, ...(previousReceipt?.managed_inventory ?? [])].filter((entry, index, entries) => (
       entries.findIndex((candidate) => candidate.root_id === entry.root_id && candidate.path === entry.path) === index
@@ -985,13 +1185,18 @@ async function installOrUpdate(command, options, paths) {
       options,
       timestamp: now(),
     });
-    journal = transition(paths, journal, "snapshotted", { steps: [...journal.steps, { name: "snapshot", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: null }] });
+    journal = transition(paths, journal, "snapshotted", { backup_root: backupRoot, backup_manifest_hash: backupManifestHash, steps: [...journal.steps, { name: "snapshot", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: null }] });
+    durableBoundary(options, "backup-captured", { journal_id: journalId, backup_root: backupRoot, backup_manifest_hash: backupManifestHash });
     failureInjection(options, "after-snapshot");
     journal = transition(paths, journal, "committing");
     commitManagedRoots({ stagingRoot: stageRoot, candidateInventory, previousReceipt, paths, options });
     failureInjection(options, "after-tree-swap");
     commitSettings(settings, paths, options.failurePoint);
     failureInjection(options, "after-settings");
+    promoteControlPlane(controlPlane, paths);
+    durableBoundary(options, "control-plane-promoted", { journal_id: journalId, destination_path: controlPlane.destination_path });
+    failureInjection(options, "after-control-plane");
+    journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "control-plane-promoted", status: "completed", timestamp: now(), before_ref: controlPlane.stage_path, after_hash: controlPlane.tree_hash }] });
     const storedInventory = persistedInventory(candidateInventory);
     const managedHash = sha256(Buffer.from(canonicalJson(storedInventory)));
     journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "commit", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: managedHash }] });
@@ -1033,6 +1238,7 @@ async function installOrUpdate(command, options, paths) {
       installed_at: e4Timestamp,
       target: { id: paths.target, overlay_id: targetDefinition.overlayId, overlay_version: materialized.provenance.overlayVersion, host_version: materialized.provenance.hostVersion },
       source: { kind: materialized.provenance.sourceKind, requested: materialized.provenance.requestedSource, requested_ref: materialized.provenance.requestedRef, resolved_commit: materialized.provenance.resolvedCommit, source_version: materialized.provenance.sourceVersion, content_hash: materialized.provenance.sourceHash },
+      control_plane: receiptControlPlane(controlPlane),
       managed_roots: persistedManagedRoots(paths),
       managed_inventory: storedInventory,
       settings: receiptState.settings,
@@ -1042,12 +1248,29 @@ async function installOrUpdate(command, options, paths) {
       transaction: { journal_id: journalId, backup_root: backupRoot, backup_manifest_hash: backupManifestHash, previous_receipt_id: previousReceipt?.receipt_id ?? null },
     }, { paths });
     journal = transition(paths, journal, "verified", { candidate_receipt: candidateReceipt, steps: [...journal.steps, { name: "integrity", status: "completed", timestamp: integrityTimestamp, before_ref: null, after_hash: integrityHash }] });
+    durableBoundary(options, "verification-completed", { journal_id: journalId, receipt_id: candidateReceipt.receipt_id });
     failureInjection(options, "after-e4");
     const receiptPath = path.join(paths.receiptsRoot, `${candidateReceipt.receipt_id}.json`);
     durableJson(receiptPath, candidateReceipt, 0o600, { root: paths.receiptsRoot });
+    journal = transition(paths, journal, "verified", { steps: [...journal.steps, { name: "candidate-receipt-written", status: "completed", timestamp: now(), before_ref: receiptPath, after_hash: sha256(Buffer.from(canonicalJson(candidateReceipt))) }] });
+    durableBoundary(options, "candidate-receipt-written", { journal_id: journalId, receipt_path: receiptPath });
     durableJson(paths.activeReceiptPath, { schema_version: 2, receipt_id: candidateReceipt.receipt_id, receipt_path: receiptPath }, 0o600, { root: paths.stateRoot });
+    journal = transition(paths, journal, "verified", { steps: [...journal.steps, { name: "active-pointer-transition", status: "completed", timestamp: now(), before_ref: active?.receiptPath ?? null, after_hash: sha256(Buffer.from(receiptPath)) }] });
+    durableBoundary(options, "active-pointer-transitioned", { journal_id: journalId, receipt_path: receiptPath });
     failureInjection(options, "after-receipt");
     journal = transition(paths, journal, "verified", { steps: [...journal.steps, { name: "receipt-published", status: "completed", timestamp: now(), before_ref: null, after_hash: sha256(Buffer.from(JSON.stringify(candidateReceipt))) }] });
+    const cleanupStep = { name: "control-plane-pruned", status: "pending", timestamp: now(), before_ref: paths.controlPlanesRoot, after_hash: null };
+    journal = transition(paths, journal, "verified", { steps: [...journal.steps, cleanupStep] });
+    durableBoundary(options, "cleanup-prune-started", { journal_id: journalId });
+    const pruned = pruneUnreferencedControlPlanes(paths);
+    journal = transition(paths, journal, "verified", { steps: journal.steps.map((step) => step === cleanupStep ? {
+      ...step,
+      status: "completed",
+      timestamp: now(),
+      after_hash: sha256(Buffer.from(canonicalJson(pruned))),
+    } : step) });
+    durableBoundary(options, "cleanup-prune-completed", { journal_id: journalId, pruned });
+    durableBoundary(options, "terminal-journal-written", { journal_id: journalId, journal_path: journalPath });
     removeEntry(stageRoot, { root: paths.stagingRoot, label: "staging root" });
     return { receipt: candidateReceipt, receiptPath, journalPath };
   } catch (error) {
@@ -1056,6 +1279,18 @@ async function installOrUpdate(command, options, paths) {
     if (!journal) {
       try { removeEntry(stageRoot, { root: paths.stagingRoot, label: "staging root" }); } catch { /* preflight failure must preserve the original error */ }
       throw failure;
+    }
+    if (journal.steps.some((step) => step.name === "receipt-published" && step.status === "completed")) {
+      const cleanupFailure = distributionError("E_RECOVERY_FAILURE", "transaction committed but post-commit cleanup is incomplete", {
+        journal_id: journalId,
+        journal_path: journalPath,
+        backup_root: backupRoot ?? null,
+      }, { cause: failure, retryable: true });
+      journal = appendTransition(journal, "verified", {
+        failure: { kind: cleanupFailure.kind, details: cleanupFailure.details, retryable: true },
+      });
+      writeJournal(paths, journal);
+      throw cleanupFailure;
     }
     let failureState = "failed";
     const backupManifestPath = backupRoot ? path.join(backupRoot, "manifest.json") : null;
@@ -1089,7 +1324,12 @@ async function installOrUpdate(command, options, paths) {
         failureState = "rollback_failed";
       }
     }
-    try { removeEntry(stageRoot, { root: paths.stagingRoot, label: "staging root" }); } catch { /* journal records the transaction failure */ }
+    if (failureState !== "rollback_failed") {
+      try { removeEntry(stageRoot, { root: paths.stagingRoot, label: "staging root" }); } catch { /* journal records the transaction failure */ }
+    }
+    if (failureState !== "rollback_failed" && controlPlane && fs.lstatSync(controlPlane.destination_path, { throwIfNoEntry: false })) {
+      try { removeEntry(controlPlane.destination_path, { root: paths.controlPlanesRoot, label: "control-plane residue" }); } catch { /* journal records cleanup residue */ }
+    }
     failure.details = { ...(failure.details ?? {}), journal_path: journalPath, backup_root: backupRoot ?? null };
     failedJournal(paths, journal, failureState, failure);
     throw failure;
@@ -1106,9 +1346,20 @@ async function uninstall(options, paths) {
   const journalId = crypto.randomUUID();
   const stageRoot = path.join(paths.stagingRoot, journalId);
   const backupRoot = path.join(paths.backupsRoot, journalId);
+  ensureDirectoryTree(stageRoot, { root: paths.stagingRoot, label: "staging root", mode: 0o700, privateMode: true });
   let journal = newJournal({ command: "uninstall", paths, journalId, stageRoot, previousReceipt: active });
   const journalPath = writeJournal(paths, journal);
+  let controlPlane = null;
   try {
+    durableBoundary(options, "journal-created", { journal_id: journalId, journal_path: journalPath });
+    if (active.receipt.control_plane) {
+      controlPlane = stageExistingControlPlane({ previous: active.receipt.control_plane, stageRoot, paths, journalId });
+      journal = transition(paths, journal, "prepared", {
+        control_plane: controlPlane,
+        steps: [{ name: "control-plane-staged", status: "completed", timestamp: now(), before_ref: controlPlane.stage_path, after_hash: controlPlane.tree_hash }],
+      });
+      durableBoundary(options, "control-plane-staged", { journal_id: journalId, tree_hash: controlPlane.tree_hash });
+    }
     const settings = overlay.settings.map((definition) => ({ ...definition, targetPath: path.resolve(paths.home, ...definition.path.split("/")) }));
     const backupManifest = snapshotState({ managedRoots: paths.managedRoots, managedInventory: active.receipt.managed_inventory, settings, backupRoot, activeReceiptPath: paths.activeReceiptPath, home: paths.home });
     let originalReceipt = active.receipt;
@@ -1116,7 +1367,8 @@ async function uninstall(options, paths) {
       originalReceipt = readReceiptById(paths, originalReceipt.transaction.previous_receipt_id).receipt;
     }
     const originalTopology = readManifest(originalReceipt.transaction.backup_root, { paths });
-    journal = transition(paths, journal, "snapshotted", { steps: [{ name: "snapshot", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: null }] });
+    journal = transition(paths, journal, "snapshotted", { backup_root: backupRoot, backup_manifest_hash: backupManifest.manifest_hash, steps: [{ name: "snapshot", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: null }] });
+    durableBoundary(options, "backup-captured", { journal_id: journalId, backup_root: backupRoot, backup_manifest_hash: backupManifest.manifest_hash });
     journal = transition(paths, journal, "committing");
     const previous = active.receipt;
     const roots = managedRootMap(paths);
@@ -1140,19 +1392,59 @@ async function uninstall(options, paths) {
         }
       }
     }
-    const receipt = validateReceipt({ ...previous, receipt_id: journalId, status: "uninstalled", installed_at: now(), managed_inventory: [], settings: [], transaction: { journal_id: journalId, backup_root: backupRoot, backup_manifest_hash: backupManifest.manifest_hash, previous_receipt_id: previous.receipt_id } }, { paths });
+    if (controlPlane) {
+      promoteControlPlane(controlPlane, paths);
+      durableBoundary(options, "control-plane-promoted", { journal_id: journalId, destination_path: controlPlane.destination_path });
+      journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "control-plane-promoted", status: "completed", timestamp: now(), before_ref: controlPlane.stage_path, after_hash: controlPlane.tree_hash }] });
+    }
+    const receipt = validateReceipt({ ...previous, receipt_id: journalId, status: "uninstalled", installed_at: now(), control_plane: controlPlane ? receiptControlPlane(controlPlane) : previous.control_plane, managed_inventory: [], settings: [], transaction: { journal_id: journalId, backup_root: backupRoot, backup_manifest_hash: backupManifest.manifest_hash, previous_receipt_id: previous.receipt_id } }, { paths });
     journal = transition(paths, journal, "committed", { candidate_receipt: receipt, steps: [...journal.steps, { name: "uninstall", status: "completed", timestamp: now(), before_ref: previous.receipt_id, after_hash: null }] });
     const receiptPath = path.join(paths.receiptsRoot, `${receipt.receipt_id}.json`);
     durableJson(receiptPath, receipt, 0o600, { root: paths.receiptsRoot });
+    journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "candidate-receipt-written", status: "completed", timestamp: now(), before_ref: receiptPath, after_hash: sha256(Buffer.from(canonicalJson(receipt))) }] });
+    durableBoundary(options, "candidate-receipt-written", { journal_id: journalId, receipt_path: receiptPath });
     durableJson(paths.activeReceiptPath, { schema_version: 2, receipt_id: receipt.receipt_id, receipt_path: receiptPath }, 0o600, { root: paths.stateRoot });
+    journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "active-pointer-transition", status: "completed", timestamp: now(), before_ref: active.receiptPath, after_hash: sha256(Buffer.from(receiptPath)) }] });
+    durableBoundary(options, "active-pointer-transitioned", { journal_id: journalId, receipt_path: receiptPath });
     journal = transition(paths, journal, "rolled_back", { steps: [...journal.steps, { name: "receipt-published", status: "completed", timestamp: now(), before_ref: null, after_hash: sha256(Buffer.from(JSON.stringify(receipt))) }] });
+    const cleanupStep = { name: "control-plane-pruned", status: "pending", timestamp: now(), before_ref: paths.controlPlanesRoot, after_hash: null };
+    journal = transition(paths, journal, "rolled_back", { steps: [...journal.steps, cleanupStep] });
+    durableBoundary(options, "cleanup-prune-started", { journal_id: journalId });
+    const pruned = pruneUnreferencedControlPlanes(paths);
+    journal = transition(paths, journal, "rolled_back", { steps: journal.steps.map((step) => step === cleanupStep ? {
+      ...step,
+      status: "completed",
+      timestamp: now(),
+      after_hash: sha256(Buffer.from(canonicalJson(pruned))),
+    } : step) });
+    durableBoundary(options, "cleanup-prune-completed", { journal_id: journalId, pruned });
+    durableBoundary(options, "terminal-journal-written", { journal_id: journalId, journal_path: journalPath });
+    removeEntry(stageRoot, { root: paths.stagingRoot, label: "staging root" });
     return { receipt, receiptPath, journalPath };
   } catch (error) {
-    const failure = error instanceof DistributionError || typeof error?.kind === "string" ? error : distributionError("E_TRANSACTION", error.message, {}, { cause: error });
+    let failure = error instanceof DistributionError || typeof error?.kind === "string" ? error : distributionError("E_TRANSACTION", error.message, {}, { cause: error });
+    if (journal.steps.some((step) => step.name === "receipt-published" && step.status === "completed")) {
+      failure = distributionError("E_RECOVERY_FAILURE", "uninstall committed but post-commit cleanup is incomplete", {
+        journal_id: journalId,
+        journal_path: journalPath,
+        backup_root: backupRoot,
+      }, { cause: failure, retryable: true });
+      journal = appendTransition(journal, journal.state, {
+        failure: { kind: failure.kind, details: failure.details, retryable: true },
+      });
+      writeJournal(paths, journal);
+      throw failure;
+    }
     let state = "failed";
     try { restoreFullBackup(backupRoot, { paths, expectedManifestHash: journal.candidate_receipt?.transaction?.backup_manifest_hash ?? null }); } catch (restoreError) {
       state = "rollback_failed";
       failure.details = { ...(failure.details ?? {}), recovery_error: restoreError.message };
+    }
+    if (state !== "rollback_failed") {
+      try { removeEntry(stageRoot, { root: paths.stagingRoot, label: "staging root" }); } catch { /* preserve forensic residue if cleanup is unsafe */ }
+    }
+    if (state !== "rollback_failed" && controlPlane && fs.lstatSync(controlPlane.destination_path, { throwIfNoEntry: false })) {
+      try { removeEntry(controlPlane.destination_path, { root: paths.controlPlanesRoot, label: "control-plane residue" }); } catch { /* preserve the forensic journal */ }
     }
     failure.details = { ...(failure.details ?? {}), journal_path: journalPath, backup_root: backupRoot };
     failedJournal(paths, journal, state, failure);
@@ -1169,13 +1461,17 @@ async function rollback(options, paths) {
   if (active.receipt.status === "installed") { validateReceiptPaths(active.receipt, paths); assertNoDrift({ receipt: active.receipt, paths, settingsRoot: paths.home, settingDefinitions: overlay.settings }); }
   const previous = readReceiptById(paths, previousId);
   const journalId = crypto.randomUUID();
-  const journal = newJournal({ command: "rollback", paths, journalId, stageRoot: path.join(paths.stagingRoot, journalId), previousReceipt: active });
+  const journal = newJournal({ command: "rollback", paths, journalId, stageRoot: path.join(paths.stagingRoot, journalId), previousReceipt: active, backupRoot: active.receipt.transaction.backup_root, backupManifestHash: active.receipt.transaction.backup_manifest_hash });
   const journalPath = writeJournal(paths, journal);
+  durableBoundary(options, "journal-created", { journal_id: journalId, journal_path: journalPath });
   try {
+    durableBoundary(options, "rollback-started", { journal_id: journalId, receipt_id: active.receipt.receipt_id });
     restoreFullBackup(active.receipt.transaction.backup_root, { paths, expectedManifestHash: active.receipt.transaction.backup_manifest_hash });
     const restored = readActive(paths);
     if (!restored || restored.receipt.receipt_id !== previous.receipt.receipt_id || restored.receiptPath !== previous.receiptPath) throwDistributionError("E_RECOVERY_FAILURE", "rollback did not restore the exact active receipt", { expected: previous.receiptPath, actual: restored?.receiptPath ?? null });
     const completed = transition(paths, journal, "rolled_back", { steps: [{ name: "rollback", status: "completed", timestamp: now(), before_ref: active.receipt.receipt_id, after_hash: sha256(Buffer.from(canonicalJson(previous.receipt.managed_inventory))) }, { name: "restore-active-receipt", status: "completed", timestamp: now(), before_ref: previous.receiptPath, after_hash: null }] });
+    durableBoundary(options, "rollback-completed", { journal_id: journalId, receipt_id: previous.receipt.receipt_id });
+    durableBoundary(options, "terminal-journal-written", { journal_id: journalId, journal_path: journalPath });
     return { receipt: previous.receipt, receiptPath: previous.receiptPath, journalPath, journal: completed };
   } catch (error) {
     const failure = error?.kind === "E_RECOVERY_FAILURE"
@@ -1218,6 +1514,25 @@ function journalFiles(paths) {
   });
 }
 
+function selectedRecoveryJournal(paths, journalId) {
+  if (journalId == null) return null;
+  if (!UUID.test(journalId)) throwDistributionError("E_USAGE", "--journal-id must be a UUID", { journal_id: journalId });
+  const journalPath = path.join(paths.journalsRoot, `${journalId}.json`);
+  assertSafePath(journalPath, { root: paths.journalsRoot, label: "journal path", allowMissing: false });
+  const journalIdentity = capturePathIdentity(journalPath, {
+    root: paths.journalsRoot,
+    label: "journal path",
+    allowMissing: false,
+    errorCode: "E_PATH_SECURITY",
+  });
+  assertPathIdentity(journalIdentity, { label: "journal path", errorCode: "E_PATH_SECURITY" });
+  const journal = readJournal(journalPath, { paths });
+  if (journal.journal_id !== journalId || journal.target !== paths.target) {
+    throwDistributionError("E_JOURNAL_SCHEMA", "requested journal identity does not match the selected target", { journal_id: journalId, target: paths.target });
+  }
+  return { journalPath, journal };
+}
+
 export async function executeLifecycle(command, options) {
   let resolvedSource = null;
   if (command === "install" || command === "update") {
@@ -1233,6 +1548,7 @@ export async function executeLifecycle(command, options) {
   if (command === "status" || command === "verify") {
     const active = readActive(paths);
     if (!active) return { receipt: null, receiptPath: null, journalPath: null };
+    requireControlPlane(active.receipt, { paths });
     if (active.receipt.status === "installed") {
       const overlay = loadOverlay(candidateOverlay(options.source ?? options.home, paths.target, options.overlayRoot)).overlay;
       validateSettingPaths(overlay, paths);
@@ -1242,10 +1558,16 @@ export async function executeLifecycle(command, options) {
     }
     return { receipt: active.receipt, receiptPath: active.receiptPath, journalPath: null };
   }
+  if (command === "uninstall" || command === "rollback") {
+    const active = readActive(paths);
+    if (active) requireControlPlane(active.receipt, { paths });
+  }
   const resolvedSourceRoot = resolvedSource?.root ?? null;
   const portableCoreHash = resolvedSourceRoot ? portableCoreTreeHash(resolvedSourceRoot) : null;
   const lock = acquireLock(paths.lockPath);
+  let preserveLock = false;
   try {
+    durableBoundary(options, "lock-created", { target: paths.target, lock_path: paths.lockPath });
     if (command === "install" || command === "update") {
       return await installOrUpdate(command, {
         ...options,
@@ -1257,10 +1579,19 @@ export async function executeLifecycle(command, options) {
     if (command === "uninstall") return await uninstall(options, paths);
     if (command === "rollback") return await rollback(options, paths);
     if (command === "recover") {
-      const unresolved = journalFiles(paths).filter(({ journal }) => isUnresolved(journal)).sort((left, right) => {
+      const requested = selectedRecoveryJournal(paths, options.journalId);
+      const unresolved = (requested ? [requested] : journalFiles(paths)).filter(({ journal }) => isUnresolved(journal)).sort((left, right) => {
         const updated = Date.parse(right.journal.updated_at) - Date.parse(left.journal.updated_at);
         return updated || Date.parse(right.journal.started_at) - Date.parse(left.journal.started_at) || right.journal.journal_id.localeCompare(left.journal.journal_id);
       });
+      if (requested && unresolved.length === 0) {
+        throwDistributionError("E_RECOVERY_FAILURE", "requested journal is already terminal and cannot be selected for recovery", { journal_id: requested.journal.journal_id });
+      }
+      if (!requested && unresolved.length > 1) {
+        throwDistributionError("E_RECOVERY_AMBIGUOUS", "multiple unresolved journals require an exact --journal-id", {
+          journal_ids: unresolved.map(({ journal }) => journal.journal_id).sort(),
+        });
+      }
       if (unresolved.length === 0) {
         const active = readActive(paths);
         return { receipt: active?.receipt ?? null, receiptPath: active?.receiptPath ?? null, journalPath: null };
@@ -1271,7 +1602,12 @@ export async function executeLifecycle(command, options) {
       return { receipt: active?.receipt ?? null, receiptPath: active?.receiptPath ?? null, journalPath: selected.journalPath };
     }
     throwDistributionError("E_USAGE", `unsupported lifecycle command: ${command}`, { command });
-  } finally { releaseLock(lock); }
+  } catch (error) {
+    preserveLock = error?.kind === "E_RECOVERY_FAILURE";
+    throw error;
+  } finally {
+    if (!preserveLock) releaseLock(lock);
+  }
 }
 
-export { INSTALLER_VERSION, acquireLock, durableJson, readActive, writeJournal, receiptInventory };
+export { DURABLE_BOUNDARY_MARKERS, INSTALLER_VERSION, acquireLock, durableJson, readActive, writeJournal, receiptInventory };

@@ -1,0 +1,714 @@
+orchestrator:
+  schema_version: 2
+  revision: 40
+  initial_phase: "phase-1"
+  current_phase: "phase-6"
+  completed_phases:
+    - "phase-1"
+    - "phase-2"
+    - "phase-3"
+    - "phase-4"
+    - "phase-5"
+  failed_phases: []
+  gate_history:
+    - schema_version: 2
+      idempotency_key: "sha256:8dc80ac772693c815f0dfac96f7baa45a3cded3e406f16c6f5a42756f1e157d4"
+      phase_id: "phase-1"
+      gate_type: "phase-1-exit"
+      question: "Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?"
+      options:
+        - "Continue to brainstorming evaluation"
+        - "Pause workflow"
+      original_recommendation: "Continue to brainstorming evaluation"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Continue to brainstorming evaluation"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-17T21:55:16Z"
+      updated_at: "2026-07-17T22:17:30Z"
+      decided_at: "2026-07-17T22:17:30Z"
+    - schema_version: 2
+      idempotency_key: "sha256:08e81492136ed67bdcaeb69c286444e7572a8c6925ae80741b28b5ca346a95a2"
+      phase_id: "phase-2"
+      gate_type: "optional-phase-selection"
+      question: "The synthesis identifies one dominant architecture and no materially competing approaches. Would you like to explore solution alternatives?"
+      options:
+        - "Yes, explore alternatives"
+        - "No, skip brainstorming"
+      original_recommendation: "No, skip brainstorming"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Yes, explore alternatives"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: true
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-17T22:18:11Z"
+      updated_at: "2026-07-17T22:28:03Z"
+      decided_at: "2026-07-17T22:28:03Z"
+    - schema_version: 2
+      idempotency_key: "sha256:1c6e29605bf62e6f2267147661a475762c53b436f8fc9ff65d5f98ae8e51e6d5"
+      phase_id: "phase-3"
+      gate_type: "design-failure-recovery"
+      question: "The solution brainstormer failed to produce its required artifacts after two attempts. How should the workflow recover?"
+      options:
+        - "Retry design"
+        - "Skip design"
+        - "Stop workflow"
+      original_recommendation: "Retry design"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Retry design"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-17T22:32:19Z"
+      updated_at: "2026-07-17T22:36:16Z"
+      decided_at: "2026-07-17T22:36:16Z"
+    - schema_version: 2
+      idempotency_key: "sha256:fa95696b8a1cc259caa50d4de86b15e6da04b58509a331d15c3042a8b2f02cd5"
+      phase_id: "phase-3"
+      gate_type: "design-failure-recovery"
+      question: "The user-approved retry also failed to produce the required solution-exploration artifacts. How should the workflow recover now?"
+      options:
+        - "Retry design"
+        - "Skip design"
+        - "Stop workflow"
+      original_recommendation: "Skip design"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Retry design"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: true
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-17T22:40:59Z"
+      updated_at: "2026-07-17T22:46:46Z"
+      decided_at: "2026-07-17T22:46:46Z"
+    - schema_version: 2
+      idempotency_key: "sha256:b44cce49b270e039db9825c224697b82b1f7ac236d4a1a361cd36e21a6e3cd13"
+      phase_id: "phase-3"
+      gate_type: "phase-3-exit"
+      question: "Continue to solution convergence?"
+      options:
+        - "Continue to solution convergence"
+        - "Pause workflow"
+      original_recommendation: "Continue to solution convergence"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Continue to solution convergence"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-17T22:55:05Z"
+      updated_at: "2026-07-17T23:27:31Z"
+      decided_at: "2026-07-17T23:27:31Z"
+    - schema_version: 2
+      idempotency_key: "sha256:23d2b78c86969b805ce00135dd84222d076de6ee450a33f36edcb96e6b34c67e"
+      phase_id: "phase-4"
+      gate_type: "research-convergence"
+      question: "Which primary distribution architecture should Maister adopt?"
+      options:
+        - "Thin npx release launcher (Recommended)"
+        - "Agent Skills copy/symlink package"
+        - "Per-host managed marketplace plugins"
+        - "Hybrid universal bootstrap plus host adapters"
+        - "Need more info"
+      original_recommendation: "Thin npx release launcher (Recommended)"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Thin npx release launcher (Recommended)"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-17T23:28:42Z"
+      updated_at: "2026-07-18T09:58:57Z"
+      decided_at: "2026-07-18T09:58:57Z"
+    - schema_version: 2
+      idempotency_key: "sha256:5344cf68acd77705cbd9406daf9f911f37b9ce93a3768d70dc4d94c933fb351e"
+      phase_id: "phase-2"
+      gate_type: "optional-phase-selection"
+      question: "The selected npx launcher introduces concrete architecture decisions that feed directly into development. Would you like to generate a high-level design?"
+      options:
+        - "Yes, generate design"
+        - "No, skip design"
+      original_recommendation: "Yes, generate design"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Yes, generate design"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-18T09:58:57Z"
+      updated_at: "2026-07-18T10:31:36Z"
+      decided_at: "2026-07-18T10:31:36Z"
+    - schema_version: 2
+      idempotency_key: "sha256:deff7dc9407e4bf7bd8e9827eea83f0943d11d5daa1793b43db636eb584db001"
+      phase_id: "phase-4"
+      gate_type: "phase-4-exit"
+      question: "Brainstorming complete. Continue to high-level design?"
+      options:
+        - "Continue to high-level design"
+        - "Pause workflow"
+      original_recommendation: "Continue to high-level design"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Continue to high-level design"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-18T10:32:09Z"
+      updated_at: "2026-07-18T11:23:52Z"
+      decided_at: "2026-07-18T11:23:52Z"
+    - schema_version: 2
+      idempotency_key: "sha256:dbf1344a9d78fc4f26886cf396e6c54bfca6cce60f4e19ecf65450924dc99a12"
+      phase_id: "phase-5"
+      gate_type: "research-clarification"
+      question: "Are the proposed high-level design assumptions correct?"
+      options:
+        - "Confirm assumptions"
+        - "Correct assumptions"
+        - "Provide more context"
+      original_recommendation: "Confirm assumptions"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Confirm assumptions"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-18T11:24:48Z"
+      updated_at: "2026-07-18T11:29:11Z"
+      decided_at: "2026-07-18T11:29:11Z"
+    - schema_version: 2
+      idempotency_key: "sha256:6bdf08499f5ea52adcb109887df08612b87fed5c1a2a6ba779d4fc70c9cb160e"
+      phase_id: "phase-5"
+      gate_type: "phase-5-exit"
+      question: "Design complete. Continue to output generation?"
+      options:
+        - "Continue to output generation"
+        - "Pause workflow"
+      original_recommendation: "Continue to output generation"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Continue to output generation"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-18T11:44:20Z"
+      updated_at: "2026-07-18T11:46:14Z"
+      decided_at: "2026-07-18T11:46:14Z"
+    - schema_version: 2
+      idempotency_key: "sha256:b5719ec2e537cb964d37d4ad56aa98b94c2cbe3592ee57a136801ce1558e292a"
+      phase_id: "phase-6"
+      gate_type: "final-handoff-approval"
+      question: "Research outputs are complete. Approve final handoff?"
+      options:
+        - "Complete workflow"
+        - "Keep workflow open"
+      original_recommendation: "Complete workflow"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "denylisted"
+      status: "decided"
+      selected_option: "Complete workflow"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-18T11:50:21.328Z"
+      updated_at: "2026-07-18T11:51:51.390Z"
+      decided_at: "2026-07-18T11:51:51.390Z"
+  work:
+    phase-1:
+      inventory_version: "research-phase-1"
+      items: []
+    phase-2:
+      inventory_version: "research-phase-2"
+      items: []
+    phase-3:
+      inventory_version: "research-phase-3"
+      items: []
+    phase-4:
+      inventory_version: "research-phase-4"
+      items: []
+    phase-5:
+      inventory_version: "research-phase-5"
+      items: []
+    phase-6:
+      inventory_version: "research-phase-6"
+      items: []
+  dispatch_outbox: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    html_output: true
+    brainstorming_enabled: true
+    design_enabled: true
+    advisor:
+      enabled: true
+      gate_policies:
+        phase-exit: "fully_automatic"
+        optional-phase: "fully_automatic"
+        clarify: "fully_automatic"
+        convergence: "fully_automatic"
+        verify-matrix: "fully_automatic"
+      advisor_agent: "advisor"
+      advisor_model: "gpt-5.6-sol"
+      arbiter_agent: "arbiter"
+      arbiter_model: "gpt-5.6-sol"
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: "exponential"
+  created: "2026-07-17T21:37:19Z"
+  updated: "2026-07-18T11:51:51.390Z"
+  task_path: ".maister/tasks/research/2026-07-17-npx-release-distribution"
+  task_ids:
+    phase-1: "research-phase-1"
+    phase-2: "research-phase-2"
+    phase-3: "research-phase-3"
+    phase-4: "research-phase-4"
+    phase-5: "research-phase-5"
+    phase-6: "research-phase-6"
+  implementation_approval:
+    status: "not_required"
+    approved_by: null
+    approved_at: null
+    approved_scope: []
+  research_context:
+    research_type: "mixed"
+    research_question: "How should Maister add an npx-based installer owned by mateuszrapacz that downloads the correct GitHub Release archive, verifies it, and invokes the existing target-aware installer without manual extraction while preserving provenance, reproducibility, rollback, recovery, and multi-host support?"
+    confidence_level: "medium"
+    gathering_strategy:
+      categories:
+        - "codebase-installer"
+        - "release-packaging"
+        - "npm-cli-boundary"
+        - "security-ownership"
+      count: 4
+      source: "planner-with-orchestrator-fallback"
+    phase_summaries:
+      phase-1:
+        summary: "Research foundation completed through codebase inspection, release analysis, npm documentation, and security review."
+        steps_completed:
+          - "initialize"
+          - "plan"
+          - "gather"
+          - "synthesize"
+        decisions:
+          - "Keep plugins/maister/bin/maister-install.mjs as the sole target mutation authority."
+          - "Make the npx launcher an input adapter for release resolution, download, validation, extraction, and cleanup."
+          - "Use mateuszrapacz release tags and target-specific archive names as the distribution contract."
+          - "Prefer @mateuszrapacz/maister as the user-scoped npm package and maister as its binary."
+          - "Bind target, version, asset, digest, source manifest, and E3 evidence before invoking the installer."
+        risks:
+          - "Safe archive extraction policy must be specified and tested."
+          - "Existing checksum, SBOM, and provenance sidecars are not publisher authentication."
+          - "npm package metadata and executable entrypoint do not exist yet."
+          - "Ownership references away from Skillpanel require deliberate review; LICENSE needs a separate legal decision."
+          - "Planner and gatherer subagents timed out; fallback research was used and recorded."
+        artifacts:
+          - "planning/research-brief.md"
+          - "planning/research-plan.md"
+          - "planning/sources.md"
+          - "analysis/findings/01-codebase-installer.md"
+          - "analysis/findings/02-release-packaging.md"
+          - "analysis/findings/03-npm-cli-boundary.md"
+          - "analysis/findings/04-security-ownership.md"
+          - "analysis/synthesis.md"
+          - "outputs/research-report.md"
+          - "outputs/research-report.html"
+      phase-2:
+        summary: "User enabled brainstorming and high-level design through independent optional-phase gates."
+        decisions:
+          - "Enable brainstorming and compare installer/package structures from established skills ecosystems."
+          - "Generate a high-level design for the selected thin npx launcher architecture."
+        risks:
+          - "External projects may use different host assumptions or trust models; findings must be translated rather than copied."
+        artifacts: []
+      phase-3:
+        summary: "Solution exploration completed after allowing the resumed brainstormer to reach terminal status. It compares five external installer patterns and four genuinely different Maister distribution alternatives."
+        decisions:
+          - "Recommend a thin @mateuszrapacz/maister npx launcher as the near-term distribution channel."
+          - "Treat generic Agent Skills installation as a complementary skills-only channel, not the full plugin installer."
+          - "Defer per-host marketplaces and hybrid host adapters until the launcher contract is proven."
+        risks:
+          - "Publisher authentication remains weaker than signed provenance."
+          - "Safe archive extraction and npm/GitHub version alignment require implementation tests."
+          - "Native marketplace channels may drift across hosts if added later."
+        artifacts:
+          - "outputs/solution-exploration.md"
+          - "outputs/solution-exploration.html"
+      phase-4:
+        summary: "Convergence selected the thin @mateuszrapacz/maister npx release launcher as the primary distribution architecture."
+        decisions:
+          - "Adopt the thin npx release launcher as the primary installation channel."
+        risks:
+          - "The launcher must not become a second host mutation authority."
+          - "Archive verification, extraction safety, and release alignment remain mandatory design concerns."
+        artifacts: []
+        decision_areas:
+          - id: "primary-distribution-architecture"
+            title: "Primary distribution architecture"
+            chosen_approach: "Thin npx release launcher"
+        deferred_ideas:
+          - "Agent Skills package for skills-only distribution."
+          - "Per-host managed marketplace plugins."
+          - "Hybrid bootstrap with certified host adapters."
+      phase-5:
+        summary: "High-level design completed using ports and adapters around the existing transactional installer, with five accepted MADR decisions."
+        decisions:
+          - "Thin npm launcher with one mutation authority."
+          - "GitHub Release payloads with a closed target allowlist."
+          - "Exact version baseline with visible latest resolution."
+          - "Fail-closed verification and safe private extraction."
+          - "Coordinated npm/GitHub publication with honest provenance claims."
+        risks:
+          - "Node engine floor remains an implementation verification item."
+          - "Archive extraction library remains an implementation choice constrained by the accepted safety policy."
+          - "Current integrity records do not authenticate the publisher."
+          - "npm and GitHub publication is not atomic."
+        artifacts:
+          - "outputs/high-level-design.md"
+          - "outputs/high-level-design.html"
+          - "outputs/decision-log.md"
+          - "outputs/decision-log.html"
+        architecture_style: "ports and adapters around the existing transactional core"
+        decisions_count: 5
+      phase-6:
+        summary: "Final decision summary generated and protected handoff approved; research workflow completed."
+        decisions:
+          - "Recommend implementation through a fresh maister:development workflow using the accepted thin npx launcher design."
+        risks:
+          - "Implementation must preserve the accepted verification, extraction, version-alignment, and single-mutation-authority constraints."
+        artifacts:
+          - "outputs/decision-summary.md"
+          - "outputs/decision-summary.html"
+    design_preferences:
+      selected_approach: "Thin npx release launcher"
+      assumptions_status: "confirmed"
+      documentation_style: "standard MADR"
+      preserve_installer_authority: true
+      explicit_target_required: true
+      exact_version_baseline: true
+      latest_visible_resolution: true
+  review_notes:
+    external_sources: "official npm, GitHub, and Node.js documentation consulted on 2026-07-17."
+    subagent_fallback: "Planner, four gatherers, and synthesizer timed out without writing artifacts; orchestrator completed the work directly."
+    subagent_phase3_correction: "Three prior runs were closed while status was running. They are classified as orchestrator interruptions, not brainstormer failures."
+    subagent_phase3_result: "Resumed agent completed successfully after receiving non-interrupting input and being allowed to run to terminal status."
+    phase2_design_gate_correction: "The independent high-level design selection gate was missed during Phase 2 and is being completed before Phase 4 exits."
+task:
+  title: "Simplify Maister release installation through npx"
+  description: "Research and document the simplest safe distribution flow for Maister using an npm CLI published under the mateuszrapacz account, downloading target-specific GitHub Release archives and delegating installation to the existing transactional installer."
+  status: "completed"
+  tags:
+    - "research"
+    - "distribution"
+    - "npm"
+    - "npx"
+    - "github-releases"
+    - "codex"
+    - "mateuszrapacz"
+  priority: "high"
+  completed_at: "2026-07-18T11:51:51.390Z"
+phases:
+  - id: "phase-1"
+    name: "Research foundation"
+    status: "completed"
+    blocked_by: []
+    started: "2026-07-17T21:37:19Z"
+    completed: "2026-07-17T22:17:30Z"
+    skip_reason: null
+    gate: "phase-1-exit"
+  - id: "phase-2"
+    name: "Evaluate optional phases"
+    status: "completed"
+    blocked_by:
+      - "phase-1"
+    started: "2026-07-17T22:17:30Z"
+    completed: "2026-07-17T22:28:03Z"
+    skip_reason: null
+    gate: "optional-phase-selection"
+  - id: "phase-3"
+    name: "Generate solution alternatives"
+    status: "completed"
+    blocked_by:
+      - "phase-2"
+    started: "2026-07-17T22:28:03Z"
+    completed: "2026-07-17T23:27:31Z"
+    skip_reason: null
+    gate: "phase-3-exit"
+  - id: "phase-4"
+    name: "Evaluate solution alternatives"
+    status: "completed"
+    blocked_by:
+      - "phase-3"
+    started: "2026-07-17T23:27:31Z"
+    completed: "2026-07-18T11:23:52Z"
+    skip_reason: null
+    gate: "phase-4-exit"
+  - id: "phase-5"
+    name: "Design high-level architecture"
+    status: "completed"
+    blocked_by:
+      - "phase-2"
+      - "phase-4"
+    started: "2026-07-18T11:23:52Z"
+    completed: "2026-07-18T11:46:14Z"
+    skip_reason: null
+    gate: "phase-5-exit"
+  - id: "phase-6"
+    name: "Summarize research and hand off"
+    status: "in_progress"
+    blocked_by:
+      - "phase-5"
+    started: "2026-07-18T11:46:14Z"
+    completed: null
+    skip_reason: null
+    gate: "final-handoff-approval"

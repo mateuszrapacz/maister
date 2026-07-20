@@ -9,15 +9,25 @@ on:
     paths:
       - "plugins/maister/**"
       - "tests/platform-independent/**"
+      - "tests/release/**"
       - "Makefile"
       - ".github/workflows/**"
+      - "package.json"
+      - "package-lock.json"
+      - "bin/**"
+      - "lib/launcher/**"
   pull_request:
     branches: [master]
     paths:
       - "plugins/maister/**"
       - "tests/platform-independent/**"
+      - "tests/release/**"
       - "Makefile"
       - ".github/workflows/**"
+      - "package.json"
+      - "package-lock.json"
+      - "bin/**"
+      - "lib/launcher/**"
 
 jobs:
   core:
@@ -36,6 +46,12 @@ jobs:
           make test-overlay TARGET=kiro-cli
       - name: Run portable runtime and distribution tests
         run: make test-core test-runtime test-evidence
+      - name: Enforce GitHub-only distribution and requirement drift gates
+        run: |
+          npm ci
+          node --test tests/platform-independent/release-github-only-policy.test.mjs
+          node --test tests/platform-independent/git-auth-residue-guard.test.mjs
+          node --test tests/platform-independent/requirement-artifact-drift.test.mjs
       - name: Verify repository topology
         run: make test-topology
       - name: Run reviewed three-target parity release gate

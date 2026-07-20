@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Log — Thin npx release launcher</title>
+<style>
+:root{--bg:#f6f7f9;--surface:#fff;--border:#e2e5ea;--text:#1a1d23;--dim:#667085;--accent:#4f46e5;--soft:#eef2ff;--ok:#15803d;--oksoft:#ecfdf3;--warn:#b45309;--warnsoft:#fffbeb;--crit:#b91c1c;--critsoft:#fef2f2;--radius:10px}
+@media(prefers-color-scheme:dark){:root{--bg:#111418;--surface:#1a1f26;--border:#303844;--text:#e6e9ee;--dim:#9aa4b2;--accent:#a5b4fc;--soft:#272b4d;--ok:#4ade80;--oksoft:#11291a;--warn:#fbbf24;--warnsoft:#302510;--crit:#f87171;--critsoft:#321616}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0 auto;max-width:1080px;padding:24px 20px 64px;background:var(--bg);color:var(--text);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}h1{font-size:24px;letter-spacing:-.02em;margin-bottom:8px}h2{font-size:17px;margin:30px 0 10px}h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--dim);margin:18px 0 6px}p{max-width:90ch}.crumbs{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px;margin-bottom:18px}.crumbs .here{font-weight:700;color:var(--text)}.crumbs .md{margin-left:auto;color:var(--dim)}header p{color:var(--dim);max-width:850px}.badge,.status{display:inline-block;border-radius:999px;font-weight:700}.badge{padding:3px 9px;background:var(--soft);color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:.05em}.status{padding:2px 8px;background:var(--oksoft);color:var(--ok);font-size:11px}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:12px 0}.tldr{border-left:4px solid var(--accent)}.risk{background:var(--warnsoft);border-color:var(--warn)}.adr{border-left:4px solid var(--accent);margin-top:24px}.adr-title{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.adr-title h2{margin:0;font-size:18px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.choice{background:var(--soft);border:1px solid var(--accent);border-radius:var(--radius);padding:12px 14px;margin:10px 0}.toc{font-size:12.5px;color:var(--dim);margin:18px 0}code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);padding:1px 5px;border-radius:4px}pre{overflow:auto;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:#171a21;color:#e5e7eb;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}table{width:100%;border-collapse:collapse}th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--border)}th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--dim)}ul,ol{padding-left:22px}li{margin:4px 0}.good{color:var(--ok)}.bad{color:var(--crit)}.small{font-size:12px;color:var(--dim)}@media(max-width:760px){body{padding:18px 14px 48px}.grid{grid-template-columns:1fr}.crumbs .md{margin-left:0;width:100%}table{display:block;overflow-x:auto}h1{font-size:21px}.adr-title{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<nav class="crumbs" aria-label="Artifact navigation">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="research-report.html">Research report</a>
+  <a href="solution-exploration.html">Exploration</a>
+  <a href="high-level-design.html">Design</a>
+  <span class="here">Decision log</span>
+  <a class="md" href="decision-log.md" target="_blank" rel="noopener">Markdown twin ↗</a>
+</nav>
+<header>
+  <span class="badge">Phase 5 · MADR decision log</span>
+  <h1>Thin npx release launcher decisions</h1>
+  <p>Five accepted architecture records for package boundaries, release payload selection, reproducibility, archive safety, and coordinated publication.</p>
+</header>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p><code>@mateuszrapacz/maister</code> will be a thin distribution launcher. GitHub Release archives remain authoritative payloads, exact versions remain reproducible, <code>latest</code> resolves visibly, all verification fails closed before delegation, and npm/GitHub outputs are promoted as one aligned release.</p>
+  <p><code>maister-install.mjs</code> remains the only authority that writes host files, settings, receipts, journals, backups, locks, or recovery state.</p>
+  <h2>Key Decisions</h2>
+  <ol>
+    <li><a href="#adr-001">Thin npm launcher and one mutation authority.</a></li>
+    <li><a href="#adr-002">GitHub Release payloads and target allowlist.</a></li>
+    <li><a href="#adr-003">Exact version baseline and visible latest resolution.</a></li>
+    <li><a href="#adr-004">Fail-closed verification and safe extraction.</a></li>
+    <li><a href="#adr-005">Coordinated publication and provenance handling.</a></li>
+  </ol>
+</section>
+
+<section class="card risk">
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li>The minimum Node engine is measured during implementation; Node 22 is the current CI reference.</li>
+    <li>The extraction implementation must prove the accepted cross-platform archive policy.</li>
+    <li>Unsigned integrity records do not authenticate the publisher; trusted publishing/signing is a follow-up ADR.</li>
+    <li>npm/GitHub publication is not atomic and requires promotion, retry, deprecation, and skew-response procedures.</li>
+  </ul>
+</section>
+
+<nav class="toc">Decisions: <a href="#adr-001">ADR-001</a> · <a href="#adr-002">ADR-002</a> · <a href="#adr-003">ADR-003</a> · <a href="#adr-004">ADR-004</a> · <a href="#adr-005">ADR-005</a> · <a href="#summary">Summary</a></nav>
+
+<main>
+<article class="card adr" id="adr-001">
+  <div class="adr-title"><span class="status">Accepted</span><h2>ADR-001: Thin npm launcher and one mutation authority</h2></div>
+  <h3>Context</h3>
+  <p>The existing installer already owns source resolution, overlays, E3, staging, locks, journals, managed settings, receipts, drift, rollback and recovery. The missing capability is one-command public distribution, not a second lifecycle implementation. Bundling mutation logic into npm or generic skill-copy tooling would split authority and guarantees.</p>
+  <h3>Decision Drivers</h3>
+  <ul><li>One owner for host state and lifecycle invariants.</li><li>Reuse tested transactional behavior and state schemas.</li><li>Small npm package and minimal semantic drift.</li><li>Offline state-only lifecycle commands.</li></ul>
+  <h3>Considered Options</h3>
+  <ol><li>Complete npm payload plus new mutation logic.</li><li>Generic Agent Skills copy/symlink tooling.</li><li>Thin verified release launcher delegating to the existing installer.</li><li>Host marketplaces first.</li></ol>
+  <h3>Decision Outcome</h3>
+  <div class="choice"><strong>Choose option 3.</strong> The launcher owns parse, resolve, download, verify, safe temporary extraction, delegation, forwarding and cleanup. Only <code>maister-install.mjs</code> crosses into host and durable installer state.</div>
+  <h3>Consequences</h3>
+  <div class="grid">
+    <div><strong class="good">Good</strong><ul><li>Manual archive and npx paths share transaction semantics.</li><li>Existing receipts remain authoritative.</li><li>Pre-delegation failures are provably mutation-free.</li></ul></div>
+    <div><strong class="bad">Bad</strong><ul><li>Node/npm is required for this channel.</li><li>Launcher/installer CLI compatibility needs fixtures.</li><li>The release archive still carries installer/runtime content.</li></ul></div>
+  </div>
+  <h3>Research Links</h3>
+  <p><a href="../analysis/synthesis.md#recommended-architecture">Synthesis</a> · <a href="research-report.html#existing-installer-boundary">Research report</a> · <a href="solution-exploration.html#1-thin-npx-release-launcher--recommended-now">Solution exploration</a> · <a href="high-level-design.html#architecture">Design boundary</a></p>
+</article>
+
+<article class="card adr" id="adr-002">
+  <div class="adr-title"><span class="status">Accepted</span><h2>ADR-002: GitHub Release payloads and target allowlist</h2></div>
+  <h3>Context</h3>
+  <p>The release pipeline already creates deterministic self-contained archives with source manifest, selected overlay, installer, and E3. Duplicating those payloads in npm would establish a second artifact source. Arbitrary URLs or auto-detected targets would weaken release and host identity.</p>
+<pre>codex    → maister-codex.tar.gz
+cursor   → maister-cursor.tar.gz
+kiro-cli → maister-kiro-cli.tar.gz</pre>
+  <h3>Decision Drivers</h3>
+  <ul><li>One authoritative target payload per version.</li><li>Reuse deterministic package tests.</li><li>Explicit host choice.</li><li>Reject repository, URL, asset and cross-target substitution.</li></ul>
+  <h3>Considered Options</h3>
+  <ol><li>Bundle all payloads in npm.</li><li>Build from default branch.</li><li>Accept arbitrary archive URLs.</li><li>Resolve fixed target assets from matching repository releases.</li></ol>
+  <h3>Decision Outcome</h3>
+  <div class="choice"><strong>Choose option 4.</strong> Resolve only <code>mateuszrapacz/maister</code> releases. Require an explicit <code>codex</code>, <code>cursor</code>, or <code>kiro-cli</code> target and select exactly one closed-map asset. npm carries launcher code only.</div>
+  <h3>Consequences</h3>
+  <div class="grid">
+    <div><strong class="good">Good</strong><ul><li>Existing release artifacts become the npx contract.</li><li>Cross-target selection fails before extraction.</li><li>npm stays small.</li></ul></div>
+    <div><strong class="bad">Bad</strong><ul><li>Install/update depends on npm and GitHub availability.</li><li>Rate limits, redirects and CDN behavior enter scope.</li><li>Release asset retention becomes operational.</li></ul></div>
+  </div>
+  <h3>Research Links</h3>
+  <p><a href="../analysis/synthesis.md#release-contract">Synthesis</a> · <a href="research-report.html#release-resolution">Research report</a> · <a href="solution-exploration.html#recommendation">Solution exploration</a> · <a href="high-level-design.html#components">Design components</a></p>
+</article>
+
+<article class="card adr" id="adr-003">
+  <div class="adr-title"><span class="status">Accepted</span><h2>ADR-003: Exact version baseline and visible latest resolution</h2></div>
+  <h3>Context</h3>
+  <p>An exact npm version is reproducible; <code>latest</code> is a moving dist-tag resolved before the binary runs. Independently asking GitHub for its latest release can select a different version during propagation or partial publication. Silent moving selection makes audits and incident diagnosis ambiguous.</p>
+  <h3>Decision Drivers</h3>
+  <ul><li>Replayable CI and runbook commands.</li><li>Audit from selector to source commit.</li><li>npm/GitHub skew detection.</li><li>Convenient first-install command without hidden movement.</li></ul>
+  <h3>Considered Options</h3>
+  <ol><li>Only runtime GitHub latest.</li><li>Exact versions only.</li><li>Exact plus latest, where the concrete npm package version must match GitHub and is shown.</li><li>A separate overriding version flag.</li></ol>
+  <h3>Decision Outcome</h3>
+  <div class="choice"><strong>Choose option 3.</strong> Package <code>@X.Y.Z</code> resolves only tag <code>vX.Y.Z</code>. For <code>@latest</code>, npm's concrete package version becomes the only acceptable GitHub release. Output includes requested and resolved versions before delegation; the receipt binds resolved source version, full commit and content hash.</div>
+  <h3>Consequences</h3>
+  <div class="grid">
+    <div><strong class="good">Good</strong><ul><li>Exact commands are replayable.</li><li>Latest remains easy but observable.</li><li>Channel skew fails closed.</li></ul></div>
+    <div><strong class="bad">Bad</strong><ul><li>Docs must distinguish convenience and reproducibility.</li><li>Dist-tag propagation can vary across caches.</li><li>Durably storing the literal selector would need a receipt-schema ADR.</li></ul></div>
+  </div>
+  <h3>Research Links</h3>
+  <p><a href="../analysis/synthesis.md#release-resolution-and-verification">Synthesis</a> · <a href="research-report.html#proposed-command-surface">Research report</a> · <a href="solution-exploration.html#deferred-ideas">Solution exploration</a> · <a href="high-level-design.html#resolution">Design resolution</a></p>
+</article>
+
+<article class="card adr" id="adr-004">
+  <div class="adr-title"><span class="status">Accepted</span><h2>ADR-004: Fail-closed verification and safe extraction</h2></div>
+  <h3>Context</h3>
+  <p>The launcher introduces network bytes and archive extraction before the installer can apply its own provenance and transaction checks. Digest-only validation does not stop traversal, link escape, special files, decompression bombs, unexpected topology, or a correctly hashed but wrongly bound payload.</p>
+  <h3>Decision Drivers</h3>
+  <ul><li>Zero host mutation for release/archive failures.</li><li>Defense in depth across transport, digest, archive, source and E3.</li><li>Cross-platform path safety and bounded resources.</li><li>Deterministic cleanup while preserving installer authority.</li></ul>
+  <h3>Considered Options</h3>
+  <ol><li>Default tar extraction and trust the installer.</li><li>Digest-only verification.</li><li>Inspect, verify, extract privately, revalidate, then delegate local source.</li><li>Stream directly into host targets.</li></ol>
+  <h3>Decision Outcome</h3>
+  <div class="choice"><strong>Choose option 3.</strong> Validate release, expected asset, bounded download, computed digest, archive paths/types/links/counts/sizes/topology, source manifest and fresh passed E3 before delegation. Extract only to an exclusive private temp root and revalidate the tree. Cleanup deletes only that exact root.</div>
+  <h3>Consequences</h3>
+  <div class="grid">
+    <div><strong class="good">Good</strong><ul><li>Archive bytes cannot directly reach host state.</li><li>Pre-delegation failure has an unchanged-state invariant.</li><li>Release skew is visible through layered bindings.</li></ul></div>
+    <div><strong class="bad">Bad</strong><ul><li>Archive safety is the largest new test surface.</li><li>Inspection/extraction uses extra I/O and disk.</li><li>Topology policy must evolve with package format.</li></ul></div>
+  </div>
+  <h3>Research Links</h3>
+  <p><a href="../analysis/synthesis.md#failure-and-cleanup-behavior">Synthesis</a> · <a href="research-report.html#verification-and-extraction">Research report</a> · <a href="solution-exploration.html#1-thin-npx-release-launcher--recommended-now">Solution exploration</a> · <a href="high-level-design.html#verification">Design verification</a></p>
+</article>
+
+<article class="card adr" id="adr-005">
+  <div class="adr-title"><span class="status">Accepted</span><h2>ADR-005: Coordinated publication and provenance handling</h2></div>
+  <h3>Context</h3>
+  <p>The public path spans npm launcher version <code>X.Y.Z</code> and GitHub tag <code>vX.Y.Z</code> with three archives and sidecars. These channels cannot update atomically. Current SHA256SUMS, SBOM, provenance and E3 create consistency evidence but are unsigned and are not independent publisher authentication.</p>
+  <h3>Decision Drivers</h3>
+  <ul><li>One source version/commit across all outputs.</li><li>No latest promotion before public end-to-end proof.</li><li>Immutable artifacts and idempotent retries.</li><li>Accurate integrity-versus-authentication claims.</li></ul>
+  <h3>Considered Options</h3>
+  <ol><li>Publish independently and align manually.</li><li>Publish npm first and wait for GitHub.</li><li>Publish/verify GitHub, publish exact npm, smoke exact npx, then promote latest.</li><li>Block distribution until a signing system exists.</li></ol>
+  <h3>Decision Outcome</h3>
+  <div class="choice"><strong>Choose option 3.</strong> Validate, package and publish GitHub assets first; verify public assets; pack/smoke and publish the matching exact npm version; run a public exact npx smoke; only then move <code>latest</code>. Retries reuse identical bytes. Broken releases are withheld/deprecated and fixed with a new patch.</div>
+  <h3>Consequences</h3>
+  <div class="grid">
+    <div><strong class="good">Good</strong><ul><li>Stable latest represents a proven public chain.</li><li>Version/source/E3 skew is gated.</li><li>Partial publication has a recovery policy.</li><li>Trust claims remain accurate.</li></ul></div>
+    <div><strong class="bad">Bad</strong><ul><li>Release automation is longer and cross-service.</li><li>Exact versions may precede latest promotion.</li><li>Maintainers need protected, retryable publication procedures.</li></ul></div>
+  </div>
+  <h3>Research Links</h3>
+  <p><a href="../analysis/synthesis.md#npm-contract">Synthesis</a> · <a href="research-report.html#ci-and-publishing">Research report</a> · <a href="solution-exploration.html#open-questions--risks">Solution exploration</a> · <a href="high-level-design.html#publishing">Design publishing</a></p>
+</article>
+
+<section class="card" id="summary">
+  <h2>Decision Summary</h2>
+  <table>
+    <thead><tr><th>ADR</th><th>Decision</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>ADR-001</td><td>Thin npm launcher and one mutation authority</td><td><span class="status">Accepted</span></td></tr>
+      <tr><td>ADR-002</td><td>GitHub Release payloads and target allowlist</td><td><span class="status">Accepted</span></td></tr>
+      <tr><td>ADR-003</td><td>Exact version baseline and visible latest resolution</td><td><span class="status">Accepted</span></td></tr>
+      <tr><td>ADR-004</td><td>Fail-closed verification and safe extraction</td><td><span class="status">Accepted</span></td></tr>
+      <tr><td>ADR-005</td><td>Coordinated publication and provenance handling</td><td><span class="status">Accepted</span></td></tr>
+    </tbody>
+  </table>
+  <h3>Review Triggers</h3>
+  <p>Revisit the decisions if a marketplace becomes lifecycle authority, GitHub archives stop being authoritative, auto-detection/arbitrary repositories or a persistent launcher cache are proposed, receipt schema must preserve the moving selector, signing changes the trust anchor, or the installer CLI/exit contract becomes incompatible.</p>
+</section>
+</main>
+
+<footer class="small">
+  <p>Primary decision record: <a href="decision-log.md">decision-log.md</a> · Architecture: <a href="high-level-design.html">high-level-design.html</a> · Workflow: <a href="../dashboard.html">research dashboard</a></p>
+</footer>
+</body>
+</html>

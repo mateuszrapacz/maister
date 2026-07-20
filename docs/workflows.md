@@ -1,5 +1,11 @@
 # Workflow Details
 
+## GitHub-only release workflow
+
+The protected release sequence is `BUILT → GITHUB_PUBLISHED → GITHUB_VERIFIED → PUBLIC_NO_AUTH_SMOKE_VERIFIED → HERMETIC_PRIVATE_TRANSPORT_VERIFIED`. It proves the literal exact tag and full commit against the prepare manifest, deterministic archives, sidecars, source manifest, E3, and lifecycle receipt; uploads only immutable GitHub Release assets; byte-compares public assets; and runs anonymous exact-selector smoke for every target. No Maister package-registry publication, lookup, promotion, or credential is permitted.
+
+If the canonical repository becomes private, release is blocked until operator-equivalent Git credentials, protected secret boundaries, `GH_TOKEN`/`GITHUB_TOKEN`/bounded `gh` fallback, real authenticated exact tag/full-commit Git acquisition, private Release API assets, cross-host authorization stripping, redaction, and the complete identity/evidence rerun pass against that same repository. Hermetic private transport tests remain required but no longer substitute for real private E2E.
+
 ## Agent-role contract
 
 Delegation is a runtime request for one exact `maister:<role_id>`, not a host-specific agent name. The resolver checks receipt and projection provenance before selecting `codex.exec`, Cursor, or Kiro. It never generates files at invocation time and never falls back to a root, built-in, similar, or inline role. `advisor` takes this ordinary path; only its gate actor and attempt identity differ. Projection happens in the materializer staging tree before validation and receipt publication. A native discovery/invocation prerequisite that cannot be safely observed is reported as `unavailable`; an observed wrong identity or behavior is `failed`.

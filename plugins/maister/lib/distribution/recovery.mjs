@@ -13,7 +13,8 @@ import {
   withMutationBoundary,
 } from "./path-safety.mjs";
 import { readJournal, validateJournal, appendTransition, isTerminal } from "./journal-schema.mjs";
-import { readReceipt } from "./receipt-schema.mjs";
+import { readReceipt, UUID } from "./receipt-schema.mjs";
+import { hashFile, hashTree } from "./hash-tree.mjs";
 
 const MODE = /^[0-7]{4}$/u;
 const SHA256 = /^[0-9a-f]{64}$/u;
@@ -550,7 +551,7 @@ export function restoreFullBackup(backupRoot, { paths = null, expectedManifestHa
   for (const topology of manifest.roots.flatMap((root) => [root.topology])) {
     for (const entry of topology.filter((item) => item.exists)) {
       const directory = path.join(home, ...entry.path.split("/"));
-      ensureDirectoryTree(directory, { root: home, label: "restore managed-root topology", mode: Number.parseInt(entry.mode, 8) });
+      ensureDirectoryTree(directory, { root: path.dirname(directory), label: "restore managed-root topology", mode: Number.parseInt(entry.mode, 8) });
       fs.chmodSync(directory, Number.parseInt(entry.mode, 8));
     }
     for (const entry of [...topology].reverse().filter((item) => !item.exists)) {
@@ -578,10 +579,81 @@ export function restoreFullBackup(backupRoot, { paths = null, expectedManifestHa
 }
 
 function cleanupRecoveryResidue(journal, paths) {
-  const residue = [journal.stage_root, path.join(paths.receiptsRoot, `${journal.journal_id}.json`)].filter(Boolean);
+  const residue = [journal.stage_root, path.join(paths.receiptsRoot, `${journal.journal_id}.json`), journal.control_plane?.destination_path].filter(Boolean);
   for (const candidate of residue) {
-    const root = candidate === journal.stage_root ? paths.stagingRoot : paths.receiptsRoot;
+    const root = candidate === journal.stage_root
+      ? paths.stagingRoot
+      : candidate === journal.control_plane?.destination_path ? paths.controlPlanesRoot : paths.receiptsRoot;
     removeEntry(candidate, { root, label: "recovery residue" });
+  }
+}
+
+function referencedControlPlaneIds(paths) {
+  const referenced = new Set();
+  for (const name of fs.readdirSync(paths.receiptsRoot).filter((entry) => entry.endsWith(".json")).sort()) {
+    if (!UUID.test(path.basename(name, ".json"))) {
+      throwDistributionError("E_CONTROL_PLANE_CLEANUP", "receipt filename is not safe for control-plane reference analysis", { name }, { retryable: true });
+    }
+    const receipt = readReceipt(path.join(paths.receiptsRoot, name), { paths });
+    if (receipt.control_plane) referenced.add(path.posix.basename(receipt.control_plane.root_ref));
+  }
+  for (const name of fs.readdirSync(paths.journalsRoot).filter((entry) => entry.endsWith(".json")).sort()) {
+    if (!UUID.test(path.basename(name, ".json"))) {
+      throwDistributionError("E_CONTROL_PLANE_CLEANUP", "journal filename is not safe for control-plane reference analysis", { name }, { retryable: true });
+    }
+    const journal = readJournal(path.join(paths.journalsRoot, name), { paths });
+    if (journal.control_plane) referenced.add(path.posix.basename(journal.control_plane.root_ref));
+    if (journal.candidate_receipt?.control_plane) referenced.add(path.posix.basename(journal.candidate_receipt.control_plane.root_ref));
+  }
+  return referenced;
+}
+
+export function pruneUnreferencedControlPlanes(paths) {
+  const referenced = referencedControlPlaneIds(paths);
+  const pruned = [];
+  for (const name of fs.readdirSync(paths.controlPlanesRoot).sort()) {
+    if (!UUID.test(name)) {
+      throwDistributionError("E_CONTROL_PLANE_CLEANUP", "control-plane root contains an unsafe entry", { name }, { retryable: true });
+    }
+    const candidate = path.join(paths.controlPlanesRoot, name);
+    const stat = fs.lstatSync(candidate);
+    if (!stat.isDirectory() || stat.isSymbolicLink()) {
+      throwDistributionError("E_CONTROL_PLANE_CLEANUP", "control-plane entry is not a private directory", { path: candidate }, { retryable: true });
+    }
+    if (referenced.has(name)) continue;
+    removeEntry(candidate, { root: paths.controlPlanesRoot, label: "unreferenced control-plane" });
+    pruned.push(name);
+  }
+  return Object.freeze(pruned);
+}
+
+function validateRecoveryControlPlane(journal, paths) {
+  if (!journal.control_plane) return;
+  const candidates = [journal.control_plane.stage_path, journal.control_plane.destination_path]
+    .filter((candidate) => fs.lstatSync(candidate, { throwIfNoEntry: false }));
+  if (candidates.length > 1) {
+    throwDistributionError("E_RECOVERY_PATH", "control-plane exists in both staged and promoted locations", { journal_id: journal.journal_id });
+  }
+  if (candidates.length === 0) return;
+  const root = candidates[0];
+  const permittedRoot = root === journal.control_plane.stage_path ? journal.stage_root : paths.controlPlanesRoot;
+  assertSafePath(root, { root: permittedRoot, label: "recovery control-plane", allowMissing: false });
+  const installer = path.join(root, "plugins", "maister", "bin", "maister-install.mjs");
+  assertSafePath(installer, { root, label: "recovery control-plane installer", allowMissing: false });
+  const installerStat = fs.lstatSync(installer);
+  if (!installerStat.isFile() || installerStat.isSymbolicLink()) {
+    throwDistributionError("E_RECOVERY_BACKUP", "control-plane installer is not a regular file", { path: installer });
+  }
+  const treeHash = hashTree(root).contentHash;
+  const installerHash = hashFile(installer);
+  if (treeHash !== journal.control_plane.tree_hash || installerHash !== journal.control_plane.installer_sha256) {
+    throwDistributionError("E_RECOVERY_BACKUP", "control-plane does not match its journal hashes", {
+      journal_id: journal.journal_id,
+      expected_tree_hash: journal.control_plane.tree_hash,
+      actual_tree_hash: treeHash,
+      expected_installer_sha256: journal.control_plane.installer_sha256,
+      actual_installer_sha256: installerHash,
+    });
   }
 }
 
@@ -590,14 +662,69 @@ export async function recoverJournal({ journalPath, journal, paths, setJournalSt
   const current = journal ?? readJournal(journalPath, { paths });
   validateJournal(current, { paths });
   if (isTerminal(current)) return current;
+  const publishedCommit = current.steps.some((step) => step.name === "receipt-published" && step.status === "completed");
+  const pendingPrune = current.steps.find((step) => step.name === "control-plane-pruned" && step.status === "pending");
+  if (publishedCommit && pendingPrune) {
+    try {
+      validateRecoveryControlPlane(current, paths);
+      const pruned = pruneUnreferencedControlPlanes(paths);
+      removeEntry(current.stage_root, { root: paths.stagingRoot, label: "completed transaction staging root" });
+      const recovered = appendTransition(current, current.state === "rolled_back" ? "rolled_back" : "recovered", {
+        failure: null,
+        steps: [
+          ...current.steps.map((step) => step === pendingPrune ? {
+            ...step,
+            status: "completed",
+            timestamp: new Date().toISOString(),
+            after_hash: sha256(canonical(pruned)),
+          } : step),
+          { name: "recovery", status: "completed", timestamp: new Date().toISOString(), before_ref: journalPath, after_hash: null },
+        ],
+      });
+      setJournalState(recovered);
+      return recovered;
+    } catch (error) {
+      const failure = distributionError("E_RECOVERY_FAILURE", "post-commit cleanup recovery could not finish", {
+        journal_id: current.journal_id,
+        journal_path: journalPath,
+      }, { cause: error, retryable: true });
+      const retained = appendTransition(current, "verified", {
+        failure: { kind: failure.kind, details: failure.details, retryable: true },
+      });
+      try { setJournalState(retained); } catch { /* preserve the primary recovery failure */ }
+      throw failure;
+    }
+  }
   const rollbackReceipt = current.command === "rollback" && current.previous_receipt
     ? readReceipt(current.previous_receipt, { paths })
     : null;
-  const transaction = current.candidate_receipt?.transaction ?? rollbackReceipt?.transaction;
+  const transaction = current.candidate_receipt?.transaction ?? rollbackReceipt?.transaction ?? {
+    backup_root: current.backup_root,
+    backup_manifest_hash: current.backup_manifest_hash,
+  };
   const backupRoot = transaction?.backup_root;
   const expectedManifestHash = transaction?.backup_manifest_hash ?? null;
-  if (!backupRoot) throwDistributionError("E_RECOVERY_BACKUP", "journal has no recoverable backup", { journal_id: current.journal_id });
+  if (!backupRoot) {
+    const committed = current.steps.some((step) => step.name === "commit" && step.status === "completed");
+    if (committed || !new Set(["prepared", "staged"]).has(current.state)) {
+      throwDistributionError("E_RECOVERY_BACKUP", "journal has no recoverable backup", { journal_id: current.journal_id });
+    }
+    removeEntry(current.stage_root, { root: paths.stagingRoot, label: "pre-commit recovery staging root" });
+    const recovered = appendTransition(current, "recovered", {
+      failure: null,
+      steps: [...current.steps, {
+        name: "recovery",
+        status: "completed",
+        timestamp: new Date().toISOString(),
+        before_ref: current.stage_root,
+        after_hash: null,
+      }],
+    });
+    setJournalState(recovered);
+    return recovered;
+  }
   try {
+    validateRecoveryControlPlane(current, paths);
     restoreFullBackup(backupRoot, { paths, expectedManifestHash });
     cleanupRecoveryResidue(current, paths);
   } catch (error) {

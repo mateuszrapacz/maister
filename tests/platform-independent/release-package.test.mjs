@@ -445,7 +445,7 @@ test("the public CLI keeps one injected GitHub checkout for source and overlay r
   const productionPluginRoot = path.join(ROOT, "plugins/maister");
   const injectedPluginRoot = path.join(sourceRoot, "plugins/maister");
   fs.cpSync(path.join(productionPluginRoot, "common"), path.join(sourceRoot, "common"), { recursive: true });
-  for (const entry of ["agent-projection-v1.json", "agents", "skills", "overlays"]) {
+  for (const entry of ["agent-projection-v1.json", "agents", "bin", "lib", "skills", "overlays"]) {
     fs.cpSync(path.join(productionPluginRoot, entry), path.join(injectedPluginRoot, entry), { recursive: true });
   }
   const attestationPath = path.join(sourceRoot, "e3-portable-core.json");

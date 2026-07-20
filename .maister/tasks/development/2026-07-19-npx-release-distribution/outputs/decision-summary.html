@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Decision Summary — npx Release Distribution</title></head>
+<body>
+  <main>
+    <h1>Decision Summary — npx Release Distribution</h1>
+    <p><strong>Source-controlled implementation passes its current local verification gates; release acceptance remains NO-GO.</strong> CQ-102 is locally fixed test-first: public smoke disables checkout credential persistence and rejects checkout-local Git auth residue before acquisition. V-007 and V-008 remain external GitHub blockers.</p>
+    <h2>Approved scope</h2>
+    <p>G1–G8 were implemented: package/CLI, release transport, archive safety, receipt-bound control plane, delegation, adversarial tests, publication workflow, documentation, and ownership metadata.</p>
+    <h2>Local evidence</h2>
+    <ul><li>Detailed local evidence records 530 passed and 0 failed; the current direct platform-independent run exits 0.</li><li>Focused policy and Git-auth guard tests pass 16/16.</li><li>Aggregate watchdog wrappers have terminal passing evidence in the detailed verification report.</li><li>Package/validation, lifecycle, recovery, journal selector, signal cleanup, and transport abort checks passed.</li></ul>
+    <h2>Release decision</h2>
+    <p>Publication and <code>latest</code> promotion remain blocked. The full aggregate transaction gate and protected/public release evidence are incomplete. Final handoff approval is not inferred from implementation approval.</p>
+    <h2>GitHub-only scope revision</h2>
+    <p>The user kept the workflow open and replaced public npmjs publication with direct execution from an exact GitHub tag or full commit. Maister will not be published to a package registry. GitHub Release archives and the existing transactional installer remain authoritative.</p>
+    <p>The exact <code>tar@7.5.20</code> dependency remains allowed as a read-only third-party npmjs acquisition. Private GitHub API credentials resolve from <code>GH_TOKEN</code>, then <code>GITHUB_TOKEN</code>, then bounded <code>gh auth</code>, with anonymous fallback for public repositories.</p>
+    <h2>Phase 2 routing</h2>
+    <p>The user selected <strong>Continue to Phase 3: TDD Red Gate</strong> after reviewing the complete GitHub-only scope and remaining verification risks.</p>
+    <h2>Phase 3 exit</h2>
+    <p>The user selected <strong>Continue to Phase 4</strong> after all three GitHub-only contract tests failed for their intended reasons.</p>
+    <h2>Phase 4 exit</h2>
+    <p>The user selected <strong>Continue to Phase 5</strong>; UI work was skipped because the distribution task has no user-interface surface.</p>
+    <h2>Phase 5 exit</h2>
+    <p>The user selected <strong>Continue to specification audit</strong> after the 38-requirement GitHub-only specification was completed without unresolved design decisions.</p>
+    <h2>Specification-audit selection</h2>
+    <p>The user selected <strong>Yes, run audit (Recommended)</strong> for the high-risk distribution and transaction scope.</p>
+    <h2>Audit remediation — Git acquisition identity</h2>
+    <p>The user selected a prepare-time resolved-commit manifest with exact selector enforcement in protected CI.</p>
+    <h2>Audit remediation — repository visibility</h2>
+    <p>The user kept the current public repository and required public E2E now, hermetic private-mode tests, and a documented protected-private migration checklist for future activation.</p>
+    <h2>Audit remediation — connection timing</h2>
+    <p>The user selected one 15-second pre-header deadline per attempt covering DNS, TCP, TLS, proxy negotiation, and response headers.</p>
+    <h2>Phase 11 second fix selection</h2>
+    <p>The user selected <strong>Fix all fixable issues</strong>, authorizing the V-016 source fix while leaving external GitHub prerequisites unchanged.</p>
+    <h2>V-016 lifecycle remediation</h2>
+    <p>The GitHub publication job now ends at <code>GITHUB_VERIFIED</code>. A downstream finalizer requires retained anonymous evidence from Linux, macOS, and Windows, records <code>PUBLIC_NO_AUTH_SMOKE_VERIFIED</code>, runs hermetic private transport, records <code>HERMETIC_PRIVATE_TRANSPORT_VERIFIED</code>, and only then uploads canonical evidence.</p>
+    <p>Lifecycle policy 8/8, policy/Make/drift 19/19, evidence 40/40, package validation, YAML parsing, and diff checks pass locally.</p>
+    <h2>Phase 11 second verification rerun</h2>
+    <p>The user selected <strong>Yes, re-run verification</strong>, authorizing full post-V-016 verification and canonical report replacement.</p>
+    <h2>Final local remediation result and current gate</h2>
+    <p>The user selected <strong>Fix all fixable issues</strong>. CQ-102 and subsequent release-harness, redirect, ambient-environment, and diagnostic findings were fixed with static and behavioral regressions. Focused policy and Git-auth guard evidence passes <strong>16/16</strong>.</p>
+    <p>The user then selected <strong>Proceed with known issues</strong>, allowing workflow continuation while preserving the external release NO-GO for V-007 and V-008. Phase 11 continued to Phase 12; E2E was skipped because <code>e2e_enabled</code> is false.</p>
+    <h2>Phase 13 documentation result</h2>
+    <p>The user selected <strong>Continue to Phase 14</strong>. The generated <code>documentation/user-guide.md</code> covers exact GitHub tag/full-commit installation and <code>npm exec</code>, public/private credential boundaries, provenance, recovery, supported targets, current external blockers, and the future-private migration checklist. No browser screenshots or unsupported release evidence were invented.</p>
+    <h2>Final handoff gate</h2>
+    <p>Final handoff question: <strong>Complete workflow?</strong> Options: <strong>Complete workflow</strong> / <strong>Keep workflow open</strong>. The user selected <strong>Complete workflow</strong>. Workflow status is <strong>completed</strong>; overall release acceptance remains NO-GO until V-007 and V-008 are satisfied.</p>
+  </main>
+</body>
+</html>

@@ -11,8 +11,14 @@ const STATES = new Set([
 const COMMANDS = new Set(["install", "update", "uninstall", "rollback", "recover"]);
 const STEP_NAMES = new Set([
   "materialize", "stage-validated", "snapshot", "commit", "integrity", "receipt-published",
-  "uninstall", "rollback", "restore-active-receipt", "recovery",
+  "control-plane-staged", "control-plane-promoted", "control-plane-pruned", "candidate-receipt-written",
+  "active-pointer-transition", "uninstall", "rollback", "restore-active-receipt", "recovery",
 ]);
+const CONTROL_PLANE_FIELDS = [
+  "schema_version", "root_ref", "installer_ref", "stage_path", "destination_path",
+  "tree_hash", "installer_sha256", "cli_contract_version", "source_version", "source_commit", "source_content_hash", "cleanup_owner",
+];
+const SHA1_COMMIT = /^[0-9a-f]{40}$/u;
 const STEP_STATUSES = new Set(["pending", "completed", "failed"]);
 const TRANSITIONS = Object.freeze({
   prepared: new Set(["prepared", "staged", "snapshotted", "committing", "rolled_back", "recovered", "failed", "rollback_failed"]),
@@ -48,6 +54,15 @@ function object(value, location) {
 function exactFields(value, fields, location) {
   object(value, location);
   const allowed = new Set(fields);
+  const unknown = Object.keys(value).find((field) => !allowed.has(field));
+  if (unknown) invalid(`${location} has unknown field ${unknown}`, { location, field: unknown });
+  const missing = fields.find((field) => !Object.hasOwn(value, field));
+  if (missing) invalid(`${location} is missing ${missing}`, { location, field: missing });
+}
+
+function exactFieldsWithOptional(value, fields, optionalFields, location) {
+  object(value, location);
+  const allowed = new Set([...fields, ...optionalFields]);
   const unknown = Object.keys(value).find((field) => !allowed.has(field));
   if (unknown) invalid(`${location} has unknown field ${unknown}`, { location, field: unknown });
   const missing = fields.find((field) => !Object.hasOwn(value, field));
@@ -141,9 +156,36 @@ function validateManagedRoots(roots, target, paths) {
   if (roots.length !== definition?.managedRoots.length) invalid("journal managed roots are incomplete", { target });
 }
 
+function validateControlPlane(controlPlane, journal, paths) {
+  if (controlPlane === null) return;
+  exactFields(controlPlane, CONTROL_PLANE_FIELDS, "control_plane");
+  if (controlPlane.schema_version !== 1) invalid("control_plane.schema_version must be 1");
+  const expectedRootRef = `control-planes/${journal.journal_id}`;
+  const expectedInstallerRef = `${expectedRootRef}/plugins/maister/bin/maister-install.mjs`;
+  if (controlPlane.root_ref !== expectedRootRef || controlPlane.installer_ref !== expectedInstallerRef) {
+    invalid("journal control_plane refs must be receipt-bound", { root_ref: controlPlane.root_ref, installer_ref: controlPlane.installer_ref });
+  }
+  absolutePath(controlPlane.stage_path, "control_plane.stage_path");
+  absolutePath(controlPlane.destination_path, "control_plane.destination_path");
+  for (const field of ["tree_hash", "installer_sha256", "source_content_hash"]) {
+    if (typeof controlPlane[field] !== "string" || !SHA256.test(controlPlane[field])) invalid(`control_plane.${field} must be a SHA-256 hash`);
+  }
+  if (controlPlane.cli_contract_version !== 1) invalid("control_plane.cli_contract_version is unsupported");
+  string(controlPlane.source_version, "control_plane.source_version");
+  if (typeof controlPlane.source_commit !== "string" || !SHA1_COMMIT.test(controlPlane.source_commit)) invalid("control_plane.source_commit must be a full commit hash");
+  if (controlPlane.cleanup_owner !== "transaction") invalid("control_plane.cleanup_owner must be transaction");
+  if (paths) {
+    if (controlPlane.stage_path !== path.join(journal.stage_root, "control-plane")) invalid("control_plane.stage_path does not match the journal staging root");
+    if (controlPlane.destination_path !== path.join(paths.controlPlanesRoot, journal.journal_id)) invalid("control_plane.destination_path does not match the receipt-bound destination");
+  }
+}
+
 export function isTerminal(journal) {
-  return journal.state === "rolled_back" || journal.state === "recovered"
-    || (journal.state === "verified" && journal.steps.some((entry) => entry.name === "receipt-published" && entry.status === "completed"));
+  const cleanupComplete = !journal.steps.some((entry) => entry.status === "pending" || entry.status === "failed");
+  return cleanupComplete && (journal.state === "rolled_back" || journal.state === "recovered"
+    || (journal.state === "verified"
+      && journal.steps.some((entry) => entry.name === "receipt-published" && entry.status === "completed")
+    ));
 }
 
 export function isUnresolved(journal) {
@@ -154,9 +196,9 @@ export function validateJournal(journal, { paths = null } = {}) {
   rejectLegacySchema(journal);
   const fields = [
     "schema_version", "journal_id", "command", "target", "started_at", "updated_at", "state",
-    "state_history", "stage_root", "managed_roots", "previous_receipt", "candidate_receipt", "lock", "steps", "failure",
+    "state_history", "stage_root", "managed_roots", "previous_receipt", "candidate_receipt", "control_plane", "backup_root", "backup_manifest_hash", "lock", "steps", "failure",
   ];
-  exactFields(journal, fields, "journal");
+  exactFieldsWithOptional(journal, fields.filter((field) => !["control_plane", "backup_root", "backup_manifest_hash"].includes(field)), ["control_plane", "backup_root", "backup_manifest_hash"], "journal");
   if (journal.schema_version !== 2) invalid("journal schema_version must be 2");
   string(journal.journal_id, "journal_id");
   if (!UUID.test(journal.journal_id)) invalid("journal_id must be a UUID");
@@ -170,6 +212,9 @@ export function validateJournal(journal, { paths = null } = {}) {
   if (!STATES.has(journal.state)) invalid(`unsupported journal state: ${journal.state}`);
   validateHistory(journal.state_history, journal.state);
   absolutePath(journal.stage_root, "stage_root");
+  validateControlPlane(journal.control_plane ?? null, journal, paths);
+  if (journal.backup_root !== null && journal.backup_root !== undefined) absolutePath(journal.backup_root, "backup_root");
+  if (journal.backup_manifest_hash !== null && journal.backup_manifest_hash !== undefined && !SHA256.test(journal.backup_manifest_hash)) invalid("backup_manifest_hash must be a SHA-256 hash or null");
   if (journal.previous_receipt !== null) {
     absolutePath(journal.previous_receipt, "previous_receipt");
     if (!UUID.test(path.basename(journal.previous_receipt, ".json")) || path.extname(journal.previous_receipt) !== ".json") invalid("previous_receipt must name a UUID receipt");
@@ -179,12 +224,23 @@ export function validateJournal(journal, { paths = null } = {}) {
   validateSteps(journal.steps);
   validateFailure(journal.failure);
   const published = journal.steps.some((entry) => entry.name === "receipt-published" && entry.status === "completed");
-  if (published && !new Set(["verified", "rolled_back"]).has(journal.state)) invalid("receipt-published journals must be in a publication terminal state");
+  if (published && !new Set(["verified", "rolled_back", "recovered"]).has(journal.state)) invalid("receipt-published journals must be in a publication terminal state");
   if (journal.state === "recovered" && !journal.steps.some((entry) => entry.name === "recovery" && entry.status === "completed")) invalid("recovered journals must record a recovery step");
   if (journal.state === "rolled_back" && !journal.steps.some((entry) => entry.name === "rollback" || entry.name === "uninstall")) invalid("rolled_back journals must record rollback or uninstall");
   if (journal.candidate_receipt !== null) {
     validateReceipt(journal.candidate_receipt, { paths });
     if (journal.candidate_receipt.receipt_id !== journal.journal_id) invalid("candidate_receipt.receipt_id must equal journal_id");
+    if ((journal.control_plane ?? null) !== null && JSON.stringify(journal.candidate_receipt.control_plane) !== JSON.stringify({
+      schema_version: journal.control_plane.schema_version,
+      root_ref: journal.control_plane.root_ref,
+      installer_ref: journal.control_plane.installer_ref,
+      tree_hash: journal.control_plane.tree_hash,
+      installer_sha256: journal.control_plane.installer_sha256,
+      cli_contract_version: journal.control_plane.cli_contract_version,
+      source_version: journal.control_plane.source_version,
+      source_commit: journal.control_plane.source_commit,
+      source_content_hash: journal.control_plane.source_content_hash,
+    })) invalid("candidate_receipt.control_plane must equal the journal binding");
   }
   if (paths) {
     const expectedStage = path.join(paths.stagingRoot, journal.journal_id);
@@ -195,6 +251,12 @@ export function validateJournal(journal, { paths = null } = {}) {
     if (journal.candidate_receipt) {
       const backupRoot = journal.candidate_receipt.transaction.backup_root;
       if (backupRoot !== path.join(paths.backupsRoot, journal.journal_id)) invalid("candidate backup_root is outside the backup root");
+    }
+    if (journal.backup_root !== null && journal.backup_root !== undefined) {
+      contained(paths.backupsRoot, journal.backup_root, "journal backup_root");
+      const expectedBackupRoot = path.join(paths.backupsRoot, journal.journal_id);
+      const rollbackBackup = journal.command === "rollback" && UUID.test(path.basename(journal.backup_root));
+      if (journal.backup_root !== expectedBackupRoot && !rollbackBackup) invalid("journal backup_root is outside the backup root");
     }
   }
   return journal;

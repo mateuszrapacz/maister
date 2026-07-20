@@ -46,6 +46,35 @@ function runWorker(fixture, expected = "accepted") {
   });
 }
 
+test("hostile archive rejection is supervised without an unhandled-rejection race", async () => {
+  const fixture = { name: "rejection-race", iterations: 25 };
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "maister-archive-rejection-race-"));
+  try {
+    const child = spawn(process.execPath, ["--unhandled-rejections=strict", WORKER.pathname, scratch, JSON.stringify(fixture), "rejection-race"], {
+      stdio: ["ignore", "pipe", "pipe"],
+      shell: false,
+    });
+    const stdout = [];
+    const stderr = [];
+    child.stdout.on("data", (chunk) => stdout.push(chunk));
+    child.stderr.on("data", (chunk) => stderr.push(chunk));
+    const [code, signal] = await new Promise((resolve, reject) => {
+      child.once("error", reject);
+      child.once("close", (...result) => resolve(result));
+    });
+    assert.equal(signal, null, Buffer.concat(stderr).toString("utf8"));
+    assert.equal(code, 0, Buffer.concat(stderr).toString("utf8"));
+    assert.equal(Buffer.concat(stderr).toString("utf8"), "");
+    assert.deepEqual(JSON.parse(Buffer.concat(stdout).toString("utf8")), {
+      schemaVersion: 1,
+      status: "rejected",
+      iterations: fixture.iterations,
+    });
+  } finally {
+    fs.rmSync(scratch, { recursive: true, force: true });
+  }
+});
+
 test("streaming inspection remains within the near-limit RSS ceiling and reports terminal counters", async () => {
   const fixture = FIXTURES.accepted.find(({ name }) => name === "near-file-limit");
   const { scratch, evidence } = await runWorker(fixture);

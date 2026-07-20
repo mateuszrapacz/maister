@@ -2,9 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { createGzip } from "node:zlib";
+import zlib, { createGzip } from "node:zlib";
 
-import { extractArchiveFile, inspectArchiveFile } from "../../lib/launcher/archive-port.mjs";
+import { extractArchiveFile, inspectArchiveFile, inspectArchiveStream } from "../../lib/launcher/archive-port.mjs";
 
 const DATA_CHUNK_BYTES = 64 * 1024;
 
@@ -67,9 +67,33 @@ async function createFixtureArchive(destination, fixture) {
   );
 }
 
+async function* delayedHostileArchive(bytes) {
+  yield bytes.subarray(0, bytes.length - 8);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  yield bytes.subarray(bytes.length - 8);
+}
+
+async function runRejectionRace(iterations) {
+  const invalidTar = Buffer.concat([Buffer.alloc(512, 1), Buffer.alloc(1024)]);
+  const hostileArchive = zlib.gzipSync(invalidTar, { level: 6, mtime: 0 });
+  for (let iteration = 0; iteration < iterations; iteration += 1) {
+    await inspectArchiveStream(delayedHostileArchive(hostileArchive))
+      .then(() => {
+        throw new Error("hostile archive was accepted");
+      }, (error) => {
+        if (error.kind !== "E_LAUNCHER_ARCHIVE_HEADER") throw error;
+      });
+  }
+  process.stdout.write(`${JSON.stringify({ schemaVersion: 1, status: "rejected", iterations })}\n`);
+}
+
 async function main() {
   const [scratch, fixtureJson, expected] = process.argv.slice(2);
   const fixture = JSON.parse(fixtureJson);
+  if (expected === "rejection-race") {
+    await runRejectionRace(fixture.iterations);
+    return;
+  }
   const archivePath = path.join(scratch, "archive.tar.gz");
   const baselineRssBytes = process.memoryUsage.rss();
   let peakRssBytes = baselineRssBytes;

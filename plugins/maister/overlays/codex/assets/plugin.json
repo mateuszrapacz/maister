@@ -3,8 +3,8 @@
   "version": "2.2.1-fork.1",
   "description": "Structured, standards-aware development workflows for Codex",
   "author": {
-    "name": "Skillpanel",
-    "email": "marek@skillpanel.com"
+    "name": "Mateusz Rapacz",
+    "email": "mateuszrapacz@users.noreply.github.com"
   },
   "repository": "https://github.com/mateuszrapacz/maister",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "displayName": "Maister",
     "shortDescription": "Standards-aware development workflows for Codex",
     "longDescription": "Specification, planning, implementation, and verification workflows for Codex.",
-    "developerName": "Skillpanel",
+    "developerName": "Mateusz Rapacz",
     "category": "Developer tools",
     "capabilities": ["Read", "Write"],
     "defaultPrompt": ["Use Maister's structured development workflows for this task."]

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High-Level Design — Thin npx release launcher</title>
+<style>
+:root{--bg:#f6f7f9;--surface:#fff;--border:#e2e5ea;--text:#1a1d23;--dim:#667085;--accent:#4f46e5;--soft:#eef2ff;--ok:#15803d;--oksoft:#ecfdf3;--warn:#b45309;--warnsoft:#fffbeb;--crit:#b91c1c;--critsoft:#fef2f2;--info:#1d4ed8;--infosoft:#eff6ff;--radius:10px}
+@media(prefers-color-scheme:dark){:root{--bg:#111418;--surface:#1a1f26;--border:#303844;--text:#e6e9ee;--dim:#9aa4b2;--accent:#a5b4fc;--soft:#272b4d;--ok:#4ade80;--oksoft:#11291a;--warn:#fbbf24;--warnsoft:#302510;--crit:#f87171;--critsoft:#321616;--info:#60a5fa;--infosoft:#15233a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0 auto;max-width:1120px;padding:24px 20px 64px;background:var(--bg);color:var(--text);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}h1{font-size:24px;letter-spacing:-.02em;margin-bottom:8px}h2{font-size:17px;margin:30px 0 10px}h3{font-size:14px;margin:4px 0 8px}p{max-width:90ch}.crumbs{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px;margin-bottom:18px}.crumbs .here{font-weight:700;color:var(--text)}.crumbs .md{margin-left:auto;color:var(--dim)}header p{color:var(--dim);max-width:850px}.badge,.tag{display:inline-block;border-radius:999px;background:var(--soft);color:var(--accent);font-weight:650}.badge{padding:3px 9px;font-size:11px;text-transform:uppercase;letter-spacing:.05em}.tag{padding:2px 7px;font-size:11px;margin:2px 3px 2px 0}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:12px 0}.tldr{border-left:4px solid var(--accent)}.risk{background:var(--warnsoft);border-color:var(--warn)}.decision{border-left:3px solid var(--accent)}.ok{background:var(--oksoft);border-color:var(--ok)}.tiles{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.tile{min-width:105px;padding:10px 14px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}.tile b{display:block;font-size:19px}.tile span{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}.toc{font-size:12.5px;color:var(--dim);margin:18px 0}.flow{font:12.5px/1.8 ui-monospace,SFMono-Regular,Menlo,monospace}pre{overflow:auto;padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:#171a21;color:#e5e7eb;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);padding:1px 5px;border-radius:4px}table{width:100%;border-collapse:collapse}th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--border)}th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--dim)}ul,ol{padding-left:22px}li{margin:4px 0}.sev{display:inline-block;font-size:10px;font-weight:750;text-transform:uppercase;border-radius:999px;padding:2px 7px;margin-right:5px}.sev.warn{background:var(--warnsoft);color:var(--warn)}.sev.crit{background:var(--critsoft);color:var(--crit)}.sev.info{background:var(--infosoft);color:var(--info)}.small{font-size:12px;color:var(--dim)}@media(max-width:760px){body{padding:18px 14px 48px}.cards{grid-template-columns:1fr}.crumbs .md{margin-left:0;width:100%}table{display:block;overflow-x:auto}h1{font-size:21px}}
+</style>
+</head>
+<body>
+<nav class="crumbs" aria-label="Artifact navigation">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="research-report.html">Research report</a>
+  <a href="solution-exploration.html">Exploration</a>
+  <span class="here">Design</span>
+  <a href="decision-log.html">Decision log</a>
+  <a class="md" href="high-level-design.md" target="_blank" rel="noopener">Markdown twin ↗</a>
+</nav>
+<header>
+  <span class="badge">Phase 5 · High-level design</span>
+  <h1>Thin npx release launcher</h1>
+  <p>A verified distribution adapter for <code>@mateuszrapacz/maister</code> that resolves GitHub Release payloads and preserves <code>maister-install.mjs</code> as the only host mutation authority.</p>
+</header>
+<div class="tiles">
+  <div class="tile"><b>1</b><span>mutation authority</span></div>
+  <div class="tile"><b>3</b><span>explicit targets</span></div>
+  <div class="tile"><b>7</b><span>lifecycle commands</span></div>
+  <div class="tile"><b>5</b><span>accepted ADRs</span></div>
+  <div class="tile"><b>Fail closed</b><span>verification policy</span></div>
+</div>
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Publish a small Node.js ESM package with a <code>maister</code> binary. For install/update it binds the concrete npm package version to a matching <code>mateuszrapacz/maister</code> GitHub Release, selects one allowlisted target archive, verifies digest, topology, source manifest and E3, extracts privately, and delegates to the archive's installer.</p>
+  <p>The launcher writes only invocation-owned temporary data. Existing installer locks, journals, transactions, settings ownership, receipts, rollback and recovery remain unchanged. Exact versions are reproducible; <code>latest</code> must show the exact package/release selected.</p>
+  <h2>Key Decisions</h2>
+  <ul>
+    <li>Thin launcher and one mutation authority — <a href="decision-log.html#adr-001">ADR-001</a>.</li>
+    <li>GitHub Release payloads with a closed target map — <a href="decision-log.html#adr-002">ADR-002</a>.</li>
+    <li>Exact baseline plus visible <code>latest</code> resolution — <a href="decision-log.html#adr-003">ADR-003</a>.</li>
+    <li>Fail-closed verification and safe private extraction — <a href="decision-log.html#adr-004">ADR-004</a>.</li>
+    <li>Coordinated npm/GitHub publication with honest provenance claims — <a href="decision-log.html#adr-005">ADR-005</a>.</li>
+  </ul>
+</section>
+<section class="card risk">
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li><span class="sev warn">Engine</span>The Node floor must be measured during implementation; Node 22 is only today's release-CI reference.</li>
+    <li><span class="sev crit">Trust</span>Unsigned checksums and provenance detect inconsistency but do not independently authenticate the publisher.</li>
+    <li><span class="sev warn">Extraction</span>The safety policy is fixed; the cross-platform library/tool remains to be proven against adversarial fixtures.</li>
+    <li><span class="sev info">Release</span>npm and GitHub publication is not atomic, so promotion and partial-failure handling are explicit gates.</li>
+  </ul>
+</section>
+<nav class="toc">Contents: <a href="#architecture">Architecture</a> · <a href="#components">Components</a> · <a href="#flows">Flows</a> · <a href="#resolution">Resolution</a> · <a href="#verification">Verification</a> · <a href="#errors">Errors</a> · <a href="#publishing">Publishing</a> · <a href="#security">Security</a> · <a href="#testing">Testing</a> · <a href="#rollout">Rollout</a> · <a href="#integration">Integration</a></nav>
+<main>
+<section id="architecture">
+  <h2>Architecture style and boundaries</h2>
+  <div class="card">
+<pre>User / CI
+   | npx @mateuszrapacz/maister@&lt;selector&gt; &lt;command&gt; --target &lt;target&gt;
+   v
++--------------- npm distribution adapter ----------------+
+| parse | resolve | download | verify | inspect | extract |
+|                    delegate | forward | cleanup          |
++----------------------------|------------------------------+
+                             | local:&lt;verified-temp-root&gt;
+                             v
++--------------- existing mutation authority --------------+
+| maister-install.mjs                                      |
+| E3 | materialize | lock | journal | transaction | receipt|
+| drift | rollback | recover                               |
++----------------------------|------------------------------+
+                             v
+                   managed host state</pre>
+    <p><strong>Distribution boundary:</strong> turns a selector into a verified local payload and may write only its private temporary root. <strong>Transaction boundary:</strong> turns that payload into host state and is crossed only by <code>maister-install.mjs</code>.</p>
+    <p class="small">Text fallback/description: the flow is linear from npx to a verified local extraction, then into the existing installer, then into host state. No launcher edge directly reaches host state.</p>
+  </div>
+</section>
+<section id="components">
+  <h2>Components and responsibilities</h2>
+  <div class="card"><table>
+    <thead><tr><th>Component</th><th>Owns</th><th>Must not own</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Package + binary</strong></td><td>ESM/bin/engine metadata; concrete package version.</td><td>Target payloads or persistent host state.</td></tr>
+      <tr><td><strong>CLI adapter</strong></td><td>Command, explicit target, selector, JSON and pass-through validation.</td><td>Host auto-detection as authority or installer result rewriting.</td></tr>
+      <tr><td><strong>Release resolver</strong></td><td>Exact <code>X.Y.Z → vX.Y.Z</code>; stable published release identity.</td><td>Branch, prerelease or neighboring-version fallback.</td></tr>
+      <tr><td><strong>Target policy</strong></td><td><code>codex</code>, <code>cursor</code>, <code>kiro-cli</code> to one fixed asset each.</td><td>Arbitrary repository, URL or asset input.</td></tr>
+      <tr><td><strong>Downloader</strong></td><td>HTTPS, redirects, status, timeout, streamed size and response limits.</td><td>Writing outside invocation temp or retrying semantic errors.</td></tr>
+      <tr><td><strong>Verifier/extractor</strong></td><td>Digest, release/source/E3 binding, archive policy, private extraction and topology recheck.</td><td>Publisher-authentication claims or host extraction.</td></tr>
+      <tr><td><strong>Delegate</strong></td><td>Spawn known installer, pass validated local source, forward output/status/signals.</td><td>Translating codes 2–8 or editing receipts.</td></tr>
+      <tr><td><strong>Cleanup guard</strong></td><td>Remove exact invocation temp root in <code>finally</code>.</td><td>Removing target or installer state.</td></tr>
+      <tr><td><strong>Existing installer</strong></td><td>Materialization, mutation, settings, lock, journal, receipt, rollback and recovery.</td><td>npm/GitHub selector resolution.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section id="flows">
+  <h2>Lifecycle flows</h2>
+  <div class="cards">
+    <article class="card"><h3>Install / update</h3><p class="flow">parse → exact release → allowlisted asset → private temp → bounded download → digest → inspect → extract → manifest + E3 → show provenance → delegate → forward → cleanup</p><p>Every pre-delegation failure leaves host and installer state unchanged. Once delegation starts, only the installer may compensate or recover.</p></article>
+    <article class="card"><h3>Status / verify</h3><p class="flow">parse target → delegate locally → forward receipt/drift result</p><p>No network or release resolution. Status reads installed state; verify applies existing receipt, inventory, settings and integrity checks.</p></article>
+    <article class="card"><h3>Uninstall / rollback</h3><p class="flow">parse target → delegate → installer journal/ownership checks → forward terminal result</p><p>The launcher never pre-deletes host files, settings, receipts, backups or locks.</p></article>
+    <article class="card"><h3>Recover</h3><p class="flow">operator quiesces host → delegate offline → preserve journal/backups → verify receipt → forward</p><p>Code 7 remains unresolved state. The launcher does not recover by deleting locks or retrying blindly.</p></article>
+  </div>
+</section>
+<section id="resolution">
+  <h2>Exact and latest resolution</h2>
+  <div class="cards">
+    <div class="card decision"><h3>Exact <code>@X.Y.Z</code></h3><ol><li>Require GitHub tag <code>vX.Y.Z</code>.</li><li>Require exactly one mapped target asset.</li><li>Require release, manifest and E3 source version <code>X.Y.Z</code>.</li><li>Bind full commit and content hashes through final receipt.</li><li>Never fall back.</li></ol></div>
+    <div class="card decision"><h3>Moving <code>@latest</code></h3><p>npm resolves the dist-tag before execution. The running package's concrete version becomes the only acceptable GitHub version. Do not independently choose GitHub's moving “latest release.”</p><pre>Resolved latest -&gt; 2.2.1 (v2.2.1)
+target codex · asset maister-codex.tar.gz</pre><p>JSON carries requested and resolved values; the receipt durably binds resolved source version and commit.</p></div>
+  </div>
+</section>
+<section id="verification">
+  <h2>Verification, extraction and cleanup</h2>
+  <div class="card"><ol>
+    <li><strong>Inputs:</strong> strict command/version and closed repository/target/asset policy.</li>
+    <li><strong>Transport:</strong> HTTPS, expected hosts, bounded redirects, timeout, status and streamed bytes.</li>
+    <li><strong>Release:</strong> published stable release, exact version/tag, unique expected asset.</li>
+    <li><strong>Digest:</strong> locally computed SHA-256 agrees with selected release records and GitHub digest when available.</li>
+    <li><strong>Archive inspection:</strong> reject absolute, drive, UNC, traversal, ambiguous, duplicate/case-colliding paths; unsafe links, special files, modes, counts and sizes.</li>
+    <li><strong>Private extraction:</strong> exclusive restrictive temp root; no overwrite or path escape.</li>
+    <li><strong>Post-extraction topology:</strong> exactly one known installer, selected overlay, source manifest and E3; no cross-target payload.</li>
+    <li><strong>Source + evidence:</strong> version, full commit, content/core/artifact hashes and fresh passed E3 all agree.</li>
+  </ol></div>
+  <div class="card ok"><h3>Cleanup invariant</h3><p>Register cleanup immediately, execute it in <code>finally</code>, and delete only the exact invocation-owned temp root. Cleanup failure preserves the primary result and reports the retained path; it never triggers host rollback.</p></div>
+</section>
+<section id="errors">
+  <h2>Error, JSON, signal and exit-code forwarding</h2>
+  <div class="card">
+    <p>Before delegation, errors name the launcher phase and resolved release context known so far. After delegation, installer stdout, stderr, JSON, receipt/journal paths and exit status are authoritative and remain unchanged.</p>
+    <table><thead><tr><th>Code</th><th>Existing meaning</th><th>Launcher behavior</th></tr></thead><tbody>
+      <tr><td>0</td><td>Success</td><td>Forward with release context.</td></tr><tr><td>2</td><td>Usage/settings format</td><td>No retry.</td></tr><tr><td>3</td><td>Source resolution</td><td>No version or branch fallback.</td></tr><tr><td>4</td><td>Validation/evidence</td><td>No alternate asset.</td></tr><tr><td>5</td><td>Drift</td><td>Operator decision required.</td></tr><tr><td>6</td><td>Lock busy</td><td>No blind retry loop.</td></tr><tr><td>7</td><td>Transaction/recovery</td><td>Preserve and report durable state.</td></tr><tr><td>8</td><td>Integrity</td><td>Stop and investigate.</td></tr>
+    </tbody></table>
+    <p>With <code>--json</code>, stdout is machine-readable only. Signals are forwarded to the child; interruption cannot become success.</p>
+  </div>
+</section>
+<section id="publishing">
+  <h2>npm and GitHub publishing alignment</h2>
+  <div class="card"><p class="flow">clean vX.Y.Z → validate/parity/E3/package → deterministic 3-target archives → verify SHA256SUMS/SBOM/PROVENANCE → publish GitHub → verify public assets → npm pack/smoke → publish exact npm X.Y.Z → public exact npx smoke → move latest</p><ul><li>npm version, GitHub tag, source manifest/version/commit and E3 bytes must align.</li><li>Do not move <code>latest</code> before the exact public chain passes.</li><li>Retries reuse identical immutable bytes; fixes use a new patch version.</li><li>A partial/broken release is withheld from promotion and deprecated where appropriate.</li></ul></div>
+</section>
+<section id="security">
+  <h2>Security, trust and observability</h2>
+  <div class="cards">
+    <div class="card"><h3>Threats addressed</h3><ul><li>Wrong target/asset: allowlist.</li><li>Version substitution: npm/tag/manifest/E3/receipt binding.</li><li>Corruption: local digest and release observations.</li><li>Archive attacks: bounded inspect-before-extract.</li><li>Partial host writes: existing transaction/recovery.</li><li>Moving input: visible <code>latest</code> resolution.</li></ul></div>
+    <div class="card risk"><h3>Residual trust risk</h3><p>Current sidecars and E3 are not an independent publisher signature. A compromise that produces internally consistent artifacts remains possible. Trusted npm publishing and stronger signing/attestation are a separate decision.</p></div>
+  </div>
+  <div class="card"><h3>Local observability</h3><p class="flow">resolve → download → verify_digest → inspect → extract → verify_source → delegate → cleanup</p><p>Human and JSON output report run ID, selector, exact version/tag, target, asset, digest, source commit, result code and receipt/journal paths. Credentials are redacted. No remote telemetry is required.</p></div>
+</section>
+<section id="testing">
+  <h2>Compatibility and test strategy</h2>
+  <div class="cards">
+    <div class="card"><h3>Compatibility</h3><ul><li>Explicit Codex, Cursor and Kiro CLI only.</li><li>Linux, macOS and Windows path/link/temp/signal coverage.</li><li>Engine floor declared only after Node/npm matrix verification.</li><li>Delegate to archive installer of the exact same version.</li><li>No launcher-owned persistent state schema.</li></ul></div>
+    <div class="card"><h3>Test layers</h3><ul><li>CLI/resolver/allowlist/JSON/forwarding units.</li><li>Network status, redirects, timeout and size limits.</li><li>Malicious archive path/link/type/count/size corpus.</li><li>Manifest/source/E3 mismatch and freshness tests.</li><li>Three-target lifecycle with isolated home/state.</li><li>Drift, lock, transaction, rollback and recovery forwarding.</li><li><code>npm pack</code>, release alignment and exact public npx smoke.</li></ul></div>
+  </div>
+  <p class="card"><strong>Critical rejection invariant:</strong> every pre-delegation failure leaves target, managed settings and installer state absent or byte-exact unchanged.</p>
+</section>
+<section id="rollout">
+  <h2>Rollout</h2>
+  <div class="card"><ol><li>Freeze CLI, target map, release descriptor, error/JSON fixtures and malicious archive corpus; verify Node floor.</li><li>Build and test a local packed launcher with mocked GitHub evidence.</li><li>Run three-target lifecycle in isolated environments on supported operating systems.</li><li>Add version/commit/E3 release alignment and publication-order gates.</li><li>Publish matching GitHub assets and first exact npm version; smoke exact public npx.</li><li>Promote <code>latest</code>; rollback the dist-tag, not installed host state, if the channel fails.</li><li>Evaluate trusted publishing/signing in a follow-up ADR.</li></ol></div>
+</section>
+<section id="integration">
+  <h2>Integration with existing installer and state</h2>
+  <div class="card"><table><thead><tr><th>Existing contract</th><th>Integration rule</th></tr></thead><tbody>
+    <tr><td>Seven commands + three targets</td><td>Accept and delegate the same lifecycle/target vocabulary.</td></tr><tr><td>Local source resolver</td><td>Install/update pass <code>local:&lt;verified-temp-root&gt;</code>; no second checkout.</td></tr><tr><td>Source manifest + E3</td><td>Launcher prevalidates; installer independently validates and records evidence.</td></tr><tr><td>Materializer/overlay</td><td>Archive source and selected same-source overlay remain installer inputs.</td></tr><tr><td>Lock/journal/staging/backups</td><td>Never opened or edited by launcher.</td></tr><tr><td>Receipt/settings/drift</td><td>Installer is authoritative; launcher reports paths and codes only.</td></tr><tr><td>State root</td><td>Remains <code>$XDG_STATE_HOME/maister/&lt;target&gt;</code> or <code>~/.local/state/maister/&lt;target&gt;</code>.</td></tr>
+  </tbody></table></div>
+  <div class="card ok"><h3>Success boundary</h3><p>The npx channel is complete when exact/latest resolution is auditable, all verification failures are mutation-free, all seven lifecycle outcomes forward unchanged, all three targets pass isolated end-to-end tests, temporary data is bounded and cleaned, and npm/GitHub versions are gated as one release unit.</p></div>
+</section>
+</main>
+<footer class="small"><p>Primary design record: <a href="high-level-design.md">high-level-design.md</a> · Architecture decisions: <a href="decision-log.html">decision-log.html</a> · Workflow: <a href="../dashboard.html">research dashboard</a></p></footer>
+</body>
+</html>

@@ -7,22 +7,55 @@ on:
   push:
     tags: ["v*"]
 
+concurrency:
+  group: maister-release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_NODE_VERSION: "22"
+  RELEASE_NPM_VERSION: "11.4.2"
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 22
+          node-version: ${{ env.RELEASE_NODE_VERSION }}
+      - name: Pin release npm client
+        run: |
+          npm install --global "npm@${{ env.RELEASE_NPM_VERSION }}"
+          test "$(npm --version)" = "${{ env.RELEASE_NPM_VERSION }}"
+      - name: Install dependencies without package lifecycle side effects
+        run: npm ci --ignore-scripts
+      - name: Prove exact selector identity and clean checkout
+        run: |
+          node -e 'if (!/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(process.env.GITHUB_REF_NAME)) throw new Error("release ref is not an exact stable vX.Y.Z tag")'
+          TAG_COMMIT="$(git rev-parse --verify "refs/tags/${GITHUB_REF_NAME}^{commit}")"
+          test "$TAG_COMMIT" = "$GITHUB_SHA"
+          test "$(node -p 'require("./package.json").version')" = "${GITHUB_REF_NAME#v}"
+          git rev-parse --verify "${GITHUB_SHA}^{commit}" | grep -Fx "$GITHUB_SHA"
+          test -z "$(git status --porcelain --untracked-files=all)"
       - name: Validate source, overlays, evidence, and topology
         run: make validate
+      - name: Enforce release-critical policy and harness tests
+        run: |
+          node --test tests/platform-independent/release-github-only-policy.test.mjs
+          node --test tests/platform-independent/git-auth-residue-guard.test.mjs
       - name: Run reviewed three-target parity release gate
         run: |
           mkdir -p dist
           make test-parity-release PARITY_REPORT=dist/parity-release.json
+      - name: Prepare Git package identity at package boundary
+        run: |
+          npm run prepare
+          test "$(node -p 'require("./.maister-resolved-commit.json").resolved_commit')" = "$GITHUB_SHA"
+          mkdir -p release-evidence
+          node -e 'const fs=require("fs"); fs.writeFileSync("release-evidence/selector-identity.json", JSON.stringify({schema_version:1,tag:process.env.GITHUB_REF_NAME,tag_commit:process.env.GITHUB_SHA,full_commit_selector:process.env.GITHUB_SHA,manifest_commit:require("./.maister-resolved-commit.json").resolved_commit},null,2)+"\n")'
       - name: Run portable core and runtime tests before generating E3
         run: make test-core test-runtime
       - name: Generate deterministic portable-core E3 attestation
@@ -39,39 +72,212 @@ jobs:
           SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=codex SOURCE_COMMIT="$GITHUB_SHA" SOURCE_VERSION="${GITHUB_REF_NAME#v}"
           SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=cursor SOURCE_COMMIT="$GITHUB_SHA" SOURCE_VERSION="${GITHUB_REF_NAME#v}"
           SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=kiro-cli SOURCE_COMMIT="$GITHUB_SHA" SOURCE_VERSION="${GITHUB_REF_NAME#v}"
-      - name: Smoke extracted target archives
+      - name: Verify packaged lifecycle and sidecars
         env:
           MAISTER_PACKAGE_DIR: dist
-        run: node --test tests/platform-independent/release-package.test.mjs
-      - name: Generate package checksums
-        run: (cd dist && sha256sum maister-*.tar.gz > SHA256SUMS)
-      - name: Generate release provenance and SBOM metadata
         run: |
-          node plugins/maister/bin/release-metadata.mjs \
-            --archive-dir dist \
-            --output-dir dist \
-            --source-commit "$GITHUB_SHA" \
-            --source-version "${GITHUB_REF_NAME#v}" \
-            --parity-report dist/parity-release.json \
-            --source-date-epoch "$(git log -1 --format=%ct)"
-      - name: Verify release metadata
-        run: node plugins/maister/bin/release-metadata.mjs --archive-dir dist --output-dir dist --check
+          node --test tests/platform-independent/release-package.test.mjs
+          (cd dist && sha256sum maister-*.tar.gz > SHA256SUMS)
+          node plugins/maister/bin/release-metadata.mjs --archive-dir dist --output-dir dist --source-commit "$GITHUB_SHA" --source-version "${GITHUB_REF_NAME#v}" --parity-report dist/parity-release.json --source-date-epoch "$(git log -1 --format=%ct)"
+          node plugins/maister/bin/release-metadata.mjs --archive-dir dist --output-dir dist --check
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: maister-target-packages
-          path: dist/*
+          name: maister-release-candidate
+          path: |
+            dist/*
+            release-evidence/*
 
-  publish:
-    needs: validate
+  launcher-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.RELEASE_NODE_VERSION }}
+      - name: Pin release npm client
+        run: |
+          npm install --global "npm@${{ env.RELEASE_NPM_VERSION }}"
+          node -e 'const expected=process.env.RELEASE_NPM_VERSION; const actual=require("node:child_process").execFileSync("npm",["--version"],{encoding:"utf8"}).trim(); if(actual!==expected) throw new Error(`expected npm ${expected}, received ${actual}`)'
+      - name: Verify launcher, archive, transaction, and platform contracts
+        run: |
+          npm ci
+          npm run validate
+          npm run test:launcher
+          node --test tests/platform-independent/installer-multiple-journals.test.mjs
+          node --test tests/platform-independent/installer-abrupt-crash.test.mjs
+          node --test tests/platform-independent/launcher-cross-platform.test.mjs
+          node --test tests/platform-independent/installer-transaction.test.mjs
+          npm pack --dry-run --json
+
+  github-release:
+    needs: [validate, launcher-matrix]
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: github-release
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.RELEASE_NODE_VERSION }}
+      - name: Pin release npm client and install test dependencies
+        run: |
+          npm install --global "npm@${{ env.RELEASE_NPM_VERSION }}"
+          test "$(npm --version)" = "${{ env.RELEASE_NPM_VERSION }}"
+          npm ci --ignore-scripts
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: maister-target-packages
-          path: dist
+          name: maister-release-candidate
+          path: candidate
+      - name: Revalidate immutable candidate identity
+        run: |
+          test "$(node -p 'require("./candidate/release-evidence/selector-identity.json").manifest_commit')" = "$GITHUB_SHA"
+          test "$(git rev-parse --verify "refs/tags/${GITHUB_REF_NAME}^{commit}")" = "$GITHUB_SHA"
+          mkdir -p release-evidence
+          cp candidate/release-evidence/selector-identity.json release-evidence/
+          node -e 'const fs=require("fs"); fs.writeFileSync("release-evidence/lifecycle.json", JSON.stringify({schema_version:1,state:"BUILT",commit:process.env.GITHUB_SHA,tag:process.env.GITHUB_REF_NAME},null,2)+"\n")'
+      - name: Observe exact GitHub Release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        if: steps.release.outputs.exists != 'true'
         with:
           generate_release_notes: true
-          files: dist/*
+          files: |
+            candidate/dist/maister-codex.tar.gz
+            candidate/dist/maister-cursor.tar.gz
+            candidate/dist/maister-kiro-cli.tar.gz
+            candidate/dist/SHA256SUMS
+            candidate/dist/SBOM.cdx.json
+            candidate/dist/PROVENANCE.json
+      - name: Record immutable GitHub publication
+        run: node -e 'const fs=require("fs"); const state=JSON.parse(fs.readFileSync("release-evidence/lifecycle.json")); state.state="GITHUB_PUBLISHED"; fs.writeFileSync("release-evidence/lifecycle.json", JSON.stringify(state,null,2)+"\n")'
+      - name: Verify exact public GitHub bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p public-assets
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir public-assets
+          for name in maister-codex.tar.gz maister-cursor.tar.gz maister-kiro-cli.tar.gz SHA256SUMS SBOM.cdx.json PROVENANCE.json; do
+            cmp -- "candidate/dist/$name" "public-assets/$name"
+          done
+          node -e 'const fs=require("fs"); const state=JSON.parse(fs.readFileSync("release-evidence/lifecycle.json")); state.state="GITHUB_VERIFIED"; fs.writeFileSync("release-evidence/lifecycle.json", JSON.stringify(state,null,2)+"\n")'
+      - name: Upload verified GitHub release baseline
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: maister-github-release-baseline-${{ github.run_id }}
+          path: |
+            release-evidence/
+            public-assets/
+          if-no-files-found: error
+
+  public-smoke:
+    needs: github-release
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.RELEASE_NODE_VERSION }}
+      - name: Reject checkout-local Git authentication residue
+        run: node tests/release/assert-no-git-auth-residue.mjs
+      - name: Pin release npm client
+        run: |
+          npm install --global "npm@${{ env.RELEASE_NPM_VERSION }}"
+          node -e 'const expected=process.env.RELEASE_NPM_VERSION; const actual=require("node:child_process").execFileSync("npm",["--version"],{encoding:"utf8"}).trim(); if(actual!==expected) throw new Error(`expected npm ${expected}, received ${actual}`)'
+      - name: Real anonymous exact tag and commit smoke
+        run: node tests/release/public-git-package-smoke.mjs --evidence .maister-public-smoke-evidence.ndjson
+      - name: Upload public smoke evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: maister-public-smoke-${{ runner.os }}-${{ github.run_id }}
+          path: |
+            .maister-public-smoke-evidence.ndjson
+            .maister-network-observations.ndjson
+          if-no-files-found: error
+          include-hidden-files: true
+
+  finalize-release-evidence:
+    needs: [github-release, public-smoke]
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.RELEASE_NODE_VERSION }}
+      - name: Pin release npm client and install test dependencies
+        run: |
+          npm install --global "npm@${{ env.RELEASE_NPM_VERSION }}"
+          test "$(npm --version)" = "${{ env.RELEASE_NPM_VERSION }}"
+          npm ci --ignore-scripts
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: maister-github-release-baseline-${{ github.run_id }}
+          path: final-evidence
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: maister-public-smoke-*-${{ github.run_id }}
+          path: final-evidence/public-smoke
+      - name: Verify complete public no-auth smoke matrix
+        env:
+          EVIDENCE_RUN_ID: ${{ github.run_id }}
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          for (const os of ["Linux", "macOS", "Windows"]) {
+            const evidencePath = path.join("final-evidence", "public-smoke", `maister-public-smoke-${os}-${process.env.EVIDENCE_RUN_ID}`, ".maister-public-smoke-evidence.ndjson");
+            const records = fs.readFileSync(evidencePath, "utf8").trim().split(/\r?\n/u).filter(Boolean).map(JSON.parse);
+            if (records.length !== 12) throw new Error(`${os} public smoke produced ${records.length} records instead of 12`);
+            if (!records.every((record) => record.terminal_lifecycle === "uninstalled" && record.network_policy?.authorization === false)) {
+              throw new Error(`${os} public smoke evidence is not terminal and anonymous`);
+            }
+          }
+          NODE
+          node -e 'const fs=require("fs"); const state=JSON.parse(fs.readFileSync("final-evidence/release-evidence/lifecycle.json")); if(state.state!=="GITHUB_VERIFIED") throw new Error(`unexpected lifecycle state ${state.state}`); state.state="PUBLIC_NO_AUTH_SMOKE_VERIFIED"; fs.writeFileSync("final-evidence/release-evidence/lifecycle.json", JSON.stringify(state,null,2)+"\n")'
+      - name: Verify hermetic private transport
+        run: |
+          node --test tests/platform-independent/launcher-credentials.test.mjs
+          node --test tests/platform-independent/launcher-release.test.mjs
+          node --test tests/platform-independent/launcher-transport.test.mjs
+          node -e 'const fs=require("fs"); const state=JSON.parse(fs.readFileSync("final-evidence/release-evidence/lifecycle.json")); if(state.state!=="PUBLIC_NO_AUTH_SMOKE_VERIFIED") throw new Error(`unexpected lifecycle state ${state.state}`); state.state="HERMETIC_PRIVATE_TRANSPORT_VERIFIED"; fs.writeFileSync("final-evidence/release-evidence/lifecycle.json", JSON.stringify(state,null,2)+"\n")'
+      - name: Upload complete GitHub-only release evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: maister-github-release-evidence-${{ github.run_id }}
+          path: final-evidence/
+          if-no-files-found: error
+          include-hidden-files: true

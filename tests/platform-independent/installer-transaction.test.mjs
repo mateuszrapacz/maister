@@ -3,26 +3,139 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import test from "node:test";
+import nodeTest, { after as nodeAfter } from "node:test";
 
 import { runCli } from "../../plugins/maister/bin/maister-install.mjs";
 import { hashTree } from "../../plugins/maister/lib/distribution/hash-tree.mjs";
 import { materialize } from "../../plugins/maister/lib/distribution/materializer.mjs";
 import { readJournal } from "../../plugins/maister/lib/distribution/journal-schema.mjs";
-import { removeEntry, restoreFullBackup, snapshotState } from "../../plugins/maister/lib/distribution/recovery.mjs";
+import { recoverJournal, removeEntry, restoreFullBackup, snapshotState } from "../../plugins/maister/lib/distribution/recovery.mjs";
 import { atomicWriteSetting } from "../../plugins/maister/lib/distribution/settings-owner.mjs";
 import { getTargetPaths } from "../../plugins/maister/lib/distribution/target-paths.mjs";
 import { readReceipt, validateReceipt } from "../../plugins/maister/lib/distribution/receipt-schema.mjs";
 import { validateJournal } from "../../plugins/maister/lib/distribution/journal-schema.mjs";
-import { executeLifecycle } from "../../plugins/maister/lib/distribution/transaction-manager.mjs";
+import { acquireLock, executeLifecycle } from "../../plugins/maister/lib/distribution/transaction-manager.mjs";
 import { createEvidenceRecord } from "../../plugins/maister/lib/distribution/evidence-schema.mjs";
 import { e3AttestationDigest, portableCoreTreeHash } from "../../plugins/maister/lib/distribution/e3-attestation.mjs";
+import { runWithExternalWatchdog } from "../helpers/external-test-watchdog.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
 const SOURCE_ROOT = path.join(ROOT, "tests/fixtures/platform-independent/source-repos/basic");
 const MULTI_ROOT_HOME = path.join(ROOT, "tests/fixtures/platform-independent/user-homes/multi-root");
 const COMMIT = "0123456789abcdef0123456789abcdef01234567";
 const TARGETS = ["codex", "cursor", "kiro-cli"];
+const HARNESS_DEADLINE_MS = 12 * 60 * 1000;
+const HARNESS_HEARTBEAT_MS = 30 * 1000;
+const HARNESS_CHILD_ENV = "MAISTER_INSTALLER_TRANSACTION_CHILD";
+const isHarnessChild = process.env[HARNESS_CHILD_ENV] === "1";
+const test = isHarnessChild ? nodeTest : () => {};
+const after = isHarnessChild ? nodeAfter : () => {};
+const harnessStartedAt = Date.now();
+const harnessSandboxes = new Set();
+
+if (!isHarnessChild) {
+  nodeTest("installer transaction aggregate has an external watchdog and terminal classification", { timeout: HARNESS_DEADLINE_MS + 60_000 }, async () => {
+    let finalTreeEvidence = [];
+    const childEnvironment = { ...process.env, [HARNESS_CHILD_ENV]: "1" };
+    delete childEnvironment.NODE_TEST_CONTEXT;
+    const result = await runWithExternalWatchdog({
+      command: process.execPath,
+      args: ["--test", import.meta.filename],
+      cwd: ROOT,
+      env: childEnvironment,
+      heartbeatKind: "maister.installer-transaction.heartbeat",
+      heartbeatDeadlineMs: null,
+      supervisorHeartbeatMs: HARNESS_HEARTBEAT_MS,
+      totalDeadlineMs: HARNESS_DEADLINE_MS,
+      maximumCaptureBytes: 256 * 1024,
+      onStdout: (chunk) => process.stderr.write(chunk),
+      onStderr: (chunk) => process.stderr.write(chunk),
+      onSupervisorHeartbeat: (record) => process.stderr.write(`${JSON.stringify(record)}\n`),
+      onRecord: (record) => {
+        if (record?.kind === "maister.installer-transaction.final-tree-evidence") {
+          finalTreeEvidence = record.final_tree_evidence;
+        }
+      },
+    });
+    process.stderr.write(`${JSON.stringify({
+      kind: "maister.installer-transaction.terminal",
+      classification: result.classification,
+      code: result.code,
+      signal: result.signal,
+      elapsed_ms: result.elapsedMs,
+      stdout_truncated: result.stdoutTruncated,
+      stderr_truncated: result.stderrTruncated,
+      final_tree_evidence: finalTreeEvidence,
+    })}\n`);
+    assert.equal(result.classification, "passed", result.stderr);
+    assert.equal(result.code, 0);
+    assert.ok(finalTreeEvidence.length > 0, "child must emit terminal final-tree evidence");
+  });
+}
+
+function compactTreeEvidence(candidate) {
+  const stat = fs.lstatSync(candidate, { throwIfNoEntry: false });
+  if (!stat) return { exists: false };
+  const mode = (stat.mode & 0o7777).toString(8).padStart(4, "0");
+  if (stat.isDirectory()) {
+    const entries = [];
+    const visit = (current, relative) => {
+      for (const name of fs.readdirSync(current).sort()) {
+        const child = path.join(current, name);
+        const childRelative = relative ? `${relative}/${name}` : name;
+        const childStat = fs.lstatSync(child);
+        const childMode = (childStat.mode & 0o7777).toString(8).padStart(4, "0");
+        if (childStat.isDirectory()) {
+          entries.push({ path: childRelative, type: "directory", mode: childMode });
+          visit(child, childRelative);
+        } else if (childStat.isSymbolicLink()) {
+          entries.push({ path: childRelative, type: "symlink", mode: childMode, link_target: fs.readlinkSync(child) });
+        } else if (childStat.isFile()) {
+          entries.push({
+            path: childRelative,
+            type: "file",
+            mode: childMode,
+            size: childStat.size,
+            sha256: crypto.createHash("sha256").update(fs.readFileSync(child)).digest("hex"),
+          });
+        } else {
+          entries.push({ path: childRelative, type: "unsupported", mode: childMode });
+        }
+      }
+    };
+    visit(candidate, "");
+    const contentHash = crypto.createHash("sha256").update(entries.map((entry) => JSON.stringify(entry)).join("\n")).digest("hex");
+    return { exists: true, type: "directory", mode, entries: entries.length, content_hash: contentHash };
+  }
+  if (stat.isSymbolicLink()) return { exists: true, type: "symlink", mode, link_target: fs.readlinkSync(candidate) };
+  return { exists: true, type: "file", mode, sha256: crypto.createHash("sha256").update(fs.readFileSync(candidate)).digest("hex") };
+}
+
+function aggregateFinalTreeEvidence() {
+  return [...harnessSandboxes].map(({ root, home, state }) => ({
+    sandbox: path.basename(root),
+    home: compactTreeEvidence(home),
+    state: compactTreeEvidence(state),
+  }));
+}
+
+const heartbeat = isHarnessChild ? setInterval(() => {
+  process.stderr.write(`${JSON.stringify({
+    kind: "maister.installer-transaction.heartbeat",
+    elapsed_ms: Date.now() - harnessStartedAt,
+    sandboxes: harnessSandboxes.size,
+  })}\n`);
+}, HARNESS_HEARTBEAT_MS) : null;
+heartbeat?.unref();
+
+after(() => {
+  clearInterval(heartbeat);
+  process.stderr.write(`${JSON.stringify({
+    kind: "maister.installer-transaction.final-tree-evidence",
+    elapsed_ms: Date.now() - harnessStartedAt,
+    final_tree_evidence: aggregateFinalTreeEvidence(),
+  })}\n`);
+});
 
 const cleanGit = {
   topLevel: () => SOURCE_ROOT,
@@ -49,7 +162,7 @@ function sandbox() {
     path.join(ROOT, "plugins/maister/agent-projection-v1.json"),
     path.join(sourceRoot, "plugins/maister/agent-projection-v1.json"),
   );
-  for (const directory of ["agents", "skills"]) {
+  for (const directory of ["agents", "skills", "bin", "lib"]) {
     fs.cpSync(
       path.join(ROOT, "plugins/maister", directory),
       path.join(sourceRoot, "plugins/maister", directory),
@@ -77,7 +190,7 @@ function sandbox() {
     expires_at: "2027-07-15T00:00:00.000Z",
     artifact_digest: coreHash,
   }, null, 2)}\n`);
-  return {
+  const box = {
     root,
     home,
     state,
@@ -86,6 +199,8 @@ function sandbox() {
     attestationPath,
     env: { ...process.env, XDG_STATE_HOME: state, MAISTER_ENABLE_FAILURE_INJECTION: "1", MAISTER_EVIDENCE_NOW: "2026-07-15T00:00:00.000Z" },
   };
+  harnessSandboxes.add(box);
+  return box;
 }
 
 function args(command, target, box, extra = []) {
@@ -150,7 +265,7 @@ function assertUnrelatedKiroContent(box, expected) {
 
 function prepareStateLayout(box, target = "kiro-cli") {
   const paths = getTargetPaths({ target, home: box.home, env: box.env });
-  for (const directory of [paths.stateRoot, paths.journalsRoot, paths.receiptsRoot, paths.backupsRoot, paths.stagingRoot]) {
+  for (const directory of [paths.stateRoot, paths.journalsRoot, paths.receiptsRoot, paths.backupsRoot, paths.stagingRoot, paths.controlPlanesRoot]) {
     fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
     fs.chmodSync(directory, 0o700);
   }
@@ -412,11 +527,20 @@ test("clean lifecycle commands have durable receipts for every target seam", asy
     const installed = output(await invoke("install", target, box));
     assert.equal(installed.ok, true, `${target}: ${JSON.stringify(installed)}`);
     assert.equal(installed.code, 0, target);
+    const installedReceipt = JSON.parse(fs.readFileSync(installed.receipt_path, "utf8"));
+    const installedControlPlane = path.join(getTargetPaths({ target, home: box.home, env: box.env }).stateRoot, installedReceipt.control_plane.root_ref);
+    assert.equal(fs.existsSync(installedControlPlane), true, `${target}: control plane missing`);
+    assert.equal(hashTree(installedControlPlane).contentHash, installedReceipt.control_plane.tree_hash, `${target}: control plane hash`);
+    assert.equal(installedReceipt.control_plane.source_commit, installedReceipt.source.resolved_commit, `${target}: control plane source binding`);
     assert.equal(fs.existsSync(activePath(box, target)), true, target);
-    assert.equal(output(await invoke("verify", target, box)).code, 0, target);
-    assert.equal(output(await invoke("update", target, box)).code, 0, target);
-    assert.equal(output(await invoke("rollback", target, box)).code, 0, target);
-    assert.equal(output(await invoke("recover", target, box)).code, 0, target);
+    const verified = output(await invoke("verify", target, box));
+    assert.equal(verified.code, 0, target);
+    const updated = output(await invoke("update", target, box));
+    assert.equal(updated.code, 0, target);
+    const rolledBack = output(await invoke("rollback", target, box));
+    assert.equal(rolledBack.code, 0, target);
+    const recovered = output(await invoke("recover", target, box));
+    assert.equal(recovered.code, 0, target);
     const uninstalled = output(await invoke("uninstall", target, box));
     assert.equal(uninstalled.code, 0, target);
     assert.equal(fs.existsSync(activePath(box, target)), false, target);
@@ -437,6 +561,99 @@ test("candidate receipts consume the supplied portable-core E3 attestation", asy
   assert.equal(e3.provenance.attestation_digest, e3AttestationDigest(attestation));
   assert.equal(e3.provenance.portable_core_tree_hash, attestation.portable_core_tree_hash);
   assert.equal(e3.provenance.artifact_digest, attestation.artifact_digest);
+});
+
+test("durable boundary inventory covers a private receipt-bound control-plane commit", async () => {
+  const { DURABLE_BOUNDARY_MARKERS } = await import("../../plugins/maister/lib/distribution/transaction-manager.mjs");
+  assert.deepEqual(DURABLE_BOUNDARY_MARKERS, [
+    "lock-created",
+    "journal-created",
+    "target-staged",
+    "control-plane-staged",
+    "backup-captured",
+    "control-plane-promoted",
+    "verification-completed",
+    "candidate-receipt-written",
+    "active-pointer-transitioned",
+    "rollback-started",
+    "rollback-completed",
+    "cleanup-prune-started",
+    "cleanup-prune-completed",
+    "terminal-journal-written",
+  ]);
+
+  const box = sandbox();
+  const observed = [];
+  const result = await executeLifecycle("install", {
+    target: "codex",
+    source: `local:${box.sourceRoot}`,
+    resolvedSourceRoot: box.sourceRoot,
+    home: box.home,
+    env: box.env,
+    git: box.git,
+    overlayRoot: path.join(ROOT, "plugins/maister/overlays"),
+    e3Attestation: readAttestation(box),
+    onDurableBoundary: ({ marker }) => observed.push(marker),
+  });
+  assert.deepEqual(observed, DURABLE_BOUNDARY_MARKERS.filter((marker) => !marker.startsWith("rollback-")));
+
+  const paths = getTargetPaths({ target: "codex", home: box.home, env: box.env });
+  const receipt = readReceipt(result.receiptPath, { paths });
+  const closureRoot = path.join(paths.stateRoot, receipt.control_plane.root_ref);
+  for (const entry of hashTree(closureRoot).entries) {
+    assert.equal(entry.mode, entry.type === "directory" ? "0700" : "0600", entry.path);
+  }
+  assert.equal((fs.statSync(closureRoot).mode & 0o777).toString(8).padStart(4, "0"), "0700");
+
+  const journal = readJournal(result.journalPath, { paths });
+  assert.deepEqual(
+    journal.steps.map(({ name }) => name),
+    [
+      "materialize",
+      "stage-validated",
+      "control-plane-staged",
+      "snapshot",
+      "control-plane-promoted",
+      "commit",
+      "integrity",
+      "candidate-receipt-written",
+      "active-pointer-transition",
+      "receipt-published",
+      "control-plane-pruned",
+    ],
+  );
+});
+
+test("transaction lock rejects live owners and atomically replaces only a validated dead-owner lock", () => {
+  const box = sandbox();
+  const paths = prepareStateLayout(box, "codex");
+  fs.writeFileSync(paths.lockPath, `${JSON.stringify({ pid: 123, acquired_at: "2026-07-15T00:00:00.000Z" })}\n`, { mode: 0o600 });
+  assert.throws(() => acquireLock(paths.lockPath, { processKill: () => undefined }), { kind: "E_LOCK_BUSY" });
+  const acquired = acquireLock(paths.lockPath, { processKill: () => { throw Object.assign(new Error("dead"), { code: "ESRCH" }); } });
+  assert.equal(JSON.parse(fs.readFileSync(paths.lockPath, "utf8")).pid, process.pid);
+  fs.rmSync(acquired.lockPath);
+});
+
+test("terminal cleanup prunes only proven-unreferenced control planes", async () => {
+  const box = sandbox();
+  const installed = output(await invoke("install", "codex", box));
+  assert.equal(installed.code, 0);
+  const paths = getTargetPaths({ target: "codex", home: box.home, env: box.env });
+  const installedReceipt = readReceipt(installed.receipt_path, { paths });
+  const historicalClosure = path.join(paths.stateRoot, installedReceipt.control_plane.root_ref);
+  const orphanId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const orphanClosure = path.join(paths.controlPlanesRoot, orphanId);
+  fs.mkdirSync(orphanClosure, { recursive: true, mode: 0o700 });
+  fs.writeFileSync(path.join(orphanClosure, "orphan"), "unreferenced\n", { mode: 0o600 });
+
+  const updated = output(await invoke("update", "codex", box));
+  assert.equal(updated.code, 0, JSON.stringify(updated));
+  const updatedReceipt = readReceipt(updated.receipt_path, { paths });
+  assert.equal(fs.existsSync(historicalClosure), true, "history-referenced closure must survive");
+  assert.equal(fs.existsSync(path.join(paths.stateRoot, updatedReceipt.control_plane.root_ref)), true, "active closure must survive");
+  assert.equal(fs.existsSync(orphanClosure), false, "proven-unreferenced closure must be pruned");
+  const journal = readJournal(updated.journal_path, { paths });
+  assert.equal(journal.steps.find(({ name }) => name === "control-plane-pruned")?.status, "completed");
 });
 
 test("install fails closed when the overlay is outside the resolved source root and leaves no target", async () => {
@@ -688,6 +905,111 @@ test("failure after snapshot restores a clean pre-install topology", async () =>
   assert.equal(fs.readdirSync(getTargetPaths({ target: "codex", home: box.home, env: box.env }).stagingRoot).length, 0);
 });
 
+test("failure after control-plane promotion removes the uncommitted authority closure", async () => {
+  const box = sandbox();
+  const result = output(await invoke("install", "codex", box, ["--failure-point", "after-control-plane"]));
+  const paths = getTargetPaths({ target: "codex", home: box.home, env: box.env });
+  assert.equal(result.code, 7);
+  const journal = JSON.parse(fs.readFileSync(result.journal_path, "utf8"));
+  assert.equal(journal.state, "recovered");
+  assert.equal(journal.backup_root, path.join(paths.backupsRoot, journal.journal_id));
+  assert.match(journal.backup_manifest_hash, /^[0-9a-f]{64}$/u);
+  assert.equal(fs.readdirSync(paths.controlPlanesRoot).length, 0);
+  assert.equal(fs.existsSync(paths.activeReceiptPath), false);
+  assert.equal(fs.existsSync(activePath(box)), false);
+});
+
+test("incomplete rollback returns code 7 and preserves every recovery artifact", async () => {
+  const box = sandbox();
+  const paths = getTargetPaths({ target: "codex", home: box.home, env: box.env });
+  let failure;
+  try {
+    await executeLifecycle("install", {
+      target: "codex",
+      source: `local:${box.sourceRoot}`,
+      resolvedSourceRoot: box.sourceRoot,
+      home: box.home,
+      env: box.env,
+      git: box.git,
+      overlayRoot: path.join(ROOT, "plugins/maister/overlays"),
+      e3Attestation: readAttestation(box),
+      onDurableBoundary: ({ marker, journal_id: journalId }) => {
+        if (marker !== "control-plane-promoted") return;
+        fs.appendFileSync(path.join(paths.backupsRoot, journalId, "manifest.json"), "tampered\n");
+        throw new Error("stop after promoted control plane");
+      },
+    });
+  } catch (error) {
+    failure = error;
+  }
+
+  assert.equal(failure?.kind, "E_RECOVERY_FAILURE");
+  const journalPath = failure.details.journal_path;
+  const journal = JSON.parse(fs.readFileSync(journalPath, "utf8"));
+  assert.equal(journal.state, "rollback_failed");
+  assert.equal(fs.existsSync(paths.lockPath), true, "lock metadata must be retained");
+  assert.equal(fs.existsSync(journal.stage_root), true, "staging must be retained");
+  assert.equal(fs.existsSync(journal.backup_root), true, "backup must be retained");
+  assert.equal(fs.existsSync(journal.control_plane.destination_path), true, "promoted closure must be retained");
+  assert.equal(fs.existsSync(journalPath), true, "journal must be retained");
+});
+
+test("post-commit prune failure is retryable code 7 and preserves committed recovery state", async () => {
+  const box = sandbox();
+  const paths = getTargetPaths({ target: "codex", home: box.home, env: box.env });
+  let failure;
+  try {
+    await executeLifecycle("install", {
+      target: "codex",
+      source: `local:${box.sourceRoot}`,
+      resolvedSourceRoot: box.sourceRoot,
+      home: box.home,
+      env: box.env,
+      git: box.git,
+      overlayRoot: path.join(ROOT, "plugins/maister/overlays"),
+      e3Attestation: readAttestation(box),
+      onDurableBoundary: ({ marker }) => {
+        if (marker === "active-pointer-transitioned") {
+          fs.mkdirSync(path.join(paths.controlPlanesRoot, "unsafe-cleanup-entry"));
+        }
+      },
+    });
+  } catch (error) {
+    failure = error;
+  }
+
+  assert.equal(failure?.kind, "E_RECOVERY_FAILURE");
+  assert.equal(failure.retryable, true);
+  const journal = readJournal(failure.details.journal_path, { paths });
+  assert.equal(journal.state, "verified");
+  assert.equal(journal.failure.kind, "E_RECOVERY_FAILURE");
+  assert.equal(journal.failure.retryable, true);
+  assert.equal(journal.steps.find(({ name }) => name === "receipt-published")?.status, "completed");
+  assert.equal(journal.steps.find(({ name }) => name === "control-plane-pruned")?.status, "pending");
+  assert.equal(fs.existsSync(paths.lockPath), true);
+  assert.equal(fs.existsSync(journal.stage_root), true);
+  assert.equal(fs.existsSync(journal.control_plane.destination_path), true);
+  assert.equal(fs.existsSync(path.join(paths.receiptsRoot, `${journal.journal_id}.json`)), true);
+  assert.equal(JSON.parse(fs.readFileSync(paths.activeReceiptPath, "utf8")).receipt_id, journal.journal_id);
+
+  const committedHome = snapshotManagedHome(box);
+  const committedPointer = snapshotPath(paths.activeReceiptPath);
+  fs.rmSync(path.join(paths.controlPlanesRoot, "unsafe-cleanup-entry"), { recursive: true });
+  const retryOrphan = path.join(paths.controlPlanesRoot, "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+  fs.mkdirSync(retryOrphan, { mode: 0o700 });
+  const recovered = await recoverJournal({
+    journalPath: failure.details.journal_path,
+    journal,
+    paths,
+    setJournalState: (next) => fs.writeFileSync(failure.details.journal_path, `${JSON.stringify(next, null, 2)}\n`, { mode: 0o600 }),
+  });
+  assert.equal(recovered.state, "recovered");
+  assert.equal(fs.existsSync(retryOrphan), false);
+  assert.equal(fs.existsSync(journal.stage_root), false);
+  assert.deepEqual(snapshotManagedHome(box), committedHome);
+  assert.deepEqual(snapshotPath(paths.activeReceiptPath), committedPointer);
+});
+
 test("failure during commit restores exact target bytes, modes, and links", async () => {
   const box = sandbox();
   await invoke("install", "codex", box);
@@ -863,7 +1185,7 @@ test("preserves existing settings mode and keeps transaction state private", asy
   }
 });
 
-test("recovers the newest unresolved journal and then an interrupted older journal", async () => {
+test("ambiguous recovery fails closed and exact journal recovery isolates unselected state", async () => {
   const box = sandbox();
   await invoke("install", "codex", box);
   clearJournals(box);
@@ -881,12 +1203,21 @@ test("recovers the newest unresolved journal and then an interrupted older journ
   fs.writeFileSync(second.journal_path, `${JSON.stringify(interrupted, null, 2)}\n`);
   fs.writeFileSync(path.join(activePath(box), "partial-write"), "remove me\n");
 
-  const recoveredNewest = output(await invoke("recover", "codex", box));
+  const beforeAmbiguous = snapshotStateRoot(box, "codex");
+  const ambiguous = output(await invoke("recover", "codex", box));
+  assert.equal(ambiguous.code, 7);
+  assert.equal(ambiguous.error.kind, "E_RECOVERY_AMBIGUOUS");
+  assert.deepEqual(snapshotStateRoot(box, "codex"), beforeAmbiguous);
+
+  const firstBeforeSelectedRecovery = snapshotPath(first.journal_path);
+  const recoveredNewest = output(await invoke("recover", "codex", box, ["--journal-id", interrupted.journal_id]));
   assert.equal(recoveredNewest.code, 0);
   assert.equal(path.resolve(recoveredNewest.journal_path), path.resolve(second.journal_path));
   assert.equal(JSON.parse(fs.readFileSync(second.journal_path, "utf8")).state, "recovered");
   assert.equal(fs.existsSync(path.join(activePath(box), "partial-write")), false);
-  const recoveredOlder = output(await invoke("recover", "codex", box));
+  assert.deepEqual(snapshotPath(first.journal_path), firstBeforeSelectedRecovery);
+
+  const recoveredOlder = output(await invoke("recover", "codex", box, ["--journal-id", JSON.parse(fs.readFileSync(first.journal_path, "utf8")).journal_id]));
   assert.equal(recoveredOlder.code, 0);
   assert.equal(JSON.parse(fs.readFileSync(first.journal_path, "utf8")).state, "recovered");
 });
@@ -1241,6 +1572,28 @@ test("persisted v1 active receipt state is rejected before lifecycle mutation", 
   assert.deepEqual(snapshotManagedHome(box), homeBefore);
   assert.deepEqual(snapshotStateRoot(box), stateBefore);
   assertUnrelatedKiroContent(box, unrelated);
+});
+
+test("control-plane-less receipts reject state commands and migrate only through verified update", async () => {
+  const box = sandbox();
+  const installed = output(await invoke("install", "codex", box));
+  assert.equal(installed.code, 0);
+  const receipt = JSON.parse(fs.readFileSync(installed.receipt_path, "utf8"));
+  delete receipt.control_plane;
+  fs.writeFileSync(installed.receipt_path, `${JSON.stringify(receipt, null, 2)}\n`, { mode: 0o600 });
+
+  const beforeStatus = snapshotStateRoot(box, "codex");
+  const status = output(await invoke("status", "codex", box));
+  assert.equal(status.code, 7);
+  assert.equal(status.error.kind, "E_OFFLINE_AUTHORITY_MIGRATION");
+  assert.deepEqual(snapshotStateRoot(box, "codex"), beforeStatus);
+
+  const updated = output(await invoke("update", "codex", box));
+  assert.equal(updated.code, 0, JSON.stringify(updated));
+  const migrated = readReceipt(updated.receipt_path, {
+    paths: getTargetPaths({ target: "codex", home: box.home, env: box.env }),
+  });
+  assert.equal(migrated.control_plane.root_ref, `control-planes/${migrated.receipt_id}`);
 });
 
 test("persisted v1 journal state is rejected before lock or recovery mutation", async () => {

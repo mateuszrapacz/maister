@@ -1,0 +1,3065 @@
+orchestrator:
+  schema_version: 2
+  started_phase: phase-1
+  current_phase: phase-14
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-3
+    - phase-4
+    - phase-5
+    - phase-6
+    - phase-7
+    - phase-8
+    - phase-9
+    - phase-10
+    - phase-11
+    - phase-12
+    - phase-13
+    - phase-14
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+    phase-7: 0
+    phase-8: 0
+    phase-9: 0
+    phase-10: 0
+    phase-11: 3
+    phase-12: 0
+    phase-13: 0
+    phase-14: 0
+  options:
+    html_output: true
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: false
+    user_docs_enabled: true
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+    sequential: false
+    advisor:
+      enabled: false
+      gate_policies:
+        phase-exit: manual
+        optional-phase: manual
+        clarify: manual
+        convergence: manual
+        verify-matrix: manual
+      advisor_agent: advisor
+      advisor_model: gpt-5.6-sol
+      arbiter_agent: arbiter
+      arbiter_model: gpt-5.6-sol
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
+  created: "2026-07-19T12:22:35Z"
+  updated: "2026-07-20T19:58:03Z"
+  task_path: .maister/tasks/development/2026-07-19-npx-release-distribution
+  task_ids:
+    phase-1: development-phase-1
+    phase-2: development-phase-2
+    phase-3: development-phase-3
+    phase-4: development-phase-4
+    phase-5: development-phase-5
+    phase-6: development-phase-6
+    phase-7: development-phase-7
+    phase-8: development-phase-8
+    phase-9: development-phase-9
+    phase-10: development-phase-10
+    phase-11: development-phase-11
+    phase-12: development-phase-12
+    phase-13: development-phase-13
+    phase-14: development-phase-14
+  gate_history:
+    - schema_version: 2
+      idempotency_key: sha256:b6101abc63d1f6c7b875729b6bf9bb1700b84e1d57d5b48f9eb25f87cfdaee57
+      phase_id: phase-1
+      gate_type: phase-1-clarification
+      question: I assume state-only npx commands must work without GitHub access by locating and invoking the matching installed Maister lifecycle authority, while install/update download and verify a release archive. Is that correct?
+      options:
+        - Confirm assumptions
+        - Correct assumptions
+        - Provide more context
+      original_recommendation: Provide more context
+      configured_policy: fully_automatic
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: Confirm assumptions
+      final_actor: user
+      rationale: The user explicitly instructed the workflow to proceed with the recommendations, which confirms the stated offline state-only command assumption.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T12:35:18Z"
+      updated_at: "2026-07-19T12:36:49Z"
+      decided_at: "2026-07-19T12:36:49Z"
+    - schema_version: 2
+      idempotency_key: sha256:fab6363d6be8afb471abebd64016107616502da243ea8c4d41d59f46d648e0d2
+      phase_id: phase-1
+      gate_type: phase-1-exit
+      question: Continue to Phase 2?
+      options:
+        - Continue to Phase 2
+        - Pause workflow
+      original_recommendation: Continue to Phase 2
+      configured_policy: fully_automatic
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to Phase 2
+      final_actor: user
+      rationale: The user selected the exact supplied continuation option.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T12:36:49Z"
+      updated_at: "2026-07-19T17:07:33Z"
+      decided_at: "2026-07-19T17:07:33Z"
+    - schema_version: 2
+      idempotency_key: sha256:e89849846906ba48cc15827affcadd2c0ad97ad7fa3f5752ad15cf8742a9d894
+      phase_id: phase-2
+      gate_type: phase-2-scope-decision
+      question: How should the npm launcher locate the matching lifecycle installer for offline state-only commands?
+      options:
+        - Persist a release-owned installer path and version/source identity in the active receipt (Recommended)
+        - Resolve a versioned installer from a dedicated managed install directory
+        - Download a matching archive when no local authority is available
+        - Need more information
+      original_recommendation: Persist a release-owned installer path and version/source identity in the active receipt (Recommended)
+      configured_policy: fully_automatic
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: Persist a release-owned installer path and version/source identity in the active receipt (Recommended)
+      final_actor: user
+      rationale: The user selected the exact recommended option.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T17:12:11Z"
+      updated_at: "2026-07-19T17:14:18Z"
+      decided_at: "2026-07-19T17:14:18Z"
+    - schema_version: 2
+      idempotency_key: sha256:e2ff5a9467cb6469d6dbc277072f92a0be24e5f042315f71ccb3dc808aae1c85
+      phase_id: phase-2
+      gate_type: phase-2-scope-decision
+      question: What concrete control-plane strategy makes state-only npx commands work offline while preserving one version-matched mutation authority?
+      options:
+        - Locate and invoke a verified, version-matched installed Maister lifecycle authority, with an explicit failure if it is absent or cannot be bound safely.
+        - Carry an explicitly version-aligned installer/control-plane closure in the npm package for state-only delegation, while still delegating all mutation to that one installer implementation.
+        - Relax the offline state-only requirement or download an archive for those commands.
+      original_recommendation: Prefer option 1 as confirmed by the clarification; if it cannot be proven against the current installed topology, resolve option 2 before implementation. Option 3 conflicts with the accepted scope and must not be used as an implicit fallback.
+      configured_policy: fully_automatic
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: Locate and invoke a verified, version-matched installed Maister lifecycle authority, with an explicit failure if it is absent or cannot be bound safely.
+      final_actor: user
+      rationale: The user selected the exact first critical option.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T17:16:02Z"
+      updated_at: "2026-07-19T17:34:55Z"
+      decided_at: "2026-07-19T17:34:55Z"
+    - schema_version: 2
+      idempotency_key: sha256:37b407669f5f7a08c38011063344d067a03809c3ca7545224e40d9e6192e4c81
+      phase_id: phase-2
+      gate_type: phase-2-scope-decision
+      question: Which cross-platform archive implementation can enforce the accepted fail-closed policy for gzip/ustar input before any extraction writes?
+      options:
+        - Use a vetted cross-platform archive implementation with pre-inspection, bounded decompression, no-follow extraction, and post-extraction checks.
+        - Use a non-shell archive subprocess only when its binary/version/capabilities are verified and equivalent path, type, link, mode, size, and topology checks remain in the launcher.
+        - Implement a custom parser/extractor only if the first two options cannot satisfy the tested platform matrix.
+        - Use an unchecked direct `tar -xzf` path.
+      original_recommendation: Choose option 1 or 2 through adversarial Linux/macOS/Windows tests; option 4 is explicitly rejected by the research and repository validation standards.
+      configured_policy: fully_automatic
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: Use a vetted cross-platform archive implementation with pre-inspection, bounded decompression, no-follow extraction, and post-extraction checks.
+      final_actor: user
+      rationale: The user selected the exact advisor-recommended option.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: advisor
+        model: gpt-5.6-sol
+        response:
+          selected_option: Use a vetted cross-platform archive implementation with pre-inspection, bounded decompression, no-follow extraction, and post-extraction checks.
+          rationale: This best matches the fail-closed boundary across Linux, macOS, and Windows without relying on ambient shell tools. Acceptance still requires adversarial tests proving bounded pre-inspection, path/type/link/mode/size/topology rejection, race resistance, and zero host mutation on failure.
+          confidence: medium
+          escalate_to_user: true
+        attempts:
+          - actor: advisor
+            attempt: 1
+            started_at: "2026-07-19T18:16:10Z"
+            finished_at: "2026-07-19T18:16:10Z"
+            status: valid
+            raw_response: '{"selected_option":"Use a vetted cross-platform archive implementation with pre-inspection, bounded decompression, no-follow extraction, and post-extraction checks.","rationale":"This best matches the fail-closed boundary across Linux, macOS, and Windows without relying on ambient shell tools. Acceptance still requires adversarial tests proving bounded pre-inspection, path/type/link/mode/size/topology rejection, race resistance, and zero host mutation on failure.","confidence":"medium","escalate_to_user":true}'
+            validation_errors: []
+            backoff:
+              strategy: exponential
+              delay_ms: 0
+              scheduled_at: null
+              completed_at: null
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T17:34:55Z"
+      updated_at: "2026-07-19T18:30:30Z"
+      decided_at: "2026-07-19T18:30:30Z"
+    - schema_version: 2
+      idempotency_key: sha256:2528f9fa60204b8243317a2571b3549b88447360634bd95ee1569c2c0e262a05
+      phase_id: phase-2
+      gate_type: phase-2-scope-decision
+      question: What Node engine floor and npm client/platform matrix should the launcher promise?
+      options:
+        - Measure the lowest supported Node version against ESM, fetch, filesystem, child-process, archive, and installer behavior, declare it in `engines.node`, and retain Node 22 as the release-CI reference.
+        - Declare Node 22 or newer as the initial floor and expand support only after a later compatibility effort.
+        - Leave the engine floor undeclared.
+      original_recommendation: Use option 1; option 2 is the safe interim baseline if measurement cannot happen before scaffolding, and option 3 is incompatible with the required cross-platform release contract.
+      configured_policy: fully_automatic
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: Declare Node 22 or newer as the initial floor and expand support only after a later compatibility effort.
+      final_actor: user
+      rationale: The user selected the exact second option.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:30:30Z"
+      updated_at: "2026-07-19T18:37:57Z"
+      decided_at: "2026-07-19T18:37:57Z"
+    - schema_version: 2
+      idempotency_key: sha256:75950c5543ede65c9d3d6dbeb4b6c7908130bb849cbe1baa8d76759b5eba8c6d
+      phase_id: phase-2
+      gate_type: phase-2-scope-decision
+      question: Should remote release resolution use GitHub API metadata, fixed browser download URLs, or both, and what transport limits are mandatory?
+      options:
+        - Use GitHub API metadata to confirm exact tag/status/assets and the fixed browser URL for the selected asset, with HTTPS/host allowlists, bounded redirects, timeouts, response/stream limits, and injectable fetch behavior.
+        - Use only fixed release URLs for exact versions and fetch sidecars directly, with the same transport bounds; use a metadata API only if required for `latest`/asset digest observations.
+        - Resolve via GitHub’s moving `latest` endpoint, arbitrary release URLs, or unbounded redirects/retries.
+      original_recommendation: Prefer option 1 because the launcher must compare release identity and asset metadata while still downloading only the closed asset mapping; option 3 is rejected.
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Use GitHub API metadata to confirm exact tag/status/assets and the fixed browser URL for the selected asset, with HTTPS/host allowlists, bounded redirects, timeouts, response/stream limits, and injectable fetch behavior.
+      final_actor: advisor
+      rationale: "This best satisfies the binding research and fail-closed standards: API metadata binds the running npm version to the exact non-draft, non-prerelease GitHub tag and allowlisted asset identity, while the fixed browser download URL preserves the closed payload mapping. Mandatory transport controls are HTTPS-only approved hosts, validation of every redirect destination, a strict redirect-count cap, connection and total-operation timeouts, bounded metadata responses and streamed archive bytes, no unbounded retries, and injectable fetch behavior for deterministic timeout, redirect, truncation, and mismatch tests. Exact versions must never fall back to latest, another asset, or an arbitrary URL; state-only commands remain entirely offline."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:37:57Z"
+      updated_at: "2026-07-19T18:42:08Z"
+      decided_at: "2026-07-19T18:42:08Z"
+      advisor:
+        logical_role_id: advisor
+        agent: advisor
+        model: gpt-5.6-sol
+        response:
+          selected_option: Use GitHub API metadata to confirm exact tag/status/assets and the fixed browser URL for the selected asset, with HTTPS/host allowlists, bounded redirects, timeouts, response/stream limits, and injectable fetch behavior.
+          rationale: "This best satisfies the binding research and fail-closed standards: API metadata binds the running npm version to the exact non-draft, non-prerelease GitHub tag and allowlisted asset identity, while the fixed browser download URL preserves the closed payload mapping. Mandatory transport controls are HTTPS-only approved hosts, validation of every redirect destination, a strict redirect-count cap, connection and total-operation timeouts, bounded metadata responses and streamed archive bytes, no unbounded retries, and injectable fetch behavior for deterministic timeout, redirect, truncation, and mismatch tests. Exact versions must never fall back to latest, another asset, or an arbitrary URL; state-only commands remain entirely offline."
+          confidence: high
+          escalate_to_user: false
+        attempts:
+          - actor: advisor
+            attempt: 1
+            started_at: "2026-07-19T18:42:08Z"
+            finished_at: "2026-07-19T18:42:08Z"
+            status: valid
+            raw_response: '{"selected_option":"Use GitHub API metadata to confirm exact tag/status/assets and the fixed browser URL for the selected asset, with HTTPS/host allowlists, bounded redirects, timeouts, response/stream limits, and injectable fetch behavior.","rationale":"This best satisfies the binding research and fail-closed standards.","confidence":"high","escalate_to_user":false}'
+            validation_errors: []
+            backoff:
+              strategy: exponential
+              delay_ms: 0
+              scheduled_at: null
+              completed_at: null
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      legacy_record: null
+    - schema_version: 2
+      idempotency_key: sha256:922b33956999ee8ca84446cbc3e4454ca46e93207515585c733e476e4449daf0
+      phase_id: phase-2
+      gate_type: phase-2-scope-decision
+      question: What is the stable launcher contract for pre-delegation errors, `--json`, child stdout/stderr, signals, and exit codes?
+      options:
+        - Keep launcher diagnostics and pre-delegation typed errors on stderr/one documented launcher envelope, keep stdout machine-readable, and forward the child’s stdout, stderr, terminal status, signal outcome, receipt, and journal paths unchanged after delegation.
+        - Parse child output and merge launcher provenance into a new combined result envelope for every lifecycle.
+        - Treat signals and cleanup as best-effort logging and translate all failures to a launcher-specific status.
+      original_recommendation: Prefer option 1; it preserves the existing installer JSON contract and avoids false success or code translation after the mutation boundary.
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Keep launcher diagnostics and pre-delegation typed errors on stderr/one documented launcher envelope, keep stdout machine-readable, and forward the child’s stdout, stderr, terminal status, signal outcome, receipt, and journal paths unchanged after delegation.
+      final_actor: advisor
+      rationale: This preserves maister-install.mjs as the sole post-delegation contract and mutation authority. It keeps --json stdout machine-readable, gives pre-delegation failures a distinct typed launcher boundary, and passes installer output, exit codes 0/2–8, signal outcomes, receipts, and journals through without reinterpretation.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: advisor
+        model: gpt-5.6-sol
+        response:
+          selected_option: Keep launcher diagnostics and pre-delegation typed errors on stderr/one documented launcher envelope, keep stdout machine-readable, and forward the child’s stdout, stderr, terminal status, signal outcome, receipt, and journal paths unchanged after delegation.
+          rationale: This preserves maister-install.mjs as the sole post-delegation contract and mutation authority.
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:42:08Z"
+      updated_at: "2026-07-19T18:42:08Z"
+      decided_at: "2026-07-19T18:42:08Z"
+    - schema_version: 2
+      idempotency_key: sha256:cb8d23e0e7ad2eb2968a831e300e4a2f2c77b56b18216abfeff974cd16f1ab52
+      phase_id: phase-2
+      gate_type: phase-2-routing
+      question: "Continue to Phase 5: Technical Approach, Requirements & Specification?"
+      options:
+        - Continue to Phase 5: Technical Approach, Requirements & Specification
+        - Pause workflow
+      original_recommendation: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+      final_actor: advisor
+      rationale: "The phase-2 gap analysis and accepted decisions are sufficient to define the launcher requirements and technical approach; phase 5 is the next canonical workflow phase."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Pasteur
+        model: gpt-5.6-sol
+        response:
+          selected_option: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+          rationale: "The phase-2 gap analysis and accepted decisions are sufficient to define the launcher requirements and technical approach; phase 5 is the next canonical workflow phase."
+          confidence: high
+          escalate_to_user: false
+        attempts:
+          - attempt: 1
+            selected_option: "Continue to Phase 5: Technical Approach, Requirements & Specification"
+            rationale: "The phase-2 gap analysis and accepted decisions are sufficient to define the launcher requirements and technical approach; phase 5 is the next canonical workflow phase."
+            confidence: high
+            escalate_to_user: false
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:46:10Z"
+      updated_at: "2026-07-19T18:50:03Z"
+      decided_at: "2026-07-19T18:50:03Z"
+    - schema_version: 2
+      idempotency_key: sha256:9ae0c8816da54f37d97f2471a7dd867dbb5a20ceee99633ffabe629128dd7ac1
+      phase_id: phase-2
+      gate_type: phase-2-scope-decision
+      question: How should distribution-facing SkillPanel ownership references and the legal LICENSE attribution be handled in this release change?
+      options:
+        - Update only package/repository/release URLs, README/operator docs, and plugin author/developer metadata to `mateuszrapacz`; leave the LICENSE attribution unchanged pending explicit legal review.
+        - Defer all ownership metadata migration and publish the launcher with mixed identity.
+        - Change the LICENSE attribution as part of the publisher migration.
+      original_recommendation: "Use option 1, which matches the research boundary: distribution identity is in scope, while legal attribution requires a separate explicit decision."
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Update only package/repository/release URLs, README/operator docs, and plugin author/developer metadata to `mateuszrapacz`; leave the LICENSE attribution unchanged pending explicit legal review.
+      final_actor: advisor
+      rationale: "This preserves the binding scope boundary: migrate distribution-facing identity to `mateuszrapacz` while treating the legal LICENSE attribution as a separate decision requiring explicit legal review."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: advisor
+        model: gpt-5.6-sol
+        response:
+          selected_option: Update only package/repository/release URLs, README/operator docs, and plugin author/developer metadata to `mateuszrapacz`; leave the LICENSE attribution unchanged pending explicit legal review.
+          rationale: This preserves the binding scope boundary and avoids an unauthorized legal-attribution change.
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:42:08Z"
+      updated_at: "2026-07-19T18:42:08Z"
+      decided_at: "2026-07-19T18:42:08Z"
+    - schema_version: 2
+      idempotency_key: sha256:be591afb1401a4a868d4e98cb3ac7804837bdb01acb74a3b54145fa2cebfdc22
+      phase_id: phase-5
+      gate_type: requirements-clarification
+      question: How should the first-use and repeat-use journey be specified?
+      options:
+        - "Users discover the package from README/release documentation and run the closed command contract through npx (for example, an exact-version install/update for codex, cursor, or kiro-cli); state-only commands reuse the installed version-matched authority offline and fail explicitly when it is unavailable."
+        - "Users run a conversational or interactive npx wizard that discovers targets and chooses releases for them, with lifecycle commands treated as secondary shortcuts."
+        - "Users install the npm package globally first and invoke a global binary; npx is documented only as an optional bootstrap path."
+      original_recommendation: "Users discover the package from README/release documentation and run the closed command contract through npx (for example, an exact-version install/update for codex, cursor, or kiro-cli); state-only commands reuse the installed version-matched authority offline and fail explicitly when it is unavailable."
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Users discover the package from README/release documentation and run the closed command contract through npx (for example, an exact-version install/update for codex, cursor, or kiro-cli); state-only commands reuse the installed version-matched authority offline and fail explicitly when it is unavailable."
+      final_actor: advisor
+      rationale: "This preserves the accepted closed CLI boundary, deterministic release selection, and offline state-only operations through a verified version-matched authority."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Zeno
+        model: gpt-5.6-sol
+        response:
+          selected_option: "Users discover the package from README/release documentation and run the closed command contract through npx (for example, an exact-version install/update for codex, cursor, or kiro-cli); state-only commands reuse the installed version-matched authority offline and fail explicitly when it is unavailable."
+          rationale: "This preserves the accepted closed CLI boundary and deterministic release selection."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:53:42Z"
+      updated_at: "2026-07-19T18:53:42Z"
+      decided_at: "2026-07-19T18:53:42Z"
+    - schema_version: 2
+      idempotency_key: sha256:dc13d8f9193e804c94f72fb56885223f3e3668d45432850cbbf335d11daead47
+      phase_id: phase-5
+      gate_type: requirements-clarification
+      question: Which reuse boundary should the specification require?
+      options:
+        - "Keep the npm launcher thin and reuse the existing closed target/source/release-interface/path-safety/materializer/E3/transaction contracts; keep maister-install.mjs as the sole host-state mutation authority and add only the new network/archive/delegation boundary."
+        - "Copy the release packaging and installer logic into the npm package so the npx path can evolve independently from the repository installer."
+        - "First refactor the entire release and installer subsystem into a new shared framework, then add the npm launcher on top of that framework."
+      original_recommendation: "Keep the npm launcher thin and reuse the existing closed target/source/release-interface/path-safety/materializer/E3/transaction contracts; keep maister-install.mjs as the sole host-state mutation authority and add only the new network/archive/delegation boundary."
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Keep the npm launcher thin and reuse the existing closed target/source/release-interface/path-safety/materializer/E3/transaction contracts; keep maister-install.mjs as the sole host-state mutation authority and add only the new network/archive/delegation boundary."
+      final_actor: advisor
+      rationale: "This minimizes duplicated security-sensitive logic and preserves the existing installer as the single authority for target-aware host mutations."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Zeno
+        model: gpt-5.6-sol
+        response:
+          selected_option: "Keep the npm launcher thin and reuse the existing closed target/source/release-interface/path-safety/materializer/E3/transaction contracts; keep maister-install.mjs as the sole host-state mutation authority and add only the new network/archive/delegation boundary."
+          rationale: "This preserves the existing installer authority."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:53:42Z"
+      updated_at: "2026-07-19T18:53:42Z"
+      decided_at: "2026-07-19T18:53:42Z"
+    - schema_version: 2
+      idempotency_key: sha256:1488dcf9c4e040b8796277ca1815f13e513fe7f2f26851407aa762162ca8fc8b
+      phase_id: phase-5
+      gate_type: requirements-clarification
+      question: What visual input belongs in this non-UI specification?
+      options:
+        - "No product UI assets are required: this is a CLI/distribution boundary, and the existing workflow dashboard is an orchestration artifact rather than a product mockup."
+        - "Create a new interactive UI mockup for the npx launcher and make it a binding implementation input."
+        - "Use the existing workflow dashboard as the product UX specification for the launcher."
+      original_recommendation: "No product UI assets are required: this is a CLI/distribution boundary, and the existing workflow dashboard is an orchestration artifact rather than a product mockup."
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "No product UI assets are required: this is a CLI/distribution boundary, and the existing workflow dashboard is an orchestration artifact rather than a product mockup."
+      final_actor: advisor
+      rationale: "This is a CLI/distribution boundary rather than a product screen, so visual product inputs would expand scope without clarifying acceptance."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Zeno
+        model: gpt-5.6-sol
+        response:
+          selected_option: "No product UI assets are required: this is a CLI/distribution boundary, and the existing workflow dashboard is an orchestration artifact rather than a product mockup."
+          rationale: "This is a CLI/distribution boundary rather than a product screen."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:53:42Z"
+      updated_at: "2026-07-19T18:53:42Z"
+      decided_at: "2026-07-19T18:53:42Z"
+    - schema_version: 2
+      idempotency_key: sha256:b1bb694e1f5f9a4c80137c5b8ccc8bf25c5a492ff7776c6a7199b872f31d0612
+      phase_id: phase-5
+      gate_type: requirements-clarification
+      question: Which success/failure behavior should requirements make testable?
+      options:
+        - "Launcher diagnostics and pre-delegation typed errors go to stderr with a documented launcher envelope, stdout remains machine-readable, and after delegation the child stdout, stderr, terminal status, signal outcome, receipt, journal paths, and exit code are forwarded unchanged."
+        - "Wrap every child result in a new launcher-specific JSON envelope and normalize child output, signals, and exit codes for consistency."
+        - "Prioritize human-readable messages; JSON output, signal behavior, cleanup, and receipt paths may be best-effort implementation details."
+      original_recommendation: "Launcher diagnostics and pre-delegation typed errors go to stderr with a documented launcher envelope, stdout remains machine-readable, and after delegation the child stdout, stderr, terminal status, signal outcome, receipt, journal paths, and exit code are forwarded unchanged."
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Launcher diagnostics and pre-delegation typed errors go to stderr with a documented launcher envelope, stdout remains machine-readable, and after delegation the child stdout, stderr, terminal status, signal outcome, receipt, journal paths, and exit code are forwarded unchanged."
+      final_actor: advisor
+      rationale: "This makes launcher failures independently observable without corrupting machine-readable output and preserves the existing installer's process and artifact contracts."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Zeno
+        model: gpt-5.6-sol
+        response:
+          selected_option: "Launcher diagnostics and pre-delegation typed errors go to stderr with a documented launcher envelope, stdout remains machine-readable, and after delegation the child stdout, stderr, terminal status, signal outcome, receipt, journal paths, and exit code are forwarded unchanged."
+          rationale: "This preserves machine-readable behavior and the existing installer contract."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:53:42Z"
+      updated_at: "2026-07-19T18:53:42Z"
+      decided_at: "2026-07-19T18:53:42Z"
+    - schema_version: 2
+      idempotency_key: sha256:fce0b5c943cb5be9aefc7466354f2518c9789277cf1903bd4a0dff6231eba727
+      phase_id: phase-5
+      gate_type: requirements-clarification
+      question: What should be in scope for this change before public publication?
+      options:
+        - "Implement and test the npm package locally with mocked bounded transport and adversarial archive fixtures, align package version/repository metadata with the GitHub release pipeline, and document a repeatable npm pack/publish plus exact-version smoke check; do not claim publication itself is atomic."
+        - "Publish the npm package first and use post-publication smoke testing to discover version, asset, and installer integration gaps."
+        - "Only add the package manifest and binary; release-pipeline coordination and cross-platform archive/transport tests can follow in a later change."
+      original_recommendation: "Implement and test the npm package locally with mocked bounded transport and adversarial archive fixtures, align package version/repository metadata with the GitHub release pipeline, and document a repeatable npm pack/publish plus exact-version smoke check; do not claim publication itself is atomic."
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Implement and test the npm package locally with mocked bounded transport and adversarial archive fixtures, align package version/repository metadata with the GitHub release pipeline, and document a repeatable npm pack/publish plus exact-version smoke check; do not claim publication itself is atomic."
+      final_actor: advisor
+      rationale: "This provides fail-closed verification and cross-boundary release confidence before publication while treating npm and GitHub coordination as repeatable and non-atomic."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Zeno
+        model: gpt-5.6-sol
+        response:
+          selected_option: "Implement and test the npm package locally with mocked bounded transport and adversarial archive fixtures, align package version/repository metadata with the GitHub release pipeline, and document a repeatable npm pack/publish plus exact-version smoke check; do not claim publication itself is atomic."
+          rationale: "This supplies release confidence before publication without claiming atomic publication."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:53:42Z"
+      updated_at: "2026-07-19T18:53:42Z"
+      decided_at: "2026-07-19T18:53:42Z"
+    - schema_version: 2
+      idempotency_key: sha256:acea07dc9ca436ae7fc7a23610a1c8e156f62e4e4730b548008e08095fc6721d
+      phase_id: phase-5
+      gate_type: technical-clarification
+      question: Which release reference semantics should be specified?
+      options:
+        - "Accept exact semantic versions and a visibly resolved latest selector; bind both to one non-draft, non-prerelease GitHub release, require the npm package version to match the running launcher, and never fall back to moving branches or arbitrary URLs."
+        - "Accept any GitHub tag or URL supplied by the caller and let the downloaded archive determine the effective version."
+        - "Resolve latest silently and permit a compatible older/newer release when the requested package and GitHub versions differ."
+      original_recommendation: "Accept exact semantic versions and a visibly resolved latest selector; bind both to one non-draft, non-prerelease GitHub release, require the npm package version to match the running launcher, and never fall back to moving branches or arbitrary URLs."
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Accept exact semantic versions and a visibly resolved latest selector; bind both to one non-draft, non-prerelease GitHub release, require the npm package version to match the running launcher, and never fall back to moving branches or arbitrary URLs."
+      final_actor: advisor
+      rationale: "This preserves the accepted reproducibility baseline, makes latest resolution observable, and prevents mutable or arbitrary fallback sources."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Kant
+        model: gpt-5.6-sol
+        response:
+          selected_option: "Accept exact semantic versions and a visibly resolved latest selector; bind both to one non-draft, non-prerelease GitHub release, require the npm package version to match the running launcher, and never fall back to moving branches or arbitrary URLs."
+          rationale: "This preserves reproducibility and exact package-to-release alignment."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:53:42Z"
+      updated_at: "2026-07-19T18:53:42Z"
+      decided_at: "2026-07-19T18:53:42Z"
+    - schema_version: 2
+      idempotency_key: sha256:665c51c7eec9e1606ac3f3869a1b5927c4a1eb6f8bc681b7da4b79218fcde6ac
+      phase_id: phase-5
+      gate_type: technical-clarification
+      question: Which verification order and mutation invariant should the specification require?
+      options:
+        - "Resolve and validate release metadata, download under bounded transport, validate archive identity/size/checksums/manifest/E3 and archive topology before extraction, extract only into a private temporary directory with no-follow and post-extraction checks, then delegate; every pre-delegation failure must prove zero host-state mutation."
+        - "Extract into the user's installation area first, then run manifest and E3 checks before invoking the installer."
+        - "Download and extract first, delegate as soon as the expected installer path exists, and treat checksum or topology failures as warnings when the archive came from GitHub."
+      original_recommendation: "Resolve and validate release metadata, download under bounded transport, validate archive identity/size/checksums/manifest/E3 and archive topology before extraction, extract only into a private temporary directory with no-follow and post-extraction checks, then delegate; every pre-delegation failure must prove zero host-state mutation."
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Resolve and validate release metadata, download under bounded transport, validate archive identity/size/checksums/manifest/E3 and archive topology before extraction, extract only into a private temporary directory with no-follow and post-extraction checks, then delegate; every pre-delegation failure must prove zero host-state mutation."
+      final_actor: advisor
+      rationale: "This satisfies bounded-transport and vetted-extraction decisions while maintaining validation-before-delegation and zero host-state mutation on pre-delegation failure."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Kant
+        model: gpt-5.6-sol
+        response:
+          selected_option: "Resolve and validate release metadata, download under bounded transport, validate archive identity/size/checksums/manifest/E3 and archive topology before extraction, extract only into a private temporary directory with no-follow and post-extraction checks, then delegate; every pre-delegation failure must prove zero host-state mutation."
+          rationale: "Validation precedes delegation and preserves the zero-mutation invariant."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:53:42Z"
+      updated_at: "2026-07-19T18:53:42Z"
+      decided_at: "2026-07-19T18:53:42Z"
+    - schema_version: 2
+      idempotency_key: sha256:4b9e2d7e02ca72c5fb941c59bb1d0611c7c821ba996d2cb9014cb61fd371a50e
+      phase_id: phase-5
+      gate_type: technical-clarification
+      question: How should state-only commands locate the installed lifecycle authority?
+      options:
+        - "Read the active receipt's release-owned installer path and version/source identity, resolve it only within the validated installation topology, verify identity and supported command contract, and fail explicitly without network access when the authority is absent, ambiguous, or mismatched."
+        - "Search PATH and common global npm locations for the first executable named maister-install and invoke it if it responds."
+        - "Bundle a second installer implementation into the npm launcher and use it whenever the installed authority is unavailable."
+      original_recommendation: "Read the active receipt's release-owned installer path and version/source identity, resolve it only within the validated installation topology, verify identity and supported command contract, and fail explicitly without network access when the authority is absent, ambiguous, or mismatched."
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Read the active receipt's release-owned installer path and version/source identity, resolve it only within the validated installation topology, verify identity and supported command contract, and fail explicitly without network access when the authority is absent, ambiguous, or mismatched."
+      final_actor: advisor
+      rationale: "This binds offline operations to the verified, version-matched installed authority and avoids PATH ambiguity, network dependence, and a competing installer."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Kant
+        model: gpt-5.6-sol
+        response:
+          selected_option: "Read the active receipt's release-owned installer path and version/source identity, resolve it only within the validated installation topology, verify identity and supported command contract, and fail explicitly without network access when the authority is absent, ambiguous, or mismatched."
+          rationale: "This avoids PATH ambiguity and binds offline commands to the verified installed authority."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:53:42Z"
+      updated_at: "2026-07-19T18:53:42Z"
+      decided_at: "2026-07-19T18:53:42Z"
+    - schema_version: 2
+      idempotency_key: sha256:7ee98d367a9a6f59e7649486094a6261a0aa6a26424986baeaa8760942d37b07
+      phase_id: phase-5
+      gate_type: technical-clarification
+      question: What should the first implementation commit own at the package and repository boundary?
+      options:
+        - "Add the root npm package manifest/bin and launcher modules/tests, integrate only the minimum release metadata and CI/publish wiring needed for version alignment, and preserve existing release archives and installer modules as the payload/mutation authorities."
+        - "Move the existing release packaging and installer into the npm package and make the repository consume the package as its new source of truth."
+        - "Add only a bin shim now; defer transport, archive validation, version alignment, and CI changes to later work."
+      original_recommendation: "Add the root npm package manifest/bin and launcher modules/tests, integrate only the minimum release metadata and CI/publish wiring needed for version alignment, and preserve existing release archives and installer modules as the payload/mutation authorities."
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Add the root npm package manifest/bin and launcher modules/tests, integrate only the minimum release metadata and CI/publish wiring needed for version alignment, and preserve existing release archives and installer modules as the payload/mutation authorities."
+      final_actor: advisor
+      rationale: "This establishes the thin launcher and version-aligned publishing boundary without relocating established payload construction or mutation authority."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Kant
+        model: gpt-5.6-sol
+        response:
+          selected_option: "Add the root npm package manifest/bin and launcher modules/tests, integrate only the minimum release metadata and CI/publish wiring needed for version alignment, and preserve existing release archives and installer modules as the payload/mutation authorities."
+          rationale: "This establishes the adapter without relocating payload or mutation ownership."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T18:53:42Z"
+      updated_at: "2026-07-19T18:53:42Z"
+      decided_at: "2026-07-19T18:53:42Z"
+    - schema_version: 2
+      idempotency_key: sha256:8358f6a9980394365c8e29349d3538166c7645e2aeb8875de965b725f22f292f
+      phase_id: phase-5
+      gate_type: phase-5-exit
+      question: "Continue to specification audit?"
+      options:
+        - Continue to specification audit
+        - Pause workflow
+      original_recommendation: Continue to specification audit
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to specification audit
+      final_actor: advisor
+      rationale: "The specification is complete enough to audit: it defines scope, authority boundaries, reproducibility, transport constraints, validation and extraction security, offline discovery, process behavior, mutation guarantees, cross-platform adversarial tests, package and CI boundaries, publication acceptance criteria, and open risks."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Volta
+        model: gpt-5.6-sol
+        response:
+          selected_option: Continue to specification audit
+          rationale: "The specification is complete enough to audit and specification auditing is enabled and recommended."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T19:22:40Z"
+      updated_at: "2026-07-19T19:22:40Z"
+      decided_at: "2026-07-19T19:22:40Z"
+    - schema_version: 2
+      idempotency_key: sha256:68284d63c3b9f0dfbecca34fe6b7e15b9bad7bbc65310ac6cb9baff64dd06b74
+      phase_id: phase-6
+      gate_type: optional-phase-selection
+      question: "Run specification audit? (Recommended)"
+      options:
+        - Yes, run audit (Recommended)
+        - No, skip audit
+      original_recommendation: Yes, run audit (Recommended)
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Yes, run audit (Recommended)
+      final_actor: advisor
+      rationale: "The audit is enabled and the completed spec is high-risk, broad, security-sensitive, and still records open implementation risks."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Goodall
+        model: gpt-5.6-sol
+        response:
+          selected_option: Yes, run audit (Recommended)
+          rationale: "An independent audit should verify completeness, internal consistency, testability, zero-mutation invariants, hostile fixture coverage, offline control-plane behavior, and release/publish alignment before implementation."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T19:22:40Z"
+      updated_at: "2026-07-19T19:22:40Z"
+      decided_at: "2026-07-19T19:22:40Z"
+    - schema_version: 2
+      idempotency_key: sha256:eeba59811d29c2483cca234227ab77fd47023e60becab582b5c75f9a3d6994fe
+      phase_id: phase-6
+      gate_type: phase-6-exit
+      question: "Continue to implementation planning?"
+      options:
+        - Continue to implementation planning
+        - Pause workflow
+      original_recommendation: Continue to implementation planning
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to implementation planning
+      final_actor: advisor
+      rationale: "The specification is ready to advance: all blocking and important findings are resolved, the sole advisory condition has been normalized consistently across all artifacts, and the re-audit found no remaining blocking or important issues."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Wegener
+        model: gpt-5.6-sol
+        response:
+          selected_option: Continue to implementation planning
+          rationale: "The specification is ready to advance and the re-audit found no remaining blocking or important issue."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T19:45:35Z"
+      updated_at: "2026-07-19T19:45:35Z"
+      decided_at: "2026-07-19T19:45:35Z"
+    - schema_version: 2
+      idempotency_key: sha256:af970351e2970c2bf16e748b26a239e52c7b0819c78aeb28cbbb494562bc4448
+      phase_id: phase-7
+      gate_type: phase-7-exit
+      question: "Continue to implementation approval?"
+      options:
+        - Continue to implementation approval
+        - Pause workflow
+      original_recommendation: Continue to implementation approval
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to implementation approval
+      final_actor: advisor
+      rationale: "The implementation plan is complete, covers eight disjoint groups with explicit prerequisites and dependency ordering, includes red/security tests, acceptance criteria, recovery and rollback guidance, and defines canonical publication states including GITHUB_PUBLISHED."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Averroes
+        model: gpt-5.6-sol
+        response:
+          selected_option: Continue to implementation approval
+          rationale: "The plan is complete and the re-audit found no blocking or important issues."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T19:55:45Z"
+      updated_at: "2026-07-19T19:55:45Z"
+      decided_at: "2026-07-19T19:55:45Z"
+    - schema_version: 2
+      idempotency_key: sha256:63ef9a836410cfa217481a15b7b3c675dd0fbed46387e93757503d0bf84204bc
+      phase_id: phase-7
+      gate_type: implementation-approval
+      question: "Approve this complete implementation scope?"
+      options:
+        - Approve complete implementation scope
+        - Reject implementation scope
+        - Request scope changes
+      original_recommendation: Approve complete implementation scope
+      configured_policy: denylisted
+      policy: manual
+      safety_classification: denylisted
+      status: decided
+      selected_option: Approve complete implementation scope
+      final_actor: user
+      rationale: "The user explicitly selected the exact approval option after reviewing the complete implementation scope."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T19:55:45Z"
+      updated_at: "2026-07-19T20:01:14Z"
+      decided_at: "2026-07-19T20:01:14Z"
+    - schema_version: 2
+      idempotency_key: sha256:c49ad3034affedbaf6160e631ac646d4ada14340e32115de079e2e883ff9af1b
+      phase_id: phase-8
+      gate_type: phase-8-exit
+      question: "Continue to verification?"
+      options:
+        - Continue to verification
+        - Pause workflow
+      original_recommendation: Continue to verification
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to verification
+      final_actor: advisor
+      rationale: "Targeted implementation, validation, packaging, lifecycle, and transaction scenarios pass individually. The interrupted aggregate runner is unresolved verification work, not evidence of an implementation failure."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Bohr
+        model: gpt-5.6-sol
+        response:
+          selected_option: Continue to verification
+          rationale: "Continue and rerun the broader transaction suite with diagnostics or bounded timeouts."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T21:14:16Z"
+      updated_at: "2026-07-19T21:14:16Z"
+      decided_at: "2026-07-19T21:14:16Z"
+    - schema_version: 2
+      idempotency_key: sha256:1074567e8cbdb7569061b00f6cea48aa37dd933825b943106e3eae4d4cb4e3e1
+      phase_id: phase-10
+      gate_type: verification-options
+      question: "Which standard verifications to run?"
+      options:
+        - Code review (Recommended)
+        - Pragmatic review (Recommended)
+        - Reality check (Recommended)
+        - Production readiness (Recommended)
+      original_recommendation: "Code review (Recommended), Pragmatic review (Recommended), Reality check (Recommended), Production readiness (Recommended)"
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: "Code review (Recommended), Pragmatic review (Recommended), Reality check (Recommended), Production readiness (Recommended)"
+      final_actor: advisor
+      rationale: "The implementation crosses security-sensitive archive, control-plane, transaction, delegation, and public publication boundaries."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: James
+        model: gpt-5.6-sol
+        response:
+          selected_option: "Code review (Recommended), Pragmatic review (Recommended), Reality check (Recommended), Production readiness (Recommended)"
+          rationale: "All four reviews are warranted; E2E is not relevant to this CLI/distribution task and documentation is user-visible operational work."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T21:14:16Z"
+      updated_at: "2026-07-19T21:14:16Z"
+      decided_at: "2026-07-19T21:14:16Z"
+    - schema_version: 2
+      idempotency_key: sha256:331e8c84756e57116cb2e003a5300605965fce9bf582f0d7df6eea6d5f4d86e1
+      phase_id: phase-10
+      gate_type: optional-phase-selection/e2e
+      question: "Enable E2E browser verification?"
+      options:
+        - Yes (Recommended)
+        - No, skip
+      original_recommendation: No, skip
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: No, skip
+      final_actor: advisor
+      rationale: "The feature is a CLI/distribution boundary with no browser UI or browser-mediated workflow."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: James
+        model: gpt-5.6-sol
+        response:
+          selected_option: No, skip
+          rationale: "No browser E2E surface exists."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T21:14:16Z"
+      updated_at: "2026-07-19T21:14:16Z"
+      decided_at: "2026-07-19T21:14:16Z"
+    - schema_version: 2
+      idempotency_key: sha256:2fb549daf9365ba658a60f1e8784995523145f5f6c4d1354faf91b19def6916f
+      phase_id: phase-10
+      gate_type: optional-phase-selection/user-docs
+      question: "Generate user documentation?"
+      options:
+        - Yes (Recommended)
+        - No, skip
+      original_recommendation: Yes (Recommended)
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Yes (Recommended)
+      final_actor: advisor
+      rationale: "The npx commands, offline boundary, receipt migration, recovery roots, version matching, and publication semantics are user-visible operational contracts."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: James
+        model: gpt-5.6-sol
+        response:
+          selected_option: Yes (Recommended)
+          rationale: "Document the public and operational contracts."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T21:14:16Z"
+      updated_at: "2026-07-19T21:14:16Z"
+      decided_at: "2026-07-19T21:14:16Z"
+    - schema_version: 2
+      idempotency_key: sha256:phase11-fix-all-fixable-20260719
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: "How should the known verification findings be resolved?"
+      options:
+        - Fix all fixable issues
+        - Fix only publication blockers
+        - Record issues and continue to documentation
+      original_recommendation: Fix all fixable issues
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Fix all fixable issues
+      final_actor: advisor
+      rationale: "The advisor selected complete remediation of deterministic recovery and acquisition-signal gaps before documentation or finalization; publication remains NO-GO until the remaining evidence gates are terminal."
+      confidence: very_high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Euler
+        model: gpt-5.6-sol
+        response:
+          selected_option: Fix all fixable issues
+          rationale: "Prioritize journal-bound recovery, publication safety, transaction recovery, signals/cleanup, archive memory, authority races, transport/archive conformance, evidence matrix, resumability, and the release runbook."
+          confidence: very_high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T22:18:45Z"
+      updated_at: "2026-07-19T22:18:45Z"
+      decided_at: "2026-07-19T22:18:45Z"
+    - schema_version: 2
+      idempotency_key: sha256:phase11-exit-20260719
+      phase_id: phase-11
+      gate_type: phase-11-exit
+      question: "Continue to Phase 12?"
+      options:
+        - Continue to Phase 12
+        - Pause workflow
+      original_recommendation: Continue to Phase 12
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to Phase 12
+      final_actor: advisor
+      rationale: "Phase 11 is passed with issues; continue the workflow while keeping publication NO-GO and preserving remaining risks in the handoff."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Copernicus
+        model: gpt-5.6-sol
+        response:
+          selected_option: Continue to Phase 12
+          rationale: "The remaining issues are publication evidence and hardening blockers, not a reason to stop workflow documentation/finalization."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T22:24:52Z"
+      updated_at: "2026-07-19T22:24:52Z"
+      decided_at: "2026-07-19T22:24:52Z"
+    - schema_version: 2
+      idempotency_key: sha256:phase13-exit-20260719
+      phase_id: phase-13
+      gate_type: phase-13-exit
+      question: "Documentation complete. Continue to Phase 14?"
+      options:
+        - Continue to Phase 14
+        - Pause workflow
+      original_recommendation: Continue to Phase 14
+      configured_policy: fully_automatic
+      policy: fully_automatic
+      safety_classification: configurable
+      status: decided
+      selected_option: Continue to Phase 14
+      final_actor: advisor
+      rationale: "The user guide is present and the workflow can proceed to finalization without changing the publication NO-GO decision."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: advisor
+        agent: Copernicus
+        model: gpt-5.6-sol
+        response:
+          selected_option: Continue to Phase 14
+          rationale: "The selected documentation is complete."
+          confidence: high
+          escalate_to_user: false
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T22:24:52Z"
+      updated_at: "2026-07-19T22:24:52Z"
+      decided_at: "2026-07-19T22:24:52Z"
+    - schema_version: 2
+      idempotency_key: sha256:5015741673e6938d420782fd23cf1ff4321a8b8581de32bb5a7345603891e44e
+      phase_id: phase-14
+      gate_type: final-handoff-approval
+      question: "Complete workflow?"
+      options:
+        - Complete workflow
+        - Keep workflow open
+      original_recommendation: Keep workflow open
+      configured_policy: manual
+      policy: manual
+      safety_classification: denylisted
+      status: decided
+      selected_option: Keep workflow open
+      final_actor: user
+      rationale: "The user continued the task with an explicit GitHub-only scope change, which necessarily keeps the workflow open and supersedes final handoff."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T23:21:25Z"
+      updated_at: "2026-07-19T23:21:25Z"
+      decided_at: "2026-07-19T23:21:25Z"
+    - schema_version: 2
+      idempotency_key: sha256:9eac553f54a8899148cba5d878292e3082a4e1b2e874dd5d7d8271ea5bc2948a
+      phase_id: phase-2
+      gate_type: scope-expansion
+      question: "Replace public npmjs distribution with GitHub-only distribution that runs the launcher from the GitHub repository or release package and supports private repositories through GitHub authentication?"
+      options:
+        - Use GitHub-only distribution and remove npm registry publication
+        - Keep public npmjs distribution
+      original_recommendation: Use GitHub-only distribution and remove npm registry publication
+      configured_policy: manual
+      policy: manual
+      safety_classification: denylisted
+      status: decided
+      selected_option: Use GitHub-only distribution and remove npm registry publication
+      final_actor: user
+      rationale: "The user explicitly chose the GitHub-only path and required removal of distribution outside GitHub, including support for a potentially private repository."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T23:21:25Z"
+      updated_at: "2026-07-19T23:21:25Z"
+      decided_at: "2026-07-19T23:21:25Z"
+    - schema_version: 2
+      idempotency_key: sha256:3c16d2367a06434a0ee263ed7291ce187015982c9a90d550022b70ca62815cc2
+      phase_id: phase-2
+      gate_type: phase-2-scope-decision
+      question: "Which registry-free archive implementation will replace the current runtime dependency on registry-installed tar@7.5.20 while preserving the approved inspection/extraction policy and bounded-memory acceptance?"
+      options:
+        - "Vendor the exact reviewed archive dependency and transitive runtime closure under an in-repository namespace, preserve upstream license/integrity evidence, and add streaming/bounded wrappers plus update review tooling."
+        - "Replace extraction with a narrowly scoped in-repository gzip/ustar implementation that consumes the existing inspection plan and is proven by the full hostile archive/platform corpus."
+        - "Keep tar as a normal package dependency and permit package-registry acquisition."
+      original_recommendation: "Vendor the exact reviewed archive dependency and transitive runtime closure under an in-repository namespace, preserve upstream license/integrity evidence, and add streaming/bounded wrappers plus update review tooling."
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Keep tar as a normal package dependency and permit package-registry acquisition."
+      final_actor: user
+      rationale: "The user selected option 3. Maister itself remains GitHub-only; npmjs is permitted only as the acquisition source for the vetted third-party tar runtime dependency."
+      confidence: high
+      escalate_to_user: false
+      user_override: true
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T23:32:33Z"
+      updated_at: "2026-07-19T23:35:18Z"
+      decided_at: "2026-07-19T23:35:18Z"
+    - schema_version: 2
+      idempotency_key: sha256:db54630d328b9089fe97973b0293b70ab01db00c82d41516e75c0691e3445a49
+      phase_id: phase-2
+      gate_type: phase-2-scope-decision
+      question: "Should authenticated GitHub API access support an existing gh auth session after environment-token lookup, or only explicit environment tokens?"
+      options:
+        - "Use GH_TOKEN, then GITHUB_TOKEN, then a bounded non-shell gh auth token --hostname github.com fallback, then anonymous access."
+        - "Use GH_TOKEN, then GITHUB_TOKEN, then anonymous access; require users of stored gh auth credentials to export a token themselves."
+      original_recommendation: "Use GH_TOKEN, then GITHUB_TOKEN, then a bounded non-shell gh auth token --hostname github.com fallback, then anonymous access."
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Use GH_TOKEN, then GITHUB_TOKEN, then a bounded non-shell gh auth token --hostname github.com fallback, then anonymous access."
+      final_actor: user
+      rationale: "The user selected option 1, allowing existing GitHub CLI authentication to support private repositories without requiring manual token export."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T23:35:18Z"
+      updated_at: "2026-07-19T23:39:47Z"
+      decided_at: "2026-07-19T23:39:47Z"
+    - schema_version: 2
+      idempotency_key: sha256:bda70639d3caeafe6e58449256cad57fd6f7b9ed55a120a3f202f6349f082a35
+      phase_id: phase-2
+      gate_type: phase-2-routing
+      question: "Continue to Phase 3: TDD Red Gate?"
+      options:
+        - "Continue to Phase 3: TDD Red Gate"
+        - "Pause workflow"
+      original_recommendation: "Continue to Phase 3: TDD Red Gate"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to Phase 3: TDD Red Gate"
+      final_actor: user
+      rationale: "The user explicitly selected the recommended Phase 3 route after reviewing the complete GitHub-only scope."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T23:39:47Z"
+      updated_at: "2026-07-19T23:48:05Z"
+      decided_at: "2026-07-19T23:48:05Z"
+    - schema_version: 2
+      idempotency_key: sha256:b76e5b30a6d16ab6f7f1fe697e14c85c609eeeaac9313bbbbfcf5b441ad04791
+      phase_id: phase-3
+      gate_type: phase-3-exit
+      question: "TDD red gate complete. Continue to Phase 4?"
+      options:
+        - "Continue to Phase 4"
+        - "Pause workflow"
+      original_recommendation: "Continue to Phase 4"
+      configured_policy: manual
+      policy: manual
+      safety_classification: test-gate
+      status: decided
+      selected_option: "Continue to Phase 4"
+      final_actor: user
+      rationale: "The user explicitly accepted the completed TDD Red gate and selected continuation to Phase 4."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-19T23:50:12Z"
+      updated_at: "2026-07-20T07:54:55Z"
+      decided_at: "2026-07-20T07:54:55Z"
+    - schema_version: 2
+      idempotency_key: sha256:4fd9f902cbe07406f20378f81e9a5e788f70218e6e510f05a48fe2f58fa8be27
+      phase_id: phase-4
+      gate_type: phase-4-exit
+      question: "UI mockups complete. Continue to Phase 5?"
+      options:
+        - "Continue to Phase 5"
+        - "Pause workflow"
+      original_recommendation: "Continue to Phase 5"
+      configured_policy: manual
+      policy: manual
+      safety_classification: design-gate
+      status: decided
+      selected_option: "Continue to Phase 5"
+      final_actor: user
+      rationale: "The user explicitly selected continuation after UI mockups were skipped because the task has no UI surface."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T07:54:55Z"
+      updated_at: "2026-07-20T08:35:31Z"
+      decided_at: "2026-07-20T08:35:31Z"
+    - schema_version: 2
+      idempotency_key: sha256:8358f6a9980394365c8e29349d3538166c7645e2aeb8875de965b725f22f292f
+      phase_id: phase-5
+      gate_type: phase-5-exit
+      question: "Continue to specification audit?"
+      options:
+        - "Continue to specification audit"
+        - "Pause workflow"
+      original_recommendation: "Continue to specification audit"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to specification audit"
+      final_actor: user
+      rationale: "The user explicitly selected the recommended transition after reviewing the rewritten 38-requirement GitHub-only specification."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T08:50:03Z"
+      updated_at: "2026-07-20T09:03:48Z"
+      decided_at: "2026-07-20T09:03:48Z"
+    - schema_version: 2
+      idempotency_key: sha256:68284d63c3b9f0dfbecca34fe6b7e15b9bad7bbc65310ac6cb9baff64dd06b74
+      phase_id: phase-6
+      gate_type: optional-phase-selection
+      question: "Run specification audit? (Recommended)"
+      options:
+        - "Yes, run audit (Recommended)"
+        - "No, skip audit"
+      original_recommendation: "Yes, run audit (Recommended)"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Yes, run audit (Recommended)"
+      final_actor: user
+      rationale: "The user explicitly selected the recommended independent specification audit."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T09:03:48Z"
+      updated_at: "2026-07-20T09:05:21Z"
+      decided_at: "2026-07-20T09:05:21Z"
+    - schema_version: 2
+      idempotency_key: sha256:a001a5765a4188b5099c45a09254275338a0ceb8e1961c833b6dce38288aa09a
+      phase_id: phase-6
+      gate_type: phase-6-audit-remediation
+      question: "How should Maister prove exact Git acquisition identity when npm/Git does not expose a trustworthy runtime source for the original selector?"
+      options:
+        - "Generate a prepare-time resolved-commit manifest and enforce exact selector use in protected CI. (Recommended)"
+        - "Limit all package selector and resolved-commit proof to protected CI; do not verify package commit at runtime."
+        - "Use ambient npm/Git/cache metadata at runtime to infer the selector and commit."
+      original_recommendation: "Generate a prepare-time resolved-commit manifest and enforce exact selector use in protected CI. (Recommended)"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Generate a prepare-time resolved-commit manifest and enforce exact selector use in protected CI. (Recommended)"
+      final_actor: user
+      rationale: "The selected split provides runtime proof of the materialized full commit without trusting ambient npm metadata, while protected CI proves the caller used an exact tag or full commit selector."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T09:12:37Z"
+      updated_at: "2026-07-20T09:17:43Z"
+      decided_at: "2026-07-20T09:17:43Z"
+    - schema_version: 2
+      idempotency_key: sha256:f74e3036196fb7fe55310843559059d793a541558b34ced29f5b5a6b5dba89e2
+      phase_id: phase-6
+      gate_type: phase-6-audit-remediation
+      question: "Which repository-visibility verification policy should the specification require?"
+      options:
+        - "Keep the current public repository, run public E2E now, and document the private migration checklist for future activation. (Selected)"
+        - "Create a separately controlled private fixture repository so public and private E2E run now."
+        - "Temporarily change the canonical repository visibility during CI."
+      original_recommendation: "Keep the current public repository, run public E2E now, and document the private migration checklist for future activation. (Selected)"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Keep the current public repository, run public E2E now, and document the private migration checklist for future activation. (Selected)"
+      final_actor: user
+      rationale: "The repository is currently public. Public anonymous E2E is release-blocking now; private transport remains hermetically tested, and a future migration checklist will activate protected private E2E when repository visibility changes."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T09:17:43Z"
+      updated_at: "2026-07-20T09:27:49Z"
+      decided_at: "2026-07-20T09:27:49Z"
+    - schema_version: 2
+      idempotency_key: sha256:03ecadf665dee4cf6534042c1073e29509384c7215d9751a213dd38a35841c54
+      phase_id: phase-6
+      gate_type: phase-6-audit-remediation
+      question: "What exact connection timing contract should GitHub transport enforce?"
+      options:
+        - "Use one 15-second pre-header deadline per attempt covering DNS, TCP, TLS, proxy negotiation, and response headers. (Recommended)"
+        - "Use a separate 10-second low-level connection deadline plus a 15-second response-header deadline."
+        - "Use only resource and aggregate wall deadlines with no dedicated connection timing contract."
+      original_recommendation: "Use one 15-second pre-header deadline per attempt covering DNS, TCP, TLS, proxy negotiation, and response headers. (Recommended)"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Use one 15-second pre-header deadline per attempt covering DNS, TCP, TLS, proxy negotiation, and response headers. (Recommended)"
+      final_actor: user
+      rationale: "One portable pre-header deadline gives deterministic DNS/TCP/TLS/proxy/header coverage on Node 22 and composes with separate idle, resource wall, and aggregate operation limits."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T09:27:49Z"
+      updated_at: "2026-07-20T09:33:28Z"
+      decided_at: "2026-07-20T09:33:28Z"
+    - schema_version: 2
+      idempotency_key: sha256:27b4e70478241c735d76e11121ee6dd40f5ea2a690b70d90b6b15c52084a6f2a
+      phase_id: phase-8
+      gate_type: phase-8-exit
+      question: "Continue to verification?"
+      options:
+        - "Continue to verification"
+        - "Pause workflow"
+      original_recommendation: "Continue to verification"
+      configured_policy: fully_automatic
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to verification"
+      final_actor: user
+      rationale: "The user selected option 1 at the mandatory Phase 8 exit gate after reviewing the completed implementation evidence."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T12:32:52Z"
+      updated_at: "2026-07-20T12:38:25Z"
+      decided_at: "2026-07-20T12:38:25Z"
+    - schema_version: 2
+      idempotency_key: sha256:f84a8df5793ab8e142827d4407aa8717c9c8bc476165e2af5461ec1bb618b8cc
+      phase_id: phase-9
+      gate_type: phase-9-exit
+      question: "TDD gate passed. Continue to Phase 10?"
+      options:
+        - "Continue to Phase 10"
+        - "Pause workflow"
+      original_recommendation: "Continue to Phase 10"
+      configured_policy: fully_automatic
+      policy: manual
+      safety_classification: test-gate
+      status: decided
+      selected_option: "Continue to Phase 10"
+      final_actor: user
+      rationale: "The user selected option 1 after the unchanged focused TDD suite passed 3/3."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T12:40:02Z"
+      updated_at: "2026-07-20T12:51:41Z"
+      decided_at: "2026-07-20T12:51:41Z"
+    - schema_version: 2
+      idempotency_key: sha256:f2188cb85b6537f4d46c60d26ec940d9084379a0b1f17276ac46c323e3c75a9f
+      phase_id: phase-10
+      gate_type: verification-options
+      question: "Which standard verifications to run?"
+      options:
+        - "Code review (Recommended)"
+        - "Pragmatic review (Recommended)"
+        - "Reality check (Recommended)"
+        - "Production readiness (Recommended)"
+      original_recommendation: "Code review (Recommended), Pragmatic review (Recommended), Reality check (Recommended), Production readiness (Recommended)"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Code review (Recommended), Pragmatic review (Recommended), Reality check (Recommended), Production readiness (Recommended)"
+      final_actor: user
+      rationale: "The user selected all recommended standard verifications."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T12:51:41Z"
+      updated_at: "2026-07-20T12:59:04Z"
+      decided_at: "2026-07-20T12:59:04Z"
+    - schema_version: 2
+      idempotency_key: sha256:113a89c563801192fc1efe8c8b782a4576c82079d3d2c186aa8342f36d60178f
+      phase_id: phase-10
+      gate_type: optional-phase-selection/user-docs
+      question: "Generate user documentation?"
+      options:
+        - "Yes (Recommended)"
+        - "No, skip"
+      original_recommendation: "Yes (Recommended)"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Yes (Recommended)"
+      final_actor: user
+      rationale: "The user selected option 1, keeping user documentation enabled for Phase 13."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T12:59:04Z"
+      updated_at: "2026-07-20T13:01:44Z"
+      decided_at: "2026-07-20T13:01:44Z"
+    - schema_version: 2
+      idempotency_key: sha256:d20e738fdbfd0cb27fa40566cf2434a7a18c541cc39e1f7572916da713200fd6
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: "Which issues should I fix?"
+      options:
+        - "Fix all fixable issues"
+        - "Let me choose specific issues"
+        - "Skip fixes, proceed as-is"
+      original_recommendation: "Fix all fixable issues"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Fix all fixable issues"
+      final_actor: user
+      rationale: "The user selected option 1, authorizing remediation of every source-controlled verification finding while external GitHub prerequisites remain blocked."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T13:30:16Z"
+      updated_at: "2026-07-20T13:45:44Z"
+      decided_at: "2026-07-20T13:45:44Z"
+    - schema_version: 2
+      idempotency_key: sha256:7096ba653a6c3c73c2b49610b263cabd9ab6785b03bb52023d9bd5a4bec6abf3
+      phase_id: phase-11
+      gate_type: verification-rerun
+      question: "Re-run verification to check fixes?"
+      options:
+        - "Yes, re-run verification"
+        - "No, proceed to the next phase"
+      original_recommendation: "Yes, re-run verification"
+      configured_policy: manual
+      policy: manual
+      safety_classification: test-gate
+      status: decided
+      selected_option: "Yes, re-run verification"
+      final_actor: user
+      rationale: "The user selected option 1, authorizing a complete post-fix verification rerun and canonical report replacement."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T15:18:52Z"
+      updated_at: "2026-07-20T15:59:45Z"
+      decided_at: "2026-07-20T15:59:45Z"
+    - schema_version: 2
+      idempotency_key: sha256:6ff17647295efcdebbc35268a15313d06e938ddb70706ab75598a96bea543661
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: "Which issues should I fix?"
+      options:
+        - "Fix all fixable issues"
+        - "Let me choose specific issues"
+        - "Skip fixes, proceed as-is"
+      original_recommendation: "Fix all fixable issues"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Fix all fixable issues"
+      final_actor: user
+      rationale: "The user selected option 1, authorizing the second fix loop for V-016 while the external GitHub prerequisites remain unchanged."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T16:11:14Z"
+      updated_at: "2026-07-20T17:12:02Z"
+      decided_at: "2026-07-20T17:12:02Z"
+    - schema_version: 2
+      idempotency_key: sha256:34eed63ef305b80ab06583847d5489291da6c39ed01a71bbb088ebb412d433be
+      phase_id: phase-11
+      gate_type: verification-rerun
+      question: "Re-run verification to check fixes?"
+      options:
+        - "Yes, re-run verification"
+        - "No, proceed to the next phase"
+      original_recommendation: "Yes, re-run verification"
+      configured_policy: manual
+      policy: manual
+      safety_classification: test-gate
+      status: decided
+      selected_option: "Yes, re-run verification"
+      final_actor: user
+      rationale: "The user selected option 1, authorizing full post-V-016 verification and canonical report replacement."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T17:16:55Z"
+      updated_at: "2026-07-20T17:27:12Z"
+      decided_at: "2026-07-20T17:27:12Z"
+    - schema_version: 2
+      idempotency_key: sha256:b38801fbc024277030edaf7d11b3461eac96c4fcb2402dda48ee0d161f5f1f01
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: "Which issues should I fix?"
+      options:
+        - "Fix all fixable issues"
+        - "Let me choose specific issues"
+        - "Skip fixes, proceed as-is"
+      original_recommendation: "Fix all fixable issues"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Fix all fixable issues"
+      final_actor: user
+      rationale: "The user selected option 1, the exact recommended fix-all choice for CQ-102."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T18:12:11Z"
+      updated_at: "2026-07-20T18:33:11Z"
+      decided_at: "2026-07-20T18:33:11Z"
+    - schema_version: 2
+      idempotency_key: sha256:e191480beb6fcda5a54148727879e12d26ff828ae74554ef47b866c2278da4f6
+      phase_id: phase-11
+      gate_type: verification-rerun
+      question: "Re-run verification to check fixes?"
+      options:
+        - "Yes, re-run verification"
+        - "No, proceed to the next phase"
+      original_recommendation: "Yes, re-run verification"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Yes, re-run verification"
+      final_actor: user
+      rationale: "The user selected option 1, authorizing the mandatory full Phase 11 re-verification after the CQ-102 fix."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T18:39:17Z"
+      updated_at: "2026-07-20T18:48:44Z"
+      decided_at: "2026-07-20T18:48:44Z"
+    - schema_version: 2
+      idempotency_key: sha256:aed4704e716566e16960fcf1504284ea57de7775e62c09d5fc36fb44ec457bc7
+      phase_id: phase-11
+      gate_type: verification-known-issues
+      question: "Proceed with known issues?"
+      options:
+        - "Proceed with known issues"
+        - "Stop workflow"
+      original_recommendation: "Proceed with known issues"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Proceed with known issues"
+      final_actor: user
+      rationale: "The user selected option 1, authorizing continuation while the external GitHub release and protection prerequisites remain unresolved and release acceptance stays NO-GO."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: "Awaiting explicit approval to continue while external GitHub release/protection blockers remain."
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T19:31:17Z"
+      updated_at: "2026-07-20T19:35:21Z"
+      decided_at: "2026-07-20T19:35:21Z"
+    - schema_version: 2
+      idempotency_key: sha256:949c1c70eecbf5b542f80cfb36dc9f5090ec10164e69582d0727f8e47ed16346
+      phase_id: phase-11
+      gate_type: phase-11-exit
+      question: "Continue to Phase 12?"
+      options:
+        - "Continue to Phase 12"
+        - "Pause workflow"
+      original_recommendation: "Continue to Phase 12"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to Phase 12"
+      final_actor: user
+      rationale: "The user selected option 1, authorizing continuation to the E2E phase; the phase is configured to skip browser verification."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: "2026-07-20T19:35:21Z"
+      updated_at: "2026-07-20T19:40:29Z"
+      decided_at: "2026-07-20T19:40:29Z"
+    - schema_version: 2
+      idempotency_key: sha256:5d3db71e7a2ecdaf6c5f3b8638d2ffd3418ea06b44e4aa52e4220cfe59c4992c
+      phase_id: phase-12
+      gate_type: phase-12-exit
+      question: "E2E complete. Continue to Phase 13?"
+      options:
+        - "Continue to Phase 13"
+        - "Pause workflow"
+      original_recommendation: "Continue to Phase 13"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to Phase 13"
+      final_actor: user
+      rationale: "The user selected option 1, authorizing continuation to the enabled user-documentation phase after E2E was skipped."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      created_at: "2026-07-20T19:40:29Z"
+      updated_at: "2026-07-20T19:44:26Z"
+      decided_at: "2026-07-20T19:44:26Z"
+    - schema_version: 2
+      idempotency_key: sha256:4190f0156e5926ddbfbb8dc4a7f936990fca079a77de6d4a9b2fd6262f1193ba
+      phase_id: phase-13
+      gate_type: phase-13-exit
+      question: "Documentation complete. Continue to Phase 14?"
+      options:
+        - "Continue to Phase 14"
+        - "Pause workflow"
+      original_recommendation: "Continue to Phase 14"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Continue to Phase 14"
+      final_actor: user
+      rationale: "The user selected option 1, authorizing finalization after the GitHub-only user guide was generated and verified."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      created_at: "2026-07-20T19:50:09Z"
+      updated_at: "2026-07-20T19:54:48Z"
+      decided_at: "2026-07-20T19:54:48Z"
+    - schema_version: 2
+      idempotency_key: sha256:5015741673e6938d420782fd23cf1ff4321a8b8581de32bb5a7345603891e44e
+      phase_id: phase-14
+      gate_type: final-handoff-approval
+      question: "Complete workflow?"
+      options:
+        - "Complete workflow"
+        - "Keep workflow open"
+      original_recommendation: "Complete workflow"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Complete workflow"
+      final_actor: user
+      rationale: "The user selected option 1, approving completion after all enabled phases and final reports were persisted."
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      arbiter: {logical_role_id: null, agent: null, model: null, response: null, attempts: [], exhausted: false}
+      continuation: null
+      provenance_kind: complete
+      created_at: "2026-07-20T19:54:48Z"
+      updated_at: "2026-07-20T19:58:03Z"
+      decided_at: "2026-07-20T19:58:03Z"
+  implementation_approval:
+    status: approved
+    approved_by: user
+    approved_at: "2026-07-20T10:22:06Z"
+    approved_scope:
+      - "Protect the root Git package with `private: true`, remove `publishConfig` and every publication lifecycle, retain exact normal dependency `tar@7.5.20`, and add the prepare-time resolved-commit manifest producer and package boundary validation."
+      - "Implement the closed seven-command/three-target launcher contract, exact package/release identity chain, and immutable verified-release descriptor without trusting ambient npm selector metadata."
+      - "Implement strict GitHub API credential resolution in precedence `GH_TOKEN` then `GITHUB_TOKEN` then bounded non-shell `gh auth token --hostname github.com` then anonymous, with invalid explicit credentials failing closed and all secret material redacted."
+      - "Implement anonymous-first exact Release lookup and API-only metadata/asset authorization, API asset URL plus `application/octet-stream` delivery, cross-host authorization stripping, and bounded direct `200`/`302` behavior."
+      - "Implement one 15-second pre-header deadline per fetch attempt plus independent body-idle, resource-wall, aggregate-operation, redirect, retry, byte, abort, and partial-file cleanup bounds through injectable seams."
+      - "Replace whole-buffer archive handling with backpressure-aware streaming download hashing, independent gzip/ustar inspection, exact `tar@7.5.20` strict filtered extraction, no-follow post-validation, and measured cross-platform RSS evidence."
+      - "Preserve `plugins/maister/bin/maister-install.mjs` as sole host/state mutation authority while completing transactional receipt-bound control-plane persistence, offline state-only delegation, exact journal selection, crash recovery, cleanup, signal, and child-result contracts."
+      - "Add terminal aggregate transaction, every durable abrupt-crash boundary, multiple unresolved-journal isolation, zero-pre-spawn-mutation, exact identity, three-target lifecycle, and Linux/macOS/Windows Node 22 acceptance evidence."
+      - "Convert release automation to GitHub-only publication and verification, remove `NPM_TOKEN` and all npm publish/view/dist-tag/registry mutation or observation, add static/runtime no-registry-mutation proof, protected exact-selector evidence, and real anonymous public tag/full-commit E2E against the existing canonical repository."
+      - "Update user/operator/release documentation and distribution-facing metadata to `mateuszrapacz`, preserve legal `LICENSE` attribution, add the normative future-private migration checklist, and enforce exact R-001–R-038 requirements/spec/HTML drift rejection."
+
+task:
+  title: Add GitHub-only npm-exec distribution for Maister
+  description: How should Maister run directly from a versioned GitHub repository or GitHub Release package, including private repositories through GitHub authentication, without publishing to npmjs or another package registry while preserving provenance, reproducibility, rollback, recovery, and support for Codex, Cursor, and Kiro CLI?
+  status: completed
+  tags: [development, distribution, npm-exec, github-only, private-repository, github-releases, installer]
+  priority: high
+
+project_context:
+  project_doc_paths:
+    - .maister/docs/project/vision.md
+    - .maister/docs/project/roadmap.md
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/project/architecture.md
+
+task_context:
+  tdd_green_passed: true
+  risk_level: high
+  clarifications_resolved: true
+  scope_expanded: true
+  architecture_decision: "GitHub-only launcher executed from an exact Git tag or commit with no npm registry publication; private repositories use existing Git credentials for package acquisition and authenticated GitHub access for exact release assets, while maister-install.mjs remains the sole mutation authority."
+  tech_clarified: true
+  tdd_red_passed: true
+  task_characteristics:
+    has_reproducible_defect: true
+    modifies_existing_code: true
+    creates_new_entities: true
+    involves_data_operations: true
+    ui_heavy: false
+  research_reference:
+    path: .maister/tasks/research/2026-07-17-npx-release-distribution
+    research_question: How should Maister add an npx-based installer owned by mateuszrapacz that downloads the correct GitHub Release archive, verifies it, and invokes the existing target-aware installer without manual extraction while preserving provenance, reproducibility, rollback, recovery, and support for Codex, Cursor, and Kiro CLI?
+    research_type: mixed
+    confidence_level: high
+  design_reference:
+    source: null
+    product_design_path: null
+    mockup_count: 0
+    has_brief: false
+    index_path: null
+  phase_summaries:
+    research:
+      summary: The research recommends a thin @mateuszrapacz/maister launcher whose only authority is release selection, bounded download, fail-closed archive verification, temporary extraction, delegation, result forwarding, and cleanup. GitHub Release archives remain the payload source of truth and maister-install.mjs remains the only host-state mutation authority.
+      key_findings:
+        - "superseded: the original registry-version recommendation is replaced by exact Git tags and full commits."
+        - Target selection is closed to codex, cursor, and kiro-cli with an exact asset allowlist.
+        - Archive, source-manifest, and E3 checks must fail before installer delegation and preserve a zero-mutation invariant.
+        - Exact Git package commit, GitHub Release tag, sidecars, archive manifest, and E3 must align; unsigned sidecars are not publisher authentication.
+        - The repository currently lacks npm package metadata and an npx entrypoint.
+      recommended_approach: "superseded: implement a private root Git package executed from exact GitHub refs, publish only GitHub Release assets, and run anonymous public exact-ref smoke validation."
+      decisions:
+        - decision: Use @mateuszrapacz/maister with binary maister.
+          rationale: Matches the accepted ownership and one-command distribution goal.
+        - decision: Keep GitHub Release archives as the payload source of truth.
+          rationale: Avoids a second target-payload store and reuses deterministic release validation.
+        - decision: Keep maister-install.mjs as the sole mutation authority.
+          rationale: Preserves receipts, journals, locks, drift checks, rollback, recovery, and lifecycle semantics.
+      risks:
+        - Cross-platform archive extraction needs adversarial path, symlink, size, ownership, and cleanup tests.
+        - Current checksum and provenance sidecars improve integrity checking but do not authenticate the publisher.
+        - Git package commit and GitHub Release identity require explicit skew-response behavior.
+        - The minimum supported Node version remains an implementation decision; Node 22 is the current CI reference.
+      artifacts:
+        - path: analysis/research-context/research-report.md
+          label: Research report
+          html: null
+        - path: analysis/research-context/solution-exploration.md
+          label: Solution exploration
+          html: null
+        - path: analysis/research-context/high-level-design.md
+          label: High-level design
+          html: null
+        - path: analysis/research-context/decision-log.md
+          label: Decision log
+          html: null
+    design:
+      summary: null
+      screen_count: 0
+      component_count: 0
+      index_path: null
+      decisions: []
+      risks: []
+      artifacts: []
+    codebase_analysis:
+      key_files:
+        - Makefile
+        - plugins/maister/bin/release-interface.mjs
+        - plugins/maister/bin/release-metadata.mjs
+        - plugins/maister/bin/maister-install.mjs
+        - plugins/maister/lib/distribution/cli-contract.mjs
+        - plugins/maister/lib/distribution/source-resolver.mjs
+        - plugins/maister/lib/distribution/path-safety.mjs
+        - plugins/maister/lib/distribution/materializer.mjs
+        - plugins/maister/lib/distribution/e3-attestation.mjs
+        - plugins/maister/lib/distribution/transaction-manager.mjs
+        - plugins/maister/lib/distribution/targets.mjs
+        - .github/workflows/release.yml
+        - tests/platform-independent/release-package.test.mjs
+        - tests/platform-independent/installer-transaction.test.mjs
+        - tests/platform-independent/source-materializer.test.mjs
+      primary_language: JavaScript ESM
+      summary: Maister has a strong deterministic release and transactional-install foundation. The Git package launcher remains thin by reusing closed target/source/E3 contracts, adding safe GitHub API and archive boundaries, and delegating all host-state mutation to maister-install.mjs.
+      decisions:
+        - decision: Preserve maister-install.mjs as the only host/state mutation authority.
+          rationale: It already owns transaction, receipts, journals, rollback, recovery, and exit-code semantics.
+        - decision: Extend release distribution around the existing deterministic target archives.
+          rationale: release-interface.mjs, release-metadata.mjs, and release.yml already establish target closure, E3, provenance, and lifecycle smoke contracts.
+        - decision: Add independent hostile-archive validation before extraction.
+          rationale: Existing release tests extract trusted artifacts directly and do not prove a safe untrusted-input boundary.
+      risks:
+        - State-only commands need a matching installed authority without network access or a second bundled installer.
+        - Current release workflow still contains superseded registry publication steps that must be removed.
+        - Existing docs and metadata contain Skillpanel-era references that need an explicit ownership migration decision.
+      artifacts:
+        - path: analysis/codebase-analysis.md
+          label: Codebase analysis
+          html: null
+    clarifications:
+      - question: I assume state-only npx commands must work without GitHub access by locating and invoking the matching installed Maister lifecycle authority, while install/update download and verify a release archive. Is that correct?
+        status: resolved
+        answer: Confirm assumptions
+        resolution: The user instructed the workflow to proceed with the recommendations, confirming offline state-only commands and verified release download for install/update.
+        recommendation: Provide more context
+        artifact: analysis/clarifications.md
+    gap_analysis:
+      integration_points:
+        - Direct-Git package metadata and launcher binary
+        - Public and private GitHub Release metadata and API asset downloads
+        - Git/API credential separation and secret-safe transport
+        - Archive implementation and bounded-memory evidence
+        - maister-install.mjs, transaction-manager.mjs, journals, and recovery
+        - GitHub-only release CI, exact-ref smokes, tests, and documentation
+      summary: The scope now uses npm only as a local Git-package client and publishes nothing to a package registry. Existing launcher and installer boundaries remain reusable, but package protection, private GitHub authentication, API asset downloads, exact-ref CI, archive dependency policy, and the previously non-terminal transaction/crash/memory evidence require implementation.
+      decisions:
+        - decision: Remove npm registry publication and execute the launcher from an exact Git tag or full commit.
+          rationale: The user requires all Maister distribution to remain on GitHub and the repository may be private.
+        - decision: Keep GitHub Release archives and maister-install.mjs as payload and mutation authorities.
+          rationale: This preserves deterministic artifacts, provenance, transactions, rollback, and recovery.
+        - decision: Separate Git credentials used by npm from GitHub API credentials used by the launcher.
+          rationale: Private acquisition needs both boundaries without exposing or translating credentials.
+      risks:
+        - The meaning of no package registry still needs a decision for third-party runtime dependency acquisition.
+        - Private Release assets require API-only authorization with cross-host credential stripping.
+        - Aggregate transactions, abrupt crashes, multiple journals, archive memory, and protected private/public smokes remain release blockers.
+      artifacts:
+        - path: analysis/gap-analysis.md
+          label: Gap analysis
+          html: null
+    scope_clarifications:
+      scope_expanded: true
+      summary: The user replaced public npmjs publication with GitHub-only exact-ref acquisition. Dependency, credential, package identity, current-public/future-private, and connection-timing decisions are all resolved.
+      decisions:
+        - decision: Do not publish Maister to npmjs, GitHub Packages, or another package registry.
+          rationale: The user selected direct GitHub repository/package acquisition.
+        - decision: Support exact Git tags and full commits for public and private repositories.
+          rationale: Public use should work anonymously; private use relies on operator Git and GitHub authentication.
+        - decision: Keep exact GitHub Release archives as payload authority and maister-install.mjs as mutation authority.
+          rationale: The scope change does not duplicate release packaging or transactional lifecycle ownership.
+        - decision: Disable workflow advisors for the revised scope.
+          rationale: The user explicitly requested that the main agent answer and decide without an advisor.
+      risks:
+        - "resolved: runtime dependency and gh-auth fallback choices are fixed in the revised specification."
+      artifacts:
+        - path: analysis/scope-clarifications.md
+          label: Scope clarifications
+          html: null
+    requirements:
+      summary: "The GitHub-only journey supports npm install/npm exec from an exact GitHub tag or full commit, never publishes Maister to a registry, separates Git acquisition credentials from bounded GitHub API authentication, and makes all 38 requirements release-blocking."
+      decisions:
+        - decision: "Support only exact #vX.Y.Z tags and full 40-hex commits."
+          rationale: "Moving branches, latest, and semver selectors cannot provide reproducible package identity."
+        - decision: "Protect the root package with private:true while retaining exact tar@7.5.20."
+          rationale: "Maister cannot be registry-published, while vetted third-party dependency acquisition remains available."
+        - decision: "Use anonymous public GitHub access and a bounded explicit private API credential chain."
+          rationale: "Public use emits no credentials and private use can reuse environment or GitHub CLI authentication safely."
+      risks:
+        - "Protected immutable tags are an operational prerequisite; private migration evidence activates only when repository visibility changes."
+        - "Current archive handling must satisfy streaming and measured peak-memory acceptance."
+      artifacts:
+        - path: analysis/requirements.md
+          label: Requirements
+          html: null
+    technical_clarifications:
+      summary: "Technical clarification fixes exact Git refs, anonymous-first GitHub access, GH_TOKEN/GITHUB_TOKEN/bounded-gh credential precedence, API asset delivery, zero registry mutation, streaming archive bounds, and receipt-bound state-only delegation."
+      decisions:
+        - decision: "Use a fixed non-shell command port for gh auth fallback."
+          rationale: "Bounded output, timeout, validation, and redaction make stored GitHub CLI authentication testable without leaking credentials."
+        - decision: "Fetch every Release asset through its GitHub API asset URL."
+          rationale: "Private Releases require authenticated API asset negotiation and safe cross-host redirect behavior."
+        - decision: "Keep state-only commands receipt-bound and launcher-network-free."
+          rationale: "Lifecycle state remains under the verified installed control-plane authority."
+      risks:
+        - "Abrupt-crash recovery, multi-journal recovery, archive-memory evidence, and current public anonymous smoke remain mandatory; private protected smoke activates on future visibility change."
+      artifacts:
+        - path: analysis/technical-clarifications.md
+          label: Technical clarifications
+          html: null
+    tdd_red:
+      summary: "Three focused tests fail against the current implementation, proving that the package is still registry-publishable, GH_TOKEN precedence is missing, and authenticated assets still use public browser download URLs."
+      decisions:
+        - decision: "Keep registry publication, credential precedence, and private asset transport in one focused red contract suite."
+          rationale: "These are independent observable defects in the revised GitHub-only scope."
+        - decision: "Stop transport tests before extraction or delegation."
+          rationale: "URL and credential behavior can be reproduced without mutating host state."
+      risks:
+        - "The bounded non-shell gh auth fallback still needs an injectable command boundary and dedicated implementation tests."
+        - "Aggregate transaction, crash recovery, multi-journal recovery, and archive-memory evidence remain downstream verification obligations."
+      artifacts:
+        - path: implementation/tdd-red-gate.md
+          label: TDD red gate
+          html: null
+        - path: ../../../tests/platform-independent/launcher-github-only.test.mjs
+          label: Failing GitHub-only contract test
+          html: null
+    tdd_green:
+      summary: "The unchanged focused GitHub-only contract suite now passes 3/3, proving package publication protection, GH_TOKEN precedence, and API-only authenticated asset transport."
+      decisions:
+        - decision: "Preserve the original three-case test without weakening its assertions."
+          rationale: "The green result must prove the Phase 3 defects were fixed rather than hidden."
+      risks:
+        - "The real anonymous public exact-selector smoke remains unavailable until the canonical v2.2.1 tag and GitHub Release assets exist."
+      artifacts:
+        - path: implementation/tdd-green-gate.md
+          label: TDD green gate
+          html: null
+        - path: ../../../tests/platform-independent/launcher-github-only.test.mjs
+          label: Passing GitHub-only contract test
+          html: null
+    ui_mockups:
+      components_designed: []
+      summary: null
+      decisions: []
+      risks: []
+      artifacts: []
+    specification:
+      summary: "The remediated specification defines 38 Must requirements for exact GitHub tag/commit acquisition, prepare-time commit identity, current anonymous public Release transport, future private migration, zero registry publication, bounded streaming archives, unchanged installer authority, crash/journal recovery, and cross-platform release gates."
+      decisions:
+        - decision: "Supersede every historical public-npm publication assumption."
+          rationale: "npm is only the local Git-package client and may read dependencies; GitHub is the only Maister distribution surface."
+        - decision: "Make all 38 requirements release-blocking."
+          rationale: "Identity, transport, transaction, recovery, memory, and no-registry evidence jointly define safe distribution."
+      risks:
+        - "The implementation is not releasable until aggregate transactions, crash/journal recovery, bounded memory, current public smoke, and zero registry mutation are proven."
+      artifacts:
+        - path: analysis/requirements.md
+          label: Requirements
+          html: null
+        - path: analysis/technical-clarifications.md
+          label: Technical clarifications
+          html: null
+        - path: implementation/spec.md
+          label: Implementation specification
+          html: implementation/spec.html
+    spec_audit:
+      summary: "Independent re-audit passed with zero blocking, important, or advisory findings. All 38 Must requirements match exactly across requirements Markdown, specification Markdown, and decoded HTML; every prior audit finding is resolved."
+      decisions:
+        - decision: "Accept the remediated specification as implementation-ready."
+          rationale: "Independent mechanical and semantic checks found no remaining blocker, important issue, advisory, or hidden decision."
+      risks:
+        - "Specification risk is resolved; implementation must still produce the release-blocking evidence defined by all 38 requirements."
+      artifacts:
+        - path: verification/spec-audit.md
+          label: Specification audit
+          html: null
+        - path: analysis/spec-fix-decisions.md
+          label: Audit fix decisions
+          html: null
+    implementation_plan:
+      summary: "The implementation plan covers all 38 Must requirements in nine disjoint groups across six dependency waves, with 55 executable steps, 57 uniquely owned paths, exact tests, recovery rules, and a ten-item approval scope. Independent orchestrator checks confirmed requirement ordering, ownership disjointness, and Markdown/HTML progress-marker parity."
+      decisions:
+        - decision: "Execute nine disjoint implementation groups across six dependency waves."
+          rationale: "This preserves single-writer ownership while allowing credentials/transport and archive/transaction work to progress in safe parallel waves."
+        - decision: "Keep the existing three-case TDD red gate unchanged until the owning production groups turn it green."
+          rationale: "The focused failures remain the proof that package protection, credential precedence, and API asset transport defects are fixed rather than hidden."
+        - decision: "Treat current public exact-selector E2E, hermetic private transport, aggregate transactions, crash recovery, RSS bounds, and zero registry mutation as release gates."
+          rationale: "These are binding acceptance obligations from the audited 38-requirement specification."
+      risks:
+        - "Protected immutable tag/ruleset configuration and a published exact candidate Release are external prerequisites; missing evidence must block rather than be replaced by fixtures."
+        - "Streaming archive memory, every durable crash boundary, multiple-journal isolation, and three-OS transaction evidence remain high-risk implementation gates."
+      artifacts:
+        - path: implementation/implementation-plan.md
+          label: Implementation plan
+          html: implementation/implementation-plan.html
+    implementation:
+      summary: "All nine implementation groups and 55 steps are complete; focused, aggregate, crash, package, policy, and clean-parity gates pass. No registry or substitute repository was created."
+      decisions:
+        - decision: "Keep GitHub as the only Maister distribution surface."
+          rationale: "The package is private and release automation has no registry mutation path."
+        - decision: "Block real public smoke until the exact canonical tag and Release exist."
+          rationale: "The canonical repository currently has no v2.2.1 tag or exact Release assets."
+      risks:
+        - "Real public smoke remains unavailable until v2.2.1 and its exact GitHub Release assets are published through the protected workflow."
+      artifacts:
+        - path: implementation/implementation-plan.md
+          label: Implementation plan
+          html: implementation/implementation-plan.html
+        - path: implementation/work-log.md
+          label: Work log
+          html: null
+    verification:
+      summary: "Source-controlled implementation passes local verification after CQ-102 remediation; current direct make test-platform-independent exits 0 and focused policy/guard checks pass 16/16. V-007/V-008 remain external blockers."
+      decisions:
+        - decision: "Fix V-016 through a downstream final evidence job."
+          rationale: "Canonical lifecycle evidence is emitted only after all three public no-auth smokes and the subsequent hermetic transport gate pass."
+        - decision: "Fix CQ-102 and subsequent release-harness findings."
+          rationale: "The public-smoke checkout no longer persists credentials; worktree/local auth, redirects, ambient transport environment, CI coverage, and diagnostics now fail closed."
+        - decision: "Keep publication blocked."
+          rationale: "Source-controlled verification is green, but V-007/V-008 remain external release prerequisites."
+        - decision: "Retain the thin-launcher and sole-installer architecture."
+          rationale: "Independent reviews found the boundary appropriate for the security and recovery contract."
+      risks:
+        - "Real public exact-selector smoke, protected three-OS execution, and GitHub administrative protections remain unavailable external evidence."
+        - "The canonical repository has no remote v2.2.1 tag or exact GitHub Release, so real anonymous exact-selector and protected three-OS evidence is unavailable."
+        - "Required tag, branch, and github-release environment protections are external administrative prerequisites."
+      artifacts:
+        - {path: verification/implementation-verification.md, label: "Implementation verification", html: verification/implementation-verification.html}
+        - {path: verification/completeness-check.md, label: "Completeness check", html: null}
+        - {path: verification/code-review-report.md, label: "Code review", html: null}
+        - {path: verification/pragmatic-review.md, label: "Pragmatic review", html: null}
+        - {path: verification/production-readiness-report.md, label: "Production readiness", html: null}
+        - {path: verification/reality-check.md, label: "Reality check", html: null}
+    e2e:
+      summary: "E2E browser verification was skipped because e2e_enabled is false for this non-browser task. No screenshots or browser evidence were claimed."
+      decisions: []
+      risks:
+        - "Real public exact-selector evidence remains unavailable until the canonical v2.2.1 Release and protected GitHub run exist."
+      artifacts: []
+    user_docs:
+      summary: "The user-facing guide documents GitHub-only exact-tag/full-commit installation and npm exec, public/private authentication boundaries, provenance, offline state-only behavior, recovery, supported targets, current external blockers, and the future-private migration checklist."
+      decisions:
+        - decision: "Document direct GitHub package acquisition without npm publication."
+          rationale: "The approved distribution policy keeps Maister on GitHub and uses npm only as the local Git-package client and read-only dependency resolver."
+        - decision: "Document the future private-repository path without creating another repository."
+          rationale: "The user requested a durable checklist for a possible later visibility change while preserving the current canonical repository."
+      risks:
+        - "The examples use the approved v2.2.1 selector contract, but the canonical public v2.2.1 Release is still an external prerequisite and is explicitly described as unavailable."
+      artifacts:
+        - path: documentation/user-guide.md
+          label: GitHub-only user guide
+          html: null
+    advisor:
+      summary: "Advisors are disabled for the revised GitHub-only scope; historical advisor records are retained only in gate history."
+      decisions: []
+      risks: []
+      artifacts: []
+
+verification_context:
+  last_status: failed
+  issues_found:
+    - "fixed: CQ-102 public-smoke disables Actions credential persistence and rejects local/worktree Git authentication residue before any npm network operation."
+    - "fixed critical: Release-critical harness files are included in CI path filters and release validation runs the policy/guard suites."
+    - "fixed critical: Public smoke manually validates bounded redirects against the allowlist before accepting response bodies."
+    - "fixed warning: Public smoke clears ambient SSH/proxy/trace variables and does not copy raw child stdout/stderr into diagnostics."
+    - "fixed critical: V-016 protected release lifecycle now records PUBLIC_NO_AUTH_SMOKE_VERIFIED after all three public smokes, then HERMETIC_PRIVATE_TRANSPORT_VERIFIED before final evidence upload."
+    - "fixed critical: Runtime resolves the exact tag reference and peels annotated tags to an independently verified commit."
+    - "fixed critical: Hostile-archive producer and consumer failures are immediately supervised without an unhandled-rejection race."
+    - "fixed critical: Release CI performs strict clean parity before prepare mutates the package boundary."
+    - "fixed critical: Task documentation uses exact GitHub tag/full-commit selectors and includes the future-private checklist."
+    - "fixed critical: Public-smoke evidence binds selector, Release, sidecars, provenance, receipt, lifecycle, and all three targets."
+    - "fixed critical: Protected CI pins npm 11.4.2 and defines post-Release smoke on Linux, macOS, and Windows."
+    - "external critical: Real public v2.2.1 tag, Release, and protected run are unavailable."
+    - "external critical: Required GitHub tag, branch, and environment protections are not observable."
+    - "fixed warning: Aggregate tests run under an external total-deadline watchdog with terminal final-tree evidence."
+    - "fixed warning: POSIX acquisition signals clean up and re-raise the original signal."
+    - "fixed warning: Delegated stdout uses backpressure and retains only a bounded rolling tail."
+    - "fixed warning: Recovery and cross-platform tests prove byte, mode, symlink, existence, topology, path, filesystem, and signal behavior."
+    - "fixed warning: Plan and work log leave protected external evidence pending; stale user-owned dist output is not claimed as current evidence."
+  fixes_applied:
+    - "Journal recovery now consumes durable top-level backup_root and backup_manifest_hash before candidate receipt creation."
+    - "Recovery accepts UUID-only --journal-id and retained launcher commands include the exact selector when available."
+    - "Acquisition signals abort transport, return conventional status, and clean the private operation root."
+    - "External transport aborts do not retry."
+    - "Exact Release tag refs are resolved and annotated tags are peeled before release identity is accepted."
+    - "Archive producer/consumer, delegated stdout, and acquisition signals now have deterministic supervision, bounds, backpressure, cleanup, and native signal semantics."
+    - "Release CI checks exact clean parity before prepare, pins npm 11.4.2, and defines post-Release public smoke on all three operating systems."
+    - "Public-smoke evidence now binds exact tag/full-commit selectors to Release assets, sidecars, E3, receipts, and complete install/status/verify/uninstall lifecycles."
+    - "Recovery restores only the intended directory mode; complete crash and multi-journal filesystem oracles pass."
+    - "The external aggregate watchdog parses structured records from stdout and stderr and retains terminal final-tree evidence; aggregate child 62/62 and wrapper 1/1 pass."
+    - "GitHub-only user documentation includes exact install/exec examples and a future-private migration checklist without introducing a registry or additional repository."
+    - "Protected release evidence now transfers a GITHUB_VERIFIED baseline, validates complete Linux/macOS/Windows anonymous smoke artifacts, records PUBLIC_NO_AUTH_SMOKE_VERIFIED before hermetic transport, and retains hidden evidence files in the final artifact."
+    - "Public-smoke checkout sets persist-credentials false; a cross-platform pre-acquisition guard rejects local extraheaders, credential configuration, URL rewrites, includes, and credential-bearing URLs without exposing values."
+    - "Release-critical harness changes are covered by CI path filters and release-job policy/guard tests; smoke redirects are manual and bounded; ambient SSH/proxy/trace variables and raw child diagnostics are removed."
+  decisions_made:
+    - "Historical verification is superseded by the revised GitHub-only scope and must be rerun."
+    - "Keep release NO-GO until aggregate, crash, memory, exact-identity, public-smoke, and zero-registry gates are terminal."
+    - "Five independent Phase 11 reviews completed; the canonical current verdict is failed/NO-GO."
+    - "All source-controlled findings selected by the user are fixed and locally regression-tested; the two external GitHub prerequisites remain unresolved."
+    - "A full verification rerun requires the explicit verification-rerun gate before canonical reports are replaced."
+    - "Post-fix rerun verified all previous source fixes and discovered V-016 as one new source-controlled critical defect."
+    - "Current canonical verdict is failed/NO-GO with V-016 source-controlled plus V-007/V-008 external."
+    - "V-016 is locally fixed test-first; a full verification rerun requires the explicit verification-rerun gate before canonical reports are replaced."
+    - "The user authorized the second full verification rerun and canonical post-V-016 report replacement."
+    - "The full rerun passed 530/530 local checks and confirmed V-016 fixed, but code review discovered CQ-102 as one new source-controlled critical defect."
+    - "CQ-102 and subsequent harness findings are fixed after RED gates; the direct current make test-platform-independent rerun exits 0 and focused policy/guard checks pass 16/16."
+  reverify_count: 3
+
+phases:
+  - id: phase-1
+    name: Analyze codebase & clarify requirements
+    status: completed
+    blocked_by: []
+    started: "2026-07-19T12:22:35Z"
+    completed: "2026-07-19T17:07:33Z"
+    gate:
+      idempotency_key: sha256:fab6363d6be8afb471abebd64016107616502da243ea8c4d41d59f46d648e0d2
+      gate_type: phase-1-exit
+      question: Continue to Phase 2?
+      options:
+        - Continue to Phase 2
+        - Pause workflow
+      recommendation: Continue to Phase 2
+      answer: Continue to Phase 2
+      status: decided
+  - id: phase-2
+    name: Analyze gaps & clarify scope
+    status: completed
+    blocked_by: [phase-1]
+    started: "2026-07-19T23:21:25Z"
+    completed: "2026-07-19T23:48:05Z"
+    gate:
+      idempotency_key: sha256:bda70639d3caeafe6e58449256cad57fd6f7b9ed55a120a3f202f6349f082a35
+      gate_type: phase-2-routing
+      question: "Continue to Phase 3: TDD Red Gate?"
+      options:
+        - "Continue to Phase 3: TDD Red Gate"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 3: TDD Red Gate"
+      answer: "Continue to Phase 3: TDD Red Gate"
+      status: decided
+      safety_classification: configurable
+      created_at: "2026-07-19T23:39:47Z"
+  - id: phase-3
+    name: Write failing test (TDD Red)
+    status: completed
+    blocked_by: [phase-2]
+    started: "2026-07-19T23:48:05Z"
+    completed: "2026-07-20T07:54:55Z"
+    skip_reason: null
+    gate:
+      idempotency_key: sha256:b76e5b30a6d16ab6f7f1fe697e14c85c609eeeaac9313bbbbfcf5b441ad04791
+      gate_type: phase-3-exit
+      question: "TDD red gate complete. Continue to Phase 4?"
+      options:
+        - "Continue to Phase 4"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 4"
+      answer: "Continue to Phase 4"
+      status: decided
+      safety_classification: test-gate
+      created_at: "2026-07-19T23:50:12Z"
+  - id: phase-4
+    name: Generate UI mockups
+    status: skipped
+    blocked_by: [phase-2]
+    started: "2026-07-20T07:54:55Z"
+    completed: "2026-07-20T08:35:31Z"
+    skip_reason: "Task characteristic ui_heavy is false; no UI mockups are required."
+    gate:
+      idempotency_key: sha256:4fd9f902cbe07406f20378f81e9a5e788f70218e6e510f05a48fe2f58fa8be27
+      gate_type: phase-4-exit
+      question: "UI mockups complete. Continue to Phase 5?"
+      options:
+        - "Continue to Phase 5"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 5"
+      answer: "Continue to Phase 5"
+      status: decided
+      safety_classification: design-gate
+      created_at: "2026-07-20T07:54:55Z"
+  - id: phase-5
+    name: Gather requirements & create specification
+    status: completed
+    blocked_by: [phase-2, phase-3, phase-4]
+    started: "2026-07-20T08:35:31Z"
+    completed: "2026-07-20T09:03:48Z"
+    gate:
+      idempotency_key: sha256:8358f6a9980394365c8e29349d3538166c7645e2aeb8875de965b725f22f292f
+      gate_type: phase-5-exit
+      question: "Continue to specification audit?"
+      options:
+        - "Continue to specification audit"
+        - "Pause workflow"
+      recommendation: "Continue to specification audit"
+      answer: "Continue to specification audit"
+      status: decided
+      safety_classification: configurable
+      created_at: "2026-07-20T08:50:03Z"
+  - id: phase-6
+    name: Audit specification
+    status: completed
+    blocked_by: [phase-5]
+    started: "2026-07-20T09:03:48Z"
+    completed: "2026-07-20T09:57:16Z"
+    gate:
+      idempotency_key: sha256:eeba59811d29c2483cca234227ab77fd47023e60becab582b5c75f9a3d6994fe
+      gate_type: phase-6-exit
+      question: "Continue to implementation planning?"
+      options:
+        - "Continue to implementation planning"
+        - "Pause workflow"
+      recommendation: "Continue to implementation planning"
+      answer: "Continue to implementation planning"
+      status: decided
+      safety_classification: configurable
+      created_at: "2026-07-20T09:49:36Z"
+  - id: phase-7
+    name: Plan implementation
+    status: completed
+    blocked_by: [phase-6]
+    started: "2026-07-20T09:57:16Z"
+    completed: "2026-07-20T10:17:52Z"
+    gate:
+      idempotency_key: sha256:af970351e2970c2bf16e748b26a239e52c7b0819c78aeb28cbbb494562bc4448
+      gate_type: phase-7-exit
+      question: "Continue to implementation approval?"
+      options:
+        - "Continue to implementation approval"
+        - "Pause workflow"
+      recommendation: "Continue to implementation approval"
+      answer: "Continue to implementation approval"
+      status: decided
+      safety_classification: configurable
+      created_at: "2026-07-20T10:13:13Z"
+  - id: phase-8
+    name: Execute implementation
+    status: completed
+    blocked_by: [phase-7]
+    started: "2026-07-20T10:22:06Z"
+    completed: "2026-07-20T12:38:25Z"
+    gate:
+      idempotency_key: sha256:27b4e70478241c735d76e11121ee6dd40f5ea2a690b70d90b6b15c52084a6f2a
+      gate_type: phase-8-exit
+      question: "Continue to verification?"
+      options:
+        - "Continue to verification"
+        - "Pause workflow"
+      recommendation: "Continue to verification"
+      answer: "Continue to verification"
+      status: decided
+      safety_classification: configurable
+      created_at: "2026-07-20T12:32:52Z"
+    groups:
+      - {id: group-1, status: completed, wave: 1, owner: "maister:task-group-implementer", started_at: "2026-07-20T10:24:41Z", completed_at: "2026-07-20T10:35:45Z", tests_passed: 6, integration_deferred_to: group-8}
+      - {id: group-2, status: completed, wave: 2, owner: "maister:task-group-implementer", started_at: "2026-07-20T10:36:24Z", completed_at: "2026-07-20T10:55:36Z", tests_passed: 19}
+      - {id: group-3, status: completed, wave: 2, owner: "maister:task-group-implementer", started_at: "2026-07-20T10:36:24Z", completed_at: "2026-07-20T10:55:36Z", tests_passed: 14}
+      - {id: group-4, status: completed, wave: 3, owner: "maister:task-group-implementer", started_at: "2026-07-20T10:56:15Z", completed_at: "2026-07-20T11:51:50Z", tests_passed: 13, commit: d349487}
+      - {id: group-6, status: completed, wave: 3, owner: "maister:task-group-implementer", started_at: "2026-07-20T10:56:15Z", completed_at: "2026-07-20T11:51:50Z", tests_passed: 61, harness_duration_ms: 450340}
+      - {id: group-5, status: completed, wave: 4, owner: "orchestrator-fallback", started_at: "2026-07-20T11:52:55Z", completed_at: "2026-07-20T12:32:52Z", tests_passed: 76, fallback_reason: "subagent quota exhausted"}
+      - {id: group-7, status: completed, wave: 4, owner: "orchestrator-fallback", started_at: "2026-07-20T11:52:55Z", completed_at: "2026-07-20T12:32:52Z", tests_passed: 19, fallback_reason: "subagent quota exhausted"}
+      - {id: group-8, status: completed, wave: 5, owner: "orchestrator-fallback", started_at: "2026-07-20T11:52:55Z", completed_at: "2026-07-20T12:32:52Z", tests_passed: 8, public_smoke: "blocked-missing-v2.2.1-tag-and-release"}
+      - {id: group-9, status: completed, wave: 5, owner: "orchestrator-fallback", started_at: "2026-07-20T11:52:55Z", completed_at: "2026-07-20T12:32:52Z", tests_passed: 8}
+  - id: phase-9
+    name: Verify test passes (TDD Green)
+    status: completed
+    blocked_by: [phase-8]
+    started: "2026-07-20T12:38:25Z"
+    completed: "2026-07-20T12:51:41Z"
+    skip_reason: null
+    gate:
+      idempotency_key: sha256:f84a8df5793ab8e142827d4407aa8717c9c8bc476165e2af5461ec1bb618b8cc
+      gate_type: phase-9-exit
+      question: "TDD gate passed. Continue to Phase 10?"
+      options:
+        - "Continue to Phase 10"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 10"
+      answer: "Continue to Phase 10"
+      status: decided
+      safety_classification: test-gate
+      created_at: "2026-07-20T12:40:02Z"
+  - id: phase-10
+    name: Prompt verification options
+    status: completed
+    blocked_by: [phase-8, phase-9]
+    started: "2026-07-20T12:51:41Z"
+    completed: "2026-07-20T13:01:44Z"
+    gate:
+      idempotency_key: sha256:113a89c563801192fc1efe8c8b782a4576c82079d3d2c186aa8342f36d60178f
+      gate_type: optional-phase-selection/user-docs
+      question: "Generate user documentation?"
+      options:
+        - "Yes (Recommended)"
+        - "No, skip"
+      recommendation: "Yes (Recommended)"
+      answer: "Yes (Recommended)"
+      status: decided
+      safety_classification: configurable
+      created_at: "2026-07-20T12:59:04Z"
+  - id: phase-11
+    name: Verify implementation & resolve issues
+    status: completed
+    blocked_by: [phase-10]
+    started: "2026-07-20T13:01:44Z"
+    completed: "2026-07-20T19:40:29Z"
+    gate:
+      idempotency_key: sha256:949c1c70eecbf5b542f80cfb36dc9f5090ec10164e69582d0727f8e47ed16346
+      gate_type: phase-11-exit
+      question: "Continue to Phase 12?"
+      options:
+        - "Continue to Phase 12"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 12"
+      answer: "Continue to Phase 12"
+      status: decided
+      safety_classification: configurable
+      created_at: "2026-07-20T19:35:21Z"
+      decided_at: "2026-07-20T19:40:29Z"
+  - id: phase-12
+    name: Run E2E tests
+    status: skipped
+    blocked_by: [phase-11]
+    started: "2026-07-20T19:40:29Z"
+    completed: "2026-07-20T19:40:29Z"
+    skip_reason: "options.e2e_enabled is false; E2E browser verification is disabled for this non-browser task."
+    gate:
+      idempotency_key: sha256:5d3db71e7a2ecdaf6c5f3b8638d2ffd3418ea06b44e4aa52e4220cfe59c4992c
+      gate_type: phase-12-exit
+      question: "E2E complete. Continue to Phase 13?"
+      options:
+        - "Continue to Phase 13"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 13"
+      answer: "Continue to Phase 13"
+      status: decided
+      safety_classification: configurable
+      created_at: "2026-07-20T19:40:29Z"
+      decided_at: "2026-07-20T19:44:26Z"
+  - id: phase-13
+    name: Generate user documentation
+    status: completed
+    blocked_by: [phase-12]
+    started: "2026-07-20T19:44:26Z"
+    completed: "2026-07-20T19:50:09Z"
+    summary: "Generated the GitHub-only user guide with exact tag/full-commit install and npm exec examples, public/private credential boundaries, provenance and recovery guidance, supported Codex/Cursor/Kiro targets, current external blockers, and the future-private migration checklist."
+    artifacts:
+      - path: documentation/user-guide.md
+        label: GitHub-only user guide
+        html: null
+    gate:
+      idempotency_key: sha256:4190f0156e5926ddbfbb8dc4a7f936990fca079a77de6d4a9b2fd6262f1193ba
+      gate_type: phase-13-exit
+      question: "Documentation complete. Continue to Phase 14?"
+      options:
+        - "Continue to Phase 14"
+        - "Pause workflow"
+      recommendation: "Continue to Phase 14"
+      answer: "Continue to Phase 14"
+      status: decided
+      safety_classification: configurable
+      created_at: "2026-07-20T19:50:09Z"
+      decided_at: "2026-07-20T19:54:48Z"
+  - id: phase-14
+    name: Finalize workflow
+    status: completed
+    blocked_by: [phase-11, phase-12, phase-13]
+    started: "2026-07-20T19:54:48Z"
+    completed: "2026-07-20T19:58:03Z"
+    gate:
+      idempotency_key: sha256:5015741673e6938d420782fd23cf1ff4321a8b8581de32bb5a7345603891e44e
+      gate_type: final-handoff-approval
+      question: "Complete workflow?"
+      options:
+        - "Complete workflow"
+        - "Keep workflow open"
+      recommendation: "Complete workflow"
+      answer: "Complete workflow"
+      status: decided
+      safety_classification: configurable
+      created_at: "2026-07-20T19:54:48Z"
+      decided_at: "2026-07-20T19:58:03Z"

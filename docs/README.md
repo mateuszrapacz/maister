@@ -2,6 +2,12 @@
 
 Maister is distributed from one common source through explicit Codex, Cursor, and Kiro CLI overlays. The target-aware installer accepts a clean local Git checkout, a self-contained Maister archive, or a GitHub source, then materializes a staging tree, validates it, and commits through a journaled transaction. GitHub installation resolves one immutable commit, creates a bounded temporary detached checkout, verifies it, selects the overlay from that same checkout, and cleans it up after the transaction.
 
+## GitHub-only package acquisition
+
+Maister itself is never published to a package registry. Run it from the public canonical repository using `npm exec --yes --package='github:mateuszrapacz/maister#v2.2.1' -- maister ...`, or replace the tag with a lowercase full 40-hex commit. Equivalent `npm install 'github:mateuszrapacz/maister#v2.2.1'` is supported. Moving selectors, arbitrary repositories, token-bearing URLs, and `--ignore-scripts` are unsupported. npmjs access is limited to read-only acquisition of the exact locked `tar@7.5.20` dependency.
+
+Public Release access is anonymous-first. Private Git credentials belong to Git/npm; optional Release API credentials use `GH_TOKEN`, then `GITHUB_TOKEN`, then bounded `gh auth token --hostname github.com`. State-only commands use the active receipt-bound control plane without launcher network or credential lookup.
+
 ## Operator guide
 
 - Use `plugins/maister/bin/maister-install.mjs` for install, update, status, verify, uninstall, rollback, and recovery.

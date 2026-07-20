@@ -40,6 +40,7 @@ export function getTargetPaths({ target, home, env = process.env }) {
     lockPath: path.join(stateRoot, "install.lock"),
     journalsRoot: path.join(stateRoot, "journals"),
     receiptsRoot: path.join(stateRoot, "receipts"),
+    controlPlanesRoot: path.join(stateRoot, "control-planes"),
     backupsRoot: path.join(stateRoot, "backups"),
     stagingRoot: path.join(stateRoot, "staging"),
     activeReceiptPath: path.join(stateRoot, "active-receipt.json"),

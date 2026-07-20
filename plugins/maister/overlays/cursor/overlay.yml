@@ -133,7 +133,7 @@ native_assets:
   - source: assets/plugin.json
     destination: .cursor-plugin/plugin.json
     mode: "0644"
-    sha256: 8222d44532879c67f0d9b55bc0446e59cd64bd7f00e313527a8e192df1ee5539
+    sha256: 9306574f24e7c3c50495f94465a54254349ec845b41c6a2336e2673d77af118d
   - source: assets/hooks/hooks.json
     destination: hooks/hooks.json
     mode: "0644"

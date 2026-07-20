@@ -1,0 +1,45 @@
+{
+  "name": "@mateuszrapacz/maister",
+  "version": "2.2.1",
+  "description": "Thin verified npx launcher for Maister GitHub Release distributions",
+  "author": "Mateusz Rapacz",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "maister": "bin/maister.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    ".maister-resolved-commit.json",
+    "bin/maister.mjs",
+    "lib/launcher/**",
+    "plugins/maister/lib/distribution/cli-contract.mjs",
+    "plugins/maister/lib/distribution/e3-attestation.mjs",
+    "plugins/maister/lib/distribution/evidence-schema.mjs",
+    "plugins/maister/lib/distribution/hash-tree.mjs",
+    "plugins/maister/lib/distribution/path-safety.mjs",
+    "plugins/maister/lib/distribution/provenance.mjs",
+    "plugins/maister/lib/distribution/targets.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "tar": "7.5.20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mateuszrapacz/maister.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mateuszrapacz/maister/issues"
+  },
+  "homepage": "https://github.com/mateuszrapacz/maister#readme",
+  "license": "MIT",
+  "scripts": {
+    "prepare": "node bin/prepare-resolved-commit.mjs",
+    "validate": "node lib/launcher/verify-package-boundary.mjs",
+    "test:launcher": "node --test tests/platform-independent/launcher-*.test.mjs"
+  }
+}

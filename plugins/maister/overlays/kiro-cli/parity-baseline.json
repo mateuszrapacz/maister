@@ -5403,7 +5403,7 @@
         },
         "skills/orchestrator-framework/bin/agent-runtime/host-adapters/exact-native.mjs": {
           "legacy": { "present": false },
-          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "cfadc6994b2ef920dcd168bc4ce0836a7ca7c0268c0367e1282f99a7ae2aecba" }
+          "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "4cb92ff10193a0762e6b34c3cd4f5ea3fa0c314ad817b48101093603932d041f" }
         },
         "skills/orchestrator-framework/bin/agent-runtime/node-process-port.mjs": {
           "legacy": { "present": false },

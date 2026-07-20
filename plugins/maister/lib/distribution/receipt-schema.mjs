@@ -9,6 +9,10 @@ const RECEIPT_FIELDS = [
   "schema_version", "receipt_id", "installer_version", "status", "installed_at",
   "target", "source", "managed_roots", "managed_inventory", "settings", "provenance", "compatibility", "evidence", "transaction",
 ];
+const CONTROL_PLANE_FIELDS = [
+  "schema_version", "root_ref", "installer_ref", "tree_hash", "installer_sha256",
+  "cli_contract_version", "source_version", "source_commit", "source_content_hash",
+];
 const TARGET_FIELDS = ["id", "overlay_id", "overlay_version", "host_version"];
 const SOURCE_FIELDS = ["kind", "requested", "requested_ref", "resolved_commit", "source_version", "content_hash"];
 const HASH_PROVENANCE_FIELDS = ["source_hash", "overlay_hash", "materialized_hash", "provenance_hash"];
@@ -54,6 +58,15 @@ function object(value, location) {
 function exactFields(value, fields, location) {
   object(value, location);
   const allowed = new Set(fields);
+  const unknown = Object.keys(value).find((field) => !allowed.has(field));
+  if (unknown) invalid(`${location} has unknown field ${unknown}`, { location, field: unknown });
+  const missing = fields.find((field) => !Object.hasOwn(value, field));
+  if (missing) invalid(`${location} is missing ${missing}`, { location, field: missing });
+}
+
+function exactFieldsWithOptional(value, fields, optionalFields, location) {
+  object(value, location);
+  const allowed = new Set([...fields, ...optionalFields]);
   const unknown = Object.keys(value).find((field) => !allowed.has(field));
   if (unknown) invalid(`${location} has unknown field ${unknown}`, { location, field: unknown });
   const missing = fields.find((field) => !Object.hasOwn(value, field));
@@ -220,6 +233,39 @@ function validateProvenance(provenance, source) {
   for (const field of PROJECTION_FIELDS.slice(2)) nullableHash(provenance.agent_projection[field], `provenance.agent_projection.${field}`, true);
 }
 
+function validateControlPlane(controlPlane, receipt, paths) {
+  exactFields(controlPlane, CONTROL_PLANE_FIELDS, "control_plane");
+  if (controlPlane.schema_version !== 1) invalid("control_plane.schema_version must be 1");
+  const expectedRootRef = `control-planes/${receipt.receipt_id}`;
+  const expectedInstallerRef = `${expectedRootRef}/plugins/maister/bin/maister-install.mjs`;
+  if (relativePath(controlPlane.root_ref, "control_plane.root_ref") !== expectedRootRef) {
+    invalid("control_plane.root_ref must be receipt-bound", { expected: expectedRootRef, actual: controlPlane.root_ref });
+  }
+  if (relativePath(controlPlane.installer_ref, "control_plane.installer_ref") !== expectedInstallerRef) {
+    invalid("control_plane.installer_ref must be contained by its receipt-bound root", { expected: expectedInstallerRef, actual: controlPlane.installer_ref });
+  }
+  nullableHash(controlPlane.tree_hash, "control_plane.tree_hash", true);
+  nullableHash(controlPlane.installer_sha256, "control_plane.installer_sha256", true);
+  if (!Number.isSafeInteger(controlPlane.cli_contract_version) || controlPlane.cli_contract_version !== 1) invalid("control_plane.cli_contract_version is unsupported");
+  string(controlPlane.source_version, "control_plane.source_version");
+  if (!COMMIT.test(controlPlane.source_commit)) invalid("control_plane.source_commit must be a full commit hash");
+  nullableHash(controlPlane.source_content_hash, "control_plane.source_content_hash", true);
+  if (controlPlane.source_version !== receipt.source.source_version
+      || controlPlane.source_commit !== receipt.source.resolved_commit
+      || controlPlane.source_content_hash !== receipt.source.content_hash) {
+    invalid("control_plane source identity must equal the receipt source identity");
+  }
+  if (paths) {
+    if (!paths.controlPlanesRoot) invalid("target paths do not declare controlPlanesRoot");
+    const rootPath = path.resolve(paths.stateRoot, ...controlPlane.root_ref.split("/"));
+    const installerPath = path.resolve(paths.stateRoot, ...controlPlane.installer_ref.split("/"));
+    contained(paths.controlPlanesRoot, rootPath, "control_plane.root_ref");
+    contained(rootPath, installerPath, "control_plane.installer_ref");
+    if (rootPath !== path.join(paths.controlPlanesRoot, receipt.receipt_id)) invalid("control_plane.root_ref resolves to the wrong receipt root");
+    if (installerPath !== path.join(rootPath, "plugins", "maister", "bin", "maister-install.mjs")) invalid("control_plane.installer_ref resolves to the wrong installer");
+  }
+}
+
 function validateLevelList(value, location, required, evidenceByCapability, expectedResult = null) {
   array(value, location);
   const seen = new Set();
@@ -324,7 +370,7 @@ function validateEvidenceAndCompatibility(receipt) {
 
 export function validateReceipt(receipt, { paths = null, receiptPath = null } = {}) {
   rejectLegacySchema(receipt, "receipt");
-  exactFields(receipt, RECEIPT_FIELDS, "receipt");
+  exactFieldsWithOptional(receipt, RECEIPT_FIELDS, ["control_plane"], "receipt");
   if (receipt.schema_version !== 2) invalid("receipt schema_version must be 2");
   string(receipt.receipt_id, "receipt_id");
   if (!UUID.test(receipt.receipt_id)) invalid("receipt_id must be a UUID", { receipt_id: receipt.receipt_id });
@@ -342,6 +388,7 @@ export function validateReceipt(receipt, { paths = null, receiptPath = null } = 
   for (const field of SOURCE_FIELDS.slice(0, -1)) string(receipt.source[field], `source.${field}`);
   if (!COMMIT.test(receipt.source.resolved_commit)) invalid("source.resolved_commit must be a full commit hash");
   nullableHash(receipt.source.content_hash, "source.content_hash", true);
+  if (Object.hasOwn(receipt, "control_plane")) validateControlPlane(receipt.control_plane, receipt, paths);
   const rootsById = validateManagedRoots(receipt.managed_roots, receipt, paths);
   validateInventory(receipt.managed_inventory, rootsById);
   validateSettings(receipt.settings, { paths });
@@ -372,6 +419,23 @@ export function validateReceipt(receipt, { paths = null, receiptPath = null } = 
     if (paths) contained(paths.receiptsRoot, normalizedReceiptPath, "receipt path");
   }
   return receipt;
+}
+
+export function controlPlaneMigrationRequired(receipt) {
+  object(receipt, "receipt");
+  return !Object.hasOwn(receipt, "control_plane");
+}
+
+export function requireControlPlane(receipt, { paths = null } = {}) {
+  validateReceipt(receipt, { paths });
+  if (controlPlaneMigrationRequired(receipt)) {
+    throw distributionError(
+      "E_OFFLINE_AUTHORITY_MIGRATION",
+      "the active receipt predates receipt-bound offline authority; run install or update from a verified release",
+      { receipt_id: receipt.receipt_id },
+    );
+  }
+  return receipt.control_plane;
 }
 
 export function readReceipt(filePath, context = {}) {
@@ -424,4 +488,4 @@ export function readActiveReceipt(paths) {
   }
 }
 
-export { RECEIPT_FIELDS, MODE, SHA256, UUID, relativePath, contained };
+export { CONTROL_PLANE_FIELDS, RECEIPT_FIELDS, MODE, SHA256, UUID, relativePath, contained };

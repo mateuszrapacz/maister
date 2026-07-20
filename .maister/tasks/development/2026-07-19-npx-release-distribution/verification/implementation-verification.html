@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Post-V-016 Implementation Verification</title>
+  <style>
+    :root{color-scheme:light;--bg:#f6f7fb;--card:#fff;--ink:#18202b;--muted:#596579;--bad:#a21d2d;--warn:#946200;--good:#176b3a;--line:#dfe3ea}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,sans-serif}main{max-width:1060px;margin:auto;padding:32px 22px 64px}h1,h2{line-height:1.2}h2{margin-top:30px}.banner,.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin:16px 0}.banner{border-left:7px solid var(--bad)}.bad{color:var(--bad)}.good{color:var(--good)}.warn{color:var(--warn)}table{width:100%;border-collapse:collapse;background:var(--card)}th,td{text-align:left;vertical-align:top;padding:10px;border:1px solid var(--line)}th{background:#eef1f6}.badge{display:inline-block;border-radius:999px;padding:2px 9px;font-weight:700}.critical{background:#fde7ea;color:var(--bad)}.warning{background:#fff2cc;color:var(--warn)}.fixed{background:#e3f5e9;color:var(--good)}code{background:#eef1f6;padding:1px 4px;border-radius:4px}a{color:#315fbd}ul,ol{padding-left:22px}.muted{color:var(--muted)}
+  </style>
+</head>
+<body><main>
+  <p><a href="implementation-verification.md">Markdown source</a></p>
+  <h1>Post-V-016 Implementation Verification</h1>
+  <section class="banner"><h2 class="bad">❌ Failed / NO-GO for external release acceptance</h2><p>V-016 and CQ-102 are fixed in source. The authoritative local targets pass, the current direct platform-independent rerun exits 0, and the focused policy/guard slice passes <strong>16/16</strong>. V-007 and V-008 remain external critical blockers; V-014 remains a warning.</p></section>
+  <section class="card"><h2>Issue counts</h2><p><span class="badge critical">3 critical</span> <span class="badge warning">1 warning</span> <span class="badge fixed">V-016 fixed</span></p></section>
+  <h2>Headline finding</h2>
+  <section class="card"><h3>CQ-102 — fixed and locally reverified</h3><p><code>public-smoke</code> now sets <code>persist-credentials: false</code>, runs a worktree-aware redacting fail-closed Git auth guard before npm, manually validates redirects, and clears ambient SSH/proxy/trace variables. Focused policy/guard evidence passes 16/16.</p></section>
+  <h2>Verification overview</h2>
+  <table><tr><th>Area</th><th>Status</th><th>Evidence</th></tr>
+    <tr><td>Plan</td><td>53/55</td><td>Two external steps pending</td></tr>
+    <tr><td>Must requirements</td><td>33/38 met</td><td>Five partial on external evidence</td></tr>
+    <tr><td>Local suite</td><td class="good">Passed</td><td>530 passed, 0 failed</td></tr>
+    <tr><td>Code review</td><td class="bad">Failed</td><td>CQ-102</td></tr>
+    <tr><td>Pragmatic review</td><td class="good">Pass</td><td>V-016 finalizer is proportionate</td></tr>
+    <tr><td>Production/reality</td><td class="bad">NO-GO</td><td>Source critical plus external blockers</td></tr>
+  </table>
+  <h2>Open issues</h2>
+  <table><tr><th>ID</th><th>Severity</th><th>Class</th><th>Status</th></tr>
+    <tr><td>CQ-102</td><td><span class="badge critical">critical</span></td><td>Source-controlled</td><td>Fixed and locally reverified</td></tr>
+    <tr><td>V-007</td><td><span class="badge critical">critical</span></td><td>External GitHub</td><td>Tag/Release/protected run absent</td></tr>
+    <tr><td>V-008</td><td><span class="badge critical">critical</span></td><td>External GitHub</td><td>Protections absent/unverified</td></tr>
+    <tr><td>V-014</td><td><span class="badge warning">warning</span></td><td>User-owned output</td><td>Untouched and non-authoritative</td></tr>
+  </table>
+  <h2>Fix &amp; Re-Verification History</h2>
+  <section class="card"><p><strong>V-001–V-006, V-009–V-013, V-015:</strong> fixed and reverified. <strong>V-016:</strong> fixed by downstream finalization after the complete public-smoke matrix and before final evidence upload. <strong>CQ-102:</strong> fixed and locally reverified with 16/16 focused checks plus a direct full platform-independent exit-0 run. <strong>V-007/V-008:</strong> external. <strong>V-014:</strong> accepted warning.</p></section>
+  <h2>Required next action</h2>
+  <ol><li>Create the authorized canonical GitHub tag/Release and run protected Linux/macOS/Windows smoke.</li><li>Verify GitHub tag, branch, ruleset, and environment protections.</li><li>Do not publish Maister to npmjs or create another repository.</li></ol>
+  <p class="muted">No registry publication, additional repository, tag, Release, or external GitHub mutation was performed.</p>
+</main></body></html>

@@ -131,7 +131,7 @@ native_assets:
   - source: assets/plugin.json
     destination: .codex-plugin/plugin.json
     mode: "0644"
-    sha256: 936cfe01de0c6320ff9e4b76c19d9432e926d6c7ed24a97d50c0178d73da605e
+    sha256: 55316e9c665651eb2b97071f2fe5c8b7229bf24f4b5c9261e3d007749ef282c1
   - source: assets/hooks/hooks.json
     destination: hooks/hooks.json
     mode: "0644"

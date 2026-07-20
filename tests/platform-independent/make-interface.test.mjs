@@ -88,13 +88,14 @@ test("Make and release CI keep projection, target checks, evidence, topology, pa
   assert.match(releaseWorkflow, /make test-core test-runtime/u);
   assert.match(validationWorkflow, /permissions:\s+contents: read/u);
   assert.match(releaseWorkflow, /permissions:\s+contents: read/u);
-  assert.match(releaseWorkflow, /publish:[\s\S]*permissions:\s+contents: write/u);
+  assert.match(releaseWorkflow, /github-release:[\s\S]*permissions:\s+contents: write/u);
+  assert.match(releaseWorkflow, /public-smoke:\s+needs: github-release/u);
   assert.match(validationWorkflow, /make test-topology/u);
   const projection = releaseWorkflow.indexOf("make validate");
   const parity = releaseWorkflow.indexOf("make test-parity-release");
   const e3 = releaseWorkflow.indexOf("make generate-e3-attestation");
   const packageIndex = releaseWorkflow.indexOf("make package TARGET=codex");
-  const lifecycle = releaseWorkflow.indexOf("Smoke extracted target archives");
+  const lifecycle = releaseWorkflow.indexOf("Verify packaged lifecycle and sidecars");
   assert.ok(projection >= 0 && parity > projection && e3 > parity && packageIndex > e3 && lifecycle > packageIndex);
 });
 
