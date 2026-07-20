@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "accepted": [
+    {
+      "name": "high-ratio-small",
+      "expanded_bytes": 4194304,
+      "entropy_stride": 32
+    },
+    {
+      "name": "high-ratio-large",
+      "expanded_bytes": 8388608,
+      "entropy_stride": 32
+    },
+    {
+      "name": "near-file-limit",
+      "expanded_bytes": 125829120,
+      "entropy_stride": 1
+    }
+  ],
+  "rejected": [
+    {
+      "name": "over-ratio-limit",
+      "expanded_bytes": 4194304,
+      "entropy_stride": 4096,
+      "expected_kind": "E_LAUNCHER_ARCHIVE_LIMIT"
+    }
+  ]
+}
