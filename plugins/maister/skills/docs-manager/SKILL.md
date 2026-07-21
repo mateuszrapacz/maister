@@ -1,5 +1,5 @@
 ---
-name: docs-manager
+name: maister-docs-manager
 description: Internal engine for managing project documentation and technical standards in .maister/docs/. Handles file operations, INDEX.md generation, and project-instructions integration. Invoked by maister:init, standards-update, and standards-discover skills.
 user-invocable: false
 ---

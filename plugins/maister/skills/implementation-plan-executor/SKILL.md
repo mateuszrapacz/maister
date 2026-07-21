@@ -1,5 +1,5 @@
 ---
-name: implementation-plan-executor
+name: maister-implementation-plan-executor
 description: Execute implementation plans by resolving and dispatching exact task-group-implementer roles. The coordinator prepares bounded context, processes output, marks checkboxes, and updates the work log.
 user-invocable: false
 ---

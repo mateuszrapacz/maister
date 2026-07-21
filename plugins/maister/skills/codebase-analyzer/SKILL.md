@@ -1,5 +1,5 @@
 ---
-name: codebase-analyzer
+name: maister-codebase-analyzer
 description: Analyzes a codebase through adaptive parallel exact-role dispatches, then delegates report generation to the codebase-analysis-reporter role.
 user-invocable: false
 ---

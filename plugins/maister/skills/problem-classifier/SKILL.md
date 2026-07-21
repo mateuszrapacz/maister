@@ -1,5 +1,5 @@
 ---
-name: problem-classifier
+name: maister-problem-classifier
 description: Classify business requirements into one of 4 modeling problem classes (CRUD, Transformation & Presentation, Integration, Resource Contention). Runs a signal scan, asks targeted clarifying questions, and recommends an implementation approach with rationale. NOT an archetype — invoke when the user asks about modeling problem classes, "jaka klasa problemu", "jak to sklasyfikować modelarsko", "problem class", or similar. For archetypes (accounting, pricing), use the *-archetype-mapper skills instead.
 argument-hint: "[business requirements or feature description]"
 ---

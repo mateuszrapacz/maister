@@ -1,5 +1,5 @@
 ---
-name: requirements-critic
+name: maister-requirements-critic
 description: Critiques requirements and interactively rebuilds them. Applies 4 checks — problem-vs-solution framing, observable behavior vs CRUD status (interactively reformulates into proper user stories), extensible signal map of hidden domain decisions, and rigid quantifier probing. Invoked ONLY on explicit request.
 argument-hint: "[requirements text, ticket, or spec to critique]"
 ---

@@ -1,5 +1,5 @@
 ---
-name: grill-me
+name: maister-grill-me
 description: Relentless interactive interview to stress-test a plan or design until shared understanding. Invoked ONLY on explicit request — e.g. "grill me", "stress-test this plan".
 argument-hint: "[plan or topic]"
 ---

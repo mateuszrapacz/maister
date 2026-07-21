@@ -1,5 +1,5 @@
 ---
-name: aggregate-designer
+name: maister-aggregate-designer
 description: Interactive wizard for designing consistency units (aggregates). Guides the designer step-by-step through command extraction, pairwise conflict analysis, boundary decisions, and locking strategy. Invoke when the user asks about designing aggregates, consistency units, resource contention modeling, "projektowanie agregatów", "jednostki spójności", "jakie komendy się blokują", "granica agregatu", "współbieżna walka o zasoby", "rywalizacja o zasoby", "concurrent resource contention", or similar.
 argument-hint: "[domain description or list of commands/requirements]"
 ---

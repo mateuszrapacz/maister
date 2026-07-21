@@ -1,5 +1,5 @@
 ---
-name: context-distiller
+name: maister-context-distiller
 description: Distill bounded contexts by finding safe generalizations across domain concepts. Uses bidirectional linguistic analysis to detect where different things behave identically (generalization candidates) and where same-named things behave differently (context split candidates). Produces a context map with generalized and specific models. Invoke when the user asks about bounded context distillation, strategic design, "context distiller", "can X be generalized with Y", event storming ambiguity, context splitting vs merging, or linguistic generalization across domain concepts.
 argument-hint: "[domain description, event storming output, or list of concepts to analyze]"
 ---

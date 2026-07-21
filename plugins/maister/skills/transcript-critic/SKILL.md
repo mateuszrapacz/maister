@@ -1,5 +1,5 @@
 ---
-name: transcript-critic
+name: maister-transcript-critic
 description: Audits meeting transcripts for decision-process problems — false consensus, marginalized voices, opinions disguised as facts, hidden dependencies, scope drift, severity mismatches, and authority dynamics. Produces a structured non-interactive report with severity, evidence quotes, and diagnostic questions. Invoked ONLY on explicit request.
 argument-hint: "[meeting transcript or notes]"
 ---
