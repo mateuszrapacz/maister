@@ -35,10 +35,10 @@ export function parseCliArgs(argv, env = process.env) {
     const argument = argv[index];
     if (argument === "--json") options.json = true;
     else if (argument === "--agents-fallback") options.agentsFallback = true;
-    else if (["--target", "--source", "--ref", "--home", "--failure-point", "--journal-id"].includes(argument)) {
+    else if (["--target", "--source", "--ref", "--home", "--failure-point", "--journal-id", "--kiro-home"].includes(argument)) {
       const value = argv[++index];
       if (!value || value.startsWith("--")) throw distributionError("E_USAGE", `${argument} requires a value`, { argument });
-      options[{ "--target": "target", "--source": "source", "--ref": "ref", "--home": "home", "--failure-point": "failurePoint", "--journal-id": "journalId" }[argument]] = value;
+      options[{ "--target": "target", "--source": "source", "--ref": "ref", "--home": "home", "--failure-point": "failurePoint", "--journal-id": "journalId", "--kiro-home": "kiroHome" }[argument]] = value;
     } else if (EVIDENCE_OPTIONS.has(argument)) {
       const value = argv[++index];
       if (!value || value.startsWith("--")) throw distributionError("E_USAGE", `${argument} requires a value`, { argument });
@@ -47,6 +47,7 @@ export function parseCliArgs(argv, env = process.env) {
     } else throw distributionError("E_USAGE", `unknown option: ${argument}`, { argument });
   }
   if (!options.target || !TARGETS.has(options.target)) throw distributionError("E_USAGE", `--target must be one of: ${TARGET_USAGE}`, { target: options.target });
+  if (options.kiroHome && options.target !== "kiro-cli") throw distributionError("E_USAGE", "--kiro-home is only valid for --target kiro-cli", { target: options.target });
   if (["install", "update"].includes(command) && !options.source) throw distributionError("E_USAGE", `${command} requires --source`, { command });
   if (options.attestationPath && !["install", "update"].includes(command)) {
     throw distributionError("E_USAGE", "E3 attestations are accepted only for install and update", { command });
@@ -123,8 +124,8 @@ export function exitCodeFor(error) {
   return EXIT_CODES.transaction;
 }
 
-export function envelope({ command, target, code, message, receiptPath = null, journalPath = null, evidence = [], error = null, receipt = null }) {
-  return {
+export function envelope({ command, target, code, message, receiptPath = null, journalPath = null, evidence = [], error = null, receipt = null, collisions = [] }) {
+  const result = {
     schema_version: 1,
     ok: code === 0,
     command,
@@ -136,6 +137,8 @@ export function envelope({ command, target, code, message, receiptPath = null, j
     journal_path: journalPath,
     evidence: receipt?.evidence ?? evidence,
   };
+  if (collisions.length > 0) result.collisions = collisions;
+  return result;
 }
 
 export { COMMANDS, EVIDENCE_OPTIONS, TARGETS };

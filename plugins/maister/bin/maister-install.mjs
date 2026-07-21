@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -135,7 +136,20 @@ export async function runCli(argv, { env = process.env, git, github } = {}) {
       receiptPath: result.receiptPath,
       journalPath: result.journalPath,
       receipt: result.receipt,
+      collisions: (result.collisions ?? []).map(({ root_id, path: p }) => ({ root_id, path: p })),
     });
+    if (options.target === "kiro-cli" && (options.kiroHome || env.KIRO_HOME)) {
+      const kiroHome = path.resolve(options.kiroHome || env.KIRO_HOME);
+      const aliasLine = `alias mk='kiro --kiro-home ${JSON.stringify(kiroHome)}'`;
+      response.mk_alias = aliasLine;
+    }
+    if (options.target === "kiro-cli") {
+      const stateBase = path.resolve(env.XDG_STATE_HOME || path.join(options.home || os.homedir(), ".local", "state"));
+      const kiroState = path.join(stateBase, "maister", "kiro-cli");
+      fs.rmSync(kiroState, { recursive: true, force: true });
+      response.receipt_path = null;
+      response.journal_path = null;
+    }
     return { status: 0, output: JSON.stringify(response) };
   } catch (error) {
     const failure = error instanceof DistributionError || typeof error?.kind === "string"
