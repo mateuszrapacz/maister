@@ -92,11 +92,12 @@ const REQUIRED_INVENTORY = {
     "hooks/hooks.json",
   ],
   "kiro-cli": [
-    "skills/**/SKILL.md",
-    "agents/*.json",
-    "steering/*.md",
-    "hooks/*.sh",
-    "agent-tools.json",
+    "skills/maister-**/SKILL.md",
+    "agents/maister*.json",
+    "agents/instructions/maister-*.md",
+    "steering/maister-*.md",
+    "hooks/maister-*.sh",
+    "maister-agent-tools.json",
   ],
   pi: [
     "package.json",

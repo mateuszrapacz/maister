@@ -59,8 +59,7 @@ test("registered targets expose stable immutable managed-root ownership", () => 
     codex: [{ rootId: "plugin_private", discoveryRoot: ".codex/plugins/local/maister", ownership: "whole_tree" }],
     cursor: [{ rootId: "plugin_private", discoveryRoot: ".cursor/plugins/local/maister", ownership: "whole_tree" }],
     "kiro-cli": [
-      { rootId: "plugin_private", discoveryRoot: ".kiro-maister", ownership: "whole_tree" },
-      { rootId: "kiro_native_agents", discoveryRoot: ".kiro/agents", ownership: "leaf_set" },
+      { rootId: "plugin_private", discoveryRoot: ".kiro", ownership: "leaf_set" },
     ],
     pi: [{ rootId: "plugin_private", discoveryRoot: ".pi/agent/maister", ownership: "whole_tree" }],
   });
@@ -112,7 +111,7 @@ test("target paths resolve every managed root under one target lock", () => {
 
   for (const target of SUPPORTED_TARGET_IDS) {
     const paths = getTargetPaths({ target, home, env });
-    assert.equal(paths.managedRoots.length, target === "kiro-cli" ? 2 : 1, target);
+    assert.equal(paths.managedRoots.length, 1, target);
     assert.equal(paths.activeRoot, paths.managedRoots.find(({ rootId }) => rootId === "plugin_private").path, target);
     assert.equal(new Set(paths.managedRoots.map(({ rootId }) => rootId)).size, paths.managedRoots.length, target);
     assert.equal(paths.managedRoots.every((root) => root.path.startsWith(`${home}/`)), true, target);

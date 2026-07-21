@@ -238,11 +238,11 @@ test("Kiro emits descriptor/prompt pairs with 100 percent relative reference clo
   const outputPaths = new Set(projection.outputs.map(({ path: outputPath }) => outputPath));
 
   for (const role of context.agentIr.roles) {
-    const descriptorPath = `maister-${role.role_id}.json`;
-    const promptPath = `instructions/maister-${role.role_id}.md`;
+    const descriptorPath = `agents/maister-${role.role_id}.json`;
+    const promptPath = `agents/instructions/maister-${role.role_id}.md`;
     const descriptor = JSON.parse(outputByPath(projection, descriptorPath).content);
     assert.equal(descriptor.name, `maister-${role.role_id}`);
-    assert.equal(descriptor.prompt, `file://./${promptPath}`);
+    assert.equal(descriptor.prompt, `file://./instructions/maister-${role.role_id}.md`);
     assert.ok(outputPaths.has(promptPath));
   }
 });
@@ -337,7 +337,7 @@ test("normalized destination collisions fail before projection writes", () => {
 
 test("unresolved Kiro prompt URIs fail projection validation", () => {
   const projection = structuredClone(createProjection("kiro-cli"));
-  const descriptor = projection.outputs.find(({ path: outputPath }) => outputPath === "maister-advisor.json");
+  const descriptor = projection.outputs.find(({ path: outputPath }) => outputPath === "agents/maister-advisor.json");
   const parsed = JSON.parse(descriptor.content);
   parsed.prompt = "file://./instructions/missing-advisor.md";
   descriptor.content = `${JSON.stringify(parsed)}\n`;

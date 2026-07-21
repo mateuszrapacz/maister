@@ -5,18 +5,14 @@ target:
   id: kiro-cli
   host_version_constraint: ">=1.0.0"
   discovery_roots:
-    - .kiro-maister
+    - .kiro
 layout:
   - source: common/skills
     destination: skills
     kind: tree
     mode: "0755"
     ownership: whole_file
-  - source: assets/agents
-    destination: agents
-    kind: tree
-    mode: "0755"
-    ownership: whole_file
+    child_prefix: "maister-"
   - source: assets/steering
     destination: steering
     kind: tree
@@ -27,13 +23,9 @@ layout:
     kind: tree
     mode: "0755"
     ownership: whole_file
+    child_prefix: "maister-"
   - source: assets/agent-tools.json
-    destination: agent-tools.json
-    kind: file
-    mode: "0644"
-    ownership: whole_file
-  - source: assets/settings-mcp.json
-    destination: settings/mcp.json
+    destination: maister-agent-tools.json
     kind: file
     mode: "0644"
     ownership: whole_file
@@ -44,19 +36,13 @@ settings:
     managed_keys:
       - mcpServers.playwright
     merge_policy: preserve_unmanaged_refuse_drift
-  - path: settings/settings.json
-    format: json
-    ownership: managed_keys
-    managed_keys:
-      - chat.defaultAgent
-    merge_policy: preserve_unmanaged_refuse_drift
 semantic_bindings:
   user_gate:
     adapter: kiro-cli.chat_gate
     capability: semantic
     fail_closed: true
   delegate_agent:
-    adapter: kiro-cli.subagent
+    adapter: kiro-cli.native
     capability: delegation
     fail_closed: true
   track_progress:
@@ -77,11 +63,12 @@ semantic_bindings:
     fail_closed: true
 inventory:
   required:
-    - "skills/**/SKILL.md"
-    - "agents/*.json"
-    - "steering/*.md"
-    - "hooks/*.sh"
-    - agent-tools.json
+    - "skills/maister-**/SKILL.md"
+    - "agents/maister*.json"
+    - "agents/instructions/maister-*.md"
+    - "steering/maister-*.md"
+    - "hooks/maister-*.sh"
+    - maister-agent-tools.json
   optional:
     - settings/mcp.json
   forbidden:
@@ -93,19 +80,18 @@ inventory:
     - "**/*claude*"
 validation:
   forbidden_vocabulary:
-    - codex
-    - cursor
     - claude
     - anthropic
     - .codex-plugin
     - .cursor-plugin
     - .claude-plugin
   executable_paths:
-    - "hooks/*.sh"
+    - "hooks/maister-*.sh"
   syntax_checks:
-    - "json:agent-tools.json"
-    - "json:agents/*.json"
-    - "markdown:steering/*.md"
+    - "json:maister-agent-tools.json"
+    - "json:agents/maister*.json"
+    - "markdown:agents/instructions/maister-*.md"
+    - "markdown:steering/maister-*.md"
 capabilities:
   semantic_bindings:
     class: semantic
@@ -145,17 +131,9 @@ capabilities:
       - E6
 native_assets:
   - source: assets/agent-tools.json
-    destination: agent-tools.json
+    destination: maister-agent-tools.json
     mode: "0644"
-    sha256: 7d047aeb5ec09f2af49a12d89305690985b07af4ceb3b50953ba0a0c6873f08d
-  - source: assets/agents/maister.json
-    destination: agents/maister.json
-    mode: "0644"
-    sha256: b2fb856049443dc8d2e4b885eec1e0ea5407072898a6bcbb7f3ebb97dc75680a
-  - source: assets/settings-mcp.json
-    destination: settings/mcp.json
-    mode: "0644"
-    sha256: 77a711f0ed6c082ede0094fd212fe8a7d440bf72074150021a3b152f2683da04
+    sha256: 2a4e9274f0dd97433e98c99e42dd5af465127e227d003530b8a8b585220c9516
 agent_projection:
   schema_version: 1
   contract: agent-projection-v1.json
@@ -193,10 +171,10 @@ agent_projection:
     - user-docs-generator
   destinations:
     - kind: descriptor
-      path_template: maister-{role_id}.json
+      path_template: agents/maister-{role_id}.json
       mode: "0644"
     - kind: prompt
-      path_template: instructions/maister-{role_id}.md
+      path_template: agents/instructions/maister-{role_id}.md
       mode: "0644"
   transform_ids:
     - canonical-body-v1
@@ -211,20 +189,20 @@ agent_projection:
       assets:
         - kind: descriptor
           source: assets/support-agents/maister-explore.json
-          destination: maister-explore.json
+          destination: agents/maister-explore.json
           mode: "0644"
         - kind: prompt
           source: assets/support-agents/instructions/maister-explore.md
-          destination: instructions/maister-explore.md
+          destination: agents/instructions/maister-explore.md
           mode: "0644"
     - support_id: maister
       native_role_external_id: maister
       assets:
         - kind: descriptor
           source: assets/support-agents/maister.json
-          destination: maister.json
+          destination: agents/maister.json
           mode: "0644"
         - kind: prompt
           source: assets/support-agents/instructions/maister.md
-          destination: instructions/maister.md
+          destination: agents/instructions/maister.md
           mode: "0644"

@@ -21,7 +21,7 @@
     ]
   },
   "kiro-descriptor-v1": {
-    "path": "maister-advisor.json",
+    "path": "agents/maister-advisor.json",
     "requiredName": "maister-advisor",
     "requiredPrompt": "file://./instructions/maister-advisor.md"
   }
