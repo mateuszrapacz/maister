@@ -40,8 +40,9 @@ layout:
 settings:
   - path: settings/mcp.json
     format: json
-    ownership: whole_file
-    managed_keys: []
+    ownership: managed_keys
+    managed_keys:
+      - mcpServers.playwright
     merge_policy: preserve_unmanaged_refuse_drift
   - path: settings/settings.json
     format: json

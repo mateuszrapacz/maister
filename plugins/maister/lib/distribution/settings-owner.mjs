@@ -378,6 +378,20 @@ export function desiredManagedValues({ target, activeRoot, keys }) {
   return values;
 }
 
+function desiredManagedValuesFromStaged({ definition, stagedPath, target, activeRoot }) {
+  const values = desiredManagedValues({ target, activeRoot, keys: definition.managed_keys });
+  if (definition.format !== "json" || !stagedPath || !fs.lstatSync(stagedPath, { throwIfNoEntry: false })) return values;
+  const staged = parseJsonSettings(
+    readFileNoFollow(stagedPath, { root: path.dirname(stagedPath), label: "staged setting", errorCode: "E_SETTINGS_PATH" }).toString("utf8"),
+    definition.path,
+  );
+  for (const key of definition.managed_keys) {
+    const value = getNested(staged, key);
+    if (value !== undefined) values[key] = cloneJson(value);
+  }
+  return values;
+}
+
 export function parseManagedValues(text, format, keys) {
   if (format === "json") {
     let parsed = {};
@@ -417,7 +431,7 @@ export function prepareSetting({ definition, targetPath, target, activeRoot, sta
     const candidate = readFileNoFollow(stagedPath, { root: path.dirname(stagedPath), label: "staged setting", errorCode: "E_SETTINGS_PATH" });
     return { ...definition, path: definition.path, targetPath, bytes: candidate, beforeSha256: exists ? sha256(before) : null, afterSha256: sha256(candidate), beforeMode, mode, managedValues: null };
   }
-  const desired = desiredManagedValues({ target, activeRoot, keys: definition.managed_keys });
+  const desired = desiredManagedValuesFromStaged({ definition, stagedPath, target, activeRoot });
   const candidateText = definition.format === "json"
     ? jsonCandidate(beforeText, definition.managed_keys, desired)
     : tomlCandidate(beforeText, definition.managed_keys, desired);
@@ -434,13 +448,13 @@ export function prepareSetting({ definition, targetPath, target, activeRoot, sta
   };
 }
 
-export function assertManagedKeysUnchanged({ definition, targetPath, target, activeRoot }) {
+export function assertManagedKeysUnchanged({ definition, targetPath, target, activeRoot, receiptSetting = null }) {
   if (definition.ownership !== "managed_keys") return;
   const stat = fs.lstatSync(targetPath, { throwIfNoEntry: false });
   if (!stat) return;
   if (stat.isSymbolicLink() || !stat.isFile()) throwDistributionError("E_SETTINGS_PATH", `settings path must be a regular file: ${definition.path}`, { path: definition.path });
   const current = parseManagedValues(readFileNoFollow(targetPath, { root: path.dirname(targetPath), label: "settings target", encoding: "utf8", errorCode: "E_SETTINGS_PATH" }), definition.format, definition.managed_keys);
-  const expected = desiredManagedValues({ target, activeRoot, keys: definition.managed_keys });
+  const expected = receiptSetting?.managed_values ?? desiredManagedValues({ target, activeRoot, keys: definition.managed_keys });
   for (const key of definition.managed_keys) {
     if (JSON.stringify(current[key]) !== JSON.stringify(expected[key])) {
       throwDistributionError("E_DRIFT_CONFLICT", `owned settings key has drifted: ${definition.path}.${key}`, { path: definition.path, key });

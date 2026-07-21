@@ -27,6 +27,7 @@ const MANAGED_ARRAY_RECEIPT_FIELDS = [
   "ownership_schema", "merge_schema", "settings_path", "array_path", "normalized_identity",
   "entry_representation", "entry_before", "entry_after", "unmanaged_projection_sha256", "mode_before", "mode_after",
 ];
+const MANAGED_KEYS_RECEIPT_FIELDS = ["managed_values"];
 const TRANSACTION_FIELDS = ["journal_id", "backup_root", "backup_manifest_hash", "previous_receipt_id"];
 const STATUSES = new Set(["installed", "uninstalled"]);
 const INVENTORY_TYPES = new Set(["file", "directory", "symlink"]);
@@ -211,7 +212,7 @@ function validateSettings(settings, { paths } = {}) {
   const seen = new Set();
   for (const [index, setting] of settings.entries()) {
     const location = `settings[${index}]`;
-    exactFieldsWithOptional(setting, SETTING_FIELDS, MANAGED_ARRAY_RECEIPT_FIELDS, location);
+    exactFieldsWithOptional(setting, SETTING_FIELDS, [...MANAGED_ARRAY_RECEIPT_FIELDS, ...MANAGED_KEYS_RECEIPT_FIELDS], location);
     const settingPath = relativePath(setting.path, `${location}.path`);
     if (seen.has(settingPath)) invalid("settings paths must be unique", { path: settingPath });
     seen.add(settingPath);
@@ -222,6 +223,7 @@ function validateSettings(settings, { paths } = {}) {
     if (setting.ownership === "whole_file" && setting.managed_keys.length > 0) invalid(`${location}.managed_keys must be empty for whole_file`, { location });
     if (setting.ownership === "managed_keys" && setting.managed_keys.length === 0) invalid(`${location}.managed_keys must be non-empty`, { location });
     const hasManagedArrayFields = MANAGED_ARRAY_RECEIPT_FIELDS.some((field) => Object.hasOwn(setting, field));
+    const hasManagedKeysFields = MANAGED_KEYS_RECEIPT_FIELDS.some((field) => Object.hasOwn(setting, field));
     if (setting.ownership === "managed_array_entries") {
       if (!hasManagedArrayFields) invalid(`${location} is missing managed-array receipt fields`, { location });
       for (const field of MANAGED_ARRAY_RECEIPT_FIELDS) if (!Object.hasOwn(setting, field)) invalid(`${location} is missing ${field}`, { location, field });
@@ -243,6 +245,16 @@ function validateSettings(settings, { paths } = {}) {
       if (setting.mode_after !== setting.mode) invalid(`${location}.mode_after must equal mode`, { location });
     } else if (hasManagedArrayFields) {
       invalid(`${location} has managed-array receipt fields for a non-managed-array setting`, { location });
+    }
+    if (setting.ownership === "managed_keys" && hasManagedKeysFields) {
+      object(setting.managed_values, `${location}.managed_values`);
+      const managedKeys = new Set(setting.managed_keys);
+      const valueKeys = Object.keys(setting.managed_values);
+      if (valueKeys.length !== managedKeys.size || valueKeys.some((key) => !managedKeys.has(key))) {
+        invalid(`${location}.managed_values must match managed_keys`, { location });
+      }
+    } else if (setting.ownership !== "managed_keys" && hasManagedKeysFields) {
+      invalid(`${location} has managed-key receipt fields for a non-managed-key setting`, { location });
     }
     nullableHash(setting.before_sha256, `${location}.before_sha256`);
     nullableHash(setting.after_sha256, `${location}.after_sha256`);

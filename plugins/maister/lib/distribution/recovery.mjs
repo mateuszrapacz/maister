@@ -15,6 +15,7 @@ import {
 import { readJournal, validateJournal, appendTransition, isTerminal } from "./journal-schema.mjs";
 import { readReceipt, UUID } from "./receipt-schema.mjs";
 import { hashFile, hashTree } from "./hash-tree.mjs";
+import { resolveTargetSettingPath } from "./target-paths.mjs";
 
 const MODE = /^[0-7]{4}$/u;
 const SHA256 = /^[0-9a-f]{64}$/u;
@@ -425,7 +426,7 @@ function validateTopology(topology, location, home, expectedRoot) {
 }
 
 function expectedSettingTargetPath(setting, paths) {
-  if (paths?.target === "pi" && setting.path === "settings.json") return paths.settingsPath;
+  if (paths) return resolveTargetSettingPath(paths, setting.path);
   return path.resolve(paths?.home ?? path.dirname(setting.targetPath), ...setting.path.split("/"));
 }
 

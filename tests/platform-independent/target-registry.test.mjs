@@ -4,7 +4,7 @@ import test from "node:test";
 import { parseCliArgs } from "../../plugins/maister/lib/distribution/cli-contract.mjs";
 import { validateJournal } from "../../plugins/maister/lib/distribution/journal-schema.mjs";
 import { validateReceipt } from "../../plugins/maister/lib/distribution/receipt-schema.mjs";
-import { getTargetPaths } from "../../plugins/maister/lib/distribution/target-paths.mjs";
+import { getTargetPaths, resolveTargetSettingPath } from "../../plugins/maister/lib/distribution/target-paths.mjs";
 import { getTargetDefinition, SUPPORTED_TARGETS, SUPPORTED_TARGET_IDS } from "../../plugins/maister/lib/distribution/targets.mjs";
 
 const JOURNAL = Object.freeze({
@@ -118,6 +118,15 @@ test("target paths resolve every managed root under one target lock", () => {
     assert.equal(paths.managedRoots.every((root) => root.path.startsWith(`${home}/`)), true, target);
     assert.equal(paths.lockPath, `${env.XDG_STATE_HOME}/maister/${target}/install.lock`, target);
   }
+});
+
+test("Kiro resolves settings below the native Kiro home", () => {
+  const home = "/tmp/maister-kiro-settings-home";
+  const paths = getTargetPaths({ target: "kiro-cli", home, env: {} });
+
+  assert.equal(paths.settingsRoot, `${home}/.kiro`);
+  assert.equal(resolveTargetSettingPath(paths, "settings/mcp.json"), `${home}/.kiro/settings/mcp.json`);
+  assert.equal(resolveTargetSettingPath(paths, "settings/settings.json"), `${home}/.kiro/settings/settings.json`);
 });
 
 test("Pi resolves its agent root from PI_CODING_AGENT_DIR before HOME and rejects non-POSIX platforms", () => {

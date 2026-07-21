@@ -640,7 +640,7 @@ test("transaction lock rejects live owners and atomically replaces only a valida
 test("terminal cleanup prunes only proven-unreferenced control planes", async () => {
   const box = sandbox();
   const installed = output(await invoke("install", "codex", box));
-  assert.equal(installed.code, 0);
+  assert.equal(installed.code, 0, JSON.stringify(installed));
   const paths = getTargetPaths({ target: "codex", home: box.home, env: box.env });
   const installedReceipt = readReceipt(installed.receipt_path, { paths });
   const historicalClosure = path.join(paths.stateRoot, installedReceipt.control_plane.root_ref);
@@ -771,6 +771,20 @@ test("missing, stale, failed, and forged E3 attestations fail before target muta
   }
 });
 
+test("local CLI install honors the explicit dirty-source opt-in during source resolution", async () => {
+  const box = sandbox();
+  box.git.status = () => [" M local-fix.mjs"];
+
+  const rejected = output(await runCli(args("install", "codex", box), { env: box.env, git: box.git }));
+  assert.equal(rejected.code, 3);
+  assert.equal(rejected.error.kind, "E_SOURCE_DIRTY");
+
+  box.env.MAISTER_ALLOW_DIRTY_LOCAL = "1";
+  const installed = output(await invoke("install", "codex", box));
+  assert.equal(installed.code, 0, JSON.stringify(installed));
+  assert.equal(fs.existsSync(installed.receipt_path), true);
+});
+
 test("failed integrity verification leaves no false passed receipt", async () => {
   const box = sandbox();
   const installed = output(await invoke("install", "codex", box));
@@ -847,11 +861,13 @@ test("rollback fails closed on a tampered transaction backup and preserves the a
   assert.equal(JSON.parse(fs.readFileSync(getTargetPaths({ target: "codex", home: box.home, env: box.env }).activeReceiptPath, "utf8")).receipt_id, receipt.receipt_id);
 });
 
-test("whole-file settings drift refuses an update", async () => {
+test("managed Kiro MCP settings drift refuses an update", async () => {
   const box = sandbox();
   await invoke("install", "kiro-cli", box);
-  const settings = path.join(box.home, "settings/mcp.json");
-  fs.appendFileSync(settings, "\n");
+  const settings = path.join(box.home, ".kiro/settings/mcp.json");
+  const value = JSON.parse(fs.readFileSync(settings, "utf8"));
+  value.mcpServers.playwright.command = "drifted";
+  fs.writeFileSync(settings, `${JSON.stringify(value, null, 2)}\n`);
   const result = output(await invoke("update", "kiro-cli", box));
   assert.equal(result.code, 5);
   assert.equal(result.error.kind, "E_DRIFT_CONFLICT");
@@ -1444,7 +1460,7 @@ test("Kiro installs canonical and support leaves into the native leaf-set root o
   const nativeRoot = managedRootPath(box, "kiro-cli", "kiro_native_agents");
   const privateRoot = managedRootPath(box, "kiro-cli", "plugin_private");
 
-  assert.equal(installed.code, 0);
+  assert.equal(installed.code, 0, JSON.stringify(installed));
   assert.equal(fs.existsSync(path.join(nativeRoot, "maister-advisor.json")), true);
   assert.equal(fs.existsSync(path.join(nativeRoot, "instructions/maister-advisor.md")), true);
   assert.equal(fs.existsSync(path.join(nativeRoot, "maister.json")), true);
@@ -1454,6 +1470,41 @@ test("Kiro installs canonical and support leaves into the native leaf-set root o
   assert.equal(receipt.managed_inventory.filter((entry) => entry.root_id === "kiro_native_agents").length, 60);
   assert.equal(receipt.managed_inventory.some((entry) => entry.root_id === "kiro_native_agents" && entry.path.startsWith("agents/")), false);
   assertUnrelatedKiroContent(box, unrelated);
+});
+
+test("Kiro installs settings under the native Kiro settings root", async () => {
+  const box = sandbox();
+  const installed = output(await invoke("install", "kiro-cli", box));
+  const nativeMcpSettings = path.join(box.home, ".kiro/settings/mcp.json");
+  const nativeSettings = path.join(box.home, ".kiro/settings/settings.json");
+
+  assert.equal(installed.code, 0, JSON.stringify(installed));
+  assert.equal(fs.existsSync(nativeMcpSettings), true);
+  assert.equal(fs.existsSync(nativeSettings), true);
+  assert.equal(fs.existsSync(path.join(box.home, "settings/mcp.json")), false);
+  assert.equal(fs.existsSync(path.join(box.home, "settings/settings.json")), false);
+  assert.equal(JSON.parse(fs.readFileSync(nativeSettings, "utf8")).chat.defaultAgent, "maister");
+});
+
+test("Kiro preserves existing native MCP settings while managing Maister's server", async () => {
+  const box = sandbox();
+  const nativeMcpSettings = path.join(box.home, ".kiro/settings/mcp.json");
+  fs.mkdirSync(path.dirname(nativeMcpSettings), { recursive: true });
+  fs.writeFileSync(nativeMcpSettings, `${JSON.stringify({
+    mcpServers: {
+      "user-owned": { command: "user-tool" },
+    },
+  }, null, 2)}\n`);
+
+  const installed = output(await invoke("install", "kiro-cli", box));
+  const settings = JSON.parse(fs.readFileSync(nativeMcpSettings, "utf8"));
+
+  assert.equal(installed.code, 0, JSON.stringify(installed));
+  assert.deepEqual(settings.mcpServers["user-owned"], { command: "user-tool" });
+  assert.deepEqual(settings.mcpServers.playwright, {
+    command: "npx",
+    args: ["@playwright/mcp@latest"],
+  });
 });
 
 test("status and verify both detect drift in a Kiro native managed leaf", async () => {

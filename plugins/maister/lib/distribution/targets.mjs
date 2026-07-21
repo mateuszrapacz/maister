@@ -27,6 +27,7 @@ const definitions = [
     id: "kiro-cli",
     overlayId: "maister/kiro-cli",
     discoveryRoot: ".kiro-maister",
+    settingsRoot: ".kiro",
     managedRoots: Object.freeze([
       managedRoot("plugin_private", ".kiro-maister", "whole_tree"),
       managedRoot("kiro_native_agents", ".kiro/agents", "leaf_set"),

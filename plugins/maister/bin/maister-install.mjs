@@ -57,6 +57,7 @@ export async function runCli(argv, { env = process.env, git, github } = {}) {
         git,
         gitTimeoutMs: env.MAISTER_GIT_TIMEOUT_MS,
         sourceVersion: options.sourceVersion,
+        allowDirtyLocal: env.MAISTER_ALLOW_DIRTY_LOCAL === "1",
         env,
       });
     }

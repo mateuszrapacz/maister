@@ -10,13 +10,14 @@ import { hashFile, hashTree } from "./hash-tree.mjs";
 import { assertNoDrift, describe } from "./drift-detector.mjs";
 import {
   assertManagedArrayUnchanged,
+  assertManagedKeysUnchanged,
   atomicWriteSetting,
   formatMode,
   prepareSetting,
   removeManagedArrayEntry,
   removeManagedKeys,
 } from "./settings-owner.mjs";
-import { getTargetPaths } from "./target-paths.mjs";
+import { getTargetPaths, resolveTargetSettingPath } from "./target-paths.mjs";
 import { requireControlPlane, validateReceipt, readReceipt, UUID } from "./receipt-schema.mjs";
 import { appendTransition, isUnresolved, readJournal, validateJournal } from "./journal-schema.mjs";
 import { collectEvidence, evaluateTarget, FAIL_CLOSED_CLASSES } from "./evidence-policy.mjs";
@@ -785,9 +786,7 @@ function validateReceiptPaths(receipt, paths) {
     assertSafePath(path.resolve(root.path, ...entry.path.split("/")), { root: paths.home, label: "managed receipt path", allowLeafSymlink: true });
   }
   for (const setting of receipt.settings) {
-    const targetPath = paths.target === "pi" && setting.path === "settings.json"
-      ? paths.settingsPath
-      : path.resolve(paths.home, ...setting.path.split("/"));
+    const targetPath = settingTargetPath(paths, setting);
     assertSafePath(targetPath, { root: paths.home, label: "settings receipt path" });
   }
 }
@@ -915,8 +914,7 @@ function commitSettings(settings, paths, failurePoint) {
 }
 
 function settingTargetPath(paths, definition) {
-  if (paths.target === "pi" && definition.path === "settings.json") return paths.settingsPath;
-  return path.resolve(paths.home, ...definition.path.split("/"));
+  return resolveTargetSettingPath(paths, definition.path);
 }
 
 function validateSettingPaths(overlay, paths) {
@@ -951,6 +949,7 @@ function settingsReceipt(settings, backupRoot) {
     mode: setting.mode,
     before_mode: setting.beforeMode,
     ...(setting.managedArray ?? {}),
+    ...(setting.managedValues ? { managed_values: setting.managedValues } : {}),
   }));
 }
 
@@ -978,6 +977,19 @@ function verifyReceipt(receiptState, paths, overlay, expectedProjection = null) 
           activeRoot: paths.activeRoot,
           receiptSetting: setting,
           homeRoot: paths.home,
+        });
+      } catch (error) {
+        if (error?.kind === "E_DRIFT_CONFLICT") conflicts.push(setting.path);
+        else throw error;
+      }
+    } else if (setting.ownership === "managed_keys") {
+      try {
+        assertManagedKeysUnchanged({
+          definition,
+          targetPath,
+          target: paths.target,
+          activeRoot: paths.activeRoot,
+          receiptSetting: setting,
         });
       } catch (error) {
         if (error?.kind === "E_DRIFT_CONFLICT") conflicts.push(setting.path);

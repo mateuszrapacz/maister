@@ -29,6 +29,11 @@ export function getTargetPaths({ target, home, env = process.env, platform = pro
     ? path.resolve(homeRoot, env.PI_CODING_AGENT_DIR || definition.pathPolicy.defaultAgentRoot)
     : null;
   const rootBase = agentRoot || homeRoot;
+  const settingsRoot = target === "pi"
+    ? agentRoot
+    : definition.settingsRoot
+      ? resolveInside(homeRoot, definition.settingsRoot, "target settings root")
+      : homeRoot;
   const stateBase = path.resolve(env.XDG_STATE_HOME || path.join(homeRoot, ".local", "state"));
   const stateRoot = path.join(stateBase, "maister", target);
   const managedRoots = Object.freeze(definition.managedRoots.map((root) => Object.freeze({
@@ -46,6 +51,7 @@ export function getTargetPaths({ target, home, env = process.env, platform = pro
     target,
     home: homeRoot,
     discoveryRoot: TARGETS[target],
+    settingsRoot,
     ...(target === "pi" ? {
       agentRoot,
       settingsPath: path.join(agentRoot, definition.pathPolicy.settingsPath),
@@ -89,6 +95,12 @@ export function projectedOutputIdentity(paths, outputPath) {
 export function resolveManagedInventoryPath(paths, { root_id: rootId, path: relativePath }) {
   const root = getManagedRoot(paths, rootId);
   return resolveInside(root.path, relativePath, `managed inventory ${rootId}`);
+}
+
+export function resolveTargetSettingPath(paths, relativePath) {
+  const normalized = normalizeRelativePath(relativePath, "target setting path");
+  if (paths.target === "pi" && normalized === "settings.json") return paths.settingsPath;
+  return resolveInside(paths.settingsRoot ?? paths.home, normalized, "target setting path");
 }
 
 export { TARGETS };
