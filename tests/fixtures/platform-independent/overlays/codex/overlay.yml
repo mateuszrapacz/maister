@@ -27,13 +27,7 @@ layout:
     kind: tree
     mode: "0755"
     ownership: whole_file
-settings:
-  - path: .codex/config.toml
-    format: toml
-    ownership: managed_keys
-    managed_keys:
-      - plugins.maister
-    merge_policy: preserve_unmanaged_refuse_drift
+settings: []
 semantic_bindings:
   user_gate:
     adapter: codex.chat_gate

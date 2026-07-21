@@ -180,7 +180,8 @@ test("accepts valid registered target fixtures with required inventories", () =>
     assert.equal(loaded.overlay.schema_version, 1);
     assert.equal(loaded.overlay.target.id, target);
     assert.deepEqual(loaded.inventory.required, REQUIRED_INVENTORY[target]);
-    assert.ok(loaded.overlay.settings.length > 0);
+    if (target === "codex") assert.deepEqual(loaded.overlay.settings, []);
+    else assert.ok(loaded.overlay.settings.length > 0);
     assert.deepEqual(
       Object.keys(loaded.overlay.semantic_bindings).sort(),
       REQUIRED_PRIMITIVES,

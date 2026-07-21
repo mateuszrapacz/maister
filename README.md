@@ -1,6 +1,6 @@
 # Maister
 
-Maister is a portable, auditable SDLC plugin. The repository contains one common source, three explicit host overlays, and one transactional installer. Host selection happens at installation time; maintainers do not independently maintain generated host trees. Cursor's checked-in compatibility projection is deterministically derived and drift-checked from the canonical source, with explicit hash-locked exceptions, and remains migration debt rather than a second source of truth.
+Maister is a portable, auditable SDLC plugin. The repository contains one common source, three explicit host overlays, and one transactional installer. Host selection happens at installation time; maintainers do not independently maintain generated host trees or a repository-owned Codex marketplace. Cursor's checked-in compatibility projection is deterministically derived and drift-checked from the canonical source, with explicit hash-locked exceptions, and remains migration debt rather than a second source of truth.
 
 ## Distribution targets
 
@@ -14,7 +14,7 @@ Maister builds and installs packages for Codex, Cursor, and Kiro CLI. Package av
 
 ### Migration boundary (historical)
 
-The old generated host trees, marketplace projections, and legacy host support were removed during the platform-independent distribution migration. They are retained only as migration history/parity context and are not supported installation targets.
+The old committed generated host trees, legacy marketplace projections, and legacy host support were removed during the platform-independent distribution migration. Codex native deployment is generated privately by the transactional installer from the selected materialized tree; it is not a second repository source or a committed projection.
 
 ## Installation
 
@@ -78,6 +78,8 @@ A visibility change blocks releases until all items pass against the same canoni
 
 The public installer supports a clean local Git checkout, a self-contained Maister archive, or a GitHub source. Production source must resolve to one full commit and must be free of untracked or ignored inputs. For `github:owner/repo`, the bounded resolver uses Git to resolve the requested safe ref, creates a temporary detached checkout at the resolved commit, verifies `HEAD`, status, and content hash, and removes the checkout after the transaction. The overlay is selected from that same checkout, so source and host contract cannot silently come from different revisions.
 
+For Codex, a successful install also performs the native deployment handoff. The installer writes the verified materialized plugin into a private, receipt-bound marketplace under the target state root, runs `codex plugin marketplace add`, then runs `codex plugin add <plugin>@<marketplace>`. `status` and `verify` check the recorded native plugin with `codex plugin list --json`. Start a new Codex session after install or update so the session reloads the newly registered skills. Updates, rollback, uninstall, and recovery use the recorded marketplace and plugin identities, so an older Maister deployment is not left active beside the current one.
+
 ```sh
 SOURCE=/path/to/maister
 test -z "$(git -C "$SOURCE" status --porcelain --untracked-files=all --ignored=matching)"
@@ -125,6 +127,7 @@ $XDG_STATE_HOME/maister/<target>/receipts/
 $XDG_STATE_HOME/maister/<target>/journals/
 $XDG_STATE_HOME/maister/<target>/backups/
 $XDG_STATE_HOME/maister/<target>/control-planes/<receipt-id>/
+$XDG_STATE_HOME/maister/codex/native/codex/<receipt-id>/
 ```
 
 If `XDG_STATE_HOME` is unset, the default is `~/.local/state`. State roots, journals, receipts, backups, staging directories, and lock files should be private to the operator (`0700` directories and `0600` files). A journal records transaction boundaries. Recovery and rollback are safety-sensitive operations; see the runbook below and preserve the state directory whenever a transaction does not complete.
@@ -304,6 +307,6 @@ make validate
 make package TARGET=codex
 ```
 
-For migration parity, `make test-parity-release` reconstructs the three reviewed legacy trees directly from the immutable Git-tree oracle, materializes all three targets from the same checkout, and requires zero unresolved differences. It needs no external legacy root. A release candidate must run this command from a clean checkout; `E_SOURCE_DIRTY` is a release stop, not a warning. `PARITY_ALLOW_DIRTY_LOCAL=1` is available only for development diagnostics, and a passing dirty-local comparison is never release evidence. Release CI runs the strict command without that override. The CLI rejects a missing manifest and accepts only explicit, versioned path rules with immutable observations, category, and rationale; it does not auto-learn differences from the candidate output. Edit `plugins/maister/` and its overlays directly. Do not create generated target directories or marketplace entries. `make validate` validates every supported overlay, the common core, evidence policy, and repository topology before packaging.
+For migration parity, `make test-parity-release` reconstructs the three reviewed legacy trees directly from the immutable Git-tree oracle, materializes all three targets from the same checkout, and requires zero unresolved differences. It needs no external legacy root. A release candidate must run this command from a clean checkout; `E_SOURCE_DIRTY` is a release stop, not a warning. `PARITY_ALLOW_DIRTY_LOCAL=1` is available only for development diagnostics, and a passing dirty-local comparison is never release evidence. Release CI runs the strict command without that override. The CLI rejects a missing manifest and accepts only explicit, versioned path rules with immutable observations, category, and rationale; it does not auto-learn differences from the candidate output. Edit `plugins/maister/` and its overlays directly. Do not create generated target directories or committed marketplace entries; runtime Codex deployment state is generated by the installer under the operator's private state root. `make validate` validates every supported overlay, the common core, evidence policy, and repository topology before packaging.
 
 More operator detail is in [docs/README.md](docs/README.md).

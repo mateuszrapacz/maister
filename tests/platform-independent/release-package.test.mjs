@@ -126,7 +126,12 @@ function invokeArchive(extractedRoot, target, command, home, state) {
     "--json",
   ], {
     cwd: extractedRoot,
-    env: { ...process.env, XDG_STATE_HOME: state, MAISTER_EVIDENCE_NOW: TEST_EVIDENCE_NOW },
+    env: {
+      ...process.env,
+      XDG_STATE_HOME: state,
+      MAISTER_EVIDENCE_NOW: TEST_EVIDENCE_NOW,
+      MAISTER_CODEX_NATIVE_DEPLOYMENT: "0",
+    },
     encoding: "utf8",
   });
   return JSON.parse(output);
@@ -146,7 +151,13 @@ function invokeArchiveAttempt(extractedRoot, target, command, home, state, extra
     "--json",
   ], {
     cwd: extractedRoot,
-    env: { ...process.env, XDG_STATE_HOME: state, MAISTER_EVIDENCE_NOW: TEST_EVIDENCE_NOW, ...env },
+    env: {
+      ...process.env,
+      XDG_STATE_HOME: state,
+      MAISTER_EVIDENCE_NOW: TEST_EVIDENCE_NOW,
+      MAISTER_CODEX_NATIVE_DEPLOYMENT: "0",
+      ...env,
+    },
     encoding: "utf8",
   });
   return { status: result.status, response: JSON.parse(result.stdout) };

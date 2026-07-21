@@ -29,6 +29,10 @@ const MANAGED_ARRAY_RECEIPT_FIELDS = [
 ];
 const MANAGED_KEYS_RECEIPT_FIELDS = ["managed_values"];
 const TRANSACTION_FIELDS = ["journal_id", "backup_root", "backup_manifest_hash", "previous_receipt_id"];
+const NATIVE_DEPLOYMENT_FIELDS = [
+  "schema_version", "marketplace_name", "plugin_id", "plugin_version",
+  "marketplace_root", "plugin_root", "installed_path", "source_tree_hash",
+];
 const STATUSES = new Set(["installed", "uninstalled"]);
 const INVENTORY_TYPES = new Set(["file", "directory", "symlink"]);
 const OWNERSHIP = new Set(["whole_file", "managed_keys", "managed_array_entries"]);
@@ -315,6 +319,29 @@ function validateControlPlane(controlPlane, receipt, paths) {
   }
 }
 
+export function validateNativeDeployment(deployment, receipt, paths, location = "native_deployment") {
+  if (deployment === null) return;
+  exactFields(deployment, NATIVE_DEPLOYMENT_FIELDS, location);
+  if (deployment.schema_version !== 1) invalid(`${location}.schema_version must be 1`);
+  string(deployment.marketplace_name, `${location}.marketplace_name`);
+  if (!/^[a-z0-9][a-z0-9-]{0,63}$/u.test(deployment.marketplace_name)) invalid(`${location}.marketplace_name is unsafe`);
+  string(deployment.plugin_id, `${location}.plugin_id`);
+  if (deployment.plugin_id !== `maister@${deployment.marketplace_name}`) invalid(`${location}.plugin_id does not match its marketplace`);
+  string(deployment.plugin_version, `${location}.plugin_version`);
+  absolutePath(deployment.marketplace_root, `${location}.marketplace_root`);
+  absolutePath(deployment.plugin_root, `${location}.plugin_root`);
+  if (deployment.plugin_root !== path.join(deployment.marketplace_root, "plugins", "maister")) invalid(`${location}.plugin_root is not derived from its marketplace root`);
+  if (deployment.installed_path !== null) absolutePath(deployment.installed_path, `${location}.installed_path`);
+  nullableHash(deployment.source_tree_hash, `${location}.source_tree_hash`, false);
+  if (receipt.target.id !== "codex") invalid(`${location} is only supported for the codex target`);
+  if (paths) {
+    contained(paths.stateRoot, deployment.marketplace_root, `${location}.marketplace_root`);
+    if (deployment.marketplace_root !== path.join(paths.stateRoot, "native", "codex", path.basename(deployment.marketplace_root))) {
+      invalid(`${location}.marketplace_root is outside the target deployment namespace`);
+    }
+  }
+}
+
 function validateLevelList(value, location, required, evidenceByCapability, expectedResult = null) {
   array(value, location);
   const seen = new Set();
@@ -419,7 +446,7 @@ function validateEvidenceAndCompatibility(receipt) {
 
 export function validateReceipt(receipt, { paths = null, receiptPath = null } = {}) {
   rejectLegacySchema(receipt, "receipt");
-  exactFieldsWithOptional(receipt, RECEIPT_FIELDS, ["control_plane"], "receipt");
+  exactFieldsWithOptional(receipt, RECEIPT_FIELDS, ["control_plane", "native_deployment"], "receipt");
   if (receipt.schema_version !== 2) invalid("receipt schema_version must be 2");
   string(receipt.receipt_id, "receipt_id");
   if (!UUID.test(receipt.receipt_id)) invalid("receipt_id must be a UUID", { receipt_id: receipt.receipt_id });
@@ -438,6 +465,7 @@ export function validateReceipt(receipt, { paths = null, receiptPath = null } = 
   if (!COMMIT.test(receipt.source.resolved_commit)) invalid("source.resolved_commit must be a full commit hash");
   nullableHash(receipt.source.content_hash, "source.content_hash", true);
   if (Object.hasOwn(receipt, "control_plane")) validateControlPlane(receipt.control_plane, receipt, paths);
+  if (Object.hasOwn(receipt, "native_deployment")) validateNativeDeployment(receipt.native_deployment, receipt, paths);
   const rootsById = validateManagedRoots(receipt.managed_roots, receipt, paths);
   validateInventory(receipt.managed_inventory, rootsById);
   validateSettings(receipt.settings, { paths });

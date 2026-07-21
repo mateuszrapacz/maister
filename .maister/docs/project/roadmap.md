@@ -14,7 +14,7 @@
 
 - Collect fresh E5/E6 records when native executables, authentication, safe adapters, and versioned scenarios are available; keep missing prerequisites explicit as `unavailable`, never as passed.
 - Continue strengthening scenario-level semantic parity and recovery fixtures.
-- Keep release packages target-aware without reintroducing generated projections or marketplace assumptions.
+- Keep release packages target-aware without reintroducing committed generated projections; host-native deployment adapters may generate private, receipt-bound handoff state at install time.
 - Keep the deterministic portable-core E3 producer and package binding aligned with the portable-core evidence worker; native E5/E6 collection remains environment-dependent and may be provisional.
 
 ## Unified projections requirement-to-test inventory

@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import { distributionError, readFileNoFollow } from "./path-safety.mjs";
-import { validateReceipt, SHA256, UUID, contained } from "./receipt-schema.mjs";
+import { validateNativeDeployment, validateReceipt, SHA256, UUID, contained } from "./receipt-schema.mjs";
 import { getTargetDefinition, SUPPORTED_TARGET_IDS } from "./targets.mjs";
 
 const STATES = new Set([
@@ -12,7 +12,8 @@ const COMMANDS = new Set(["install", "update", "uninstall", "rollback", "recover
 const STEP_NAMES = new Set([
   "materialize", "stage-validated", "snapshot", "commit", "integrity", "receipt-published",
   "control-plane-staged", "control-plane-promoted", "control-plane-pruned", "candidate-receipt-written",
-  "active-pointer-transition", "uninstall", "rollback", "restore-active-receipt", "recovery",
+  "active-pointer-transition", "native-deployment-prepared", "native-deployment-installed",
+  "native-previous-retired", "native-deployment-removed", "uninstall", "rollback", "restore-active-receipt", "recovery",
 ]);
 const CONTROL_PLANE_FIELDS = [
   "schema_version", "root_ref", "installer_ref", "stage_path", "destination_path",
@@ -198,7 +199,7 @@ export function validateJournal(journal, { paths = null } = {}) {
     "schema_version", "journal_id", "command", "target", "started_at", "updated_at", "state",
     "state_history", "stage_root", "managed_roots", "previous_receipt", "candidate_receipt", "control_plane", "backup_root", "backup_manifest_hash", "lock", "steps", "failure",
   ];
-  exactFieldsWithOptional(journal, fields.filter((field) => !["control_plane", "backup_root", "backup_manifest_hash"].includes(field)), ["control_plane", "backup_root", "backup_manifest_hash"], "journal");
+  exactFieldsWithOptional(journal, fields.filter((field) => !["control_plane", "backup_root", "backup_manifest_hash"].includes(field)), ["control_plane", "backup_root", "backup_manifest_hash", "native_deployment", "previous_native_deployment"], "journal");
   if (journal.schema_version !== 2) invalid("journal schema_version must be 2");
   string(journal.journal_id, "journal_id");
   if (!UUID.test(journal.journal_id)) invalid("journal_id must be a UUID");
@@ -213,6 +214,8 @@ export function validateJournal(journal, { paths = null } = {}) {
   validateHistory(journal.state_history, journal.state);
   absolutePath(journal.stage_root, "stage_root");
   validateControlPlane(journal.control_plane ?? null, journal, paths);
+  validateNativeDeployment(journal.native_deployment ?? null, { target: { id: "codex" } }, paths, "native_deployment");
+  validateNativeDeployment(journal.previous_native_deployment ?? null, { target: { id: "codex" } }, paths, "previous_native_deployment");
   if (journal.backup_root !== null && journal.backup_root !== undefined) absolutePath(journal.backup_root, "backup_root");
   if (journal.backup_manifest_hash !== null && journal.backup_manifest_hash !== undefined && !SHA256.test(journal.backup_manifest_hash)) invalid("backup_manifest_hash must be a SHA-256 hash or null");
   if (journal.previous_receipt !== null) {

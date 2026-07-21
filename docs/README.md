@@ -35,7 +35,9 @@ The evidence schema distinguishes E1–E6. E5/E6 records are `unavailable` when 
 
 ## Migration boundary (historical)
 
-The migration removed legacy host support, committed generated target trees, old host builders, and marketplace installation assumptions. Those artifacts are parity history only. Maintainers now edit the common source and versioned overlays, then validate a selected target.
+The migration removed legacy host support, committed generated target trees, old host builders, and repository-owned marketplace projections. Those artifacts are parity history only. Codex's native marketplace handoff is generated privately by the transactional installer from the selected materialized tree; maintainers still edit only the common source and versioned overlays, then validate a selected target.
+
+Codex installation registers that private deployment with `codex plugin marketplace add` and `codex plugin add`; `status`/`verify` validate the recorded native plugin with `codex plugin list --json`. Start a new Codex session after install or update to reload the skills. The receipt-bound native deployment is also used by update, rollback, uninstall, and recovery.
 
 ## Package verification
 

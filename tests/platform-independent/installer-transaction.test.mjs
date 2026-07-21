@@ -200,7 +200,13 @@ function sandbox() {
     sourceRoot,
     git,
     attestationPath,
-    env: { ...process.env, XDG_STATE_HOME: state, MAISTER_ENABLE_FAILURE_INJECTION: "1", MAISTER_EVIDENCE_NOW: "2026-07-15T00:00:00.000Z" },
+    env: {
+      ...process.env,
+      XDG_STATE_HOME: state,
+      MAISTER_ENABLE_FAILURE_INJECTION: "1",
+      MAISTER_EVIDENCE_NOW: "2026-07-15T00:00:00.000Z",
+      MAISTER_CODEX_NATIVE_DEPLOYMENT: "0",
+    },
   };
   harnessSandboxes.add(box);
   return box;
@@ -905,7 +911,7 @@ test("managed Kiro MCP settings drift refuses an update", async () => {
   assert.equal(result.error.kind, "E_DRIFT_CONFLICT");
 });
 
-test("managed-key settings preserve unrelated content and refuse owned-key conflicts", async () => {
+test("Codex portable installation preserves native config without claiming its ownership", async () => {
   const box = sandbox();
   await invoke("install", "codex", box);
   const settings = path.join(box.home, ".codex/config.toml");
@@ -914,16 +920,100 @@ test("managed-key settings preserve unrelated content and refuse owned-key confl
   assert.match(fs.readFileSync(settings, "utf8"), /user\.preference = "preserve"/u);
   fs.appendFileSync(settings, "plugins.maister = false\n");
   const result = output(await invoke("update", "codex", box));
-  assert.equal(result.code, 5);
-  assert.equal(result.error.kind, "E_DRIFT_CONFLICT");
+  assert.equal(result.code, 0);
 });
 
-test("uninstall drift rejection preserves exact managed tree and settings state", async () => {
+test("Codex native deployment is receipt-bound across install, update, rollback, verify, and uninstall", async () => {
+  const box = sandbox();
+  box.env.MAISTER_CODEX_NATIVE_DEPLOYMENT = "1";
+  const installedPlugins = new Map();
+  const pluginSources = new Map();
+  let currentPluginSource = null;
+  const run = (command, argumentsList) => {
+    if (command !== "codex") return { status: 1, stdout: "", stderr: "unexpected command" };
+    if (argumentsList[0] === "plugin" && argumentsList[1] === "marketplace" && argumentsList[2] === "add") {
+      currentPluginSource = path.join(argumentsList[3], "plugins/maister");
+      return { status: 0, stdout: "{}", stderr: "" };
+    }
+    if (argumentsList[0] === "plugin" && argumentsList[1] === "add") {
+      const pluginId = argumentsList[2];
+      const installedPath = path.join(box.root, "codex-cache", pluginId.replaceAll("@", "-"));
+      installedPlugins.set(pluginId, installedPath);
+      pluginSources.set(pluginId, currentPluginSource);
+      return { status: 0, stdout: JSON.stringify({ installedPath }), stderr: "" };
+    }
+    if (argumentsList[0] === "plugin" && argumentsList[1] === "list") {
+      return {
+        status: 0,
+        stdout: JSON.stringify({
+          installed: [...installedPlugins.entries()].map(([pluginId, installedPath]) => ({
+            pluginId,
+            installed: true,
+            enabled: true,
+            source: { path: pluginSources.get(pluginId) },
+          })),
+          available: [],
+        }),
+        stderr: "",
+      };
+    }
+    if (argumentsList[0] === "plugin" && argumentsList[1] === "remove") {
+      installedPlugins.delete(argumentsList[2]);
+      return { status: 0, stdout: "{}", stderr: "" };
+    }
+    return { status: 0, stdout: "{}", stderr: "" };
+  };
+  const lifecycle = (command, extra = {}) => executeLifecycle(command, {
+    target: "codex",
+    source: `local:${box.sourceRoot}`,
+    resolvedSourceRoot: box.sourceRoot,
+    home: box.home,
+    env: box.env,
+    git: box.git,
+    overlayRoot: path.join(ROOT, "plugins/maister/overlays"),
+    e3Attestation: readAttestation(box),
+    codexDeploymentRunner: run,
+    ...extra,
+  });
+
+  const first = await lifecycle("install");
+  const firstReceipt = JSON.parse(fs.readFileSync(first.receiptPath, "utf8"));
+  assert.ok(firstReceipt.native_deployment);
+  assert.equal(installedPlugins.has(firstReceipt.native_deployment.plugin_id), true);
+
+  const updated = await lifecycle("update");
+  const updatedReceipt = JSON.parse(fs.readFileSync(updated.receiptPath, "utf8"));
+  assert.notEqual(updatedReceipt.native_deployment.plugin_id, firstReceipt.native_deployment.plugin_id);
+  assert.equal(installedPlugins.has(firstReceipt.native_deployment.plugin_id), false);
+  assert.equal(installedPlugins.has(updatedReceipt.native_deployment.plugin_id), true);
+
+  const verified = await lifecycle("verify");
+  assert.equal(verified.receipt.receipt_id, updatedReceipt.receipt_id);
+  await lifecycle("rollback");
+  assert.equal(installedPlugins.has(updatedReceipt.native_deployment.plugin_id), false);
+  assert.equal(installedPlugins.has(firstReceipt.native_deployment.plugin_id), true);
+
+  await assert.rejects(
+    () => lifecycle("update", { failurePoint: "native-deployment-installed" }),
+    (error) => error?.kind === "E_TX_FAILURE",
+  );
+  assert.equal(installedPlugins.has(firstReceipt.native_deployment.plugin_id), true);
+
+  const uninstalled = await lifecycle("uninstall");
+  const uninstalledReceipt = JSON.parse(fs.readFileSync(uninstalled.receiptPath, "utf8"));
+  assert.equal(uninstalledReceipt.native_deployment, null);
+  assert.equal(installedPlugins.has(firstReceipt.native_deployment.plugin_id), false);
+});
+
+test("uninstall drift rejection preserves exact managed tree and native settings state", async () => {
   const box = sandbox();
   await invoke("install", "codex", box);
   const settings = path.join(box.home, ".codex/config.toml");
-  fs.appendFileSync(settings, "plugins.maister = false\n");
+  fs.mkdirSync(path.dirname(settings), { recursive: true });
+  fs.writeFileSync(settings, "user.preference = \"preserve\"\n");
   fs.chmodSync(settings, 0o640);
+  const managedFile = path.join(activePath(box), ".codex-plugin/plugin.json");
+  fs.appendFileSync(managedFile, "drift\n");
   const beforeTree = readActiveSnapshot(box);
   const beforeSettings = fs.readFileSync(settings);
   const beforeMode = fs.statSync(settings).mode & 0o7777;
@@ -1173,13 +1263,6 @@ test("rejects symlink escapes at target, state, settings, and staging boundaries
       },
     },
     {
-      name: "settings leaf",
-      setup: (box, outside) => {
-        fs.mkdirSync(path.join(box.home, ".codex"), { recursive: true });
-        fs.symlinkSync(outside, path.join(box.home, ".codex/config.toml"));
-      },
-    },
-    {
       name: "staging root",
       setup: (box, outside) => {
         const paths = getTargetPaths({ target: "codex", home: box.home, env: box.env });
@@ -1222,8 +1305,10 @@ test("rejects untrusted active receipt paths and strict receipt tampering", asyn
 
 test("preserves existing settings mode and keeps transaction state private", async () => {
   const box = sandbox();
-  await invoke("install", "codex", box);
   const settings = path.join(box.home, ".codex/config.toml");
+  fs.mkdirSync(path.dirname(settings), { recursive: true });
+  fs.writeFileSync(settings, "user.preference = \"preserve\"\n");
+  await invoke("install", "codex", box);
   fs.chmodSync(settings, 0o640);
   assert.equal(output(await invoke("update", "codex", box)).code, 0);
   assert.equal(fs.statSync(settings).mode & 0o7777, 0o640);

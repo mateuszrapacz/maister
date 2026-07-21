@@ -26,6 +26,16 @@ import { consumeE3Attestation, portableCoreTreeHash, requireE3Attestation } from
 import { getTargetDefinition } from "./targets.mjs";
 import { canonicalJson } from "./provenance.mjs";
 import {
+  attachCodexDeployment,
+  defaultCodexDeploymentRunner,
+  detachCodexDeployment,
+  installPreparedCodexDeployment,
+  prepareCodexDeployment,
+  removeCodexDeployment,
+  removeCodexMarketplace,
+  verifyCodexDeployment,
+} from "./codex-deployment.mjs";
+import {
   assertSafePath,
   copyTreeEntry,
   ensureDirectoryTree,
@@ -57,6 +67,14 @@ const DURABLE_BOUNDARY_MARKERS = Object.freeze([
   "terminal-journal-written",
 ]);
 const DURABLE_BOUNDARY_MARKER_SET = new Set(DURABLE_BOUNDARY_MARKERS);
+const NATIVE_DURABLE_BOUNDARY_MARKERS = new Set([
+  "native-deployment-prepared",
+  "native-deployment-installed",
+  "native-previous-retire-intent",
+  "native-previous-retired",
+  "native-deployment-removal-intent",
+  "native-deployment-removed",
+]);
 const DEFAULT_SCENARIO_VERSION = "1.0.0";
 const BASE_EVIDENCE = Object.freeze([
   ["E1", "overlay-contract-v1"],
@@ -69,6 +87,46 @@ const RELEASE_POLICIES = Object.freeze({
   "offline-provisional": Object.freeze({ id: "offline-provisional", allowProvisionalPackaging: true, requireFailClosed: false }),
   strict: Object.freeze({ id: "strict", allowProvisionalPackaging: false, requireFailClosed: true }),
 });
+
+function codexNativeDeploymentEnabled(options, target) {
+  return target === "codex"
+    && options.nativeDeployment !== false
+    && options.env?.MAISTER_CODEX_NATIVE_DEPLOYMENT !== "0";
+}
+
+function codexDeploymentRunner(options) {
+  return options.codexDeploymentRunner ?? options.codexRunner ?? defaultCodexDeploymentRunner;
+}
+
+function codexDeploymentEnvironment(options) {
+  return options.env ?? process.env;
+}
+
+function ensureCodexDeploymentAttached({ deployment, run, env }) {
+  try {
+    verifyCodexDeployment({ deployment, run, env });
+    return deployment;
+  } catch {
+    return attachCodexDeployment({ deployment, run, env });
+  }
+}
+
+function recoverCodexNativeJournal(journal, options, paths) {
+  if (!codexNativeDeploymentEnabled(options, paths.target)) return;
+  const run = codexDeploymentRunner(options);
+  const env = codexDeploymentEnvironment(options);
+  const current = journal.native_deployment ?? null;
+  const previous = journal.previous_native_deployment ?? null;
+  const hasStep = (name) => journal.steps.some((step) => step.name === name);
+  if (journal.command === "uninstall") {
+    if (current && hasStep("native-deployment-removed")) ensureCodexDeploymentAttached({ deployment: current, run, env });
+    return;
+  }
+  if (current) removeCodexDeployment({ deployment: current, run, env, paths });
+  if (previous && (journal.command === "rollback" || hasStep("native-previous-retired"))) {
+    ensureCodexDeploymentAttached({ deployment: previous, run, env });
+  }
+}
 
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -604,6 +662,16 @@ function durableBoundary(options, marker, details = {}) {
   }
 }
 
+function nativeDurableBoundary(options, marker, details = {}) {
+  if (!NATIVE_DURABLE_BOUNDARY_MARKERS.has(marker)) {
+    throwDistributionError("E_TRANSACTION", "unknown native transaction boundary", { marker });
+  }
+  options.onDurableBoundary?.(Object.freeze({ marker, ...details }));
+  if (options.failurePoint === marker || options.failurePoint === `after-${marker}`) {
+    throwDistributionError("E_TX_FAILURE", `injected transaction failure at ${marker}`, { point: marker });
+  }
+}
+
 function sourcePathValue(source) {
   if (typeof source !== "string" || source.trim() === "") return null;
   if (source.startsWith("local:")) return source.slice("local:".length);
@@ -1117,7 +1185,7 @@ function promoteControlPlane(controlPlane, paths) {
   }
 }
 
-function newJournal({ command, paths, journalId, stageRoot, previousReceipt, candidateReceipt = null, controlPlane = null, backupRoot = null, backupManifestHash = null }) {
+function newJournal({ command, paths, journalId, stageRoot, previousReceipt, candidateReceipt = null, controlPlane = null, backupRoot = null, backupManifestHash = null, nativeDeployment = null, previousNativeDeployment = null }) {
   const started = now();
   return {
     schema_version: 2,
@@ -1133,6 +1201,8 @@ function newJournal({ command, paths, journalId, stageRoot, previousReceipt, can
     previous_receipt: previousReceipt?.receiptPath ?? null,
     candidate_receipt: candidateReceipt,
     control_plane: controlPlane,
+    native_deployment: nativeDeployment,
+    previous_native_deployment: previousNativeDeployment,
     backup_root: backupRoot,
     backup_manifest_hash: backupManifestHash,
     lock: { path: paths.lockPath },
@@ -1178,6 +1248,9 @@ async function installOrUpdate(command, options, paths) {
   let backupManifestHash = null;
   let settings = [];
   let controlPlane = null;
+  let nativeDeployment = null;
+  const previousNativeDeployment = previousReceipt?.native_deployment ?? null;
+  let previousNativeRetired = false;
   try {
     const materialized = await materialize({
       source: options.source, target: paths.target, overlayPath: overlayFiles.overlayPath, inventoryPath: overlayFiles.inventoryPath,
@@ -1255,6 +1328,57 @@ async function installOrUpdate(command, options, paths) {
     durableBoundary(options, "control-plane-promoted", { journal_id: journalId, destination_path: controlPlane.destination_path });
     failureInjection(options, "after-control-plane");
     journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "control-plane-promoted", status: "completed", timestamp: now(), before_ref: controlPlane.stage_path, after_hash: controlPlane.tree_hash }] });
+    if (codexNativeDeploymentEnabled(options, paths.target)) {
+      const prepared = prepareCodexDeployment({
+        paths,
+        deploymentId: journalId,
+        activeRoot: paths.activeRoot,
+      });
+      journal = transition(paths, journal, "committed", {
+        native_deployment: prepared,
+        previous_native_deployment: previousNativeDeployment,
+        steps: [...journal.steps, { name: "native-deployment-prepared", status: "completed", timestamp: now(), before_ref: prepared.marketplace_root, after_hash: prepared.source_tree_hash }],
+      });
+      nativeDurableBoundary(options, "native-deployment-prepared", { journal_id: journalId, marketplace_root: prepared.marketplace_root });
+      writeJournal(paths, journal);
+      nativeDeployment = installPreparedCodexDeployment({
+        deployment: prepared,
+        run: codexDeploymentRunner(options),
+        env: codexDeploymentEnvironment(options),
+      });
+      verifyCodexDeployment({
+        deployment: nativeDeployment,
+        run: codexDeploymentRunner(options),
+        env: codexDeploymentEnvironment(options),
+      });
+      journal = transition(paths, journal, "committed", {
+        native_deployment: nativeDeployment,
+        steps: [...journal.steps, { name: "native-deployment-installed", status: "completed", timestamp: now(), before_ref: prepared.marketplace_root, after_hash: sha256(Buffer.from(canonicalJson(nativeDeployment))) }],
+      });
+      nativeDurableBoundary(options, "native-deployment-installed", { journal_id: journalId, plugin_id: nativeDeployment.plugin_id });
+      writeJournal(paths, journal);
+      if (previousNativeDeployment && previousNativeDeployment.plugin_id !== nativeDeployment.plugin_id) {
+        const retirementStep = { name: "native-previous-retired", status: "pending", timestamp: now(), before_ref: previousNativeDeployment.plugin_id, after_hash: null };
+        journal = transition(paths, journal, "committed", { steps: [...journal.steps, retirementStep] });
+        nativeDurableBoundary(options, "native-previous-retire-intent", { journal_id: journalId, plugin_id: previousNativeDeployment.plugin_id });
+        detachCodexDeployment({
+          deployment: previousNativeDeployment,
+          run: codexDeploymentRunner(options),
+          env: codexDeploymentEnvironment(options),
+        });
+        previousNativeRetired = true;
+        journal = transition(paths, journal, "committed", {
+          steps: journal.steps.map((step) => step === retirementStep ? { ...step, status: "completed", timestamp: now() } : step),
+        });
+        nativeDurableBoundary(options, "native-previous-retired", { journal_id: journalId, plugin_id: previousNativeDeployment.plugin_id });
+        writeJournal(paths, journal);
+        removeCodexMarketplace({
+          deployment: previousNativeDeployment,
+          run: codexDeploymentRunner(options),
+          env: codexDeploymentEnvironment(options),
+        });
+      }
+    }
     const storedInventory = persistedInventory(candidateInventory);
     const managedHash = sha256(Buffer.from(canonicalJson(storedInventory)));
     journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "commit", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: managedHash }] });
@@ -1300,6 +1424,7 @@ async function installOrUpdate(command, options, paths) {
       managed_roots: persistedManagedRoots(paths),
       managed_inventory: storedInventory,
       settings: receiptState.settings,
+      native_deployment: nativeDeployment,
       provenance: receiptState.provenance,
       compatibility,
       evidence,
@@ -1350,6 +1475,30 @@ async function installOrUpdate(command, options, paths) {
       writeJournal(paths, journal);
       throw cleanupFailure;
     }
+    let nativeRecoveryError = null;
+    if (codexNativeDeploymentEnabled(options, paths.target)) {
+      const currentNative = nativeDeployment ?? journal.native_deployment;
+      const priorWasRetired = previousNativeRetired || journal.steps.some((step) => step.name === "native-previous-retired" && step.status === "completed");
+      try {
+        if (currentNative) {
+          removeCodexDeployment({
+            deployment: currentNative,
+            run: codexDeploymentRunner(options),
+            env: codexDeploymentEnvironment(options),
+            paths,
+          });
+        }
+        if (priorWasRetired && previousNativeDeployment) {
+          attachCodexDeployment({
+            deployment: previousNativeDeployment,
+            run: codexDeploymentRunner(options),
+            env: codexDeploymentEnvironment(options),
+          });
+        }
+      } catch (recoveryError) {
+        nativeRecoveryError = recoveryError;
+      }
+    }
     let failureState = "failed";
     const backupManifestPath = backupRoot ? path.join(backupRoot, "manifest.json") : null;
     let backupManifestIdentity = null;
@@ -1382,6 +1531,13 @@ async function installOrUpdate(command, options, paths) {
         failureState = "rollback_failed";
       }
     }
+    if (nativeRecoveryError) {
+      failure = distributionError("E_RECOVERY_FAILURE", "Codex native deployment rollback could not be completed", {
+        journal_id: journalId,
+        native_deployment: nativeDeployment?.plugin_id ?? journal.native_deployment?.plugin_id ?? null,
+      }, { cause: nativeRecoveryError, retryable: true });
+      failureState = "rollback_failed";
+    }
     if (failureState !== "rollback_failed") {
       try { removeEntry(stageRoot, { root: paths.stagingRoot, label: "staging root" }); } catch { /* journal records the transaction failure */ }
     }
@@ -1405,9 +1561,11 @@ async function uninstall(options, paths) {
   const stageRoot = path.join(paths.stagingRoot, journalId);
   const backupRoot = path.join(paths.backupsRoot, journalId);
   ensureDirectoryTree(stageRoot, { root: paths.stagingRoot, label: "staging root", mode: 0o700, privateMode: true });
-  let journal = newJournal({ command: "uninstall", paths, journalId, stageRoot, previousReceipt: active });
+  const activeNativeDeployment = active.receipt.native_deployment ?? null;
+  let journal = newJournal({ command: "uninstall", paths, journalId, stageRoot, previousReceipt: active, nativeDeployment: activeNativeDeployment });
   const journalPath = writeJournal(paths, journal);
   let controlPlane = null;
+  let nativeDeploymentDetached = false;
   try {
     durableBoundary(options, "journal-created", { journal_id: journalId, journal_path: journalPath });
     if (active.receipt.control_plane) {
@@ -1472,7 +1630,7 @@ async function uninstall(options, paths) {
       durableBoundary(options, "control-plane-promoted", { journal_id: journalId, destination_path: controlPlane.destination_path });
       journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "control-plane-promoted", status: "completed", timestamp: now(), before_ref: controlPlane.stage_path, after_hash: controlPlane.tree_hash }] });
     }
-    const receipt = validateReceipt({ ...previous, receipt_id: journalId, status: "uninstalled", installed_at: now(), control_plane: controlPlane ? receiptControlPlane(controlPlane) : previous.control_plane, managed_inventory: [], settings: [], transaction: { journal_id: journalId, backup_root: backupRoot, backup_manifest_hash: backupManifest.manifest_hash, previous_receipt_id: previous.receipt_id } }, { paths });
+    const receipt = validateReceipt({ ...previous, receipt_id: journalId, status: "uninstalled", installed_at: now(), control_plane: controlPlane ? receiptControlPlane(controlPlane) : previous.control_plane, native_deployment: null, managed_inventory: [], settings: [], transaction: { journal_id: journalId, backup_root: backupRoot, backup_manifest_hash: backupManifest.manifest_hash, previous_receipt_id: previous.receipt_id } }, { paths });
     journal = transition(paths, journal, "committed", { candidate_receipt: receipt, steps: [...journal.steps, { name: "uninstall", status: "completed", timestamp: now(), before_ref: previous.receipt_id, after_hash: null }] });
     const receiptPath = path.join(paths.receiptsRoot, `${receipt.receipt_id}.json`);
     durableJson(receiptPath, receipt, 0o600, { root: paths.receiptsRoot });
@@ -1481,7 +1639,40 @@ async function uninstall(options, paths) {
     durableJson(paths.activeReceiptPath, { schema_version: 2, receipt_id: receipt.receipt_id, receipt_path: receiptPath }, 0o600, { root: paths.stateRoot });
     journal = transition(paths, journal, "committed", { steps: [...journal.steps, { name: "active-pointer-transition", status: "completed", timestamp: now(), before_ref: active.receiptPath, after_hash: sha256(Buffer.from(receiptPath)) }] });
     durableBoundary(options, "active-pointer-transitioned", { journal_id: journalId, receipt_path: receiptPath });
+    if (codexNativeDeploymentEnabled(options, paths.target) && activeNativeDeployment) {
+      const removalStep = { name: "native-deployment-removed", status: "pending", timestamp: now(), before_ref: activeNativeDeployment.plugin_id, after_hash: null };
+      journal = transition(paths, journal, "committed", {
+        native_deployment: activeNativeDeployment,
+        steps: [...journal.steps, removalStep],
+      });
+      nativeDurableBoundary(options, "native-deployment-removal-intent", { journal_id: journalId, plugin_id: activeNativeDeployment.plugin_id });
+      detachCodexDeployment({
+        deployment: activeNativeDeployment,
+        run: codexDeploymentRunner(options),
+        env: codexDeploymentEnvironment(options),
+      });
+      nativeDeploymentDetached = true;
+      journal = transition(paths, journal, "committed", {
+        native_deployment: activeNativeDeployment,
+        steps: journal.steps.map((step) => step === removalStep ? { ...step, status: "completed", timestamp: now() } : step),
+      });
+      nativeDurableBoundary(options, "native-deployment-removed", { journal_id: journalId, plugin_id: activeNativeDeployment.plugin_id });
+      writeJournal(paths, journal);
+      removeCodexMarketplace({
+        deployment: activeNativeDeployment,
+        run: codexDeploymentRunner(options),
+        env: codexDeploymentEnvironment(options),
+      });
+    }
     journal = transition(paths, journal, "rolled_back", { steps: [...journal.steps, { name: "receipt-published", status: "completed", timestamp: now(), before_ref: null, after_hash: sha256(Buffer.from(JSON.stringify(receipt))) }] });
+    if (activeNativeDeployment && nativeDeploymentDetached) {
+      removeCodexDeployment({
+        deployment: activeNativeDeployment,
+        run: codexDeploymentRunner(options),
+        env: codexDeploymentEnvironment(options),
+        paths,
+      });
+    }
     const cleanupStep = { name: "control-plane-pruned", status: "pending", timestamp: now(), before_ref: paths.controlPlanesRoot, after_hash: null };
     journal = transition(paths, journal, "rolled_back", { steps: [...journal.steps, cleanupStep] });
     durableBoundary(options, "cleanup-prune-started", { journal_id: journalId });
@@ -1510,6 +1701,20 @@ async function uninstall(options, paths) {
       writeJournal(paths, journal);
       throw failure;
     }
+    if (nativeDeploymentDetached && activeNativeDeployment) {
+      try {
+        attachCodexDeployment({
+          deployment: activeNativeDeployment,
+          run: codexDeploymentRunner(options),
+          env: codexDeploymentEnvironment(options),
+        });
+      } catch (restoreError) {
+        failure = distributionError("E_RECOVERY_FAILURE", "uninstall rollback could not restore the Codex plugin", {
+          journal_id: journalId,
+          plugin_id: activeNativeDeployment.plugin_id,
+        }, { cause: restoreError, retryable: true });
+      }
+    }
     let state = "failed";
     try { restoreFullBackup(backupRoot, { paths, expectedManifestHash: journal.candidate_receipt?.transaction?.backup_manifest_hash ?? null }); } catch (restoreError) {
       state = "rollback_failed";
@@ -1536,7 +1741,17 @@ async function rollback(options, paths) {
   if (active.receipt.status === "installed") { validateReceiptPaths(active.receipt, paths); assertNoDrift({ receipt: active.receipt, paths, settingsRoot: paths.home, settingDefinitions: overlay.settings }); }
   const previous = readReceiptById(paths, previousId);
   const journalId = crypto.randomUUID();
-  const journal = newJournal({ command: "rollback", paths, journalId, stageRoot: path.join(paths.stagingRoot, journalId), previousReceipt: active, backupRoot: active.receipt.transaction.backup_root, backupManifestHash: active.receipt.transaction.backup_manifest_hash });
+  const journal = newJournal({
+    command: "rollback",
+    paths,
+    journalId,
+    stageRoot: path.join(paths.stagingRoot, journalId),
+    previousReceipt: active,
+    backupRoot: active.receipt.transaction.backup_root,
+    backupManifestHash: active.receipt.transaction.backup_manifest_hash,
+    nativeDeployment: active.receipt.native_deployment ?? null,
+    previousNativeDeployment: previous.receipt.native_deployment ?? null,
+  });
   const journalPath = writeJournal(paths, journal);
   durableBoundary(options, "journal-created", { journal_id: journalId, journal_path: journalPath });
   try {
@@ -1544,6 +1759,21 @@ async function rollback(options, paths) {
     restoreFullBackup(active.receipt.transaction.backup_root, { paths, expectedManifestHash: active.receipt.transaction.backup_manifest_hash });
     const restored = readActive(paths);
     if (!restored || restored.receipt.receipt_id !== previous.receipt.receipt_id || restored.receiptPath !== previous.receiptPath) throwDistributionError("E_RECOVERY_FAILURE", "rollback did not restore the exact active receipt", { expected: previous.receiptPath, actual: restored?.receiptPath ?? null });
+    if (codexNativeDeploymentEnabled(options, paths.target) && active.receipt.native_deployment) {
+      removeCodexDeployment({
+        deployment: active.receipt.native_deployment,
+        run: codexDeploymentRunner(options),
+        env: codexDeploymentEnvironment(options),
+        paths,
+      });
+      if (previous.receipt.native_deployment) {
+        attachCodexDeployment({
+          deployment: previous.receipt.native_deployment,
+          run: codexDeploymentRunner(options),
+          env: codexDeploymentEnvironment(options),
+        });
+      }
+    }
     const completed = transition(paths, journal, "rolled_back", { steps: [{ name: "rollback", status: "completed", timestamp: now(), before_ref: active.receipt.receipt_id, after_hash: sha256(Buffer.from(canonicalJson(previous.receipt.managed_inventory))) }, { name: "restore-active-receipt", status: "completed", timestamp: now(), before_ref: previous.receiptPath, after_hash: null }] });
     durableBoundary(options, "rollback-completed", { journal_id: journalId, receipt_id: previous.receipt.receipt_id });
     durableBoundary(options, "terminal-journal-written", { journal_id: journalId, journal_path: journalPath });
@@ -1630,6 +1860,16 @@ export async function executeLifecycle(command, options) {
       validateReceiptPaths(active.receipt, paths);
       assertNoDrift({ receipt: active.receipt, paths, settingsRoot: paths.home, settingDefinitions: overlay.settings });
       if (command === "verify") verifyReceipt(active.receipt, paths, overlay, active.receipt.provenance.agent_projection);
+      if (codexNativeDeploymentEnabled(options, paths.target)) {
+        if (!active.receipt.native_deployment) {
+          throwDistributionError("E_CODEX_DEPLOYMENT", "receipt has no native Codex deployment; reinstall or update the target", { target: paths.target });
+        }
+        verifyCodexDeployment({
+          deployment: active.receipt.native_deployment,
+          run: codexDeploymentRunner(options),
+          env: codexDeploymentEnvironment(options),
+        });
+      }
     }
     return { receipt: active.receipt, receiptPath: active.receiptPath, journalPath: null };
   }
@@ -1672,7 +1912,13 @@ export async function executeLifecycle(command, options) {
         return { receipt: active?.receipt ?? null, receiptPath: active?.receiptPath ?? null, journalPath: null };
       }
       const selected = unresolved[0];
-      await recoverJournal({ journalPath: selected.journalPath, journal: selected.journal, paths, setJournalState: (next) => writeJournal(paths, next) });
+      await recoverJournal({
+        journalPath: selected.journalPath,
+        journal: selected.journal,
+        paths,
+        setJournalState: (next) => writeJournal(paths, next),
+        nativeRecovery: (current) => recoverCodexNativeJournal(current, options, paths),
+      });
       const active = readActive(paths);
       return { receipt: active?.receipt ?? null, receiptPath: active?.receiptPath ?? null, journalPath: selected.journalPath };
     }

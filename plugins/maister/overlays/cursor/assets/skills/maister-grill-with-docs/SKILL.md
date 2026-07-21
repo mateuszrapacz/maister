@@ -1,7 +1,6 @@
 ---
 name: maister-grill-with-docs
 description: Stress-test a plan or domain topic while maintaining language.md and sparse ADRs. Same grilling discipline as grill-me, plus user-confirmed vocabulary and decision documentation. Explicit request only.
-disable-model-invocation: true
 argument-hint: "[plan or domain topic]"
 ---
 

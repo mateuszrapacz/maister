@@ -15,7 +15,7 @@ Ask for the capability directly in natural language, for example:
 
 The portable source of truth is each skill's `SKILL.md` under `plugins/maister/skills/`. Supported host overlays may project a different display or command name, so use the name exposed by the installed host instead of copying another host's syntax.
 
-Treat every on-demand skill as user-triggered: it runs only for a clear request. Where `disable-model-invocation: true` is present, host metadata also prevents implicit attachment; the remaining skills express the same request guard in their canonical descriptions. A host or orchestrator may recommend a skill, but the recommendation does not run it.
+Treat every on-demand skill as user-triggered: it runs only for a clear request. The canonical descriptions express that request guard, and Codex-compatible frontmatter avoids host-specific `disable-model-invocation` keys that are rejected by the native plugin validator. A host or orchestrator may recommend a skill, but the recommendation does not run it.
 
 ### Orchestrator suggestions
 

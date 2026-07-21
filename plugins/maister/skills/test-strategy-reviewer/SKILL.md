@@ -1,7 +1,6 @@
 ---
 name: test-strategy-reviewer
 description: Reviews test code and suggests when testing strategy mismatches the problem class being solved. Detects output-based tests on integration code, interaction-based tests on pure transformations, missing state verification on stateful objects, and tests at wrong abstraction level. Invoke when user asks to review tests, "is my test strategy correct", "review my tests", "test strategy", "am I testing this right".
-disable-model-invocation: true
 argument-hint: "[path to test file or directory, or description of what to review]"
 ---
 

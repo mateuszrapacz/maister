@@ -1,7 +1,6 @@
 ---
 name: grill-me
 description: Relentless interactive interview to stress-test a plan or design until shared understanding. Invoked ONLY on explicit request — e.g. "grill me", "stress-test this plan".
-disable-model-invocation: true
 argument-hint: "[plan or topic]"
 ---
 

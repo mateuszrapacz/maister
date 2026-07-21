@@ -664,7 +664,7 @@ function validateRecoveryControlPlane(journal, paths) {
   }
 }
 
-export async function recoverJournal({ journalPath, journal, paths, setJournalState = () => {} }) {
+export async function recoverJournal({ journalPath, journal, paths, setJournalState = () => {}, nativeRecovery = null }) {
   if (paths && journalPath) assertSafePath(journalPath, { root: paths.journalsRoot, label: "journal path", allowMissing: false });
   const current = journal ?? readJournal(journalPath, { paths });
   validateJournal(current, { paths });
@@ -733,6 +733,7 @@ export async function recoverJournal({ journalPath, journal, paths, setJournalSt
   try {
     validateRecoveryControlPlane(current, paths);
     restoreFullBackup(backupRoot, { paths, expectedManifestHash });
+    if (typeof nativeRecovery === "function") nativeRecovery(current);
     cleanupRecoveryResidue(current, paths);
   } catch (error) {
     const failure = distributionError("E_RECOVERY_FAILURE", "journal recovery could not restore the verified backup", { journal_id: current.journal_id, backup_root: backupRoot }, { cause: error });

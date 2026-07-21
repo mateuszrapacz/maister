@@ -25,7 +25,12 @@ if (!fs.existsSync(sourceRoot)) {
 }
 
 const git = Object.freeze({ topLevel: () => fs.realpathSync(sourceRoot), head: () => commit, status: () => [] });
-const environment = { ...process.env, XDG_STATE_HOME: state, MAISTER_EVIDENCE_NOW: "2026-07-15T00:00:00.000Z" };
+const environment = {
+  ...process.env,
+  XDG_STATE_HOME: state,
+  MAISTER_EVIDENCE_NOW: "2026-07-15T00:00:00.000Z",
+  MAISTER_CODEX_NATIVE_DEPLOYMENT: "0",
+};
 const coreHash = portableCoreTreeHash(sourceRoot);
 const e3Attestation = Object.freeze({
   schema_version: 1,
