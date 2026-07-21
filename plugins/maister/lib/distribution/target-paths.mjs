@@ -16,7 +16,7 @@ function absoluteHome(home) {
   return resolved;
 }
 
-export function getTargetPaths({ target, home, env = process.env, platform = process.platform }) {
+export function getTargetPaths({ target, home, env = process.env, platform = process.platform, kiroHome = null }) {
   const definition = getTargetDefinition(target);
   if (!definition) {
     throwDistributionError("E_USAGE", `unsupported target: ${target}`, { target });
@@ -25,22 +25,27 @@ export function getTargetPaths({ target, home, env = process.env, platform = pro
   if (target === "pi" && !["darwin", "linux"].includes(platform)) {
     throwDistributionError("E_USAGE", "pi target supports POSIX platforms only", { target, platform });
   }
+  const kiroHomeOverride = target === "kiro-cli" ? (kiroHome || env.KIRO_HOME || null) : null;
   const agentRoot = target === "pi"
     ? path.resolve(homeRoot, env.PI_CODING_AGENT_DIR || definition.pathPolicy.defaultAgentRoot)
     : null;
   const rootBase = agentRoot || homeRoot;
   const settingsRoot = target === "pi"
     ? agentRoot
-    : definition.settingsRoot
-      ? resolveInside(homeRoot, definition.settingsRoot, "target settings root")
-      : homeRoot;
+    : kiroHomeOverride
+      ? path.resolve(kiroHomeOverride)
+      : definition.settingsRoot
+        ? resolveInside(homeRoot, definition.settingsRoot, "target settings root")
+        : homeRoot;
   const stateBase = path.resolve(env.XDG_STATE_HOME || path.join(homeRoot, ".local", "state"));
   const stateRoot = path.join(stateBase, "maister", target);
   const managedRoots = Object.freeze(definition.managedRoots.map((root) => Object.freeze({
     rootId: root.rootId,
     path: target === "pi"
       ? path.resolve(rootBase, definition.pathPolicy.packagePath)
-      : path.resolve(homeRoot, ...root.discoveryRoot.split("/")),
+      : kiroHomeOverride
+        ? path.resolve(kiroHomeOverride)
+        : path.resolve(homeRoot, ...root.discoveryRoot.split("/")),
     ownership: root.ownership,
   })));
   const activeRoot = managedRoots.find(({ rootId }) => rootId === "plugin_private").path;
@@ -59,6 +64,7 @@ export function getTargetPaths({ target, home, env = process.env, platform = pro
     } : {}),
     activeRoot,
     managedRoots,
+    ...(kiroHomeOverride ? { kiroHomeOverride } : {}),
     stateRoot,
     lockPath: path.join(stateRoot, "install.lock"),
     journalsRoot: path.join(stateRoot, "journals"),
@@ -83,13 +89,7 @@ export function getManagedRoot(paths, rootId) {
 
 export function projectedOutputIdentity(paths, outputPath) {
   const normalized = normalizeRelativePath(outputPath, "projected output path");
-  if (paths.target !== "kiro-cli") {
-    return Object.freeze({ rootId: "plugin_private", path: normalized });
-  }
-  return Object.freeze({
-    rootId: "kiro_native_agents",
-    path: normalized.startsWith("agents/") ? normalized.slice("agents/".length) : normalized,
-  });
+  return Object.freeze({ rootId: "plugin_private", path: normalized });
 }
 
 export function resolveManagedInventoryPath(paths, { root_id: rootId, path: relativePath }) {

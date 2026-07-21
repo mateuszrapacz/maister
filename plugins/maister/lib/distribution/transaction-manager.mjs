@@ -770,16 +770,13 @@ function ownershipFor(plan, relative) {
 }
 
 function receiptInventory(stagingRoot, plan, paths, projection) {
-  const projectedPaths = new Set((projection?.outputs ?? []).map(({ path: outputPath }) => outputPath));
-  const isProjectedPath = (entryPath) => projectedPaths.has(entryPath)
-    || [...projectedPaths].some((outputPath) => outputPath.startsWith(`${entryPath}/`));
   const entries = [];
   const seen = new Set();
+  const rootOwnership = new Map(paths.managedRoots.map((r) => [r.rootId, r.ownership]));
   for (const entry of hashTree(stagingRoot).entries) {
-    const native = paths.target === "kiro-cli" && isProjectedPath(entry.path);
-    if (native && entry.type === "directory") continue;
-    const rootId = native ? "kiro_native_agents" : "plugin_private";
-    const relativePath = native && entry.path.startsWith("agents/") ? entry.path.slice("agents/".length) : entry.path;
+    const rootId = "plugin_private";
+    const relativePath = entry.path;
+    if (rootOwnership.get(rootId) === "leaf_set" && entry.type === "directory") continue;
     const identity = `${rootId}\0${relativePath}`;
     if (seen.has(identity)) throwDistributionError("E_MATERIALIZE_COLLISION", "materialized outputs collide in a managed root", { root_id: rootId, path: relativePath });
     seen.add(identity);
@@ -801,7 +798,7 @@ function persistedInventory(entries) {
   return entries.map(({ source_path: _sourcePath, ...entry }) => entry);
 }
 
-function assertNoUnmanagedCollisions(candidateInventory, previousReceipt, paths) {
+function assertNoUnmanagedCollisions(candidateInventory, previousReceipt, paths, { allowLeafSetOverwrite = false } = {}) {
   const roots = managedRootMap(paths);
   const owned = new Set((previousReceipt?.managed_inventory ?? []).map((entry) => `${entry.root_id}\0${entry.path}`));
   if (!previousReceipt) {
@@ -811,19 +808,25 @@ function assertNoUnmanagedCollisions(candidateInventory, previousReceipt, paths)
       }
     }
   }
+  const collisions = [];
   for (const entry of candidateInventory.filter(({ type }) => type !== "directory")) {
     const identity = `${entry.root_id}\0${entry.path}`;
     if (owned.has(identity)) continue;
     const root = roots.get(entry.root_id);
     const actual = describe(root.path, entry.path);
     if (actual.exists) {
-      throwDistributionError("E_DRIFT_CONFLICT", "unmanaged content collides with a managed destination", {
-        root_id: entry.root_id,
-        path: entry.path,
-        actual,
-      });
+      if (root.ownership === "leaf_set" && allowLeafSetOverwrite) {
+        collisions.push({ root_id: entry.root_id, path: entry.path, actual });
+      } else {
+        throwDistributionError("E_DRIFT_CONFLICT", "unmanaged content collides with a managed destination", {
+          root_id: entry.root_id,
+          path: entry.path,
+          actual,
+        });
+      }
     }
   }
+  return collisions;
 }
 
 function removeManagedPath(root, relative, type) {
@@ -1271,7 +1274,7 @@ async function installOrUpdate(command, options, paths) {
     assertSafePath(stageRoot, { root: paths.stagingRoot, label: "staging root", allowMissing: false });
     const candidateInventory = receiptInventory(stageRoot, materialized.plan, paths, materialized.projection);
     settings = prepareSettings({ overlay, paths, target: paths.target, activeRoot: paths.activeRoot, stagingRoot: stageRoot });
-    assertNoUnmanagedCollisions(candidateInventory, previousReceipt, paths);
+    const collisions = assertNoUnmanagedCollisions(candidateInventory, previousReceipt, paths, { allowLeafSetOverwrite: true });
     if (!previousReceipt) {
       for (const definition of overlay.settings) {
         if (definition.ownership === "whole_file") {
@@ -1459,7 +1462,7 @@ async function installOrUpdate(command, options, paths) {
     durableBoundary(options, "cleanup-prune-completed", { journal_id: journalId, pruned });
     durableBoundary(options, "terminal-journal-written", { journal_id: journalId, journal_path: journalPath });
     removeEntry(stageRoot, { root: paths.stagingRoot, label: "staging root" });
-    return { receipt: candidateReceipt, receiptPath, journalPath };
+    return { receipt: candidateReceipt, receiptPath, journalPath, collisions };
   } catch (error) {
     let failure = error;
     if (!(failure instanceof DistributionError) && typeof failure?.kind !== "string") failure = distributionError("E_TRANSACTION", failure.message, { journal_id: journalId }, { cause: failure });
@@ -1851,7 +1854,7 @@ export async function executeLifecycle(command, options) {
     const resolvedSourceRoot = assertSourceRootBinding(resolvedSource, options);
     resolvedSource = Object.freeze({ ...resolvedSource, root: resolvedSourceRoot });
   }
-  const paths = getTargetPaths({ target: options.target, home: options.home, env: options.env });
+  const paths = getTargetPaths({ target: options.target, home: options.home, env: options.env, kiroHome: options.kiroHome });
   assertNoLegacyState(paths);
   ensureDirectories(paths);
   if (command === "status" || command === "verify") {

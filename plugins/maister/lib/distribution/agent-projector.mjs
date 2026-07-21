@@ -234,7 +234,7 @@ function kiroDescriptor(role, row) {
   };
   if (role.skill_dependencies.length > 0) {
     descriptor.resources = role.skill_dependencies.map(
-      (skillId) => `skill://~/.kiro-maister/skills/${skillId}/SKILL.md`,
+      (skillId) => `skill://~/.kiro/skills/maister-${skillId}/SKILL.md`,
     );
   }
   return descriptor;
@@ -298,8 +298,8 @@ function canonicalOutputs(agentIr, rowsByRole, target) {
       if (
         !descriptor
         || !prompt
-        || descriptor.path !== `maister-${role.role_id}.json`
-        || prompt.path !== `instructions/maister-${role.role_id}.md`
+        || descriptor.path !== `agents/maister-${role.role_id}.json`
+        || prompt.path !== `agents/instructions/maister-${role.role_id}.md`
       ) {
         failAgentProjection("E_AGENT_PROJECTION_BINDING", `Kiro destinations do not match exact native identity for ${role.role_id}`);
       }

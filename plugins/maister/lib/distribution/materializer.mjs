@@ -65,7 +65,7 @@ const HISTORICAL_TEMPLATE_EXCEPTIONS = Object.freeze({
     "skills/product-design/server/template.html": new Set(["{{TITLE}}", "{{NAV}}", "{{CONTENT}}", "{{ANNOTATIONS}}"]),
   }),
   "kiro-cli": Object.freeze({
-    "skills/product-design/server/template.html": new Set(["{{TITLE}}", "{{NAV}}", "{{CONTENT}}", "{{ANNOTATIONS}}"]),
+    "skills/maister-product-design/server/template.html": new Set(["{{TITLE}}", "{{NAV}}", "{{CONTENT}}", "{{ANNOTATIONS}}"]),
   }),
   cursor: Object.freeze({
     "skills/maister-product-design/server/template.html": new Set(["{{TITLE}}", "{{NAV}}", "{{CONTENT}}", "{{ANNOTATIONS}}"]),
@@ -96,22 +96,22 @@ const HISTORICAL_VOCABULARY_EXCEPTIONS = Object.freeze({
     "skills/standards-update/SKILL.md": Object.freeze(["claude"]),
   }),
   "kiro-cli": Object.freeze({
-    "skills/docs-manager/docs/INDEX.md": Object.freeze(["claude"]),
-    "skills/docs-manager/SKILL.md": Object.freeze(["claude"]),
-    "skills/init/SKILL.md": Object.freeze(["codex", "claude"]),
-    "skills/migration/references/migration-strategies.md": Object.freeze(["claude"]),
-    "skills/migration/references/migration-types.md": Object.freeze(["claude"]),
-    "skills/orchestrator-framework/assets/dashboard.html": Object.freeze(["cursor"]),
-    "skills/orchestrator-framework/bin/orchestrator-state-repository.mjs": Object.freeze(["cursor"]),
-    "skills/orchestrator-framework/references/gate-decision-engine.md": Object.freeze(["codex", "cursor"]),
-    "skills/orchestrator-framework/references/host-capabilities.yml": Object.freeze(["codex", "cursor"]),
-    "skills/orchestrator-framework/references/html-report-style.md": Object.freeze(["cursor"]),
-    "skills/orchestrator-framework/references/orchestrator-patterns.md": Object.freeze(["claude"]),
-    "skills/product-design/server/template.html": Object.freeze(["cursor"]),
-    "skills/quick-plan/SKILL.md": Object.freeze(["claude"]),
-    "skills/standards-discover/references/docs-extractor-prompt.md": Object.freeze(["claude"]),
-    "skills/standards-discover/SKILL.md": Object.freeze(["claude"]),
-    "skills/standards-update/SKILL.md": Object.freeze(["claude"]),
+    "skills/maister-docs-manager/docs/INDEX.md": Object.freeze(["claude"]),
+    "skills/maister-docs-manager/SKILL.md": Object.freeze(["claude"]),
+    "skills/maister-init/SKILL.md": Object.freeze(["codex", "claude"]),
+    "skills/maister-migration/references/migration-strategies.md": Object.freeze(["claude"]),
+    "skills/maister-migration/references/migration-types.md": Object.freeze(["claude"]),
+    "skills/maister-orchestrator-framework/assets/dashboard.html": Object.freeze(["cursor"]),
+    "skills/maister-orchestrator-framework/bin/orchestrator-state-repository.mjs": Object.freeze(["cursor"]),
+    "skills/maister-orchestrator-framework/references/gate-decision-engine.md": Object.freeze(["codex", "cursor"]),
+    "skills/maister-orchestrator-framework/references/host-capabilities.yml": Object.freeze(["codex", "cursor"]),
+    "skills/maister-orchestrator-framework/references/html-report-style.md": Object.freeze(["cursor"]),
+    "skills/maister-orchestrator-framework/references/orchestrator-patterns.md": Object.freeze(["claude"]),
+    "skills/maister-product-design/server/template.html": Object.freeze(["cursor"]),
+    "skills/maister-quick-plan/SKILL.md": Object.freeze(["claude"]),
+    "skills/maister-standards-discover/references/docs-extractor-prompt.md": Object.freeze(["claude"]),
+    "skills/maister-standards-discover/SKILL.md": Object.freeze(["claude"]),
+    "skills/maister-standards-update/SKILL.md": Object.freeze(["claude"]),
   }),
 });
 
@@ -237,7 +237,7 @@ function addPlanEntry(entries, destination, sourcePath, type, mode, owner, sourc
   });
 }
 
-function expandSource(entries, sourcePath, destination, kind, mode, ownership, sourceRoot, enforceKind = true, merge = false, native = false) {
+function expandSource(entries, sourcePath, destination, kind, mode, ownership, sourceRoot, enforceKind = true, merge = false, native = false, childPrefix = "") {
   const stat = fs.lstatSync(sourcePath);
   if (stat.isSymbolicLink()) assertSafeSymlink(sourcePath, sourceRoot);
   if (enforceKind && kind === "file" && !stat.isFile() && !stat.isSymbolicLink()) {
@@ -251,7 +251,8 @@ function expandSource(entries, sourcePath, destination, kind, mode, ownership, s
   if (type !== "directory") return;
   for (const childName of fs.readdirSync(sourcePath).sort()) {
     const childSource = path.join(sourcePath, childName);
-    const childDestination = `${destination}/${childName}`;
+    const prefixedName = childPrefix ? `${childPrefix}${childName}` : childName;
+    const childDestination = `${destination}/${prefixedName}`;
     expandSource(entries, childSource, childDestination, "tree", mode, ownership, sourceRoot, false, merge, native);
   }
 }
@@ -274,6 +275,7 @@ export function buildAssemblyPlan({ sourceRoot, overlay, overlayBase, stagingRoo
       true,
       layout.merge === true,
       source.startsWith("assets/"),
+      layout.child_prefix ?? "",
     );
   }
   const destinations = new Map();
