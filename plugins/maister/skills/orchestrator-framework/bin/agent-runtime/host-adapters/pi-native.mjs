@@ -48,6 +48,31 @@ const RESPONSE_STATUSES = new Set([
 const UNAVAILABLE_STATUSES = new Set(["invalid_request", "unavailable_context"]);
 const SAFE_DISPATCH_ID = /^[a-z0-9][a-z0-9-]{0,127}$/u;
 
+export const PI_ORCHESTRATION_COMMANDS = Object.freeze([
+  Object.freeze({ name: "maister-work", invocation: "/work", description: "Route a task to the appropriate Maister workflow" }),
+  Object.freeze({ name: "maister-development", invocation: "/skill:maister:development", description: "Run the Maister development workflow" }),
+  Object.freeze({ name: "maister-init", invocation: "/skill:maister:init", description: "Initialize Maister project documentation and standards" }),
+  Object.freeze({ name: "maister-performance", invocation: "/skill:maister:performance", description: "Run the Maister performance workflow" }),
+  Object.freeze({ name: "maister-migration", invocation: "/skill:maister:migration", description: "Run the Maister migration workflow" }),
+  Object.freeze({ name: "maister-research", invocation: "/skill:maister:research", description: "Run the Maister research workflow" }),
+  Object.freeze({ name: "maister-product-design", invocation: "/skill:maister:product-design", description: "Run the Maister product design workflow" }),
+  Object.freeze({
+    name: "maister-bye",
+    invocation: "End the Maister session gracefully. Preserve the active orchestrator-state.yml, summarize completed and remaining work, and do not mark an in-progress workflow completed.",
+    description: "End a Maister session while preserving workflow state",
+  }),
+  Object.freeze({
+    name: "maister-resume",
+    invocation: "Resume the Maister workflow from orchestrator-state.yml. Preserve the task path and continue from the first incomplete phase; if no active state exists, report that clearly.",
+    description: "Resume a Maister workflow from saved state",
+  }),
+  Object.freeze({
+    name: "maister-status",
+    invocation: "Read the active Maister orchestrator-state.yml and report the task path, workflow type, status, current or next phase, completed and failed phases, blockers, and pending gates. Do not modify state or start a workflow.",
+    description: "Report Maister workflow state and blockers",
+  }),
+]);
+
 export class PiNativeAdapterError extends Error {
   constructor(code, message, details = {}, { cause, retryable = false } = {}) {
     super(`[${code}] ${message}`, cause === undefined ? {} : { cause });
@@ -286,6 +311,17 @@ function eventError(error, fallbackCode = "E_PI_NATIVE_FAILURE") {
     message: error instanceof Error ? error.message : String(error),
     retryable: Boolean(error?.retryable),
   };
+}
+
+function commandMessageSender(pi, context) {
+  if (typeof context.sendUserMessage === "function") return context.sendUserMessage.bind(context);
+  if (typeof pi.sendUserMessage === "function") return pi.sendUserMessage.bind(pi);
+  return null;
+}
+
+function commandDeliveryOptions(context) {
+  if (typeof context.isIdle === "function" && !context.isIdle()) return { deliverAs: "followUp" };
+  return undefined;
 }
 
 function appendEvent({ eventPort, plan, task, eventType, status, payload = {}, observedAgent = null, clock }) {
@@ -527,6 +563,18 @@ export function createPiExtensionBridge({ pi, eventPort, clock, delegation, task
       });
     },
   });
+  for (const command of PI_ORCHESTRATION_COMMANDS) {
+    pi.registerCommand(command.name, {
+      description: command.description,
+      handler: async (args, context = {}) => {
+        const sendUserMessage = commandMessageSender(pi, context);
+        if (!sendUserMessage) fail("E_PI_CONTEXT_UNAVAILABLE", "Pi ExtensionContext does not expose sendUserMessage");
+        const message = `${command.invocation}${typeof args === "string" && args.length > 0 ? ` ${args}` : ""}`;
+        const options = commandDeliveryOptions(context);
+        return options ? sendUserMessage(message, options) : sendUserMessage(message);
+      },
+    });
+  }
   const removeShutdown = pi.on("session_shutdown", () => adapter.shutdown());
   let disposed = false;
   const dispose = async () => {

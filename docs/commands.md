@@ -28,6 +28,29 @@ The plugin classifies the task type with confidence scoring, asks for confirmati
 
 ---
 
+## Pi shortcuts
+
+The Pi package registers collision-safe aliases for Maister workflows and
+lifecycle state. Workflow aliases forward to canonical skills or prompts;
+lifecycle aliases preserve normal state handling:
+
+| Command | Forwards to |
+| --- | --- |
+| `/maister-work` | `/work` |
+| `/maister-development` | `/skill:maister:development` |
+| `/maister-init` | `/skill:maister:init` |
+| `/maister-performance` | `/skill:maister:performance` |
+| `/maister-migration` | `/skill:maister:migration` |
+| `/maister-research` | `/skill:maister:research` |
+| `/maister-product-design` | `/skill:maister:product-design` |
+| `/maister-bye` | Preserve workflow state |
+| `/maister-resume` | Resume saved workflow state |
+| `/maister-status` | Read saved workflow state |
+
+Arguments are passed unchanged. Example:
+
+`/maister-development Add filtering --e2e`
+
 ## Development
 
 ### `/maister:development [description | task-path]`

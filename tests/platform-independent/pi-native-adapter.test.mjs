@@ -8,6 +8,7 @@ import {
   createPiExtensionBridge,
   createPiNativeAdapter,
   PI_DELEGATION_EVENTS,
+  PI_ORCHESTRATION_COMMANDS,
   PI_DELEGATION_PROTOCOL_VERSION,
 } from "../../plugins/maister/skills/orchestrator-framework/bin/agent-runtime/host-adapters/pi-native.mjs";
 import { sanitizeObservationValue } from "../../plugins/maister/skills/orchestrator-framework/bin/agent-runtime/execution-event-payload.mjs";
@@ -339,12 +340,13 @@ test("Pi adapter exposes public cancellation and records process loss as termina
   assert.deepEqual(lossEvents.events.map((event) => event.event_type), ["dispatch_requested", "started", "process_lost"]);
 });
 
-test("the generated ExtensionAPI bridge registers one public command and cleans up on session shutdown", async (t) => {
+test("the generated ExtensionAPI bridge registers orchestration commands and cleans up on session shutdown", async (t) => {
   const root = temporaryTask();
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const eventBus = createEventBus();
   const events = captureEventPort();
   const requests = [];
+  const userMessages = [];
   driveCompletion(eventBus, requests);
   const commands = new Map();
   const lifecycle = new Map();
@@ -353,20 +355,52 @@ test("the generated ExtensionAPI bridge registers one public command and cleans 
     registerCommand(name, definition) {
       commands.set(name, definition);
     },
+    sendUserMessage: (message, options) => userMessages.push({ message, options }),
     on(name, handler) {
       lifecycle.set(name, handler);
       return () => lifecycle.delete(name);
     },
   };
   const bridge = createPiExtensionBridge({ pi, delegation: DELEGATION, eventPort: events, clock: () => "2026-07-21T00:00:00.000Z" });
-  const candidatePlan = createPlan({ dispatch_id: "dispatch-pi-command" });
-  const result = await commands.get("maister-delegate").handler({ plan: candidatePlan, task: createTask(root) }, {
+  const commandContext = {
     cwd: root,
     taskPath: root,
+    isIdle: () => true,
     sessionManager: { getSessionId: () => "session-pi-command" },
-  });
+  };
+  const candidatePlan = createPlan({ dispatch_id: "dispatch-pi-command" });
+  const result = await commands.get("maister-delegate").handler({ plan: candidatePlan, task: createTask(root) }, commandContext);
+  await commands.get("maister-work").handler("Add a feature", commandContext);
+  await commands.get("maister-development").handler("Add a feature --e2e", commandContext);
+  await commands.get("maister-init").handler("", commandContext);
+  await commands.get("maister-bye").handler("Keep this path", commandContext);
+  await commands.get("maister-resume").handler(".maister/tasks/development/example", commandContext);
+  await commands.get("maister-status").handler("", commandContext);
+  await commands.get("maister-development").handler("Queue this", { ...commandContext, isIdle: () => false });
 
-  assert.equal(commands.size, 1);
+  assert.equal(commands.size, 1 + PI_ORCHESTRATION_COMMANDS.length);
+  assert.deepEqual(
+    [...commands.keys()],
+    ["maister-delegate", ...PI_ORCHESTRATION_COMMANDS.map(({ name }) => name)],
+  );
+  assert.deepEqual(userMessages, [
+    { message: "/work Add a feature", options: undefined },
+    { message: "/skill:maister:development Add a feature --e2e", options: undefined },
+    { message: "/skill:maister:init", options: undefined },
+    {
+      message: "End the Maister session gracefully. Preserve the active orchestrator-state.yml, summarize completed and remaining work, and do not mark an in-progress workflow completed. Keep this path",
+      options: undefined,
+    },
+    {
+      message: "Resume the Maister workflow from orchestrator-state.yml. Preserve the task path and continue from the first incomplete phase; if no active state exists, report that clearly. .maister/tasks/development/example",
+      options: undefined,
+    },
+    {
+      message: "Read the active Maister orchestrator-state.yml and report the task path, workflow type, status, current or next phase, completed and failed phases, blockers, and pending gates. Do not modify state or start a workflow.",
+      options: undefined,
+    },
+    { message: "/skill:maister:development Queue this", options: { deliverAs: "followUp" } },
+  ]);
   assert.equal(result.status, "succeeded");
   assert.equal(requests.length, 1);
   assert.equal(events.events[0].payload.session_id, "session-pi-command");
