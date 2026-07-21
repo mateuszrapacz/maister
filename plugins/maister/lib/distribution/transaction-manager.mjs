@@ -8,7 +8,14 @@ import { materialize } from "./materializer.mjs";
 import { revalidateResolvedSource, resolveSource } from "./source-resolver.mjs";
 import { hashFile, hashTree } from "./hash-tree.mjs";
 import { assertNoDrift, describe } from "./drift-detector.mjs";
-import { atomicWriteSetting, formatMode, prepareSetting, removeManagedKeys } from "./settings-owner.mjs";
+import {
+  assertManagedArrayUnchanged,
+  atomicWriteSetting,
+  formatMode,
+  prepareSetting,
+  removeManagedArrayEntry,
+  removeManagedKeys,
+} from "./settings-owner.mjs";
 import { getTargetPaths } from "./target-paths.mjs";
 import { requireControlPlane, validateReceipt, readReceipt, UUID } from "./receipt-schema.mjs";
 import { appendTransition, isUnresolved, readJournal, validateJournal } from "./journal-schema.mjs";
@@ -121,11 +128,19 @@ function managedRootMap(paths) {
 }
 
 function evidenceBinding(provenance, scenarioVersion) {
+  const projection = provenance.agent_projection;
   return {
     source_commit: provenance.resolvedCommit,
     source_version: provenance.sourceVersion,
+    overlay_id: provenance.overlayId,
     overlay_version: provenance.overlayVersion,
+    host: provenance.host,
     scenario_version: scenarioVersion,
+    schema_version: projection?.schema_version,
+    projector_version: projection?.projector_version,
+    canonical_set_digest: projection?.canonical_set_digest,
+    manifest_digest: projection?.manifest_digest,
+    projected_tree_digest: projection?.projected_tree_digest,
     ...provenanceHashes(provenance),
   };
 }
@@ -170,13 +185,10 @@ function createValidatedPortableEvidence({ target, materialized, attestation, po
     target,
     hostVersion: materialized.provenance.hostVersion,
     provenance: {
+      ...provenance,
       resolvedCommit: materialized.provenance.resolvedCommit,
       sourceVersion: materialized.provenance.sourceVersion,
       overlayVersion: materialized.provenance.overlayVersion,
-      sourceHash: materialized.provenance.sourceHash,
-      overlayHash: materialized.provenance.overlayHash,
-      materializedHash: materialized.provenance.materializedHash,
-      provenanceHash: materialized.provenance.provenanceHash,
       scenarioVersion: options.scenarioVersion ?? DEFAULT_SCENARIO_VERSION,
       portableCoreTreeHash: portableCoreHash,
       artifactDigest: portableCoreHash,
@@ -683,7 +695,8 @@ function candidateOverlay(source, target, overlayRoot, { resolvedSourceRoot = nu
 }
 
 function ownershipFor(plan, relative) {
-  return plan.find((entry) => entry.destination === relative)?.ownership ?? "whole_file";
+  const ownership = plan.find((entry) => entry.destination === relative)?.ownership ?? "whole_file";
+  return ownership === "plugin_private" ? "whole_file" : ownership;
 }
 
 function receiptInventory(stagingRoot, plan, paths, projection) {
@@ -771,7 +784,12 @@ function validateReceiptPaths(receipt, paths) {
     if (!root) throwDistributionError("E_RECEIPT_SCHEMA", "managed inventory references an unknown root", { root_id: entry.root_id });
     assertSafePath(path.resolve(root.path, ...entry.path.split("/")), { root: paths.home, label: "managed receipt path", allowLeafSymlink: true });
   }
-  for (const setting of receipt.settings) assertSafePath(path.resolve(paths.home, ...setting.path.split("/")), { root: paths.home, label: "settings receipt path" });
+  for (const setting of receipt.settings) {
+    const targetPath = paths.target === "pi" && setting.path === "settings.json"
+      ? paths.settingsPath
+      : path.resolve(paths.home, ...setting.path.split("/"));
+    assertSafePath(targetPath, { root: paths.home, label: "settings receipt path" });
+  }
 }
 
 function commitWholeTree({ stagingRoot, activeRoot, candidateInventory, previousReceipt, failurePoint, home }) {
@@ -884,15 +902,26 @@ function commitSettings(settings, paths, failurePoint) {
     const parent = path.dirname(setting.targetPath);
     ensureDirectoryTree(parent, { root: paths.home, label: "settings parent", mode: 0o755 });
     assertSafePath(setting.targetPath, { root: paths.home, label: "settings target" });
-    atomicWriteSetting(setting.targetPath, setting.bytes, setting.mode ?? "0600");
+    atomicWriteSetting(setting.targetPath, setting.bytes, setting.mode ?? "0600", {
+      expected: {
+        exists: setting.beforeSha256 !== null,
+        sha256: setting.beforeSha256,
+        mode: setting.beforeMode,
+      },
+    });
     operations += 1;
     if (failurePoint === "during-commit" && operations === 1) failureInjection({ failurePoint }, "during-commit");
   }
 }
 
+function settingTargetPath(paths, definition) {
+  if (paths.target === "pi" && definition.path === "settings.json") return paths.settingsPath;
+  return path.resolve(paths.home, ...definition.path.split("/"));
+}
+
 function validateSettingPaths(overlay, paths) {
   for (const definition of overlay.settings) {
-    const targetPath = path.resolve(paths.home, ...definition.path.split("/"));
+    const targetPath = settingTargetPath(paths, definition);
     assertSafePath(targetPath, { root: paths.home, label: "settings target" });
     assertSafePath(path.dirname(targetPath), { root: paths.home, label: "settings parent" });
   }
@@ -902,10 +931,11 @@ function prepareSettings({ overlay, paths, target, activeRoot, stagingRoot }) {
   validateSettingPaths(overlay, paths);
   return overlay.settings.map((definition) => prepareSetting({
     definition,
-    targetPath: path.resolve(paths.home, ...definition.path.split("/")),
+    targetPath: settingTargetPath(paths, definition),
     target,
     activeRoot,
     stagedPath: path.join(stagingRoot, ...definition.path.split("/")),
+    homeRoot: paths.home,
   }));
 }
 
@@ -920,6 +950,7 @@ function settingsReceipt(settings, backupRoot) {
     backup_ref: path.relative(backupRoot, path.join(backupRoot, "settings", String(index))),
     mode: setting.mode,
     before_mode: setting.beforeMode,
+    ...(setting.managedArray ?? {}),
   }));
 }
 
@@ -934,10 +965,25 @@ function verifyReceipt(receiptState, paths, overlay, expectedProjection = null) 
     if (!actual.exists || actual.type !== entry.type || actual.mode !== entry.mode || (entry.type === "file" && actual.sha256 !== entry.sha256) || (entry.type === "symlink" && actual.linkTarget !== entry.link_target)) conflicts.push({ root_id: entry.root_id, path: entry.path });
   }
   for (const setting of receiptState.settings) {
-    const targetPath = path.resolve(paths.home, ...setting.path.split("/"));
+    const definition = overlay.settings.find(({ path: settingPath }) => settingPath === setting.path);
+    const targetPath = settingTargetPath(paths, definition ?? setting);
     assertSafePath(targetPath, { root: paths.home, label: "settings receipt path" });
     const stat = fs.lstatSync(targetPath, { throwIfNoEntry: false });
     if (!stat || stat.isSymbolicLink() || !stat.isFile() || (setting.ownership === "whole_file" && hashFile(targetPath) !== setting.after_sha256) || formatMode(stat.mode) !== setting.mode) conflicts.push(setting.path);
+    if (setting.ownership === "managed_array_entries") {
+      try {
+        assertManagedArrayUnchanged({
+          definition,
+          targetPath,
+          activeRoot: paths.activeRoot,
+          receiptSetting: setting,
+          homeRoot: paths.home,
+        });
+      } catch (error) {
+        if (error?.kind === "E_DRIFT_CONFLICT") conflicts.push(setting.path);
+        else throw error;
+      }
+    }
   }
   if (conflicts.length > 0) throwDistributionError("E_INTEGRITY", "post-commit integrity verification failed", { conflicts });
   if (overlay.target.id !== receiptState.target.id) throwDistributionError("E_INTEGRITY", "receipt target does not match overlay", {});
@@ -1143,7 +1189,7 @@ async function installOrUpdate(command, options, paths) {
     if (!previousReceipt) {
       for (const definition of overlay.settings) {
         if (definition.ownership === "whole_file") {
-          const targetPath = path.resolve(paths.home, ...definition.path.split("/"));
+          const targetPath = settingTargetPath(paths, definition);
           const stagedPath = path.join(stageRoot, ...definition.path.split("/"));
           const targetStat = fs.lstatSync(targetPath, { throwIfNoEntry: false });
           if (targetStat && !targetStat.isSymbolicLink() && fs.existsSync(stagedPath) && hashFile(targetPath) !== hashFile(stagedPath)) throwDistributionError("E_DRIFT_CONFLICT", `existing user settings conflict with ${definition.path}`, { path: definition.path });
@@ -1360,7 +1406,7 @@ async function uninstall(options, paths) {
       });
       durableBoundary(options, "control-plane-staged", { journal_id: journalId, tree_hash: controlPlane.tree_hash });
     }
-    const settings = overlay.settings.map((definition) => ({ ...definition, targetPath: path.resolve(paths.home, ...definition.path.split("/")) }));
+    const settings = overlay.settings.map((definition) => ({ ...definition, targetPath: settingTargetPath(paths, definition) }));
     const backupManifest = snapshotState({ managedRoots: paths.managedRoots, managedInventory: active.receipt.managed_inventory, settings, backupRoot, activeReceiptPath: paths.activeReceiptPath, home: paths.home });
     let originalReceipt = active.receipt;
     while (originalReceipt.transaction.previous_receipt_id) {
@@ -1377,10 +1423,24 @@ async function uninstall(options, paths) {
     }
     for (const definition of settings) {
       assertSafePath(definition.targetPath, { root: paths.home, label: "settings target" });
-      if (definition.ownership === "managed_keys") {
+      if (definition.ownership === "managed_array_entries") {
+        const receiptSetting = active.receipt.settings.find(({ path: settingPath }) => settingPath === definition.path);
+    const bytes = removeManagedArrayEntry({
+          definition,
+          targetPath: definition.targetPath,
+          activeRoot: paths.activeRoot,
+          expected: receiptSetting,
+          homeRoot: paths.home,
+          returnDetails: true,
+        });
+        if (bytes) {
+          const stat = fs.lstatSync(definition.targetPath, { throwIfNoEntry: false });
+          atomicWriteSetting(definition.targetPath, bytes.bytes, stat ? formatMode(stat.mode) : "0600", { expected: bytes.expected });
+        }
+      } else if (definition.ownership === "managed_keys") {
         const stat = fs.lstatSync(definition.targetPath, { throwIfNoEntry: false });
-        const bytes = removeManagedKeys({ definition, targetPath: definition.targetPath });
-        if (bytes && stat) atomicWriteSetting(definition.targetPath, bytes, formatMode(stat.mode));
+        const bytes = removeManagedKeys({ definition, targetPath: definition.targetPath, returnDetails: true });
+        if (bytes && stat) atomicWriteSetting(definition.targetPath, bytes.bytes, formatMode(stat.mode), { expected: bytes.expected });
       } else removeEntry(definition.targetPath, { root: paths.home, label: "settings target" });
     }
     for (const root of originalTopology.roots) {

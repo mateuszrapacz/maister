@@ -18,6 +18,7 @@ const TARGET_CONTRACTS = Object.freeze({
   codex: Object.freeze({ adapterId: "codex.exec", representation: "codex-prompt-schema", native: false }),
   cursor: Object.freeze({ adapterId: "cursor.native", representation: "cursor-markdown", native: true }),
   "kiro-cli": Object.freeze({ adapterId: "kiro-cli.native", representation: "kiro-descriptor-prompt", native: true }),
+  pi: Object.freeze({ adapterId: "pi.native", representation: "pi-agent-frontmatter", native: true, colonIdentity: true }),
 });
 const OUTCOME_CODES = new Set([
   "E_AGENT_REQUEST_GRAMMAR",
@@ -157,7 +158,9 @@ function validateRow(row, logicalRoleId, target) {
   const contract = TARGET_CONTRACTS[target];
   if (!contract) fail("E_AGENT_MISMATCHED_STATE", `unsupported dispatch target ${target}`, { target });
   const roleId = logicalRoleId.slice("maister:".length);
-  const expectedNative = contract.native ? `maister-${roleId}` : null;
+  const expectedNative = contract.native
+    ? contract.colonIdentity ? `maister:${roleId}` : `maister-${roleId}`
+    : null;
   if (
     row.role_id !== roleId
     || row.target !== target

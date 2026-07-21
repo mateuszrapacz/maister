@@ -4,7 +4,7 @@ import path from "node:path";
 import { hashFile } from "./hash-tree.mjs";
 import { distributionError, throwDistributionError } from "./path-safety.mjs";
 import { normalizeRelativePath } from "./path-safety.mjs";
-import { assertManagedKeysUnchanged } from "./settings-owner.mjs";
+import { assertManagedArrayUnchanged, assertManagedKeysUnchanged } from "./settings-owner.mjs";
 
 function describe(root, relative) {
   const normalized = normalizeRelativePath(relative, "managed path");
@@ -40,10 +40,23 @@ export function detectDrift({ receipt, paths = null, settingsRoot = paths?.home,
   const activeRoot = roots.get("plugin_private");
   for (const definition of settingDefinitions) {
     const setting = receipt.settings.find((entry) => entry.path === definition.path);
-    const targetPath = path.resolve(settingsRoot ?? path.dirname(activeRoot), ...definition.path.split("/"));
+    const targetPath = paths?.target === "pi" && definition.path === "settings.json"
+      ? paths.settingsPath
+      : path.resolve(settingsRoot ?? path.dirname(activeRoot), ...definition.path.split("/"));
     if (definition.ownership === "whole_file") {
       const actual = fs.existsSync(targetPath) ? hashFile(targetPath) : null;
       if (setting && actual !== setting.after_sha256) conflicts.push({ path: definition.path, expected: setting.after_sha256, actual });
+    } else if (definition.ownership === "managed_array_entries") {
+      try {
+        assertManagedArrayUnchanged({
+          definition,
+          targetPath,
+          target: receipt.target.id,
+          activeRoot,
+          receiptSetting: setting,
+        });
+      }
+      catch (error) { if (error?.kind === "E_DRIFT_CONFLICT") conflicts.push(error.details); else throw error; }
     } else {
       try { assertManagedKeysUnchanged({ definition, targetPath, target: receipt.target.id, activeRoot }); }
       catch (error) { if (error?.kind === "E_DRIFT_CONFLICT") conflicts.push(error.details); else throw error; }

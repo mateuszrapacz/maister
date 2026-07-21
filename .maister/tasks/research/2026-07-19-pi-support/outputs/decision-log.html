@@ -1,0 +1,176 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pi architecture decisions · Maister research</title><style>:root{--bg:#f4f1ea;--paper:#fffdf8;--ink:#17202a;--muted:#65717b;--line:#d8d3c8;--brand:#0d6b61;--accent:#d96532;--code:#12232b}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:linear-gradient(135deg,#edf4f1 0,#f4f1ea 36%,#eee9df 100%);color:var(--ink);font:16px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:var(--brand);text-underline-offset:3px}a:hover{color:var(--accent)}.shell{max-width:1180px;margin:auto;padding:24px}.crumbs{display:flex;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:16px}.crumbs a{text-decoration:none}.hero{position:relative;overflow:hidden;background:linear-gradient(125deg,#123e43,#0d6b61);color:white;padding:34px 38px;border-radius:18px 18px 0 0}.hero:after{content:"π";position:absolute;right:28px;top:-35px;font:190px/1 Georgia,serif;color:rgba(255,255,255,.09)}.hero h1{margin:0 0 8px;font:700 clamp(30px,5vw,50px)/1.08 Georgia,serif}.hero p{max-width:760px;margin:0;color:#d9eeea}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border-left:1px solid var(--line);border-right:1px solid var(--line)}.stat{background:var(--paper);padding:16px 20px}.stat b{display:block;font-size:22px;color:var(--brand)}.stat span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.suite{display:flex;gap:10px;flex-wrap:wrap;padding:14px 20px;background:#eef2ef;border:1px solid var(--line)}.suite a{background:white;border:1px solid var(--line);border-radius:999px;padding:6px 11px;text-decoration:none;font-size:13px}.content{background:var(--paper);border:1px solid var(--line);border-top:0;padding:34px 42px 60px;border-radius:0 0 18px 18px;box-shadow:0 22px 55px rgba(35,44,42,.10)}h1{font:700 38px/1.15 Georgia,serif;margin:0 0 12px}h2{font:700 27px/1.2 Georgia,serif;margin:46px 0 16px;padding-top:10px;border-top:2px solid var(--ink)}h1+h2{margin-top:20px;border-top:0;background:#e8f3f0;padding:18px;border-radius:10px}h3{font-size:19px;margin:30px 0 10px;color:var(--brand)}h4{font-size:16px;margin:24px 0 8px}p{max-width:920px}hr{border:0;border-top:1px solid var(--line);margin:42px 0}code{font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:#e9eee9;padding:2px 5px;border-radius:4px}pre{background:var(--code);color:#eaf5f2;padding:20px;border-radius:10px;overflow:auto;border-left:5px solid var(--accent)}pre code{background:none;padding:0;color:inherit}.table-wrap{overflow:auto;margin:18px 0 28px;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;min-width:680px;font-size:14px}th{background:#173f43;color:white;text-align:left}th,td{padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top}tbody tr:nth-child(even){background:#f3f5f1}ul,ol{padding-left:24px;max-width:920px}li{margin:6px 0}footer{text-align:center;color:var(--muted);font-size:12px;padding:22px}@media(max-width:760px){.shell{padding:0}.hero,.content{border-radius:0;padding:26px 20px}.stats{grid-template-columns:repeat(2,1fr)}.suite{border-left:0;border-right:0}h2{font-size:23px}}@media print{body{background:white}.shell{max-width:none;padding:0}.hero{background:white;color:black;padding:0}.hero:after,.stats,.suite,.crumbs,footer{display:none}.content{border:0;box-shadow:none;padding:0}a{color:inherit}}</style></head><body><div class="shell"><nav class="crumbs"><a href="research-report.html">Research report</a><span>/</span><a href="solution-exploration.html">Solution exploration</a><span>/</span><strong>Pi architecture decisions</strong></nav><header class="hero"><h1>Pi architecture decisions</h1><p>Eight accepted MADR records defining package, projection, runtime, ownership, admission, prerequisite, event, and evidence boundaries.</p></header><section class="stats"><div class="stat"><b>8</b><span>decisions</span></div><div class="stat"><b>5</b><span>selected areas</span></div><div class="stat"><b>1</b><span>target matrix</span></div><div class="stat"><b>0</b><span>legacy gates</span></div></section><nav class="suite" aria-label="Research artifact suite"><a href="research-report.html">Research report</a><a href="solution-exploration.html">Solution exploration</a><a href="high-level-design.html">High-level design</a><a href="decision-log.html">Decision log</a></nav><main class="content"><h1 id="architecture-decision-log-first-class-pi-support">Architecture decision log: first-class Pi support</h1>
+<h2 id="tl-dr">TL;DR</h2>
+<ul><li>Eight accepted MADRs define one coherent Pi boundary: generated package, semantic projection, native adapter, narrow settings ownership, current admission, external prerequisite, durable events and evidence.</li><li>Maister owns canonical behavior, exact role resolution, receipts and the hash-chained execution stream; Pi and <code>pi-subagents</code> remain operator-owned runtime dependencies.</li><li>Success requires exact observed identity, durable terminal evidence and a fresh supported runtime tuple.</li><li>Historical parity is not accepted: the release contract evaluates only the current four-host product state.</li></ul>
+<h2 id="key-decisions">Key Decisions</h2>
+<ul><li>ADR-001: generate one private local Maister package for Pi.</li><li>ADR-002: project commands semantically across skills, prompts and a minimal extension.</li><li>ADR-003: use a thin direct-import adapter over public <code>pi-subagents/delegation</code> v1.</li><li>ADR-004: own one Pi <code>packages[]</code> member through identity-aware <code>managed_array_entries</code>.</li><li>ADR-005: use one current-state admission matrix for Codex, Cursor, Kiro CLI and Pi.</li><li>ADR-006: keep <code>pi-subagents</code> an operator-owned prerequisite.</li><li>ADR-007: normalize Pi observations into a versioned Maister-owned durable event contract.</li><li>ADR-008: gate Pi support claims with fresh E1-E6 evidence.</li></ul>
+<h2 id="open-questions-risks">Open Questions / Risks</h2>
+<ul><li>The final command projection table may reveal additional—but still minimal—imperative extension commands.</li><li>A future delegation protocol or runtime tuple change can invalidate E5/E6 and requires compatibility renewal.</li><li>Public foreground delegation provides no child replay after process loss; retry cannot claim same-run resume.</li><li>Incorrect package-identity normalization could affect shared operator settings, so schema versioning and fault-injection coverage are mandatory.</li><li>Removing parity-specific machinery must retain every useful current-state completeness, determinism, topology and lifecycle assertion.</li></ul>
+<p>Date: <strong>2026-07-19</strong> Format: <strong>MADR</strong> Scope: <strong>current four-target Maister product contract</strong> Related: <a href="high-level-design.md">high-level design</a>, <a href="solution-exploration.md">solution exploration</a>, <a href="research-report.md">research report</a></p>
+<h2 id="decision-index">Decision index</h2>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Decision</th><th>Status</th></tr></thead><tbody><tr><td>ADR-001</td><td>Generate one private local Maister package for Pi</td><td>Accepted</td></tr><tr><td>ADR-002</td><td>Project commands by semantics across skills, prompts, and a minimal extension</td><td>Accepted</td></tr><tr><td>ADR-003</td><td>Use a thin direct-import adapter over public <code>pi-subagents/delegation</code> v1</td><td>Accepted</td></tr><tr><td>ADR-004</td><td>Add identity-aware ownership for one Pi <code>packages[]</code> member</td><td>Accepted</td></tr><tr><td>ADR-005</td><td>Use one current-state admission matrix for all four targets</td><td>Accepted</td></tr><tr><td>ADR-006</td><td>Keep <code>pi-subagents</code> an operator-owned prerequisite</td><td>Accepted</td></tr><tr><td>ADR-007</td><td>Version the Pi bridge observation and durable event contract</td><td>Accepted</td></tr><tr><td>ADR-008</td><td>Gate Pi support claims with fresh E1-E6 evidence</td><td>Accepted</td></tr></tbody></table></div>
+<hr>
+<h2 id="adr-001-generate-one-private-local-maister-package-for-pi">ADR-001: Generate one private local Maister package for Pi</h2>
+<h3 id="status">Status</h3>
+<p>Accepted.</p>
+<h3 id="context">Context</h3>
+<p>Pi discovers extensions, skills and prompt templates through packages. Maister requires deterministic projection, a narrow ownership boundary, transactional lifecycle, provenance, archive closure and uninstallability. Loose global resources would spread ownership across user directories and make origin/collision checks harder. A self-contained npm package that bundles subagents would duplicate an operator-owned extension and expand release responsibility.</p>
+<p>Alternatives and evidence: <a href="solution-exploration.md#decision-area-1--package-and-discovery-integration">Solution exploration — Decision Area 1</a>.</p>
+<h3 id="decision-drivers">Decision drivers</h3>
+<ul><li>canonical-source ownership and deterministic generation;</li><li>native Pi discovery;</li><li>one reversible lifecycle boundary;</li><li>local checkout, archive and GitHub source equivalence;</li><li>no ownership of unrelated user/project resources;</li><li>reproducible release closure.</li></ul>
+<h3 id="considered-options">Considered options</h3>
+<ol><li>One private generated local Pi package.</li><li>Loose global extensions, skills, prompts and agents.</li><li>A published/self-contained npm package including subagents.</li></ol>
+<h3 id="outcome">Outcome</h3>
+<p>Materialize one complete package at <code>~/.pi/agent/maister/**</code>. It contains an explicit <code>package.json</code>, provenance, skills, prompt templates, a minimal extension, all namespaced agent descriptors, projection metadata and selected portable runtime files. The entire tree is Maister-owned and atomically replaceable. The release archive contains the generated package inputs/outputs but not <code>pi-subagents</code>.</p>
+<h3 id="consequences">Consequences</h3>
+<p>Positive:</p>
+<ul><li>one obvious ownership and provenance boundary;</li><li>deterministic discovery and extracted-archive testing;</li><li>clean uninstall and drift detection;</li><li>host-specific artifacts remain generated from canonical source.</li></ul>
+<p>Negative:</p>
+<ul><li>the projector and archive topology gain a Pi package layout;</li><li>shared settings must register the local package;</li><li>descriptor discovery through <code>pi-subagents</code> needs separate E5 proof.</li></ul>
+<h3 id="validation">Validation</h3>
+<p>E1/E2 must prove the closed overlay, package manifest, complete semantic mapping, exact 28-role projection and byte-identical rebuilds. Archive tests must prove no bundled subagents and no foreign-target leakage.</p>
+<hr>
+<h2 id="adr-002-project-commands-by-semantics-across-skills-prompts-and-a-minimal-extension">ADR-002: Project commands by semantics across skills, prompts, and a minimal extension</h2>
+<h3 id="status">Status</h3>
+<p>Accepted.</p>
+<h3 id="context">Context</h3>
+<p>Pi does not provide a single resource kind equivalent to every Maister command. Treating all entries as prompt templates loses imperative host behavior and typed failures; treating all entries as extension commands unnecessarily turns declarative workflows into code and creates a large security/maintenance surface.</p>
+<p>Alternatives and evidence: <a href="solution-exploration.md#decision-area-2--command-and-skill-projection-strategy">Solution exploration — Decision Area 2</a>.</p>
+<h3 id="decision-drivers">Decision drivers</h3>
+<ul><li>preserve behavior rather than filenames;</li><li>minimize executable code;</li><li>keep canonical workflows host-neutral;</li><li>make origin and completeness mechanically testable;</li><li>support Pi-native discovery and user ergonomics.</li></ul>
+<h3 id="considered-options">Considered options</h3>
+<ol><li>Hybrid semantic projection.</li><li>Everything as prompt templates.</li><li>Everything as extension commands.</li></ol>
+<h3 id="outcome">Outcome</h3>
+<p>Project reusable workflows as Pi skills, textual entry points as prompt templates, imperative host operations as extension commands, and roles as <code>maister-&lt;role&gt;</code> agent descriptors. Maintain a reviewed, closed command mapping that assigns every canonical entry exactly once. Generated Pi artifacts may bind host APIs but may not copy canonical behavior.</p>
+<h3 id="consequences">Consequences</h3>
+<p>Positive:</p>
+<ul><li>smallest executable surface;</li><li>natural Pi resource discovery;</li><li>explicit semantic mapping and provenance;</li><li>portable core stays authoritative.</li></ul>
+<p>Negative:</p>
+<ul><li>the mapping requires deliberate review and validation;</li><li>some current command names may not map one-to-one to a Pi UI primitive;</li><li>origin/shadowing must be checked at runtime.</li></ul>
+<h3 id="validation">Validation</h3>
+<p>Projection tests reject missing, duplicated or wrongly classified entries. E2 proves deterministic output; E5 proves the effective installed origins and exact agent identities.</p>
+<hr>
+<h2 id="adr-003-use-a-thin-direct-import-adapter-over-public-pi-subagents-delegation-v1">ADR-003: Use a thin direct-import adapter over public <code>pi-subagents/delegation</code> v1</h2>
+<h3 id="status">Status</h3>
+<p>Accepted.</p>
+<h3 id="context">Context</h3>
+<p>The installed <code>pi-subagents</code> 0.35.1 exposes a public delegation protocol v1 with request, start, update, response and cancel events. Empirical probes confirmed exact observed identity, bounded updates, typed unknown-agent failure and queued cancellation. Parent-facing tool mediation obscures typed failure and identity. Reimplementing subprocess orchestration would duplicate the extension and diverge from Pi-native behavior.</p>
+<p>Alternatives and evidence: <a href="solution-exploration.md#decision-area-3--native-bridge-shape">Solution exploration — Decision Area 3</a>.</p>
+<h3 id="decision-drivers">Decision drivers</h3>
+<ul><li>use the installed native-agent extension directly;</li><li>preserve exact identity and typed terminal states;</li><li>avoid private APIs and reimplementation;</li><li>retain Maister policy, resolver and durable evidence;</li><li>enable deterministic adapter tests.</li></ul>
+<h3 id="considered-options">Considered options</h3>
+<ol><li>Thin direct-import adapter over delegation v1.</li><li>Parent-facing Pi tool/RPC mediation.</li><li>Maister-owned child-process reimplementation.</li></ol>
+<h3 id="outcome">Outcome</h3>
+<p>The <code>pi.native</code> adapter imports only the public <code>pi-subagents/delegation</code> v1 contract. Maister resolves the exact role and writes a durable start event before emitting a request. <code>requestId</code> equals <code>dispatch_id</code>. The adapter subscribes before emission, sanitizes updates, checks the terminal <code>response.agent</code> against the frozen plan, durably appends the terminal result, and uses v1 cancel on cancellation or post-launch persistence failure.</p>
+<p><code>resolveAgent</code> and <code>readExecutionEventStream</code> remain Maister-owned. There is no generic/inline fallback and no dependency on <code>background-work</code>, private RPC modules or private status/event files.</p>
+<h3 id="consequences">Consequences</h3>
+<p>Positive:</p>
+<ul><li>smallest bridge over a verified public contract;</li><li>exact native behavior without surrendering governance;</li><li>typed errors and cancellation observations;</li><li>independently versionable normalization layer.</li></ul>
+<p>Negative:</p>
+<ul><li>public foreground delegation cannot replay or resume a child after process loss;</li><li>compatibility is bound to a supported protocol/version tuple;</li><li>updates must be sanitized and bounded before persistence.</li></ul>
+<h3 id="validation">Validation</h3>
+<p>E6 covers ordinary-role and advisor completion, exact requested/observed identities, unknown/wrong agent, malformed events, timeout, cancellation, budget failures, process loss, and durable-write failures. Static/topology checks reject private <code>pi-subagents</code> imports.</p>
+<hr>
+<h2 id="adr-004-add-identity-aware-ownership-for-one-pi-packages-member">ADR-004: Add identity-aware ownership for one Pi <code>packages[]</code> member</h2>
+<h3 id="status">Status</h3>
+<p>Accepted.</p>
+<h3 id="context">Context</h3>
+<p>Pi registers packages in a shared <code>settings.json</code> array. Existing <code>managed_keys</code> ownership would claim/replace the whole <code>packages</code> value, which could destroy operator-managed packages. Requiring manual registration would make install receipts incomplete and lifecycle verification nondeterministic.</p>
+<p>Alternatives and evidence: <a href="solution-exploration.md#decision-area-4--settings-and-package-ownership">Solution exploration — Decision Area 4</a>.</p>
+<h3 id="decision-drivers">Decision drivers</h3>
+<ul><li>least ownership in shared configuration;</li><li>deterministic install/update/verify/uninstall;</li><li>preservation of unrelated values, representations and order;</li><li>exact rollback and drift refusal;</li><li>compatibility with Pi string and object package entries.</li></ul>
+<h3 id="considered-options">Considered options</h3>
+<ol><li>Identity-aware <code>managed_array_entries</code>.</li><li>Own the complete <code>packages</code> key.</li><li>Never touch settings and require manual registration.</li></ol>
+<h3 id="outcome">Outcome</h3>
+<p>Add the closed ownership kind <code>managed_array_entries</code> and algorithm <code>pi_local_package_v1</code>. The algorithm extracts string or object <code>source</code>, resolves local paths relative to the settings file, and normalizes them to one absolute identity. Maister owns exactly the identity resolving to <code>~/.pi/agent/maister</code>, not the array or file.</p>
+<p>The receipt records file/array path, identity and merge algorithm versions, normalized identity, exact installed entry, before/after hashes and modes, and backup reference. Duplicate identities, incompatible operator-owned representations, malformed JSON or drift fail before mutation. Any semantic change to normalization requires a new version and explicit receipt upgrade.</p>
+<h3 id="consequences">Consequences</h3>
+<p>Positive:</p>
+<ul><li>unrelated Pi packages and settings are preserved;</li><li>the registration is still transactional, verifiable and uninstallable;</li><li>string/object equivalence is explicit and testable.</li></ul>
+<p>Negative:</p>
+<ul><li>receipts, drift checks, recovery and schemas gain a new ownership primitive;</li><li>exact byte preservation during semantic merge/rollback requires careful snapshots;</li><li>normalization bugs would be high impact and therefore fail closed.</li></ul>
+<h3 id="validation">Validation</h3>
+<p>Tests cover string/object equivalence, relative path resolution, duplicates, conflicting filters/objects, malformed JSON, unrelated member ordering, file modes, drift, every injected commit failure, rollback and interrupted recovery.</p>
+<hr>
+<h2 id="adr-005-use-one-current-state-admission-matrix-for-all-four-targets">ADR-005: Use one current-state admission matrix for all four targets</h2>
+<h3 id="status">Status</h3>
+<p>Accepted. This decision supersedes the historical-parity premise discussed in the original <a href="solution-exploration.md#decision-area-5--greenfield-admission-and-release-architecture">Solution exploration — Decision Area 5</a>. The convergence decision explicitly selected current-state admission only.</p>
+<h3 id="context">Context</h3>
+<p>Only the current Maister product contract matters. Pi has no useful legacy tree, and retaining an immutable historical oracle or a separate legacy target set would create two release truths. Existing useful parity checks—canonical completeness, deterministic projection, topology and lifecycle fidelity—are current invariants and do not require historical fixtures.</p>
+<h3 id="decision-drivers">Decision drivers</h3>
+<ul><li>one understandable product/release contract;</li><li>equal admission for every currently supported host;</li><li>no fabricated Pi legacy evidence;</li><li>removal of obsolete migration complexity;</li><li>fail-closed current artifact verification.</li></ul>
+<h3 id="considered-options">Considered options</h3>
+<ol><li>One current-state all-target admission matrix.</li><li>Current-state admission plus a non-blocking legacy audit.</li><li>Experimental Pi release outside the main matrix.</li></ol>
+<p>Historical-oracle expansion and dual-track admission were rejected with the historical-parity premise.</p>
+<h3 id="outcome">Outcome</h3>
+<p><code>SUPPORTED_TARGET_IDS = [codex, cursor, kiro-cli, pi]</code> is the only active target set. All registry, overlay, projection, lifecycle, evidence, archive, extracted-install and release gates iterate it. Remove the parity-release gate, legacy/parity fixtures and tests, parity-specific CI/Make/release metadata, and architecture wording. Replace them with a current-admission gate that preserves current completeness, determinism, topology, lifecycle, reproducibility and evidence invariants.</p>
+<h3 id="consequences">Consequences</h3>
+<p>Positive:</p>
+<ul><li>one source of truth for support and release;</li><li>Pi is admitted honestly under the same current contract;</li><li>obsolete fixtures and gate exceptions disappear;</li><li>adding a future host has one admission path.</li></ul>
+<p>Negative:</p>
+<ul><li>tests and documentation that encoded historical migration need removal or rewriting;</li><li>useful assertions must be separated from their parity-specific fixture mechanism;</li><li>release automation changes across Make, CI, packaging and evidence metadata.</li></ul>
+<h3 id="validation">Validation</h3>
+<p>All four targets pass the same current gate. Removing any required target artifact or evidence fails admission. No product/release code references a historical target set, parity oracle or legacy fixture.</p>
+<hr>
+<h2 id="adr-006-keep-pi-subagents-an-operator-owned-prerequisite">ADR-006: Keep <code>pi-subagents</code> an operator-owned prerequisite</h2>
+<h3 id="status">Status</h3>
+<p>Accepted.</p>
+<h3 id="context">Context</h3>
+<p>The user already has Pi and extensions installed and explicitly chose the subagents plugin as the native-agent foundation. Maister can validate the active extension but bundling or updating it would create conflicting package ownership, security and compatibility obligations. The package choice alternatives are described in <a href="solution-exploration.md#decision-area-1--package-and-discovery-integration">Solution exploration — Decision Area 1</a>, and the adapter boundary in <a href="solution-exploration.md#decision-area-3--native-bridge-shape">Decision Area 3</a>.</p>
+<h3 id="decision-drivers">Decision drivers</h3>
+<ul><li>respect operator control of the Pi toolchain;</li><li>prevent duplicate/incompatible extension installations;</li><li>keep Maister archives deterministic and minimal;</li><li>make compatibility evidence explicit;</li><li>allow independent security/update policy for the extension.</li></ul>
+<h3 id="considered-options">Considered options</h3>
+<ol><li>Detect and validate an operator-owned prerequisite.</li><li>Bundle the extension inside the Maister package.</li><li>Automatically install/update/remove the external extension.</li></ol>
+<h3 id="outcome">Outcome</h3>
+<p>Maister never bundles, installs, updates, configures or uninstalls <code>pi-subagents</code>. E5 reads the active configured identity/version and public protocol availability. Missing or incompatible prerequisites produce typed <code>unavailable</code> evidence and actionable remediation. Release provenance/SBOM marks the extension as external, not bundled.</p>
+<h3 id="consequences">Consequences</h3>
+<p>Positive:</p>
+<ul><li>clear ownership and upgrade responsibility;</li><li>no hidden mutation of the operator's environment;</li><li>smaller package and security boundary.</li></ul>
+<p>Negative:</p>
+<ul><li>native support depends on an independently changing component;</li><li>operators may need a separate installation/remediation step;</li><li>compatibility must be renewed when the active tuple changes.</li></ul>
+<h3 id="validation">Validation</h3>
+<p>Install/update/uninstall tests assert that external extension files and settings never change. E5 proves active version/protocol; absent/wrong/inactive cases are typed and never auto-remediated.</p>
+<hr>
+<h2 id="adr-007-version-the-pi-bridge-observation-and-durable-event-contract">ADR-007: Version the Pi bridge observation and durable event contract</h2>
+<h3 id="status">Status</h3>
+<p>Accepted.</p>
+<h3 id="context">Context</h3>
+<p>The public delegation protocol is process-local. Maister's safety, audit and workflow resume guarantees require durable events independent of the extension. Directly persisting raw extension events would leak unstable/private data and couple replay to a third-party schema. The adapter choice is detailed in <a href="solution-exploration.md#decision-area-3--native-bridge-shape">Solution exploration — Decision Area 3</a>.</p>
+<h3 id="decision-drivers">Decision drivers</h3>
+<ul><li>stable audit/replay semantics across adapter versions;</li><li>append-before-launch safety;</li><li>exact requested/observed identity evidence;</li><li>privacy and bounded storage;</li><li>honest behavior after process loss.</li></ul>
+<h3 id="considered-options">Considered options</h3>
+<ol><li>Normalize into a versioned Maister observation schema and hash-chained stream.</li><li>Persist raw <code>pi-subagents</code> events as the execution record.</li><li>Treat Pi process/session files or background state as durable storage.</li></ol>
+<h3 id="outcome">Outcome</h3>
+<p>Define a versioned Pi observation mapping for start, bounded update, cancellation and terminal statuses. The durable stream records dispatch/attempt IDs, requested and observed external identity, normalized status, supported metrics/paths, adapter/protocol/runtime versions, and chain integrity. Sensitive or unbounded payloads are excluded. <code>readExecutionEventStream</code> reads only Maister state.</p>
+<p>A start event must commit before request emission; a terminal event must commit before success returns. Process loss is typed failure and retry is a new attempt.</p>
+<h3 id="consequences">Consequences</h3>
+<p>Positive:</p>
+<ul><li>replay remains under Maister's schema and integrity rules;</li><li>third-party schema changes are isolated in one adapter;</li><li>success and exact identity are auditable;</li><li>privacy rules are enforceable.</li></ul>
+<p>Negative:</p>
+<ul><li>the adapter needs an explicit status/field translation table;</li><li>not every extension detail is retained;</li><li>a write failure after launch forces cancellation/failure even if the child completes.</li></ul>
+<h3 id="validation">Validation</h3>
+<p>Golden mapping tests cover every public v1 terminal status and rejected field. Chain tests prove ordering, tamper detection, start-before-launch and terminal-before-success. Restart tests prove no child-resume claim.</p>
+<hr>
+<h2 id="adr-008-gate-pi-support-claims-with-fresh-e1-e6-evidence">ADR-008: Gate Pi support claims with fresh E1-E6 evidence</h2>
+<h3 id="status">Status</h3>
+<p>Accepted.</p>
+<h3 id="context">Context</h3>
+<p>Research probes establish feasibility, not a product support claim. Pi, Node and <code>pi-subagents</code> can change independently; installed descriptors can be shadowed; structural packaging can succeed while native discovery/runtime is unavailable. The evidence alternatives and sequencing are summarized in the <a href="solution-exploration.md#recommended-implementation-sequence">solution exploration implementation sequence</a> and detailed in the <a href="research-report.md#8-evidence-and-support-levels-e1-e6">research report</a>.</p>
+<h3 id="decision-drivers">Decision drivers</h3>
+<ul><li>claims must match reproducible evidence;</li><li>structural and native capability must remain distinguishable;</li><li>stale successes must not mask changed runtime state;</li><li>all targets use the same evidence vocabulary;</li><li>releases must fail closed for the claim they make.</li></ul>
+<h3 id="considered-options">Considered options</h3>
+<ol><li>Versioned E1-E6 evidence with freshness and graduated claims.</li><li>Declare support after package discovery/version output alone.</li><li>Treat one research probe as permanent native-runtime evidence.</li></ol>
+<h3 id="outcome">Outcome</h3>
+<p>Pi uses the existing six-level model: E1 overlay, E2 materialization, E3 portable core, E4 installer transaction, E5 native discovery and E6 native runtime. Evidence envelopes bind source/commit, overlay/package/canonical digests, projector/scenario/schema versions, active executable realpath and Pi/Node/subagents tuple, timestamp and result.</p>
+<p>The initial tested tuple is Pi 0.80.10, Node &gt;=22.19 (observed 25.9.0), and <code>pi-subagents</code> 0.35.1. A changed tuple/digest/scenario or newer failed/unavailable result invalidates earlier native evidence. Provisional packaging may claim E1-E4 only; native or semantic support requires fresh E5/E6 and relevant role scenarios.</p>
+<h3 id="consequences">Consequences</h3>
+<p>Positive:</p>
+<ul><li>honest, granular support language;</li><li>deterministic renewal after environment changes;</li><li>clear separation between installability and native runtime;</li><li>current admission can reason over one evidence model.</li></ul>
+<p>Negative:</p>
+<ul><li>release/test cost increases with native scenarios;</li><li>exact compatibility ranges require continuing evidence;</li><li>a functioning but untested tuple remains unavailable by policy.</li></ul>
+<h3 id="validation">Validation</h3>
+<p>Freshness tests mutate each bound digest/version/scenario and prove invalidation. E5 tests exact 28 identities/origins and prerequisites. E6 tests ordinary/advisor success plus typed failure/cancel paths and durable event integrity.</p>
+<hr>
+<h2 id="combined-decision-outcome">Combined decision outcome</h2>
+<p>The eight decisions form one boundary: a deterministic Maister-owned Pi package is registered through one narrowly owned settings member; its declarative resources are projected semantically; its imperative native bridge calls the operator-owned public delegation-v1 API; Maister owns identity resolution and durable events; and one current-state four-target gate admits only claims justified by fresh E1-E6 evidence.</p>
+<p>Any proposal to bundle <code>pi-subagents</code>, import private extension APIs, own the full Pi settings array/file, persist raw third-party session state, allow fallback identity, or reintroduce historical parity conflicts with this decision set and requires explicit superseding ADRs.</p>
+</main><footer>Maister · Pi support research · 2026-07-19 · self-contained artifact</footer></div></body></html>

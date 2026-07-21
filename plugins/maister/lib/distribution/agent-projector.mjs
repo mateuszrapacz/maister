@@ -20,6 +20,7 @@ const TARGET_IDENTITIES = Object.freeze({
   codex: Object.freeze({ adapter: "codex.exec", nativePrefix: null }),
   cursor: Object.freeze({ adapter: "cursor.native", nativePrefix: "maister-" }),
   "kiro-cli": Object.freeze({ adapter: "kiro-cli.native", nativePrefix: "maister-" }),
+  pi: Object.freeze({ adapter: "pi.native", nativePrefix: "maister:" }),
 });
 const KIRO_TOOL_NAMES = Object.freeze({
   read: Object.freeze(["read"]),
@@ -187,6 +188,24 @@ function cursorAgent(role) {
   return `${lines.join("\n")}\n`;
 }
 
+function piAgent(role, row) {
+  const lines = [
+    "---",
+    `name: ${yamlScalar(`maister:${role.role_id}`)}`,
+    `description: ${yamlScalar(role.description)}`,
+    `maister_role_id: ${yamlScalar(role.role_id)}`,
+    `native_role_external_id: ${yamlScalar(`maister:${role.role_id}`)}`,
+    `canonical_source: ${yamlScalar(role.source_path)}`,
+    `canonical_source_sha256: ${yamlScalar(row.source_sha256)}`,
+    `projection_schema: ${yamlScalar("pi-agent-frontmatter-v1")}`,
+    `execution_profile: ${yamlScalar(row.execution_profile_id)}`,
+    "---",
+    "",
+    role.instruction_body.replace(/\n$/u, ""),
+  ];
+  return `${lines.join("\n")}\n`;
+}
+
 function kiroTools(row) {
   const resolved = [];
   for (const logicalTool of row.execution_policy.tools.tools) {
@@ -259,6 +278,19 @@ function canonicalOutputs(agentIr, rowsByRole, target) {
         ownership: "canonical",
         roleId: role.role_id,
         content: cursorAgent(role),
+      }));
+    } else if (target === "pi") {
+      const agent = destinations.get("package-agent");
+      if (!agent || agent.path !== `agents/maister-${role.role_id}.md`) {
+        failAgentProjection("E_AGENT_PROJECTION_BINDING", `Pi destination does not match exact package-agent identity for ${role.role_id}`);
+      }
+      outputs.push(textOutput({
+        outputPath: agent.path,
+        kind: agent.kind,
+        mode: agent.mode,
+        ownership: "canonical",
+        roleId: role.role_id,
+        content: piAgent(role, row),
       }));
     } else {
       const descriptor = destinations.get("descriptor");

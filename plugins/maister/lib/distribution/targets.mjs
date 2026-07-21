@@ -34,6 +34,37 @@ const definitions = [
     probe: "kiro-cli",
     probeCommand: "kiro-cli",
   },
+  {
+    id: "pi",
+    overlayId: "maister/pi",
+    discoveryRoot: ".pi/agent/maister",
+    managedRoots: Object.freeze([
+      managedRoot("plugin_private", ".pi/agent/maister", "whole_tree"),
+    ]),
+    probe: "pi",
+    probeCommand: "pi",
+    adapterId: "pi.native",
+    projectionId: "pi.native",
+    platform: "posix",
+    pathPolicy: Object.freeze({
+      agentRootEnv: "PI_CODING_AGENT_DIR",
+      defaultAgentRoot: ".pi/agent",
+      settingsPath: "settings.json",
+      sessionRootEnv: "PI_CODING_AGENT_SESSION_DIR",
+      packageRootEnv: "PI_PACKAGE_DIR",
+      packagePath: "maister",
+    }),
+    compatibility: Object.freeze({
+      pi: "0.80.10",
+      node: "25.9.0",
+      piSubagents: "0.35.1",
+      delegationProtocol: 1,
+    }),
+    probes: Object.freeze({
+      executable: "pi",
+      prerequisite: "pi-subagents",
+    }),
+  },
 ].map((definition) => Object.freeze(definition));
 
 export const SUPPORTED_TARGETS = Object.freeze(definitions);

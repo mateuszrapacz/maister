@@ -86,9 +86,9 @@ function mapping(value, location, code) {
   }
 }
 
-function exactFields(value, fields, location, code) {
+function exactFields(value, fields, location, code, optional = []) {
   mapping(value, location, code);
-  const allowed = new Set(fields);
+  const allowed = new Set([...fields, ...optional]);
   const unknown = Object.keys(value).find((field) => !allowed.has(field));
   if (unknown) fail(code, `${location} has unknown field ${unknown}`, { location, field: unknown });
   const missing = fields.find((field) => !Object.hasOwn(value, field));
@@ -159,7 +159,7 @@ function deepFreeze(value) {
 
 export function validateDispatchPlan(candidate) {
   const code = "E_DISPATCH_PLAN_SCHEMA";
-  exactFields(candidate, PLAN_FIELDS, "dispatch plan", code);
+  exactFields(candidate, PLAN_FIELDS, "dispatch plan", code, ["retry_of"]);
   if (candidate.schema_version !== DISPATCH_PLAN_SCHEMA_VERSION) fail(code, `dispatch plan schema_version must be ${DISPATCH_PLAN_SCHEMA_VERSION}`);
   if (!SAFE_DISPATCH_ID.test(candidate.dispatch_id)) fail(code, "dispatch_id must be a lowercase path-safe identifier", { dispatch_id: candidate.dispatch_id });
   if (!LOGICAL_ROLE_ID.test(candidate.requested_logical_role_id)) fail(code, "requested_logical_role_id is not exact", { logical_role_id: candidate.requested_logical_role_id });
@@ -169,6 +169,11 @@ export function validateDispatchPlan(candidate) {
   if (typeof candidate.role_source_digest !== "string" || !SHA256.test(candidate.role_source_digest)) fail(code, "role_source_digest must be a SHA-256 digest");
   for (const field of ["target", "representation", "adapter_id", "host", "host_version"]) text(candidate[field], `dispatch plan.${field}`, code);
   text(candidate.native_role_external_id, "dispatch plan.native_role_external_id", code, { nullable: true });
+  if (candidate.retry_of !== undefined) {
+    if (!SAFE_DISPATCH_ID.test(candidate.retry_of) || candidate.retry_of === candidate.dispatch_id) {
+      fail(code, "dispatch plan.retry_of must identify a different path-safe dispatch", { retry_of: candidate.retry_of });
+    }
+  }
   policy(candidate.policy, "dispatch plan.policy", code);
   provenance(candidate.provenance, "dispatch plan.provenance", code);
   return deepFreeze(structuredClone(candidate));

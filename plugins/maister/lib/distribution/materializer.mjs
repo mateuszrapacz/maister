@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -19,6 +20,11 @@ import {
   AgentProjectionError,
   projectAgents,
 } from "./agent-projector.mjs";
+import {
+  createPiCommandProjection,
+  projectPiCommands,
+} from "./pi-command-projection.mjs";
+import { PI_EXTENSION_SOURCE } from "./pi-extension-source.mjs";
 import { canonicalJson, createProvenance } from "./provenance.mjs";
 import { revalidateResolvedSource, resolveSource } from "./source-resolver.mjs";
 import { hashFile, hashTree } from "./hash-tree.mjs";
@@ -37,7 +43,22 @@ import {
   throwDistributionError,
 } from "./path-safety.mjs";
 
-const AGENT_PROJECTION_TARGETS = Object.freeze(["codex", "cursor", "kiro-cli"]);
+const AGENT_PROJECTION_TARGETS = Object.freeze(["codex", "cursor", "kiro-cli", "pi"]);
+
+const PI_PACKAGE_MANIFEST = Object.freeze({
+  name: "maister",
+  version: "1.0.0-generated",
+  private: true,
+  description: "Maister workflow package for Pi",
+  pi: Object.freeze({
+    extensions: Object.freeze(["./extensions/maister.ts"]),
+    skills: Object.freeze(["./skills"]),
+    prompts: Object.freeze(["./prompts"]),
+    subagents: Object.freeze({
+      agents: Object.freeze(["./agents"]),
+    }),
+  }),
+});
 
 const HISTORICAL_TEMPLATE_EXCEPTIONS = Object.freeze({
   codex: Object.freeze({
@@ -48,6 +69,9 @@ const HISTORICAL_TEMPLATE_EXCEPTIONS = Object.freeze({
   }),
   cursor: Object.freeze({
     "skills/maister-product-design/server/template.html": new Set(["{{TITLE}}", "{{NAV}}", "{{CONTENT}}", "{{ANNOTATIONS}}"]),
+  }),
+  pi: Object.freeze({
+    "skills/product-design/server/template.html": new Set(["{{TITLE}}", "{{NAV}}", "{{CONTENT}}", "{{ANNOTATIONS}}"]),
   }),
 });
 
@@ -288,6 +312,113 @@ export function buildAssemblyPlan({ sourceRoot, overlay, overlayBase, stagingRoo
   return Object.freeze(entries.map((entry) => Object.freeze(entry)));
 }
 
+function piPackageEntryMode(destination, type) {
+  if (type === "directory") return "0755";
+  return destination === "bin" || destination.startsWith("bin/") ? "0755" : "0644";
+}
+
+function expandPiPackageSource(entries, sourcePath, destination, sourceRoot) {
+  const sourceStat = fs.lstatSync(sourcePath, { throwIfNoEntry: false });
+  if (!sourceStat) {
+    throwDistributionError("E_MATERIALIZE_SOURCE", `Pi package source does not exist: ${sourcePath}`, { sourcePath });
+  }
+  assertSourceContained(sourcePath, sourceRoot, null);
+  if (sourceStat.isSymbolicLink()) {
+    throwDistributionError("E_MATERIALIZE_SYMLINK", `Pi package source must not contain symlinks: ${sourcePath}`, { sourcePath });
+  }
+  if (!sourceStat.isDirectory() && !sourceStat.isFile()) {
+    throwDistributionError("E_MATERIALIZE_TYPE", `unsupported Pi package source entry: ${sourcePath}`, { sourcePath });
+  }
+  const type = sourceStat.isDirectory() ? "directory" : "file";
+  addPlanEntry(
+    entries,
+    destination,
+    sourcePath,
+    type,
+    piPackageEntryMode(destination, type),
+    "plugin_private",
+    sourceRoot,
+    true,
+    false,
+    false,
+  );
+  if (type !== "directory") return;
+  for (const childName of fs.readdirSync(sourcePath).sort()) {
+    expandPiPackageSource(
+      entries,
+      path.join(sourcePath, childName),
+      `${destination}/${childName}`,
+      sourceRoot,
+    );
+  }
+}
+
+function validatePackagePlan(entries, stagingRoot) {
+  const destinations = new Map();
+  for (const entry of entries) {
+    const key = normalizedPathKey(entry.destination);
+    const previous = destinations.get(key);
+    if (previous) {
+      throwDistributionError("E_MATERIALIZE_COLLISION", `Pi package destination collides after normalization: ${entry.destination}`, {
+        destination: entry.destination,
+        previous: previous.destination,
+      });
+    }
+    destinations.set(key, entry);
+  }
+  for (const entry of entries) {
+    let parent = path.posix.dirname(entry.destination);
+    while (parent !== ".") {
+      const parentEntry = destinations.get(normalizedPathKey(parent));
+      if (parentEntry && parentEntry.type !== "directory") {
+        throwDistributionError("E_MATERIALIZE_COLLISION", `Pi package file destination contains another destination: ${entry.destination}`, {
+          destination: entry.destination,
+          previous: parentEntry.destination,
+        });
+      }
+      parent = path.posix.dirname(parent);
+    }
+  }
+  const sorted = entries.sort((left, right) => {
+    const a = normalizedPathKey(left.destination);
+    const b = normalizedPathKey(right.destination);
+    return a < b ? -1 : a > b ? 1 : left.destination.localeCompare(right.destination);
+  });
+  if (stagingRoot) {
+    for (const entry of sorted) resolveInside(stagingRoot, entry.destination, "Pi package destination");
+  }
+  return Object.freeze(sorted.map((entry) => Object.freeze(entry)));
+}
+
+function buildPiPackagePlan({ sourceRoot, overlay, stagingRoot }) {
+  const root = ensureDirectoryRoot(sourceRoot, "source root");
+  const pluginRoot = projectionPluginRoot(root);
+  const entries = [];
+  const skillOrigins = overlay.inventory.skill_origins ?? [];
+  for (const origin of skillOrigins) {
+    expandPiPackageSource(
+      entries,
+      resolveInside(pluginRoot, origin.source, "Pi skill source"),
+      origin.destination,
+      root,
+    );
+  }
+  for (const [source, destination] of [
+    ["common", "common"],
+    ["lib", "lib"],
+    ["bin", "bin"],
+    ["skills/orchestrator-framework/bin", "orchestrator-framework/bin"],
+  ]) {
+    expandPiPackageSource(
+      entries,
+      resolveInside(pluginRoot, source, "Pi runtime source"),
+      destination,
+      root,
+    );
+  }
+  return validatePackagePlan(entries, stagingRoot);
+}
+
 function globRegex(pattern) {
   const normalized = pattern.replaceAll("\\", "/");
   let expression = "^";
@@ -403,6 +534,56 @@ function validateFrontmatterSyntax(source) {
   }
 }
 
+function validateTypeScriptSyntax(source) {
+  if (source.trim().length === 0) throw new Error("TypeScript source must not be empty");
+  const stack = [];
+  let quote = null;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+  for (let index = 0; index < source.length; index += 1) {
+    const character = source[index];
+    const next = source[index + 1];
+    if (lineComment) {
+      if (character === "\n") lineComment = false;
+      continue;
+    }
+    if (blockComment) {
+      if (character === "*" && next === "/") {
+        blockComment = false;
+        index += 1;
+      }
+      continue;
+    }
+    if (quote !== null) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === quote) quote = null;
+      continue;
+    }
+    if (character === "/" && next === "/") {
+      lineComment = true;
+      index += 1;
+      continue;
+    }
+    if (character === "/" && next === "*") {
+      blockComment = true;
+      index += 1;
+      continue;
+    }
+    if (character === "\"" || character === "'" || character === "`") {
+      quote = character;
+      continue;
+    }
+    if ("({[".includes(character)) stack.push(character);
+    else if (")}]".includes(character)) {
+      const expected = { ")": "(", "]": "[", "}": "{" }[character];
+      if (stack.pop() !== expected) throw new Error("unbalanced TypeScript delimiters");
+    }
+  }
+  if (quote !== null || blockComment || stack.length > 0) throw new Error("unterminated TypeScript construct");
+}
+
 function validateSyntax(stagingRoot, checks, files) {
   validateFrontmatter(stagingRoot, files);
   for (const entry of files) {
@@ -431,6 +612,7 @@ function validateSyntax(stagingRoot, checks, files) {
         if (text === null) throw new Error("not a text file");
         if (format === "json") JSON.parse(text);
         else if (format === "yaml") parseCanonicalYaml(text);
+        else if (format === "typescript") validateTypeScriptSyntax(text);
         else if (format === "markdown" || format === "frontmatter") {
           const normalized = normalizeTextForParsing(text);
           if (normalized.startsWith("---\n") && !/^---\n[\s\S]*?\n---(?:\n|$)/u.test(normalized)) {
@@ -724,13 +906,19 @@ function validateContent(stagingRoot, overlay, files) {
   const forbidden = overlay.validation.forbidden_vocabulary.map((word) => word.toLocaleLowerCase("en-US"));
   const exceptions = HISTORICAL_VOCABULARY_EXCEPTIONS[overlay.target.id] ?? {};
   for (const entry of files) {
+    const internalPiRuntime = overlay.target.id === "pi"
+      && (entry.path.startsWith("lib/")
+        || entry.path.startsWith("bin/")
+        || entry.path.startsWith("orchestrator-framework/bin/"));
     const text = readText(resolveInside(stagingRoot, entry.path, "content path"));
-    if (text !== null && hasUnresolvedTemplateToken(text, entry.path, overlay.target.id)) {
+    if (!internalPiRuntime && text !== null && hasUnresolvedTemplateToken(text, entry.path, overlay.target.id)) {
       throwDistributionError("E_MATERIALIZE_TEMPLATE", `unresolved template token in ${entry.path}`, { path: entry.path });
     }
     if (text === null) continue;
     const exceptionWords = new Set((exceptions[entry.path] ?? []).map((word) => word.toLocaleLowerCase("en-US")));
-    const found = forbidden.find((word) => text.toLocaleLowerCase("en-US").includes(word) && !exceptionWords.has(word));
+    const found = internalPiRuntime
+      ? undefined
+      : forbidden.find((word) => text.toLocaleLowerCase("en-US").includes(word) && !exceptionWords.has(word));
     if (found) {
       throwDistributionError("E_OVERLAY_VOCABULARY", `forbidden host vocabulary in materialized content: ${entry.path}`, {
         path: entry.path,
@@ -954,7 +1142,81 @@ function loadProjectionSupportAssets(pluginRoot, manifest, target) {
           errorCode: "E_AGENT_PROJECTION_IO",
         }),
       };
-    }));
+  }));
+}
+
+function writeGeneratedPackageFile(stagingRoot, relativePath, content, mode = "0644") {
+  const destination = resolveInside(stagingRoot, relativePath, "generated Pi package file");
+  const parent = path.dirname(destination);
+  ensureDirectoryPath(parent, {
+    root: stagingRoot,
+    label: "generated Pi package parent",
+    mode: 0o755,
+    errorCode: "E_MATERIALIZE_SYMLINK",
+  });
+  const existing = fs.lstatSync(destination, { throwIfNoEntry: false });
+  if (existing) {
+    throwDistributionError("E_MATERIALIZE_COLLISION", `generated Pi package file already exists: ${relativePath}`, {
+      path: relativePath,
+    });
+  }
+  const bytes = Buffer.from(content, "utf8");
+  fs.writeFileSync(destination, bytes, { flag: "wx", mode: Number.parseInt(mode, 8) });
+  fs.chmodSync(destination, Number.parseInt(mode, 8));
+  return Object.freeze({
+    path: relativePath,
+    mode,
+    size: bytes.length,
+    sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+  });
+}
+
+function piPackageManifestText() {
+  return `${JSON.stringify(PI_PACKAGE_MANIFEST, null, 2)}\n`;
+}
+
+function piSourceManifestText(source, contentHash = null) {
+  return `${canonicalJson({
+    schema_version: 1,
+    source_commit: source.resolvedCommit,
+    source_version: source.sourceVersion,
+    content_hash: contentHash,
+  })}\n`;
+}
+
+function finalizePiSourceManifest(stagingRoot, source) {
+  writeGeneratedPackageFile(stagingRoot, ".maister-source.json", piSourceManifestText(source), "0644");
+  const contentHash = hashTree(stagingRoot, {
+    ignore: (relative) => relative === ".maister-source.json",
+  }).contentHash;
+  const manifestPath = resolveInside(stagingRoot, ".maister-source.json", "Pi source manifest");
+  fs.writeFileSync(manifestPath, piSourceManifestText(source, contentHash), { encoding: "utf8" });
+  fs.chmodSync(manifestPath, 0o644);
+  return contentHash;
+}
+
+function preparePiPackage({ sourceRoot, stagingRoot, overlay, projectionContract }) {
+  const pluginRoot = projectionPluginRoot(sourceRoot);
+  const commandOrigins = overlay.inventory.command_origins;
+  const commandProjection = createPiCommandProjection({
+    sourceRoot: pluginRoot,
+    origins: commandOrigins,
+  });
+  const commandOutputs = projectPiCommands({
+    sourceRoot: pluginRoot,
+    origins: commandOrigins,
+  });
+  writeGeneratedPackageFile(stagingRoot, "package.json", piPackageManifestText(), "0644");
+  writeGeneratedPackageFile(stagingRoot, "agent-projection-v1.json", `${canonicalJson(projectionContract)}\n`, "0644");
+  writeGeneratedPackageFile(
+    stagingRoot,
+    "pi-command-projection-v1.json",
+    `${canonicalJson(commandProjection)}\n`,
+    "0644",
+  );
+  writeGeneratedPackageFile(stagingRoot, "extensions/maister.ts", PI_EXTENSION_SOURCE, "0644");
+  for (const output of commandOutputs) writeGeneratedPackageFile(stagingRoot, output.path, output.content, output.mode);
+  return Object.freeze({ commandProjection, commandOutputs });
 }
 
 function canonicalProjectionPaths(overlay) {
@@ -991,6 +1253,13 @@ function projectCanonicalAgents({ sourceRoot, selectedOverlay, stagingRoot }) {
   const manifest = buildAgentManifest({ agentIr, projectionContract, overlays });
   const supportAssets = loadProjectionSupportAssets(pluginRoot, manifest, target);
   return projectAgents({ agentIr, manifest, target, stagingRoot, supportAssets });
+}
+
+function buildTargetAssemblyPlan({ sourceRoot, overlay, overlayBase, stagingRoot }) {
+  if (overlay.target.id === "pi") {
+    return buildPiPackagePlan({ sourceRoot, overlay, stagingRoot });
+  }
+  return buildAssemblyPlan({ sourceRoot, overlay, overlayBase, stagingRoot });
 }
 
 function announcePhase(options, phase, details = {}) {
@@ -1042,11 +1311,12 @@ export async function materialize(options) {
   assertSameFilesystem(source.root, stagingRoot);
   const overlayBase = loaded.overlayPath ? path.dirname(loaded.overlayPath) : options.overlayBase;
   let plan;
+  let packageArtifacts = null;
   try {
     assertPathIdentity(stagingParentIdentity, { label: "staging parent", errorCode: "E_MATERIALIZE_SYMLINK" });
     assertPathIdentity(stagingIdentity, { label: "staging root", errorCode: "E_MATERIALIZE_SYMLINK" });
     plan = withoutProjectionOwnedLeaves(
-      buildAssemblyPlan({ sourceRoot: source.root, overlay: loaded.overlay, overlayBase, stagingRoot }),
+      buildTargetAssemblyPlan({ sourceRoot: source.root, overlay: loaded.overlay, overlayBase, stagingRoot }),
       loaded.overlay,
     );
     const sourceBeforeAssembly = await revalidateResolvedSource(source, options);
@@ -1057,6 +1327,18 @@ export async function materialize(options) {
     announcePhase(options, "source-revalidated-after-assembly", { source: sourceAfterAssembly });
     assertPathIdentity(stagingParentIdentity, { label: "staging parent", errorCode: "E_MATERIALIZE_SYMLINK" });
     assertPathIdentity(stagingIdentity, { label: "staging root", errorCode: "E_MATERIALIZE_SYMLINK" });
+    if (loaded.overlay.target.id === "pi") {
+      const pluginRoot = projectionPluginRoot(sourceAfterAssembly.root);
+      const projectionContract = loadAgentProjectionContract({
+        projectionPath: path.join(pluginRoot, "agent-projection-v1.json"),
+      });
+      packageArtifacts = preparePiPackage({
+        sourceRoot: sourceAfterAssembly.root,
+        stagingRoot,
+        overlay: loaded.overlay,
+        projectionContract,
+      });
+    }
     const projection = projectCanonicalAgents({
       sourceRoot: sourceAfterAssembly.root,
       selectedOverlay: loaded.overlay,
@@ -1064,20 +1346,25 @@ export async function materialize(options) {
     });
     announcePhase(options, "projection-complete", { stagingRoot, projection });
     options.testHooks?.afterProjection?.({ source: sourceAfterAssembly, stagingRoot, plan, projection });
+    if (loaded.overlay.target.id === "pi") finalizePiSourceManifest(stagingRoot, sourceAfterAssembly);
     const sourceAfterProjection = await revalidateResolvedSource(sourceAfterAssembly, options);
     assertPathIdentity(stagingParentIdentity, { label: "staging parent", errorCode: "E_MATERIALIZE_SYMLINK" });
     assertPathIdentity(stagingIdentity, { label: "staging root", errorCode: "E_MATERIALIZE_SYMLINK" });
     const staged = stagingEntries(stagingRoot);
     announcePhase(options, "staging-enumerated", { stagingRoot, entries: staged.entries });
+    const projectedOutputs = [
+      ...projection.outputs,
+      ...(packageArtifacts?.commandOutputs ?? []),
+    ];
     const validation = {
       inventory: validateInventory(stagingRoot, loaded.inventory, staged.entries),
       syntax: validateSyntax(stagingRoot, loaded.overlay.validation.syntax_checks, staged.files),
-      modes: validateModes(stagingRoot, loaded.overlay.validation.executable_paths, staged.files, projection.outputs),
+      modes: validateModes(stagingRoot, loaded.overlay.validation.executable_paths, staged.files, projectedOutputs),
       references: validateInternalReferences(stagingRoot, loaded.overlay.target.id, staged.files, staged.entries),
       hashes: Object.freeze({
         ok: true,
         native: validateNativeAssets(stagingRoot, loaded.overlay, plan, source.root, overlayBase),
-        projected: validateProjectedHashes(stagingRoot, projection.outputs, staged.files),
+        projected: validateProjectedHashes(stagingRoot, projectedOutputs, staged.files),
       }),
       content: validateContent(stagingRoot, loaded.overlay, staged.files),
     };
@@ -1100,6 +1387,7 @@ export async function materialize(options) {
       plan,
       validation,
       projection,
+      commandProjection: packageArtifacts?.commandProjection ?? null,
       provenance,
       sourceBinding: Object.freeze({
         kind: sourceAfterProjection.kind,

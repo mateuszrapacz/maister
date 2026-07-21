@@ -46,10 +46,8 @@ jobs:
         run: |
           node --test tests/platform-independent/release-github-only-policy.test.mjs
           node --test tests/platform-independent/git-auth-residue-guard.test.mjs
-      - name: Run reviewed three-target parity release gate
-        run: |
-          mkdir -p dist
-          make test-parity-release PARITY_REPORT=dist/parity-release.json
+      - name: Confirm current four-target admission before packaging
+        run: make test-current-target-admission
       - name: Prepare Git package identity at package boundary
         run: |
           npm run prepare
@@ -72,13 +70,16 @@ jobs:
           SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=codex SOURCE_COMMIT="$GITHUB_SHA" SOURCE_VERSION="${GITHUB_REF_NAME#v}"
           SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=cursor SOURCE_COMMIT="$GITHUB_SHA" SOURCE_VERSION="${GITHUB_REF_NAME#v}"
           SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=kiro-cli SOURCE_COMMIT="$GITHUB_SHA" SOURCE_VERSION="${GITHUB_REF_NAME#v}"
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" E3_ATTESTATION=dist/e3-portable-core.json make package TARGET=pi SOURCE_COMMIT="$GITHUB_SHA" SOURCE_VERSION="${GITHUB_REF_NAME#v}"
       - name: Verify packaged lifecycle and sidecars
         env:
           MAISTER_PACKAGE_DIR: dist
+          MAISTER_RELEASE_EVIDENCE_OUTPUT: dist/pi-evidence.json
         run: |
           node --test tests/platform-independent/release-package.test.mjs
           (cd dist && sha256sum maister-*.tar.gz > SHA256SUMS)
-          node plugins/maister/bin/release-metadata.mjs --archive-dir dist --output-dir dist --source-commit "$GITHUB_SHA" --source-version "${GITHUB_REF_NAME#v}" --parity-report dist/parity-release.json --source-date-epoch "$(git log -1 --format=%ct)"
+          CURRENT_TARGET_ADMISSION_ARCHIVE_DIR=dist CURRENT_TARGET_ADMISSION_EVIDENCE=dist/pi-evidence.json CURRENT_TARGET_ADMISSION_REPORT=dist/current-target-admission.json make test-current-target-admission
+          node plugins/maister/bin/release-metadata.mjs --archive-dir dist --output-dir dist --source-commit "$GITHUB_SHA" --source-version "${GITHUB_REF_NAME#v}" --admission-report dist/current-target-admission.json --source-date-epoch "$(git log -1 --format=%ct)"
           node plugins/maister/bin/release-metadata.mjs --archive-dir dist --output-dir dist --check
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -164,7 +165,9 @@ jobs:
             candidate/dist/maister-codex.tar.gz
             candidate/dist/maister-cursor.tar.gz
             candidate/dist/maister-kiro-cli.tar.gz
+            candidate/dist/maister-pi.tar.gz
             candidate/dist/SHA256SUMS
+            candidate/dist/current-target-admission.json
             candidate/dist/SBOM.cdx.json
             candidate/dist/PROVENANCE.json
       - name: Record immutable GitHub publication
@@ -175,7 +178,7 @@ jobs:
         run: |
           mkdir -p public-assets
           gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir public-assets
-          for name in maister-codex.tar.gz maister-cursor.tar.gz maister-kiro-cli.tar.gz SHA256SUMS SBOM.cdx.json PROVENANCE.json; do
+          for name in maister-codex.tar.gz maister-cursor.tar.gz maister-kiro-cli.tar.gz maister-pi.tar.gz SHA256SUMS current-target-admission.json SBOM.cdx.json PROVENANCE.json; do
             cmp -- "candidate/dist/$name" "public-assets/$name"
           done
           node -e 'const fs=require("fs"); const state=JSON.parse(fs.readFileSync("release-evidence/lifecycle.json")); state.state="GITHUB_VERIFIED"; fs.writeFileSync("release-evidence/lifecycle.json", JSON.stringify(state,null,2)+"\n")'

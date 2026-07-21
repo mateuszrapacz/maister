@@ -66,11 +66,11 @@ test("release interface validates every target from the central registry", () =>
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
   const payload = JSON.parse(result.stdout);
   assert.equal(payload.ok, true);
-  assert.deepEqual(payload.targets.map(({ target }) => target), ["codex", "cursor", "kiro-cli"]);
+  assert.deepEqual(payload.targets.map(({ target }) => target), ["codex", "cursor", "kiro-cli", "pi"]);
   assert.equal(payload.targets.every(({ ok }) => ok === true), true);
 });
 
-test("Make and release CI keep projection, target checks, evidence, topology, parity, and package lifecycle in dependency order", () => {
+test("Make and release CI keep projection, target checks, evidence, topology, current admission, and package lifecycle in dependency order", () => {
   const makefile = fs.readFileSync(path.join(ROOT, "Makefile"), "utf8");
   const validationWorkflow = fs.readFileSync(path.join(ROOT, ".github/workflows/validate-generated-variants.yml"), "utf8");
   const releaseWorkflow = fs.readFileSync(path.join(ROOT, ".github/workflows/release.yml"), "utf8");
@@ -80,11 +80,13 @@ test("Make and release CI keep projection, target checks, evidence, topology, pa
   assert.match(makefile, /test-materializer\n/u);
   assert.match(makefile, /test-install\n/u);
   assert.match(makefile, /validate: check-cursor-projection/u);
-  assert.match(makefile, /test: test-core test-runtime test-evidence test-topology/u);
+  assert.match(makefile, /test: test-core test-runtime test-pi test-evidence test-current-target-admission test-topology/u);
   assert.match(validationWorkflow, /make test-overlay TARGET=codex/u);
   assert.match(validationWorkflow, /make test-overlay TARGET=cursor/u);
   assert.match(validationWorkflow, /make test-overlay TARGET=kiro-cli/u);
-  assert.match(validationWorkflow, /make test-core test-runtime test-evidence/u);
+  assert.match(validationWorkflow, /make test-overlay TARGET=pi/u);
+  assert.match(validationWorkflow, /make test-current-target-admission/u);
+  assert.match(validationWorkflow, /make test-core test-runtime test-pi test-evidence/u);
   assert.match(releaseWorkflow, /make test-core test-runtime/u);
   assert.match(validationWorkflow, /permissions:\s+contents: read/u);
   assert.match(releaseWorkflow, /permissions:\s+contents: read/u);
@@ -92,11 +94,14 @@ test("Make and release CI keep projection, target checks, evidence, topology, pa
   assert.match(releaseWorkflow, /public-smoke:\s+needs: github-release/u);
   assert.match(validationWorkflow, /make test-topology/u);
   const projection = releaseWorkflow.indexOf("make validate");
-  const parity = releaseWorkflow.indexOf("make test-parity-release");
+  const admission = releaseWorkflow.indexOf("make test-current-target-admission");
   const e3 = releaseWorkflow.indexOf("make generate-e3-attestation");
   const packageIndex = releaseWorkflow.indexOf("make package TARGET=codex");
   const lifecycle = releaseWorkflow.indexOf("Verify packaged lifecycle and sidecars");
-  assert.ok(projection >= 0 && parity > projection && e3 > parity && packageIndex > e3 && lifecycle > packageIndex);
+  assert.ok(projection >= 0 && admission > projection && e3 > admission && packageIndex > e3 && lifecycle > packageIndex);
+  assert.doesNotMatch(makefile, /test-parity-release|PARITY_ORACLE|PARITY_REPORT/u);
+  assert.doesNotMatch(validationWorkflow, /three-target|test-parity-release|parity-release/u);
+  assert.doesNotMatch(releaseWorkflow, /three-target|test-parity-release|parity-release/u);
 });
 
 test("Make rejects an unsafe package version without executing shell text", () => {
@@ -298,23 +303,21 @@ test("adversarial strings stay data across Make and the release interface", () =
     assert.match(`${hostileDirectory.stdout}\n${hostileDirectory.stderr}`, /E_RELEASE_INTERFACE_PATH/u);
   }
 
-  const safeParityReport = runInterface("parity-release", {
-    PARITY_REPORT: path.join(root, "report with spaces 'quote'.json"),
-    PARITY_ALLOW_DIRTY_LOCAL: "1",
+  const safeAdmissionReport = runInterface("current-target-admission", {
+    CURRENT_TARGET_ADMISSION_REPORT: path.join(root, "report with spaces 'quote'.json"),
   });
-  assert.equal(safeParityReport.status, 0, `${safeParityReport.stdout}\n${safeParityReport.stderr}`);
+  assert.equal(safeAdmissionReport.status, 0, `${safeAdmissionReport.stdout}\n${safeAdmissionReport.stderr}`);
 
   for (const value of [
     `report; touch ${marker}`,
     "report\nwith-newline",
     "report${process.exit()}",
   ]) {
-    const hostileParityReport = runInterface("parity-release", {
-      PARITY_REPORT: path.join(root, value),
-      PARITY_ALLOW_DIRTY_LOCAL: "1",
+    const hostileAdmissionReport = runInterface("current-target-admission", {
+      CURRENT_TARGET_ADMISSION_REPORT: path.join(root, value),
     });
-    assert.notEqual(hostileParityReport.status, 0);
-    assert.match(`${hostileParityReport.stdout}\n${hostileParityReport.stderr}`, /E_RELEASE_INTERFACE_PATH/u);
+    assert.notEqual(hostileAdmissionReport.status, 0);
+    assert.match(`${hostileAdmissionReport.stdout}\n${hostileAdmissionReport.stderr}`, /E_RELEASE_INTERFACE_PATH/u);
   }
   assert.equal(fs.existsSync(marker), false);
 });

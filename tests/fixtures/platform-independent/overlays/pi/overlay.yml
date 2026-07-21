@@ -1,0 +1,492 @@
+schema_version: 1
+overlay_id: maister/pi
+overlay_version: 1.0.0
+target:
+  id: pi
+  adapter_id: pi.native
+  projection: pi.native
+  host_version_constraint: 0.80.x
+  platform: posix
+  discovery_roots:
+    - .pi/agent/maister
+  path_policy:
+    agent_root_env: PI_CODING_AGENT_DIR
+    default_agent_root: $HOME/.pi/agent
+    settings_path: settings.json
+    session_root_env: PI_CODING_AGENT_SESSION_DIR
+    package_root_env: PI_PACKAGE_DIR
+    package_path: maister
+    containment: agent_root
+layout:
+  - source: generated/pi-package
+    destination: maister
+    kind: tree
+    mode: "0755"
+    ownership: plugin_private
+settings:
+  - path: settings.json
+    format: json
+    ownership: managed_array_entries
+    managed_keys: []
+    array_path: packages
+    identity: pi_local_package_v1
+    entries:
+      - source: ./maister
+    merge_policy: preserve_unmanaged_refuse_drift
+semantic_bindings:
+  user_gate:
+    adapter: pi.extension
+    capability: semantic
+    fail_closed: true
+  delegate_agent:
+    adapter: pi.native
+    capability: delegation
+    fail_closed: true
+  track_progress:
+    adapter: execution-event-writer
+    capability: persistence
+    fail_closed: true
+  resolve_task_root:
+    adapter: maister.task-root
+    capability: persistence
+    fail_closed: true
+  persist_state:
+    adapter: maister.state-repository
+    capability: persistence
+    fail_closed: true
+  continue_workflow:
+    adapter: maister.phase-continuation
+    capability: continuation
+    fail_closed: true
+inventory:
+  required:
+    - package.json
+    - .maister-source.json
+    - agent-projection-v1.json
+    - pi-command-projection-v1.json
+    - extensions/maister.ts
+    - "skills/**/SKILL.md"
+    - "prompts/*.md"
+    - "agents/maister-*.md"
+    - "common/**"
+    - "lib/**"
+    - "bin/**"
+    - "orchestrator-framework/**"
+  optional: []
+  forbidden:
+    - "commands/**"
+    - ".git/**"
+    - "node_modules/**"
+    - "credentials/**"
+    - "auth/**"
+    - "trust/**"
+    - "sessions/**"
+    - ".pi/**"
+    - "pi-subagents/**"
+  command_origins:
+    - source: commands/modeling-aggregate-designer.md
+      destination: prompts/modeling-aggregate-designer.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: 9f80a86f66a9a83e5a410851f087309d3dc0da486afc5693889948e33ff35087
+    - source: commands/modeling-context-distiller.md
+      destination: prompts/modeling-context-distiller.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: 8199bc624c4cf946ff08f0a05244e3cd65610388384723c750519cbcecbbecea
+    - source: commands/quick-metaprogram-classifier.md
+      destination: prompts/quick-metaprogram-classifier.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: 0571d8b2165bd62bf1522cf6a41596c82b22b5db80c24462d96d52c417b92f60
+    - source: commands/quick-problem-classifier.md
+      destination: prompts/quick-problem-classifier.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: 68e2b2e255434e87b046deb7926799834b535e86965bb956a4f1425ac850bea9
+    - source: commands/quick-requirements-critic.md
+      destination: prompts/quick-requirements-critic.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: a0c18c0f0799cebdcee7b22eae69c33cf5776584ffc071c17374ba353e9d9586
+    - source: commands/quick-transcript-critic.md
+      destination: prompts/quick-transcript-critic.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: 98ab55db3d0e7042d634cb32c50eecdf211dd96dd9fc6c7d8da709cd90021b25
+    - source: commands/reviews-code.md
+      destination: prompts/reviews-code.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: 41f74eddea48b0c95e7d0381317b23e6379a6a9d670f8585d6afabba6a58acca
+    - source: commands/reviews-linguistic-boundaries.md
+      destination: prompts/reviews-linguistic-boundaries.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: 7db5aabd22181440f4dac7a49be0d0ac0b3574071151c686a9c1fad1867b9594
+    - source: commands/reviews-pragmatic.md
+      destination: prompts/reviews-pragmatic.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: b07186d87723010cb28ef8a4ba8eecbcaf854991125ed57c17857a6e00f6117f
+    - source: commands/reviews-production-readiness.md
+      destination: prompts/reviews-production-readiness.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: 6f743f360cbf3415d63d6befbdad4e762655e53a385ba170ccd18d620f930ae7
+    - source: commands/reviews-reality-check.md
+      destination: prompts/reviews-reality-check.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: a98ec01a40b89c04bef21ee25fc0445880a0fa12debf8489ff0a3ede6e86e38e
+    - source: commands/reviews-spec-audit.md
+      destination: prompts/reviews-spec-audit.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: 0103c7c2c504c343277a48d85326ad14e6628fec957041fff260d33a0edae8b6
+    - source: commands/reviews-test-strategy.md
+      destination: prompts/reviews-test-strategy.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: c444cd58625ecbdb875af0a985f3149e0941992a1a69356635924667420dfd9c
+    - source: commands/work.md
+      destination: prompts/work.md
+      kind: prompt
+      transform_id: pi-prompt-v1
+      sha256: f3fd5d90f76362c88df32a46fc1b7ba86dc67a13b83c0f8495a9f661d24326f7
+  skill_origins:
+    - source: skills/aggregate-designer
+      destination: skills/aggregate-designer
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/codebase-analyzer
+      destination: skills/codebase-analyzer
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/context-distiller
+      destination: skills/context-distiller
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/development
+      destination: skills/development
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/docs-manager
+      destination: skills/docs-manager
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/grill-me
+      destination: skills/grill-me
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/grill-with-docs
+      destination: skills/grill-with-docs
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/implementation-plan-executor
+      destination: skills/implementation-plan-executor
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/implementation-verifier
+      destination: skills/implementation-verifier
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/init
+      destination: skills/init
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/linguistic-boundary-verifier
+      destination: skills/linguistic-boundary-verifier
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/metaprogram-classifier
+      destination: skills/metaprogram-classifier
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/migration
+      destination: skills/migration
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/orchestrator-framework
+      destination: skills/orchestrator-framework
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/performance
+      destination: skills/performance
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/problem-classifier
+      destination: skills/problem-classifier
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/product-design
+      destination: skills/product-design
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/quick-bugfix
+      destination: skills/quick-bugfix
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/quick-dev
+      destination: skills/quick-dev
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/quick-plan
+      destination: skills/quick-plan
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/requirements-critic
+      destination: skills/requirements-critic
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/research
+      destination: skills/research
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/standards-discover
+      destination: skills/standards-discover
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/standards-update
+      destination: skills/standards-update
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/test-strategy-reviewer
+      destination: skills/test-strategy-reviewer
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/thermo-nuclear-code-quality-review
+      destination: skills/thermo-nuclear-code-quality-review
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/thermo-nuclear-review
+      destination: skills/thermo-nuclear-review
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/thermos
+      destination: skills/thermos
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/transcript-critic
+      destination: skills/transcript-critic
+      kind: skill
+      transform_id: pi-skill-v1
+  role_origins:
+    - source: agents/advisor.md
+      destination: agents/maister-advisor.md
+      kind: package-agent
+      logical_role_id: maister:advisor
+    - source: agents/bottleneck-analyzer.md
+      destination: agents/maister-bottleneck-analyzer.md
+      kind: package-agent
+      logical_role_id: maister:bottleneck-analyzer
+    - source: agents/code-quality-pragmatist.md
+      destination: agents/maister-code-quality-pragmatist.md
+      kind: package-agent
+      logical_role_id: maister:code-quality-pragmatist
+    - source: agents/code-reviewer.md
+      destination: agents/maister-code-reviewer.md
+      kind: package-agent
+      logical_role_id: maister:code-reviewer
+    - source: agents/codebase-analysis-reporter.md
+      destination: agents/maister-codebase-analysis-reporter.md
+      kind: package-agent
+      logical_role_id: maister:codebase-analysis-reporter
+    - source: agents/docs-operator.md
+      destination: agents/maister-docs-operator.md
+      kind: package-agent
+      logical_role_id: maister:docs-operator
+    - source: agents/e2e-test-verifier.md
+      destination: agents/maister-e2e-test-verifier.md
+      kind: package-agent
+      logical_role_id: maister:e2e-test-verifier
+    - source: agents/gap-analyzer.md
+      destination: agents/maister-gap-analyzer.md
+      kind: package-agent
+      logical_role_id: maister:gap-analyzer
+    - source: agents/html-companion-writer.md
+      destination: agents/maister-html-companion-writer.md
+      kind: package-agent
+      logical_role_id: maister:html-companion-writer
+    - source: agents/implementation-completeness-checker.md
+      destination: agents/maister-implementation-completeness-checker.md
+      kind: package-agent
+      logical_role_id: maister:implementation-completeness-checker
+    - source: agents/implementation-planner.md
+      destination: agents/maister-implementation-planner.md
+      kind: package-agent
+      logical_role_id: maister:implementation-planner
+    - source: agents/information-gatherer.md
+      destination: agents/maister-information-gatherer.md
+      kind: package-agent
+      logical_role_id: maister:information-gatherer
+    - source: agents/production-readiness-checker.md
+      destination: agents/maister-production-readiness-checker.md
+      kind: package-agent
+      logical_role_id: maister:production-readiness-checker
+    - source: agents/project-analyzer.md
+      destination: agents/maister-project-analyzer.md
+      kind: package-agent
+      logical_role_id: maister:project-analyzer
+    - source: agents/reality-assessor.md
+      destination: agents/maister-reality-assessor.md
+      kind: package-agent
+      logical_role_id: maister:reality-assessor
+    - source: agents/research-planner.md
+      destination: agents/maister-research-planner.md
+      kind: package-agent
+      logical_role_id: maister:research-planner
+    - source: agents/research-synthesizer.md
+      destination: agents/maister-research-synthesizer.md
+      kind: package-agent
+      logical_role_id: maister:research-synthesizer
+    - source: agents/solution-brainstormer.md
+      destination: agents/maister-solution-brainstormer.md
+      kind: package-agent
+      logical_role_id: maister:solution-brainstormer
+    - source: agents/solution-designer.md
+      destination: agents/maister-solution-designer.md
+      kind: package-agent
+      logical_role_id: maister:solution-designer
+    - source: agents/spec-auditor.md
+      destination: agents/maister-spec-auditor.md
+      kind: package-agent
+      logical_role_id: maister:spec-auditor
+    - source: agents/specification-creator.md
+      destination: agents/maister-specification-creator.md
+      kind: package-agent
+      logical_role_id: maister:specification-creator
+    - source: agents/task-classifier.md
+      destination: agents/maister-task-classifier.md
+      kind: package-agent
+      logical_role_id: maister:task-classifier
+    - source: agents/task-group-implementer.md
+      destination: agents/maister-task-group-implementer.md
+      kind: package-agent
+      logical_role_id: maister:task-group-implementer
+    - source: agents/test-suite-runner.md
+      destination: agents/maister-test-suite-runner.md
+      kind: package-agent
+      logical_role_id: maister:test-suite-runner
+    - source: agents/thermo-nuclear-code-quality-review-subagent.md
+      destination: agents/maister-thermo-nuclear-code-quality-review-subagent.md
+      kind: package-agent
+      logical_role_id: maister:thermo-nuclear-code-quality-review-subagent
+    - source: agents/thermo-nuclear-review-subagent.md
+      destination: agents/maister-thermo-nuclear-review-subagent.md
+      kind: package-agent
+      logical_role_id: maister:thermo-nuclear-review-subagent
+    - source: agents/ui-mockup-generator.md
+      destination: agents/maister-ui-mockup-generator.md
+      kind: package-agent
+      logical_role_id: maister:ui-mockup-generator
+    - source: agents/user-docs-generator.md
+      destination: agents/maister-user-docs-generator.md
+      kind: package-agent
+      logical_role_id: maister:user-docs-generator
+  support_inventory: []
+validation:
+  forbidden_vocabulary:
+    - claude
+    - anthropic
+    - .cursor-plugin
+    - .claude-plugin
+  executable_paths:
+    - "bin/**"
+  syntax_checks:
+    - "json:package.json"
+    - "json:.maister-source.json"
+    - "json:agent-projection-v1.json"
+    - "json:pi-command-projection-v1.json"
+    - "typescript:extensions/maister.ts"
+  forbidden_topology:
+    - "commands/**"
+    - ".git/**"
+    - "node_modules/**"
+    - "pi-subagents/**"
+    - ".pi/**"
+    - "auth/**"
+    - "trust/**"
+    - "sessions/**"
+capabilities:
+  semantic_bindings:
+    class: semantic
+    required_evidence: [E1, E3, E5, E6]
+  safety_hooks:
+    class: safety
+    required_evidence: [E1, E2, E4]
+  state_persistence:
+    class: persistence
+    required_evidence: [E1, E2, E4]
+  rollback:
+    class: rollback
+    required_evidence: [E1, E2, E4]
+  native_discovery:
+    class: packaging
+    required_evidence: [E1, E2, E5]
+  native_runtime:
+    class: semantic
+    required_evidence: [E3, E6]
+native_assets: []
+agent_projection:
+  schema_version: 1
+  contract: agent-projection-v1.json
+  projector_version: 1.0.0
+  adapter_id: pi.native
+  representation: pi-agent-frontmatter
+  canonical_roles:
+    - advisor
+    - bottleneck-analyzer
+    - code-quality-pragmatist
+    - code-reviewer
+    - codebase-analysis-reporter
+    - docs-operator
+    - e2e-test-verifier
+    - gap-analyzer
+    - html-companion-writer
+    - implementation-completeness-checker
+    - implementation-planner
+    - information-gatherer
+    - production-readiness-checker
+    - project-analyzer
+    - reality-assessor
+    - research-planner
+    - research-synthesizer
+    - solution-brainstormer
+    - solution-designer
+    - spec-auditor
+    - specification-creator
+    - task-classifier
+    - task-group-implementer
+    - test-suite-runner
+    - thermo-nuclear-code-quality-review-subagent
+    - thermo-nuclear-review-subagent
+    - ui-mockup-generator
+    - user-docs-generator
+  destinations:
+    - kind: package-agent
+      path_template: agents/maister-{role_id}.md
+      mode: "0644"
+  transform_ids:
+    - canonical-body-v1
+    - pi-agent-frontmatter-v1
+  execution_profile_ids:
+    - pi.native
+  support_inventory: []
+compatibility:
+  pi: 0.80.10
+  node: 25.9.0
+  pi_subagents: 0.35.1
+  delegation_protocol: 1
+probes:
+  executable:
+    command: pi
+    version_args: [--version]
+    expected_version: 0.80.10
+    resolve_realpath: true
+  prerequisite:
+    package: pi-subagents
+    export: pi-subagents/delegation
+    version_range: ">=0.35.0 <0.36.0"
+    tested_version: 0.35.1
+    protocol_version: 1

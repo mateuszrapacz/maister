@@ -89,6 +89,7 @@ export function createDispatchTaskPreparer({ projection, workingRoot = process.c
       const privatePaths = privateDispatchDirectory(context.taskPath);
       const common = {
         task_path: privatePaths.taskRoot,
+        working_root: workingRoot,
         bounded_task: JSON.stringify(task),
         canonical_source_digest: plan.role_source_digest,
         execution_context: executionContext(task, context),
@@ -104,7 +105,6 @@ export function createDispatchTaskPreparer({ projection, workingRoot = process.c
       if (last?.isSymbolicLink() || (last && !last.isFile())) throw new TypeError("last-message destination is not a regular file");
       return {
         ...common,
-        working_root: workingRoot,
         role_prompt: prompt.content,
         output_schema_path: outputSchemaPath,
         last_message_path: lastMessagePath,

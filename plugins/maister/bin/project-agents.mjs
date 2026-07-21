@@ -13,7 +13,7 @@ import {
 import { projectAgents } from "../lib/distribution/agent-projector.mjs";
 import { loadOverlay } from "../lib/distribution/overlay-loader.mjs";
 
-const TARGETS = ["codex", "cursor", "kiro-cli"];
+const TARGETS = ["codex", "cursor", "kiro-cli", "pi"];
 
 function parseArguments(argumentsList) {
   const options = { check: false, targets: [] };

@@ -1400,7 +1400,7 @@ test("the real repository topology and focused Make entry point use only registe
   for (const target of SUPPORTED_TARGET_IDS) {
     assert.match(validationWorkflow, new RegExp(`make test-overlay TARGET=${target}`, "u"));
   }
-  assert.match(validationWorkflow, /make test-core test-runtime test-evidence/u);
+  assert.match(validationWorkflow, /make test-core test-runtime test-pi test-evidence/u);
   assert.match(validationWorkflow, /make test-topology/u);
 
   const releaseWorkflow = fs.readFileSync(".github/workflows/release.yml", "utf8");

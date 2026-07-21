@@ -23,11 +23,13 @@ const TARGET_TRANSFORMS = Object.freeze({
   codex: Object.freeze(["canonical-body-v1", "codex-output-schema-v1"]),
   cursor: Object.freeze(["canonical-body-v1", "cursor-frontmatter-v1"]),
   "kiro-cli": Object.freeze(["canonical-body-v1", "kiro-descriptor-v1"]),
+  pi: Object.freeze(["canonical-body-v1", "pi-agent-frontmatter-v1"]),
 });
 const TARGET_KINDS = Object.freeze({
   codex: Object.freeze(["output-schema", "prompt"]),
   cursor: Object.freeze(["agent"]),
   "kiro-cli": Object.freeze(["descriptor", "prompt"]),
+  pi: Object.freeze(["package-agent"]),
 });
 
 export class AgentProjectionError extends Error {
@@ -93,7 +95,8 @@ function validateOutput(output, index) {
   }
   if (!TARGET_KINDS.codex.includes(output.kind)
     && !TARGET_KINDS.cursor.includes(output.kind)
-    && !TARGET_KINDS["kiro-cli"].includes(output.kind)) {
+    && !TARGET_KINDS["kiro-cli"].includes(output.kind)
+    && !TARGET_KINDS.pi.includes(output.kind)) {
     failAgentProjection("E_AGENT_PROJECTION_SCHEMA", `outputs[${index}].kind is unsupported`, { kind: output.kind });
   }
   if (!["canonical", "support"].includes(output.ownership)) {

@@ -342,3 +342,263 @@ export function validateExecutionEventStream(events, options = {}) {
   const state = streamState(events, options);
   return { events: structuredClone(events), ...state };
 }
+
+// Pi owns a deliberately separate observation vocabulary.  The legacy event
+// vocabulary above remains available to the existing process adapters; Pi
+// observations use this schema so a host event can never be mistaken for a
+// portable Maister execution record.
+export const MAISTER_OBSERVATION_SCHEMA_VERSION = 1;
+export const OBSERVATION_EVENT_SCHEMA_VERSION = MAISTER_OBSERVATION_SCHEMA_VERSION;
+export const MAISTER_OBSERVATION_EVENT_TYPES = Object.freeze([
+  "dispatch_requested",
+  "started",
+  "update",
+  "cancel_requested",
+  "response_observed",
+  "terminal",
+  "failure",
+  "process_lost",
+]);
+export const MAISTER_OBSERVATION_TERMINAL_STATUSES = Object.freeze([
+  "completed",
+  "failed",
+  "timed_out",
+  "cancelled",
+  "interrupted",
+  "turn_budget_exhausted",
+  "tool_budget_exhausted",
+  "acceptance_failed",
+  "invalid_request",
+  "unavailable_context",
+  "identity_mismatch",
+  "durable_write_failed",
+  "process_lost",
+]);
+
+const OBSERVATION_EVENT_FIELDS = [
+  "schema_version",
+  "stream_id",
+  "event_id",
+  "sequence",
+  "event_type",
+  "occurred_at",
+  "dispatch_id",
+  "request_id",
+  "target",
+  "adapter_id",
+  "protocol_version",
+  "logical_role_id",
+  "requested_agent",
+  "observed_agent",
+  "status",
+  "payload",
+  "previous_hash",
+  "hash",
+];
+const OBSERVATION_NON_TERMINAL_STATUSES = new Set(["requested", "started", "update", "cancel_requested"]);
+const OBSERVATION_TERMINAL_EVENTS = new Set(["terminal", "failure", "process_lost"]);
+const OBSERVATION_ROLE_ID = /^maister:[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
+const OBSERVATION_SHA256 = /^[0-9a-f]{64}$/u;
+
+export class MaisterObservationValidationError extends Error {
+  constructor(code, message, details = {}) {
+    super(message);
+    this.name = "MaisterObservationValidationError";
+    this.code = code;
+    this.kind = code;
+    this.details = details;
+    this.retryable = false;
+  }
+}
+
+function observationFail(code, message, details = {}) {
+  throw new MaisterObservationValidationError(code, message, details);
+}
+
+function observationMapping(value, location) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    observationFail("E_OBSERVATION_SCHEMA", `${location} must be a mapping`, { location });
+  }
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) {
+    observationFail("E_OBSERVATION_SCHEMA", `${location} must be a plain mapping`, { location });
+  }
+}
+
+function observationString(value, location, { nullable = false } = {}) {
+  if (nullable && value === null) return;
+  if (typeof value !== "string" || value.length === 0 || value.includes("\0")) {
+    observationFail("E_OBSERVATION_SCHEMA", `${location} must be a non-empty NUL-free string${nullable ? " or null" : ""}`, { location });
+  }
+}
+
+function observationTimestamp(value, location) {
+  observationString(value, location);
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed) || new Date(parsed).toISOString() !== value) {
+    observationFail("E_OBSERVATION_SCHEMA", `${location} must be an RFC3339 UTC timestamp with milliseconds`, { location, value });
+  }
+}
+
+function observationJson(value, location) {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) observationFail("E_OBSERVATION_SCHEMA", `${location} contains a non-finite number`, { location });
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) => observationJson(entry, `${location}[${index}]`));
+    return;
+  }
+  observationMapping(value, location);
+  for (const [key, entry] of Object.entries(value)) {
+    observationString(key, `${location} key`);
+    observationJson(entry, `${location}.${key}`);
+  }
+}
+
+function observationExactFields(value, fields, location, { optional = [] } = {}) {
+  observationMapping(value, location);
+  const allowed = new Set([...fields, ...optional]);
+  const unknown = Object.keys(value).find((field) => !allowed.has(field));
+  if (unknown) observationFail("E_OBSERVATION_SCHEMA", `${location} has unknown field ${unknown}`, { location, field: unknown });
+  const missing = fields.find((field) => !Object.hasOwn(value, field));
+  if (missing) observationFail("E_OBSERVATION_SCHEMA", `${location} is missing ${missing}`, { location, field: missing });
+}
+
+function observationDigest(value, location, { nullable = false } = {}) {
+  if (nullable && value === null) return;
+  if (typeof value !== "string" || !OBSERVATION_SHA256.test(value)) {
+    observationFail("E_OBSERVATION_DIGEST", `${location} must be a lowercase SHA-256 digest${nullable ? " or null" : ""}`, { location, value });
+  }
+}
+
+function observationEventShape(event, { omitHash = false } = {}) {
+  const requiredFields = OBSERVATION_EVENT_FIELDS.filter((field) => field !== "observed_agent" && !(omitHash && field === "hash"));
+  const optionalFields = ["observed_agent", "retry_of", ...(omitHash ? ["hash"] : [])];
+  observationExactFields(event, requiredFields, "observation event", { optional: optionalFields });
+  if (event.schema_version !== MAISTER_OBSERVATION_SCHEMA_VERSION) observationFail("E_OBSERVATION_SCHEMA", "observation schema_version must be 1");
+  if (!MAISTER_OBSERVATION_EVENT_TYPES.includes(event.event_type)) observationFail("E_OBSERVATION_SCHEMA", `unsupported observation event type ${event.event_type}`);
+  if (!Number.isSafeInteger(event.sequence) || event.sequence < 0) observationFail("E_OBSERVATION_SEQUENCE", "observation sequence must be a non-negative safe integer");
+  observationString(event.stream_id, "observation stream_id");
+  observationString(event.event_id, "observation event_id");
+  observationString(event.dispatch_id, "observation dispatch_id");
+  observationString(event.request_id, "observation request_id");
+  if (event.request_id !== event.dispatch_id) observationFail("E_OBSERVATION_IDENTITY", "request_id must equal dispatch_id");
+  if (event.retry_of !== undefined) {
+    if (!/^[a-z0-9][a-z0-9-]{0,127}$/u.test(event.retry_of) || event.retry_of === event.dispatch_id) {
+      observationFail("E_OBSERVATION_IDENTITY", "retry_of must identify a different path-safe dispatch");
+    }
+  }
+  if (event.target !== "pi" || event.adapter_id !== "pi.native") observationFail("E_OBSERVATION_IDENTITY", "observation target must be pi/pi.native");
+  if (event.protocol_version !== 1) observationFail("E_OBSERVATION_PROTOCOL", "observation protocol_version must be 1");
+  if (!OBSERVATION_ROLE_ID.test(event.logical_role_id) || event.requested_agent !== event.logical_role_id) {
+    observationFail("E_OBSERVATION_IDENTITY", "requested agent must be the exact maister:<role> identity");
+  }
+  if (event.observed_agent !== undefined && event.observed_agent !== null && !OBSERVATION_ROLE_ID.test(event.observed_agent)) {
+    observationFail("E_OBSERVATION_IDENTITY", "observed_agent must be an exact maister:<role> identity or null");
+  }
+  const allowedStatuses = new Set([...OBSERVATION_NON_TERMINAL_STATUSES, ...MAISTER_OBSERVATION_TERMINAL_STATUSES]);
+  if (typeof event.status !== "string" || !allowedStatuses.has(event.status)) observationFail("E_OBSERVATION_STATUS", `unsupported observation status ${event.status}`);
+  if (event.event_type === "dispatch_requested" && event.status !== "requested") observationFail("E_OBSERVATION_STATUS", "dispatch_requested must use requested status");
+  if (event.event_type === "started" && event.status !== "started") observationFail("E_OBSERVATION_STATUS", "started must use started status");
+  if (event.event_type === "update" && event.status !== "update") observationFail("E_OBSERVATION_STATUS", "update must use update status");
+  if (event.event_type === "cancel_requested" && event.status !== "cancel_requested") observationFail("E_OBSERVATION_STATUS", "cancel_requested must use cancel_requested status");
+  if (event.event_type === "response_observed" && !MAISTER_OBSERVATION_TERMINAL_STATUSES.includes(event.status)) observationFail("E_OBSERVATION_STATUS", "response_observed must carry a terminal status");
+  if (OBSERVATION_TERMINAL_EVENTS.has(event.event_type) && !MAISTER_OBSERVATION_TERMINAL_STATUSES.includes(event.status)) observationFail("E_OBSERVATION_STATUS", `${event.event_type} must carry a terminal status`);
+  observationTimestamp(event.occurred_at, "observation occurred_at");
+  observationJson(event.payload, "observation payload");
+  if (Buffer.byteLength(canonicalObservationJson(event), "utf8") > 16 * 1024) observationFail("E_OBSERVATION_SIZE", "canonical observation event exceeds 16 KiB");
+  if (event.previous_hash !== null) observationDigest(event.previous_hash, "observation previous_hash");
+  if (!omitHash) observationDigest(event.hash, "observation hash");
+}
+
+export function canonicalObservationJson(value) {
+  observationJson(value, "canonical observation value");
+  if (Array.isArray(value)) return `[${value.map(canonicalObservationJson).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalObservationJson(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+export function observationEventDigest(event) {
+  observationMapping(event, "observation event");
+  const withoutHash = { ...event };
+  delete withoutHash.hash;
+  const previous = event.previous_hash === null ? "" : event.previous_hash;
+  return crypto.createHash("sha256").update(`${previous}\n${canonicalObservationJson(withoutHash)}`, "utf8").digest("hex");
+}
+
+export function createObservationEvent(eventWithoutHash) {
+  observationEventShape(eventWithoutHash, { omitHash: true });
+  const event = { ...structuredClone(eventWithoutHash), hash: observationEventDigest(eventWithoutHash) };
+  return validateObservationEvent(event);
+}
+
+export function validateObservationEvent(event) {
+  observationEventShape(event);
+  const expected = observationEventDigest(event);
+  if (event.hash !== expected) observationFail("E_OBSERVATION_DIGEST", "observation hash does not match canonical bytes", { expected, actual: event.hash });
+  return structuredClone(event);
+}
+
+function sameObservationIdentity(first, candidate) {
+  return ["stream_id", "dispatch_id", "request_id", "target", "adapter_id", "protocol_version", "logical_role_id", "requested_agent"].every((field) => first[field] === candidate[field])
+    && (first.retry_of ?? null) === (candidate.retry_of ?? null);
+}
+
+export function validateObservationStream(events, { requireTerminal = false } = {}) {
+  if (!Array.isArray(events) || events.length === 0) observationFail("E_OBSERVATION_SEQUENCE", "observation stream must not be empty");
+  const seenEventIds = new Set();
+  let started = false;
+  let responseObserved = false;
+  let cancelRequested = false;
+  let terminal = false;
+  let updates = 0;
+  for (const [index, candidate] of events.entries()) {
+    const event = validateObservationEvent(candidate);
+    if (event.sequence !== index) observationFail("E_OBSERVATION_SEQUENCE", `observation ${index} has a non-monotonic sequence`);
+    if (seenEventIds.has(event.event_id)) observationFail("E_OBSERVATION_SEQUENCE", "observation event_id is duplicated");
+    seenEventIds.add(event.event_id);
+    const previous = index === 0 ? null : events[index - 1];
+    if (event.previous_hash !== (previous?.hash ?? null)) observationFail("E_OBSERVATION_DIGEST", `observation ${index} breaks hash continuity`);
+    if (index === 0 && event.event_type !== "dispatch_requested") observationFail("E_OBSERVATION_SEQUENCE", "observation stream must begin with dispatch_requested");
+    if (index > 0 && !sameObservationIdentity(events[0], event)) observationFail("E_OBSERVATION_IDENTITY", `observation ${index} changes immutable dispatch identity`);
+    if (terminal) observationFail("E_OBSERVATION_SEQUENCE", "events cannot follow a terminal observation");
+    if (index > 0 && event.event_type === "dispatch_requested") observationFail("E_OBSERVATION_SEQUENCE", "dispatch_requested may occur only once");
+    if (event.event_type === "started") {
+      if (started) observationFail("E_OBSERVATION_SEQUENCE", "started may occur only once");
+      if (responseObserved) observationFail("E_OBSERVATION_SEQUENCE", "started must precede response observations");
+      started = true;
+    }
+    if (event.event_type === "update") {
+      if (!started || responseObserved) observationFail("E_OBSERVATION_SEQUENCE", "update requires an active started dispatch");
+      updates += 1;
+      if (updates > 128) observationFail("E_OBSERVATION_LIMIT", "observation stream contains more than 128 updates");
+    }
+    if (event.event_type === "cancel_requested") {
+      if (responseObserved) observationFail("E_OBSERVATION_SEQUENCE", "cancellation must precede the response observation");
+      if (cancelRequested) observationFail("E_OBSERVATION_SEQUENCE", "cancel_requested may occur only once");
+      cancelRequested = true;
+    }
+    if (event.event_type === "response_observed") {
+      if ((!started && !(cancelRequested && event.status === "cancelled")) || responseObserved) {
+        observationFail("E_OBSERVATION_SEQUENCE", "response requires an active started dispatch or a queued cancellation");
+      }
+      responseObserved = true;
+    }
+    if (OBSERVATION_TERMINAL_EVENTS.has(event.event_type)) terminal = true;
+  }
+  if (requireTerminal && !terminal) observationFail("E_OBSERVATION_TERMINAL", "observation stream is incomplete");
+  const nextEventTypes = terminal
+    ? []
+    : responseObserved
+      ? ["terminal"]
+      : started
+        ? ["update", "cancel_requested", "response_observed", "terminal", "process_lost"]
+        : cancelRequested
+          ? ["response_observed", "terminal", "process_lost"]
+        : ["started", "process_lost"];
+  return { events: structuredClone(events), complete: terminal, updateCount: updates, nextEventTypes };
+}

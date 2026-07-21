@@ -47,6 +47,7 @@ test("packaged runtime composes resolver, task preparation, exact native adapter
   assert.equal(terminal.status, "succeeded");
   assert.equal(launches.length, 1);
   assert.equal(launches[0].task.execution_context.idempotency_key, "gate-key-runtime");
+  assert.equal(launches[0].task.working_root, process.cwd());
   assert.equal(runtime.readExecutionEventStream({ taskPath: fixture.root, dispatchId: plan.dispatch_id }).complete, true);
 });
 

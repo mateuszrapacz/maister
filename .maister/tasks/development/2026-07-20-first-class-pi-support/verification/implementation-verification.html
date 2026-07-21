@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Implementation Verification — First-class Pi support</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, -apple-system, sans-serif; line-height: 1.5; }
+    body { max-width: 980px; margin: 0 auto; padding: 2rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 2rem; }
+    th, td { border: 1px solid #8886; padding: .55rem .7rem; text-align: left; vertical-align: top; }
+    th { background: #8882; }
+    .pass { color: #16803c; font-weight: 700; }
+    .caution { color: #9a6700; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Implementation Verification</h1>
+    <p><strong class="pass">PASS</strong> for the complete approved Pi scope, including the full public delegation v1 lifecycle.</p>
+    <p>All seven implementation groups and the final validation path are complete. A fresh real-host E5/E6 run passed; admission promotes a complete bound E1-E6 manifest to <code>pi.native-semantic</code> and remains fail-closed for other tuples.</p>
+    <h2>Final matrix</h2>
+    <table>
+      <thead><tr><th>Gate</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td><code>make validate</code></td><td>Passed</td></tr>
+        <tr><td><code>make test-core</code></td><td>Passed under watchdog</td></tr>
+        <tr><td><code>make test-runtime</code></td><td>Passed</td></tr>
+        <tr><td><code>make test-pi</code></td><td>26 passed, 0 failed</td></tr>
+        <tr><td><code>make test-evidence</code></td><td>45 passed, 0 failed</td></tr>
+        <tr><td>Pi integrated lifecycle</td><td>7 passed, 0 failed</td></tr>
+        <tr><td>Current target set</td><td>codex, cursor, kiro-cli, pi</td></tr>
+        <tr><td>Pi support claim</td><td><code>pi.native-semantic</code> with the complete bound E1-E6 manifest; provisional fallback remains explicit</td></tr>
+        <tr><td>Native evidence</td><td>E5 passed; E6 passed on the pinned host tuple</td></tr>
+      </tbody>
+    </table>
+    <h2>Fix loop</h2>
+    <p>The audit findings for settings races, durable redaction, working-root propagation, tilde identity, event values, session identity, disposal, request bounds, retry provenance, evidence binding, and packaged E3 projection binding were corrected and covered by regression tests.</p>
+    <h2>Boundary</h2>
+    <p class="caution">Publish <code>pi.native-semantic</code> only with the complete fresh E1-E6 manifest. E5/E6 expire after 14 days and remain bound to Pi 0.80.10, Node 25.9.0, pi-subagents 0.35.1, the executable, protocol, and generated package.</p>
+  </main>
+</body>
+</html>

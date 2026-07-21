@@ -424,6 +424,11 @@ function validateTopology(topology, location, home, expectedRoot) {
   if (path.resolve(previous) !== path.resolve(expectedRoot)) throwDistributionError("E_RECOVERY_BACKUP", `${location} does not terminate at its managed root`, {});
 }
 
+function expectedSettingTargetPath(setting, paths) {
+  if (paths?.target === "pi" && setting.path === "settings.json") return paths.settingsPath;
+  return path.resolve(paths?.home ?? path.dirname(setting.targetPath), ...setting.path.split("/"));
+}
+
 function validateManifest(manifest, backupRoot, paths = null) {
   exactFields(manifest, ["schema_version", "home", "roots", "settings", "active_receipt", "manifest_hash"], "backup manifest");
   if (manifest.schema_version !== 2) throwDistributionError("E_RECOVERY_BACKUP", "backup manifest schema_version must be 2", {});
@@ -464,7 +469,8 @@ function validateManifest(manifest, backupRoot, paths = null) {
     if (typeof setting.path !== "string" || path.isAbsolute(setting.path) || setting.path.split("/").some((part) => !part || part === "." || part === "..")) throwDistributionError("E_RECOVERY_BACKUP", "backup setting path is invalid", { path: setting.path });
     if (path.normalize(setting.backupPath) !== setting.backupPath || setting.backupPath !== path.join(backupAbsolute, "settings", String(index))) throwDistributionError("E_RECOVERY_BACKUP", "backup setting path is invalid", { path: setting.backupPath });
     validateSnapshotRecord(setting, `backup settings[${index}]`);
-    if (!path.isAbsolute(setting.targetPath) || path.normalize(setting.targetPath) !== setting.targetPath || (paths && path.resolve(setting.targetPath) !== path.resolve(paths.home, ...setting.path.split("/")))) throwDistributionError("E_RECOVERY_BACKUP", "backup setting target is outside home", { path: setting.targetPath });
+    const expectedTargetPath = expectedSettingTargetPath(setting, paths);
+    if (!path.isAbsolute(setting.targetPath) || path.normalize(setting.targetPath) !== setting.targetPath || path.resolve(setting.targetPath) !== path.resolve(expectedTargetPath)) throwDistributionError("E_RECOVERY_BACKUP", "backup setting target is outside home", { path: setting.targetPath });
     assertSafePath(setting.targetPath, { root: paths?.home ?? path.dirname(setting.targetPath), label: "backup setting target" });
   }
   exactFields(manifest.active_receipt, ["path", "backupPath", "exists", "mode", "fingerprint"], "backup active receipt");

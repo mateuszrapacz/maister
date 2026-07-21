@@ -9,6 +9,8 @@ import test from "node:test";
 
 import { hashTree } from "../../plugins/maister/lib/distribution/hash-tree.mjs";
 import { portableCoreTreeHash } from "../../plugins/maister/lib/distribution/e3-attestation.mjs";
+import { canonicalJson } from "../../plugins/maister/lib/distribution/provenance.mjs";
+import { createEvidenceRecord } from "../../plugins/maister/lib/distribution/evidence-schema.mjs";
 import { SUPPORTED_TARGET_IDS } from "../../plugins/maister/lib/distribution/targets.mjs";
 import { generateE3Attestation } from "../../plugins/maister/bin/generate-e3-attestation.mjs";
 import {
@@ -28,6 +30,41 @@ function tempDirectory(prefix) {
 
 function sha256(filePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+function piEvidenceRecords() {
+  const provenance = {
+    source_commit: COMMIT,
+    source_version: "test",
+    overlay_id: "maister/pi",
+    overlay_version: "1.0.0",
+    host: "pi",
+    scenario_version: "1.0.0",
+    schema_version: 1,
+    projector_version: "1.0.0",
+    canonical_set_digest: "1".repeat(64),
+    manifest_digest: "2".repeat(64),
+    projected_tree_digest: "3".repeat(64),
+    source_hash: "4".repeat(64),
+    overlay_hash: "a".repeat(64),
+    materialized_hash: "5".repeat(64),
+    provenance_hash: "6".repeat(64),
+  };
+  return ["E1", "E2", "E3", "E4", "E5", "E6"].map((capability) => createEvidenceRecord({
+    target: "pi",
+    capability,
+    hostVersion: "0.80.10",
+    scenario: `${capability.toLowerCase()}-v1`,
+    result: capability === "E5" || capability === "E6" ? "unavailable" : "passed",
+    provenance: capability === "E5" || capability === "E6"
+      ? { ...provenance, reason: "host_evidence_unavailable" }
+      : provenance,
+    timestamp: "2026-07-15T00:00:00.000Z",
+  }));
+}
+
+function evidenceDigest(records) {
+  return crypto.createHash("sha256").update(canonicalJson(records)).digest("hex");
 }
 
 function makePackage(directory, target, { attestation, sourceCommit = REPO_COMMIT, sourceVersion = "test" } = {}) {
@@ -277,6 +314,14 @@ test("target archives are deterministic, self-contained, and support a clean lif
     fs.mkdirSync(state);
     const installed = invokeArchive(extractedRoot, target, "install", home, state);
     assert.equal(installed.ok, true, target);
+    if (target === "pi" && process.env.MAISTER_RELEASE_EVIDENCE_OUTPUT) {
+      const activePointerPath = path.join(state, "maister", target, "active-receipt.json");
+      const activePointer = JSON.parse(fs.readFileSync(activePointerPath, "utf8"));
+      const activeReceipt = JSON.parse(fs.readFileSync(activePointer.receipt_path, "utf8"));
+      const evidenceOutput = path.resolve(ROOT, process.env.MAISTER_RELEASE_EVIDENCE_OUTPUT);
+      fs.mkdirSync(path.dirname(evidenceOutput), { recursive: true });
+      fs.writeFileSync(evidenceOutput, `${JSON.stringify({ schema_version: 1, target: "pi", records: activeReceipt.evidence }, null, 2)}\n`);
+    }
     assert.equal(invokeArchive(extractedRoot, target, "verify", home, state).ok, true, target);
     assert.equal(invokeArchive(extractedRoot, target, "uninstall", home, state).ok, true, target);
   }
@@ -369,9 +414,9 @@ test("packaged lifecycle rejects missing, forged, mismatched, and stale E3 attes
   }
 });
 
-test("release metadata binds checksums, parity, and self-declared limitations", () => {
+test("release metadata binds checksums, current admission, and self-declared limitations", () => {
   const root = tempDirectory("maister-release-metadata-");
-  const parityReport = path.join(root, "parity-release.json");
+  const admissionReport = path.join(root, "current-target-admission.json");
   const attestation = {
     schema_version: 1,
     kind: "maister/e3-portable-core",
@@ -396,11 +441,35 @@ test("release metadata binds checksums, parity, and self-declared limitations", 
     return { name, hash: sha256(filePath) };
   });
   fs.writeFileSync(path.join(root, "SHA256SUMS"), `${archives.map(({ name, hash }) => `${hash}  ${name}`).join("\n")}\n`);
-  fs.writeFileSync(parityReport, `${JSON.stringify({
+  const piRecords = piEvidenceRecords();
+  fs.writeFileSync(admissionReport, `${JSON.stringify({
     schema_version: 1,
-    gate: "three-target-shadow-parity",
+    gate: "current-target-admission-v1",
+    target_set: [...SUPPORTED_TARGET_IDS],
     ok: true,
-    targets: SUPPORTED_TARGET_IDS.map((target) => ({ target, ok: true, counts: { unresolved: 0 } })),
+    targets: SUPPORTED_TARGET_IDS.map((target) => ({ target, ok: true, overlay_id: `maister/${target}`, overlay_version: "1.0.0", contract_hash: "a".repeat(64) })),
+    pi_support: {
+      label: "pi.structural-transactional.provisional",
+      claim_basis: "validated-current-evidence-v1",
+      evidence: { E1: "passed", E2: "passed", E3: "passed", E4: "passed", E5: "unavailable", E6: "unavailable" },
+      evidence_binding: {
+        schema_version: 1,
+        kind: "pi-transaction-evidence-v1",
+        target: "pi",
+        source_commit: COMMIT,
+        source_version: "test",
+        overlay_id: "maister/pi",
+        overlay_version: "1.0.0",
+        overlay_hash: "a".repeat(64),
+        evidence_digest: evidenceDigest(piRecords),
+        evidence_ids: piRecords.map((record) => ({ capability: record.capability, evidence_id: record.evidence_id, result: record.result, timestamp: record.timestamp, expires_at: record.expires_at })),
+      },
+      evidence_records: piRecords,
+      structural_transactional: { status: "provisional", required_evidence: ["E1", "E2", "E3", "E4"] },
+      native_discovery: { status: "unavailable", evidence: "E5", reason: "host_evidence_unavailable", remediation: "run E5" },
+      native_runtime: { status: "unavailable", evidence: "E6", reason: "host_evidence_unavailable", remediation: "run E6" },
+      semantic: { status: "unavailable", evidence: "E6", reason: "native_runtime_unavailable", remediation: "run E6" },
+    },
   })}\n`);
 
   createReleaseMetadata({
@@ -408,7 +477,7 @@ test("release metadata binds checksums, parity, and self-declared limitations", 
     outputDir: root,
     sourceCommit: COMMIT,
     sourceVersion: "test",
-    parityReportPath: parityReport,
+    admissionReportPath: admissionReport,
     sourceDateEpoch: 1700000000,
   });
   assert.equal(verifyReleaseMetadata({ archiveDir: root, outputDir: root }).ok, true);
@@ -417,6 +486,12 @@ test("release metadata binds checksums, parity, and self-declared limitations", 
   assert.equal(provenance.portable_core_attestation.supplied, true);
   assert.equal(provenance.portable_core_attestation.source_commit, COMMIT);
   assert.equal(provenance.build.artifacts[0].attestation.digest, provenance.portable_core_attestation.digest);
+  assert.equal(provenance.build.target_admission.gate, "current-target-admission-v1");
+  assert.deepEqual(provenance.build.target_admission.target_set, ["codex", "cursor", "kiro-cli", "pi"]);
+  assert.equal(provenance.pi_support.label, "pi.structural-transactional.provisional");
+  assert.equal(provenance.pi_support.evidence.E5, "unavailable");
+  assert.equal(provenance.external_prerequisites[0].name, "pi-subagents");
+  assert.equal(provenance.external_prerequisites[0].bundled, false);
   provenance.portable_core_attestation.digest = "0".repeat(64);
   fs.writeFileSync(path.join(root, "PROVENANCE.json"), `${JSON.stringify(provenance, null, 2)}\n`);
   assert.throws(
@@ -428,7 +503,7 @@ test("release metadata binds checksums, parity, and self-declared limitations", 
     outputDir: root,
     sourceCommit: COMMIT,
     sourceVersion: "test",
-    parityReportPath: parityReport,
+    admissionReportPath: admissionReport,
     sourceDateEpoch: 1700000000,
   });
   const changed = path.join(root, "maister-codex.tar.gz");

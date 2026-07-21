@@ -10,3 +10,7 @@
 
 /.worktrees/
 /.maister-kiro-build.lock.d/
+
+# Pix Agent
+.pi/
+.pi-lens/

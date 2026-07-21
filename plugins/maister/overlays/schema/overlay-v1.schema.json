@@ -20,8 +20,10 @@
   ],
   "properties": {
     "schema_version": { "const": 1 },
-    "overlay_id": { "type": "string", "pattern": "^maister/(codex|cursor|kiro-cli)$" },
+    "overlay_id": { "type": "string", "pattern": "^maister/(codex|cursor|kiro-cli|pi)$" },
     "overlay_version": { "$ref": "#/$defs/semver" },
+    "compatibility": { "$ref": "#/$defs/compatibility" },
+    "probes": { "$ref": "#/$defs/probes" },
     "target": { "$ref": "#/$defs/target" },
     "layout": {
       "type": "array",
@@ -69,6 +71,18 @@
     },
     "agent_projection": { "$ref": "#/$defs/agentProjection" }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "target": {
+            "properties": { "id": { "const": "pi" } }
+          }
+        }
+      },
+      "then": { "required": ["compatibility", "probes"] }
+    }
+  ],
   "$defs": {
     "semver": {
       "type": "string",
@@ -93,13 +107,17 @@
       "additionalProperties": false,
       "required": ["id", "host_version_constraint", "discovery_roots"],
       "properties": {
-        "id": { "enum": ["codex", "cursor", "kiro-cli"] },
+        "id": { "enum": ["codex", "cursor", "kiro-cli", "pi"] },
         "host_version_constraint": { "type": "string", "minLength": 1 },
         "discovery_roots": {
           "type": "array",
           "minItems": 1,
           "items": { "$ref": "#/$defs/relativePath" }
-        }
+        },
+        "adapter_id": { "type": "string", "minLength": 1 },
+        "projection": { "type": "string", "minLength": 1 },
+        "platform": { "enum": ["posix"] },
+        "path_policy": { "$ref": "#/$defs/pathPolicy" }
       }
     },
     "layoutEntry": {
@@ -111,7 +129,7 @@
         "destination": { "$ref": "#/$defs/relativePath" },
         "kind": { "enum": ["file", "tree", "template"] },
         "mode": { "$ref": "#/$defs/mode" },
-        "ownership": { "enum": ["whole_file", "managed_keys"] }
+        "ownership": { "enum": ["whole_file", "managed_keys", "plugin_private"] }
       }
     },
     "setting": {
@@ -121,10 +139,21 @@
       "properties": {
         "path": { "$ref": "#/$defs/relativePath" },
         "format": { "enum": ["json", "toml", "yaml", "shell"] },
-        "ownership": { "enum": ["whole_file", "managed_keys"] },
+        "ownership": { "enum": ["whole_file", "managed_keys", "managed_array_entries"] },
         "managed_keys": {
           "type": "array",
           "items": { "$ref": "#/$defs/relativePath" }
+        },
+        "array_path": { "$ref": "#/$defs/relativePath" },
+        "identity": { "type": "string", "minLength": 1 },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source"],
+            "properties": { "source": { "type": "string", "minLength": 1 } }
+          }
         },
         "merge_policy": { "const": "preserve_unmanaged_refuse_drift" }
       }
@@ -146,7 +175,11 @@
       "properties": {
         "required": { "$ref": "#/$defs/pathList" },
         "optional": { "$ref": "#/$defs/pathList" },
-        "forbidden": { "$ref": "#/$defs/pathList" }
+        "forbidden": { "$ref": "#/$defs/pathList" },
+        "command_origins": { "$ref": "#/$defs/originList" },
+        "skill_origins": { "$ref": "#/$defs/originList" },
+        "role_origins": { "$ref": "#/$defs/originList" },
+        "support_inventory": { "type": "array" }
       }
     },
     "pathList": {
@@ -163,6 +196,87 @@
         "syntax_checks": {
           "type": "array",
           "items": { "type": "string", "pattern": "^[a-z]+:[^\\s].*$" }
+        },
+        "forbidden_topology": { "$ref": "#/$defs/pathList" }
+      }
+    },
+    "originList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/origin" }
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "destination", "kind"],
+      "properties": {
+        "source": { "$ref": "#/$defs/relativePath" },
+        "destination": { "$ref": "#/$defs/relativePath" },
+        "kind": { "type": "string", "minLength": 1 },
+        "transform_id": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "logical_role_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "pathPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_root_env",
+        "default_agent_root",
+        "settings_path",
+        "session_root_env",
+        "package_root_env",
+        "package_path",
+        "containment"
+      ],
+      "properties": {
+        "agent_root_env": { "type": "string", "minLength": 1 },
+        "default_agent_root": { "type": "string", "minLength": 1 },
+        "settings_path": { "$ref": "#/$defs/relativePath" },
+        "session_root_env": { "type": "string", "minLength": 1 },
+        "package_root_env": { "type": "string", "minLength": 1 },
+        "package_path": { "$ref": "#/$defs/relativePath" },
+        "containment": { "const": "agent_root" }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pi", "node", "pi_subagents", "delegation_protocol"],
+      "properties": {
+        "pi": { "$ref": "#/$defs/semver" },
+        "node": { "$ref": "#/$defs/semver" },
+        "pi_subagents": { "$ref": "#/$defs/semver" },
+        "delegation_protocol": { "const": 1 }
+      }
+    },
+    "probes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executable", "prerequisite"],
+      "properties": {
+        "executable": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["command", "version_args", "expected_version", "resolve_realpath"],
+          "properties": {
+            "command": { "type": "string", "minLength": 1 },
+            "version_args": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+            "expected_version": { "$ref": "#/$defs/semver" },
+            "resolve_realpath": { "type": "boolean" }
+          }
+        },
+        "prerequisite": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["package", "export", "version_range", "tested_version", "protocol_version"],
+          "properties": {
+            "package": { "type": "string", "minLength": 1 },
+            "export": { "type": "string", "minLength": 1 },
+            "version_range": { "type": "string", "minLength": 1 },
+            "tested_version": { "$ref": "#/$defs/semver" },
+            "protocol_version": { "const": 1 }
+          }
         }
       }
     },
@@ -248,8 +362,8 @@
         "schema_version": { "const": 1 },
         "contract": { "const": "agent-projection-v1.json" },
         "projector_version": { "$ref": "#/$defs/semver" },
-        "adapter_id": { "enum": ["codex.exec", "cursor.native", "kiro-cli.native"] },
-        "representation": { "enum": ["codex-prompt-schema", "cursor-markdown", "kiro-descriptor-prompt"] },
+        "adapter_id": { "enum": ["codex.exec", "cursor.native", "kiro-cli.native", "pi.native"] },
+        "representation": { "enum": ["codex-prompt-schema", "cursor-markdown", "kiro-descriptor-prompt", "pi-agent-frontmatter"] },
         "canonical_roles": {
           "type": "array",
           "minItems": 28,

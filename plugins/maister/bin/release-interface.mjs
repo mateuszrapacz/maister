@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runCli } from "./maister-install.mjs";
-import { runParityReleaseGate } from "./parity-release.mjs";
+import { runCurrentTargetAdmission } from "./parity-release.mjs";
 import { assertCleanRepositoryTopology } from "./shadow-parity.mjs";
 import { validateOverlayCommand } from "./validate-overlay.mjs";
 import { generateE3Attestation } from "./generate-e3-attestation.mjs";
@@ -15,7 +15,6 @@ import { loadE3Attestation, portableCoreTreeHash } from "../lib/distribution/e3-
 import { SUPPORTED_TARGET_IDS } from "../lib/distribution/targets.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "../../..");
-const DEFAULT_ORACLE = path.join(ROOT, "tests/fixtures/platform-independent/parity-oracle/manifest.json");
 const FULL_COMMIT = /^[0-9a-f]{40}$/u;
 const VERSION = /^[A-Za-z0-9][A-Za-z0-9._+\-]{0,127}$/u;
 const SAFE_COMMAND = /^[A-Za-z0-9][A-Za-z0-9_./:+,=@%+\-]*(?: [A-Za-z0-9_./:+,=@%+\-]+)*$/u;
@@ -68,7 +67,7 @@ function inputPath(value, name, { required = true, mustExist = false, regularFil
 
 function targetValue(value) {
   if (!SUPPORTED_TARGET_IDS.includes(value)) {
-    fail("E_RELEASE_INTERFACE_TARGET", "TARGET must be codex, cursor, or kiro-cli", { target: value });
+    fail("E_RELEASE_INTERFACE_TARGET", `TARGET must be one of ${SUPPORTED_TARGET_IDS.join(", ")}`, { target: value });
   }
   return value;
 }
@@ -150,11 +149,38 @@ function assertPackageClosure(stage, target) {
     "overlays/cursor/assets/agents",
     "overlays/kiro-cli/assets/agents",
     ".codex/agents",
+    "overlays/pi/assets",
+    "overlays/pi/node_modules",
+    "overlays/pi/.pi",
+    "overlays/pi/auth",
+    "overlays/pi/trust",
+    "overlays/pi/sessions",
+    "overlays/pi/pi-subagents",
   ];
   for (const relative of forbidden) {
     if (fs.existsSync(path.join(pluginRoot, relative))) {
       fail("E_RELEASE_INTERFACE_PACKAGE", "package contains forbidden legacy or behavior-bearing assets", { target, path: relative });
     }
+  }
+
+  const forbiddenSegments = new Set([".pi", "auth", "credentials", "node_modules", "sessions", "trust"]);
+  const forbiddenEntries = [];
+  const visit = (current, relative = "") => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const child = path.join(current, entry.name);
+      const childRelative = relative ? `${relative}/${entry.name}` : entry.name;
+      if (forbiddenSegments.has(entry.name) || /(?:^|\/)pi-subagents(?:\/|$)/u.test(childRelative)) {
+        forbiddenEntries.push(childRelative);
+      }
+      if (entry.isDirectory() && !entry.isSymbolicLink()) visit(child, childRelative);
+    }
+  };
+  visit(pluginRoot);
+  if (forbiddenEntries.length > 0) {
+    fail("E_RELEASE_INTERFACE_PACKAGE", "package contains Pi operator-owned state or an external prerequisite", {
+      target,
+      paths: forbiddenEntries,
+    });
   }
 }
 
@@ -167,6 +193,13 @@ function removeForbiddenPackageTrees(stage) {
     "overlays/codex/parity-baseline.json",
     "overlays/cursor/parity-baseline.json",
     "overlays/kiro-cli/parity-baseline.json",
+    "overlays/pi/assets",
+    "overlays/pi/.pi",
+    "overlays/pi/auth",
+    "overlays/pi/trust",
+    "overlays/pi/sessions",
+    "overlays/pi/node_modules",
+    "overlays/pi/pi-subagents",
   ]) {
     fs.rmSync(path.join(pluginRoot, relative), { recursive: true, force: true });
   }
@@ -375,22 +408,23 @@ function runValidateOverlays() {
   };
 }
 
-async function runParity({ env = process.env } = {}) {
-  const oraclePath = regularInputFile(env.PARITY_ORACLE ?? DEFAULT_ORACLE, "PARITY_ORACLE");
-  const reportPath = env.PARITY_REPORT ? inputPath(env.PARITY_REPORT, "PARITY_REPORT") : null;
-  const result = await runParityReleaseGate({
+async function runCurrentTargetAdmissionCommand({ env = process.env } = {}) {
+  const reportPath = env.CURRENT_TARGET_ADMISSION_REPORT
+    ? inputPath(env.CURRENT_TARGET_ADMISSION_REPORT, "CURRENT_TARGET_ADMISSION_REPORT")
+    : null;
+  const archiveDir = env.CURRENT_TARGET_ADMISSION_ARCHIVE_DIR
+    ? inputPath(env.CURRENT_TARGET_ADMISSION_ARCHIVE_DIR, "CURRENT_TARGET_ADMISSION_ARCHIVE_DIR")
+    : undefined;
+  const evidencePath = env.CURRENT_TARGET_ADMISSION_EVIDENCE
+    ? regularInputFile(env.CURRENT_TARGET_ADMISSION_EVIDENCE, "CURRENT_TARGET_ADMISSION_EVIDENCE")
+    : undefined;
+  const result = await runCurrentTargetAdmission({
     root: ROOT,
-    oraclePath,
-    allowDirtyLocal: flagValueFrom(env, "PARITY_ALLOW_DIRTY_LOCAL", "0"),
     reportPath,
+    archiveDir,
+    evidencePath,
   });
   return result;
-}
-
-function flagValueFrom(env, name, defaultValue) {
-  const value = env[name] ?? defaultValue;
-  if (value !== "0" && value !== "1") fail("E_RELEASE_INTERFACE_FLAG", `${name} must be 0 or 1`, { name, value });
-  return value === "1";
 }
 
 function runTopology() {
@@ -421,7 +455,7 @@ export async function runReleaseInterface(command, { env = process.env } = {}) {
   if (command === "package") return packageTarget({ env });
   if (command === "validate-overlay") return runValidateOverlay({ env });
   if (command === "validate-overlays") return runValidateOverlays();
-  if (command === "parity-release") return runParity({ env });
+  if (command === "current-target-admission") return runCurrentTargetAdmissionCommand({ env });
   if (command === "topology") return runTopology();
   if (command === "install") return runInstall({ env });
   fail("E_RELEASE_INTERFACE_USAGE", `unknown release interface command: ${command}`, { command });

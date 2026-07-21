@@ -23,10 +23,14 @@ const EVALUATION_FIELDS = ["target", "capability", "capabilityClass", "required"
 const MANAGED_ROOT_FIELDS = ["root_id", "path", "ownership"];
 const INVENTORY_FIELDS = ["root_id", "path", "type", "mode", "sha256", "link_target", "ownership"];
 const SETTING_FIELDS = ["path", "format", "ownership", "managed_keys", "before_sha256", "after_sha256", "backup_ref", "mode", "before_mode"];
+const MANAGED_ARRAY_RECEIPT_FIELDS = [
+  "ownership_schema", "merge_schema", "settings_path", "array_path", "normalized_identity",
+  "entry_representation", "entry_before", "entry_after", "unmanaged_projection_sha256", "mode_before", "mode_after",
+];
 const TRANSACTION_FIELDS = ["journal_id", "backup_root", "backup_manifest_hash", "previous_receipt_id"];
 const STATUSES = new Set(["installed", "uninstalled"]);
 const INVENTORY_TYPES = new Set(["file", "directory", "symlink"]);
-const OWNERSHIP = new Set(["whole_file", "managed_keys"]);
+const OWNERSHIP = new Set(["whole_file", "managed_keys", "managed_array_entries"]);
 const ROOT_OWNERSHIP = new Set(["whole_tree", "leaf_set"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const SHA256 = /^[0-9a-f]{64}$/u;
@@ -192,12 +196,22 @@ function validateInventory(entries, rootsById) {
   }
 }
 
+function validatePackageEntry(value, location, nullable) {
+  if (nullable && value === null) return;
+  if (typeof value === "string") {
+    string(value, location);
+    return;
+  }
+  object(value, location);
+  string(value.source, `${location}.source`);
+}
+
 function validateSettings(settings, { paths } = {}) {
   array(settings, "settings");
   const seen = new Set();
   for (const [index, setting] of settings.entries()) {
     const location = `settings[${index}]`;
-    exactFields(setting, SETTING_FIELDS, location);
+    exactFieldsWithOptional(setting, SETTING_FIELDS, MANAGED_ARRAY_RECEIPT_FIELDS, location);
     const settingPath = relativePath(setting.path, `${location}.path`);
     if (seen.has(settingPath)) invalid("settings paths must be unique", { path: settingPath });
     seen.add(settingPath);
@@ -207,6 +221,29 @@ function validateSettings(settings, { paths } = {}) {
     for (const [keyIndex, key] of setting.managed_keys.entries()) relativePath(key, `${location}.managed_keys[${keyIndex}]`);
     if (setting.ownership === "whole_file" && setting.managed_keys.length > 0) invalid(`${location}.managed_keys must be empty for whole_file`, { location });
     if (setting.ownership === "managed_keys" && setting.managed_keys.length === 0) invalid(`${location}.managed_keys must be non-empty`, { location });
+    const hasManagedArrayFields = MANAGED_ARRAY_RECEIPT_FIELDS.some((field) => Object.hasOwn(setting, field));
+    if (setting.ownership === "managed_array_entries") {
+      if (!hasManagedArrayFields) invalid(`${location} is missing managed-array receipt fields`, { location });
+      for (const field of MANAGED_ARRAY_RECEIPT_FIELDS) if (!Object.hasOwn(setting, field)) invalid(`${location} is missing ${field}`, { location, field });
+      if (setting.ownership_schema !== "managed_array_entries_v1") invalid(`${location}.ownership_schema is unsupported`, { location });
+      if (setting.merge_schema !== "pi_local_package_v1") invalid(`${location}.merge_schema is unsupported`, { location });
+      if (setting.settings_path !== setting.path) invalid(`${location}.settings_path must equal settings.path`, { location });
+      relativePath(setting.array_path, `${location}.array_path`);
+      absolutePath(setting.normalized_identity, `${location}.normalized_identity`);
+      if (!new Set(["string", "object"]).has(setting.entry_representation)) invalid(`${location}.entry_representation is unsupported`, { location });
+      validatePackageEntry(setting.entry_before, `${location}.entry_before`, true);
+      validatePackageEntry(setting.entry_after, `${location}.entry_after`, false);
+      if ((setting.entry_representation === "string" && typeof setting.entry_after !== "string")
+        || (setting.entry_representation === "object" && (!setting.entry_after || typeof setting.entry_after !== "object" || Array.isArray(setting.entry_after)))) {
+        invalid(`${location}.entry_representation does not match entry_after`, { location });
+      }
+      nullableHash(setting.unmanaged_projection_sha256, `${location}.unmanaged_projection_sha256`, true);
+      nullableMode(setting.mode_before, `${location}.mode_before`);
+      nullableMode(setting.mode_after, `${location}.mode_after`, true);
+      if (setting.mode_after !== setting.mode) invalid(`${location}.mode_after must equal mode`, { location });
+    } else if (hasManagedArrayFields) {
+      invalid(`${location} has managed-array receipt fields for a non-managed-array setting`, { location });
+    }
     nullableHash(setting.before_sha256, `${location}.before_sha256`);
     nullableHash(setting.after_sha256, `${location}.after_sha256`);
     relativePath(setting.backup_ref, `${location}.backup_ref`);

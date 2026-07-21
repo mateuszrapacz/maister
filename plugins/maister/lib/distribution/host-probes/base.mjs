@@ -32,7 +32,7 @@ function assertTimeout(timeoutMs) {
 function timedOut(result) {
   return result?.timedOut === true
     || result?.error?.code === "ETIMEDOUT"
-    || (result?.status === null && result?.signal !== undefined);
+    || (result?.status === null && result?.signal !== null && result?.signal !== undefined);
 }
 
 function defaultRun(command, args, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {

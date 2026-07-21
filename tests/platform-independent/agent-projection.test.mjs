@@ -26,7 +26,7 @@ const PROJECTION_FIXTURE_PATH = path.join(
   ROOT,
   "tests/fixtures/platform-independent/agent-projection/named-transforms.json",
 );
-const TARGETS = ["codex", "cursor", "kiro-cli"];
+const TARGETS = ["codex", "cursor", "kiro-cli", "pi"];
 
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -116,6 +116,7 @@ test("projects an exact canonical bijection and separate support inventory for e
     codex: { canonical: 56, support: 0 },
     cursor: { canonical: 28, support: 1 },
     "kiro-cli": { canonical: 56, support: 4 },
+    pi: { canonical: 28, support: 0 },
   };
 
   for (const target of TARGETS) {
@@ -210,6 +211,25 @@ test("Cursor emits all exact maister native IDs including E2E with no Advisor-on
   assert.ok(canonicalPaths.includes("agents/e2e-test-verifier.md"));
   assert.match(outputByPath(projection, "agents/advisor.md").content, /^---\nname: maister-advisor\n/u);
   assert.equal(outputByPath(projection, "agents/advisor.md").content.includes("readonly:"), false);
+});
+
+test("Pi emits one exact package-agent descriptor per canonical role", () => {
+  const context = loadContext();
+  const projection = createProjection("pi", context);
+  const canonicalOutputs = projection.outputs.filter(({ ownership }) => ownership === "canonical");
+
+  assert.deepEqual(
+    canonicalOutputs.map(({ path: outputPath }) => outputPath),
+    context.agentIr.roles.map(({ role_id: roleId }) => `agents/maister-${roleId}.md`),
+  );
+  for (const role of context.agentIr.roles) {
+    const output = outputByPath(projection, `agents/maister-${role.role_id}.md`);
+    assert.match(output.content, new RegExp(`^---\\nname: "maister:${role.role_id}"\\n`, "u"));
+    assert.match(output.content, new RegExp(`\\nmaister_role_id: "${role.role_id}"\\n`, "u"));
+    assert.match(output.content, /\nprojection_schema: "pi-agent-frontmatter-v1"\n/u);
+    assert.match(output.content, /\ncanonical_source_sha256: "[0-9a-f]{64}"\n/u);
+    assert.equal(output.content.includes("name: maister-"), false);
+  }
 });
 
 test("Kiro emits descriptor/prompt pairs with 100 percent relative reference closure", () => {

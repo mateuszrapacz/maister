@@ -24,7 +24,10 @@ const SOURCE_ROOT = path.join(ROOT, "tests/fixtures/platform-independent/source-
 const MULTI_ROOT_HOME = path.join(ROOT, "tests/fixtures/platform-independent/user-homes/multi-root");
 const COMMIT = "0123456789abcdef0123456789abcdef01234567";
 const TARGETS = ["codex", "cursor", "kiro-cli"];
-const HARNESS_DEADLINE_MS = 12 * 60 * 1000;
+// The aggregate is intentionally exhaustive and can run close to eleven
+// minutes on a busy CI host. Keep the external watchdog bounded, but leave
+// enough margin for the same test when invoked through Make/CI supervision.
+const HARNESS_DEADLINE_MS = 15 * 60 * 1000;
 const HARNESS_HEARTBEAT_MS = 30 * 1000;
 const HARNESS_CHILD_ENV = "MAISTER_INSTALLER_TRANSACTION_CHILD";
 const isHarnessChild = process.env[HARNESS_CHILD_ENV] === "1";

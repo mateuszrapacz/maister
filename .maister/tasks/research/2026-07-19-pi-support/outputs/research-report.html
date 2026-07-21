@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First-Class Pi Support — Research Report</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { border-left:4px solid var(--accent); }
+.warn-card { border-left:4px solid var(--warn); }
+.ok-card { border-left:4px solid var(--ok); }
+.toc { font-size:12.5px; color:var(--dim); margin:18px 0; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+.flow { white-space:pre-wrap; overflow:auto; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:14px; font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace; }
+.muted { color:var(--dim); } .small { font-size:12px; } ul,ol { padding-left:21px; }
+header p { color:var(--dim); margin-top:-4px; }
+@media (max-width:720px) { body{padding:16px 12px 48px} table{display:block;overflow-x:auto} }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <span class="here">Report</span>
+  <a href="research-report.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+<header>
+  <span class="badge">Research report</span>
+  <h1>First-Class Pi Support for Maister</h1>
+  <p>Implementation-ready recommendation · generated 2026-07-19</p>
+</header>
+<div class="tiles">
+  <div class="tile"><b>12</b><span>finding areas</span></div>
+  <div class="tile"><b>5</b><span>source reports</span></div>
+  <div class="tile"><b>6</b><span>implementation slices</span></div>
+  <div class="tile"><b>28</b><span>agent roles</span></div>
+  <div class="tile"><b class="pass">High</b><span>architecture confidence</span></div>
+</div>
+
+<section class="card tldr">
+  <h2>TL;DR</h2>
+  <p>Maister should add <code>pi</code> as a fourth first-class target delivered as one generated local Pi package, with all behavior still owned by canonical Maister sources.</p>
+  <p>Native agents should run through public <code>pi-subagents/delegation</code> v1; Maister retains exact role resolution, append-before-side-effect recording, terminal identity verification, and its durable hash-chained event stream.</p>
+  <p>The install owns only <code>~/.pi/agent/maister/**</code> plus one identity-managed <code>packages</code> member. Active Pi, subagents, settings, auth, sessions, trust, and other packages remain operator-owned.</p>
+  <p>The verified tuple is Pi 0.80.10, Node 25.9.0, and <code>pi-subagents</code> 0.35.1. Research proves feasibility; product support remains unavailable until E1–E6 implementation and evidence.</p>
+</section>
+
+<div class="grid">
+<section class="card ok-card">
+  <h2>Key Decisions</h2>
+  <ul>
+    <li>Register <code>pi</code> as a real target with adapter <code>pi.native</code>; do not model it as a Codex/Kiro alias or an unmanaged companion install.</li>
+    <li>Materialize one deterministic Pi package at <code>~/.pi/agent/maister/</code>, generated from canonical skills, commands, common runtime, and all 28 canonical agents.</li>
+    <li>Use <code>pi-subagents/delegation</code> protocol v1 for native foreground execution. Keep <code>resolveAgent</code> and <code>readExecutionEventStream</code> owned by Maister.</li>
+    <li>Add identity-aware <code>managed_array_entries</code> ownership for exactly one local package declaration; never own the whole <code>packages</code> array and never call <code>pi install</code> inside the Maister transaction.</li>
+    <li>Keep <code>pi-subagents</code> external and operator-owned; verify exact configured identity/version and fail closed when absent, ambiguous, incompatible, or inactive.</li>
+    <li>Keep the immutable historical parity oracle scoped to Codex, Cursor, and Kiro CLI; admit Pi through a separate greenfield all-target gate.</li>
+    <li>Make support claims graduated and evidence-driven: registered → structural → transactional → native discovery → native runtime → semantic.</li>
+  </ul>
+</section>
+<section class="card warn-card">
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li>The future package must prove discovery of all 28 namespaced descriptors without ambient shadowing.</li>
+    <li>Commands require a reviewed prompt/skill/extension mapping; Pi has no standalone <code>commands/</code>.</li>
+    <li>Foreground delegation has no public durable replay or same-run resume.</li>
+    <li><code>managed_array_entries</code> is a new receipt/drift/rollback primitive.</li>
+    <li>Independent Pi updates must invalidate stale E5/E6.</li>
+    <li>Current historical parity validation has an unrelated <code>exact-native.mjs</code> baseline mismatch.</li>
+  </ul>
+</section>
+</div>
+
+<nav class="toc">Contents:
+  <a href="#answer">Architecture</a> · <a href="#host">Host contract</a> ·
+  <a href="#projection">Projection</a> · <a href="#runtime">Runtime</a> ·
+  <a href="#install">Installation</a> · <a href="#parity">Admission</a> ·
+  <a href="#evidence">Evidence</a> · <a href="#gaps">Gap matrix</a> ·
+  <a href="#tests">Tests</a> · <a href="#slices">Slices</a> · <a href="#risks">Risks</a>
+</nav>
+
+<main>
+<section id="answer">
+  <h2>1. Recommended architecture</h2>
+  <pre class="flow">Canonical Maister source
+  ├─ skills / commands / common runtime / 28 agents
+  └─ overlays/pi + projection rules
+          │ deterministic materialization
+          ▼
+~/.pi/agent/maister/  [Maister whole_tree]
+  ├─ package.json → extensions, skills, prompts
+  ├─ extensions/maister.ts
+  ├─ skills/* · prompts/* · agents/maister-*.md
+  └─ portable runtime/lib/bin closure
+          │ public delegation v1
+          ▼
+operator-owned pi-subagents 0.35.1 on active Pi 0.80.10
+          │ exact observed identity + bounded result
+          ▼
+Pi native port → exact-native adapter
+          │ durable append before/after side effect
+          ▼
+Maister hash-chained execution stream + E5/E6</pre>
+  <p>The design reuses the canonical projection, three-method runtime, transaction, and evidence policy. <span class="sev info">recommendation</span> <strong>High confidence.</strong>
+    Sources: <a href="../analysis/findings/01-maister-core-contract.md" target="_blank" rel="noopener">F1</a>,
+    <a href="../analysis/findings/02-pi-host-contract.md" target="_blank" rel="noopener">F2</a>,
+    <a href="../analysis/findings/03-pi-subagents-native-runtime.md" target="_blank" rel="noopener">F3</a>,
+    <a href="../analysis/findings/04-distribution-installation.md" target="_blank" rel="noopener">F4</a>,
+    <a href="../analysis/findings/05-compatibility-validation.md" target="_blank" rel="noopener">F5</a>.</p>
+</section>
+
+<section id="host">
+  <h2>2. Verified host contract</h2>
+  <table><thead><tr><th>Element</th><th>Verified baseline</th><th>Consequence</th><th>Confidence</th></tr></thead><tbody>
+    <tr><td>Active executable</td><td><code>.../node/25.9.0/bin/pi</code>, Pi 0.80.10</td><td>Bind evidence to executable realpath/version</td><td><span class="pass">High</span> · F2/F3/F4</td></tr>
+    <tr><td>Node</td><td>25.9.0; Pi engine ≥22.19.0</td><td>Validate runtime engine</td><td><span class="pass">High</span> · F2/F4</td></tr>
+    <tr><td>Stale copy</td><td>coding-agent 0.79.10 in user npm tree</td><td>Never infer host from arbitrary node_modules</td><td><span class="pass">High</span> · F2/F3</td></tr>
+    <tr><td>Subagents</td><td>configured 0.35.1; dev baseline Pi 0.80.10</td><td>Start with exact tuple, not wildcard range</td><td><span class="pass">High</span></td></tr>
+    <tr><td>Distribution</td><td>Pi package: extensions, skills, prompts, themes</td><td>One local package; no scattered leaves</td><td><span class="pass">High</span> · F2/F4</td></tr>
+    <tr><td>Commands</td><td>extension, prompt or skill origin; no commands directory</td><td>Explicit origin per command</td><td><span class="pass">High</span> · F2 PHC-2</td></tr>
+    <tr><td>Automation</td><td>print, JSONL, RPC, SDK; typed RPC failures</td><td>RPC for E5 discovery; terminal delegation for E6</td><td><span class="pass">High</span></td></tr>
+    <tr><td>Ambient discovery</td><td>agent-dir override does not hide <code>~/.agents/skills</code></td><td>Hermetic flags + collision checks</td><td><span class="pass">High</span> · F2 PHC-2</td></tr>
+  </tbody></table>
+  <div class="card warn-card"><strong>Resolved contradiction.</strong> The plan's 0.79.10 premise is stale. Reproducible PATH behavior establishes 0.80.10; the 0.79.10 copy is only a split-host negative case.</div>
+</section>
+
+<section id="projection">
+  <h2>3–4. Target, package, and canonical projections</h2>
+  <div class="grid">
+    <div class="card"><h3>Atomic target admission</h3><p>Add <code>pi</code> only with overlay/inventory, <code>pi.native</code>, representation/transforms/profiles, six semantic bindings, E1–E6, runtime/probes/release/tests. Registry-only must fail. <strong>High.</strong> F1 §§1–2.</p></div>
+    <div class="card"><h3>Owned package tree</h3><p><code>~/.pi/agent/maister/</code> contains manifest, source binding, thin extension, projected skills/prompts/agents, and portable closure. Pi manifest exposes only native resource kinds. <strong>Medium-high.</strong> F2/F4.</p></div>
+  </div>
+  <h3>Projection rules</h3>
+  <table><thead><tr><th>Resource</th><th>Canonical rule</th><th>Verification</th></tr></thead><tbody>
+    <tr><td>Skills</td><td>Copy/declared transform from canonical directories; preserve assets, safe references, modes and hashes; no generated source ownership.</td><td>Manifest discovery, ambient collision failure, deterministic hashes.</td></tr>
+    <tr><td>Text commands</td><td>Parameterized textual entry points become prompt templates.</td><td>RPC <code>get_commands</code> reports prompt origin.</td></tr>
+    <tr><td>Workflow commands</td><td>Reusable instruction/assets become skills.</td><td>RPC reports skill origin; progressive loading remains valid.</td></tr>
+    <tr><td>Imperative commands</td><td>Host/install/status/bridge control becomes thin extension commands calling portable core.</td><td>Extension origin and typed response.</td></tr>
+    <tr><td>28 agents</td><td>Exact bijection; one namespaced descriptor per canonical role; source digest + Pi execution profile; no hand-maintained body.</td><td>E5 enumerates 28 exact IDs and rejects shadowing; E6 checks ordinary + advisor roles.</td></tr>
+  </tbody></table>
+  <details class="card"><summary>Closed projection invariants</summary><p>Reject missing/duplicate roles, unsafe destinations, normalized collisions, undeclared transforms, foreign host vocabulary, policy controls Pi cannot enforce, and support assets covering canonical roles. Resolver chooses one exact external ID; terminal <code>response.agent</code> must match byte-for-byte. Sources: F1 §1.4 and F3 discovery.</p></details>
+</section>
+
+<section id="runtime">
+  <h2>5. Native runtime adapter</h2>
+  <div class="card ok-card"><strong>Verified probe:</strong> public delegation v1 produced <code>started</code>, bounded updates, then <code>completed</code> with <code>agent=researcher</code>, model, run ID, exit 0 and <code>NATIVE_API_OK</code>. Unknown agent returned typed <code>failed</code>; queued cancel returned <code>cancelled</code>. F3 P2–P4.</div>
+  <ol>
+    <li>Maister <code>resolveAgent</code> validates target paths, receipt/projection/provenance, logical role, policies and capabilities; produces <code>pi.native</code> plan.</li>
+    <li>Native port resolves active Pi/Node/subagents/protocol/auth/readiness and exact agent discovery; missing capability is <code>unavailable</code>.</li>
+    <li>Durably append dispatch/attempt before request emission; failed append prevents launch.</li>
+    <li>Subscribe before emit; use <code>requestId=dispatch_id</code>, exact agent, cwd/context and supported bounds.</li>
+    <li>Sanitize and bound started/update fields into the Maister event schema.</li>
+    <li>Map terminal status; require exact observed identity even when process/text look successful.</li>
+    <li>Durably append terminal result; <code>readExecutionEventStream</code> reads only Maister's hash chain.</li>
+    <li>On cancel or post-launch record failure emit v1 cancel and record its observable outcome.</li>
+  </ol>
+  <div class="grid">
+    <div class="card"><h3>Use</h3><p>Exported <code>pi-subagents/delegation</code> v1 for foreground dispatch; Pi RPC for host/resource inventory.</p></div>
+    <div class="card warn-card"><h3>Do not use</h3><p>Parent model tool mediation, deep imports, private async status/events files, or process-local background snapshots as durable history.</p></div>
+  </div>
+  <p><strong>Limits:</strong> no public foreground replay/same-run resume; lost execution becomes typed failure and retry is a new dispatch. Background-work exposes only process-local provider/id/session. F1 §1.6; F3 API and capability matrix.</p>
+</section>
+
+<section id="install">
+  <h2>6. Installation and recovery</h2>
+  <table><thead><tr><th>State</th><th>Owner</th><th>Mechanism</th></tr></thead><tbody>
+    <tr><td><code>~/.pi/agent/maister/**</code></td><td>Maister</td><td>One private whole-tree transaction</td></tr>
+    <tr><td>Exact local package membership</td><td>Maister</td><td>One identity-aware managed array entry</td></tr>
+    <tr><td>Settings file + other entries</td><td>Pi/operator</td><td>Snapshot for rollback; preserve values/order; no whole-array ownership</td></tr>
+    <tr><td>Pi executable + subagents</td><td>Operator</td><td>Read-only prerequisite/version probe</td></tr>
+    <tr><td>Auth/sessions/trust/models/ambient skills</td><td>Operator</td><td>Never own, archive or log</td></tr>
+    <tr><td><code>$XDG_STATE_HOME/maister/pi/**</code></td><td>Maister</td><td>Lock, staging, journal, backup, receipt</td></tr>
+  </tbody></table>
+  <div class="card"><h3><code>managed_array_entries</code></h3><p>Own exactly the package identity resolving to <code>~/.pi/agent/maister</code>. Normalize relative paths as Pi does; string <code>"./maister"</code> and object <code>{source:"./maister",...}</code> are the same identity. Duplicate/conflicting identity or owned-member drift fails before mutation. Receipt records array path, normalized identity, exact entry, merge version, hashes/modes and backup. F4 §4.2. <strong>High confidence.</strong></p></div>
+  <h3>Lifecycle</h3>
+  <ol>
+    <li>Resolve/revalidate one immutable local/archive/GitHub source and its Pi overlay.</li>
+    <li>Read-only probe active Pi and configured subagents tuple.</li>
+    <li>Materialize complete package and 28 roles in empty same-filesystem staging.</li>
+    <li>Reject unmanaged root, symlink/path or settings identity collision, unsafe manifest, incompatible prerequisite.</li>
+    <li>Snapshot roots, exact settings bytes/mode, active receipt and recovery state.</li>
+    <li>Atomically replace tree, then merge one package member.</li>
+    <li>Verify receipt bytes/modes/links/member; produce E4 and optional E5/E6.</li>
+    <li>Publish receipt only after integrity succeeds.</li>
+  </ol>
+  <p>Update repeats drift checks. Uninstall removes only the exact member and tree. Failure restores exact settings bytes/mode, tree topology and prior receipt. Never invoke <code>pi install</code> inside the transaction. F4 §§1.2, 4.3.</p>
+</section>
+
+<section id="parity">
+  <h2>7. Greenfield admission vs historical parity</h2>
+  <div class="grid">
+    <div class="card"><h3>Historical oracle</h3><p><code>MIGRATED_PARITY_TARGET_IDS</code>: Codex, Cursor, Kiro CLI. Immutable pre-migration comparison stays unchanged.</p></div>
+    <div class="card ok-card"><h3>Greenfield admission</h3><p><code>SUPPORTED_TARGET_IDS</code>: all four targets. Overlay, projection, install, runtime, evidence, archive, lifecycle, topology and release gates include Pi.</p></div>
+  </div>
+  <p>A synthetic Pi legacy tree would be dishonest. Existing targets pass both gates; Pi passes all-target admission only. F1 historical parity; F4 §6. <strong>High confidence.</strong></p>
+</section>
+
+<section id="evidence">
+  <h2>8. Evidence and support levels</h2>
+  <table><thead><tr><th>Level</th><th>Required proof</th><th>Research status</th><th>Product now</th></tr></thead><tbody>
+    <tr><td>E1 Overlay</td><td>Closed overlay/inventory/ownership/bindings</td><td>Design only</td><td class="fail">Unavailable</td></tr>
+    <tr><td>E2 Materialization</td><td>Deterministic package + exact 28-role/skill/command projection</td><td>Design only</td><td class="fail">Unavailable</td></tr>
+    <tr><td>E3 Portable core</td><td>Fresh source/commit attestation consumed by Pi</td><td>Producer reusable; Pi binding absent</td><td class="fail">Unavailable</td></tr>
+    <tr><td>E4 Installer</td><td>Receipt/journal/verify/update/uninstall/rollback/recovery</td><td>Primitives proven; array owner absent</td><td class="fail">Unavailable</td></tr>
+    <tr><td>E5 Discovery</td><td>0.80.10/25.9.0/0.35.1 + protocol + exact 28 IDs/origins</td><td>Partial host proof; not projected set</td><td class="fail">Unavailable</td></tr>
+    <tr><td>E6 Runtime</td><td>Ordinary + advisor, exact identities, terminal + durable Maister events, failure/cancel</td><td>Researcher feasibility proven; adapter absent</td><td class="fail">Unavailable</td></tr>
+  </tbody></table>
+  <table><thead><tr><th>Support term</th><th>Minimum</th><th>Allowed claim</th></tr></thead><tbody>
+    <tr><td>Registered</td><td>Schema knows Pi</td><td>Internal target only</td></tr>
+    <tr><td>Structural</td><td>E1–E3</td><td>Deterministic package</td></tr>
+    <tr><td>Transactional</td><td>E1–E4</td><td>Lifecycle supported</td></tr>
+    <tr><td>Native discovery</td><td>Fresh E5</td><td>Exact tuple identities/controls</td></tr>
+    <tr><td>Native runtime</td><td>Fresh E6</td><td>Exact native dispatch</td></tr>
+    <tr><td>Semantic</td><td>E1–E6 + role behavior</td><td>Full claim for tested tuple/scenario</td></tr>
+    <tr><td>Provisional package</td><td>E1–E4; E5/E6 explicitly unavailable</td><td>No native/semantic claim</td></tr>
+  </tbody></table>
+  <p>Freshness binds versions, source/overlay/commit, scenario/schema/projector, digests and time. Any tuple/digest/scenario change or later failure renews/blocks evidence. F5 evidence policy.</p>
+</section>
+
+<section id="gaps">
+  <h2>9. Four-target gap matrix</h2>
+  <table><thead><tr><th>Area</th><th>Codex</th><th>Cursor</th><th>Kiro CLI</th><th>Pi action</th></tr></thead><tbody>
+    <tr><td>Root</td><td>whole plugin</td><td>whole plugin</td><td>tree + agent leaves</td><td>local package + managed member</td></tr>
+    <tr><td>Skills</td><td>projection</td><td>projection + support</td><td>projection</td><td><code>pi.skills</code> + collision check</td></tr>
+    <tr><td>Commands</td><td>plugin/skill</td><td>Cursor surface</td><td>CLI skills</td><td>prompt/skill/extension mapping</td></tr>
+    <tr><td>28 agents</td><td>prompt profiles</td><td>descriptors</td><td>descriptor/prompt</td><td>namespaced subagents descriptors</td></tr>
+    <tr><td>Gates/state</td><td>portable</td><td>portable</td><td>portable</td><td>reuse portable core</td></tr>
+    <tr><td>Runtime</td><td>codex exec</td><td>cursor.native</td><td>kiro-cli.native</td><td>pi.native → delegation v1</td></tr>
+    <tr><td>Identity/events</td><td>exact + durable</td><td>normalized</td><td>normalized</td><td>response.agent + Maister stream</td></tr>
+    <tr><td>Install</td><td>tree</td><td>tree</td><td>multi-root</td><td>tree + array member</td></tr>
+    <tr><td>Evidence/release</td><td>E1–E6</td><td>E1–E6</td><td>E1–E6</td><td>target closure + Pi probes/archive</td></tr>
+    <tr><td>Parity</td><td>legacy + admission</td><td>legacy + admission</td><td>legacy + admission</td><td>greenfield admission only</td></tr>
+  </tbody></table>
+</section>
+
+<section id="tests">
+  <h2>10. Requirements-to-test traceability</h2>
+  <table><thead><tr><th>Requirement</th><th>Suites</th><th>Pi acceptance/negative additions</th></tr></thead><tbody>
+    <tr><td>R1–R6 IR/projection/identity</td><td>overlay, agent-ir/projection/resolver, topology</td><td>28-role bijection; namespace/profiles; no copies; missing/duplicate/transform failures</td></tr>
+    <tr><td>R7–R12 registry/materialization</td><td>target-registry, source-materializer, projection</td><td>fourth counts; byte-identical builds; origins; safe paths/modes/hashes</td></tr>
+    <tr><td>R13–R16 adapters/bindings</td><td>adapters, composition, events, overlay</td><td>v1 launch; unknown/wrong/missing ID; malformed/duplicate/timeout/cancel; no fallback</td></tr>
+    <tr><td>R17–R22 lifecycle</td><td>registry, installer transaction, topology</td><td>identity dedupe; preserve settings; drift; rollback/recovery; auth/session untouched</td></tr>
+    <tr><td>R23–R28 resolution/events/gates</td><td>resolver, adapters, events, gate evaluator</td><td>durable prelaunch; write-failure cancel; lost terminal; Maister-only resumed read</td></tr>
+    <tr><td>R29–R31 evidence</td><td>evidence topology, installer</td><td>exact tuple; 28-ID E5; ordinary/advisor E6; freshness; typed unavailable</td></tr>
+    <tr><td>R32–R35 release</td><td>make, package, parity, topology</td><td>archive/SBOM/provenance/lifecycle; no foreign assets; split parity/admission</td></tr>
+  </tbody></table>
+  <details class="card"><summary>Mandatory negatives</summary><ul>
+    <li>Missing/unsupported Pi, Node, subagents, auth/readiness → typed unavailable.</li>
+    <li>Ambient shadowing → collision, never alternate identity.</li>
+    <li>RPC prompt acceptance or process exit 0 without terminal exact identity → not E6.</li>
+    <li>Stale tuple/digest/scenario → evidence renewal.</li>
+    <li>Generated Pi behavior checked into forbidden source topology → failure.</li>
+    <li>E1–E4 alone → at most provisional packaging.</li>
+  </ul></details>
+</section>
+
+<section id="slices">
+  <h2>11. Staged implementation slices</h2>
+  <div class="grid">
+    <div class="card"><span class="badge">Slice 0</span><h3>Contract + parity split</h3><p>Central enumeration, Pi schema identity, projection migration, migrated/all-target sets.</p><p><strong>Accept:</strong> registry-only fails; legacy oracle unchanged; greenfield gate recognizes Pi; baseline green.</p></div>
+    <div class="card"><span class="badge">Slice 1</span><h3>Overlay + projections</h3><p>Package manifest, skills/commands, 28 profiles/descriptors.</p><p><strong>Accept:</strong> exact bijection, deterministic builds, expected origins/IDs, no duplicated behavior.</p></div>
+    <div class="card"><span class="badge">Slice 2</span><h3>Transactional lifecycle</h3><p>Managed array entries, receipt migration, drift, rollback/recovery.</p><p><strong>Accept:</strong> equivalent source modes; unrelated state untouched; collisions fail; exact restore.</p></div>
+    <div class="card"><span class="badge">Slice 3</span><h3>pi.native bridge</h3><p>Delegation v1, preflight, identity, sanitization, terminal/cancel.</p><p><strong>Accept:</strong> exact success; all negative paths typed; durable-before-launch; no fallback.</p></div>
+    <div class="card"><span class="badge">Slice 4</span><h3>E1–E6</h3><p>E5 inventory and ordinary/advisor E6 scenarios with freshness.</p><p><strong>Accept:</strong> exact tuple only; unavailable runners honest; stale proof blocked; production adapter reproduces probe.</p></div>
+    <div class="card"><span class="badge">Slice 5</span><h3>Release + CI + docs</h3><p>Archives, checksums, SBOM/provenance, extracted lifecycle, claim vocabulary.</p><p><strong>Accept:</strong> reproducible four-target release; external tuple not bundled; split gates; claims match evidence.</p></div>
+    <div class="card"><span class="badge">Slice 6</span><h3>Semantic qualification</h3><p>Read-only, shell, writer, advisor and orchestrator behavior.</p><p><strong>Accept:</strong> no unresolved semantic differences before “semantically verified”.</p></div>
+  </div>
+</section>
+
+<section id="risks">
+  <h2>12. Risks and unsupported outcomes</h2>
+  <table><thead><tr><th>Risk</th><th>Consequence</th><th>Mitigation</th><th>Confidence</th></tr></thead><tbody>
+    <tr><td>Package-local agent discovery</td><td>E5 cannot prove projected IDs</td><td>Final-package discovery, fail unavailable</td><td>Medium</td></tr>
+    <tr><td>Public export resolution</td><td>Bridge cannot import API</td><td>Lifecycle smoke; no deep import/bundling without escalation</td><td>Medium-high</td></tr>
+    <tr><td>Cancel/process loss</td><td>Orphan or missing terminal</td><td>Bounded tests, cancel correlation, typed timeout/failure</td><td>Medium</td></tr>
+    <tr><td>Ambient shadowing</td><td>Wrong identity</td><td>Namespace, E5 inventory, hermetic flags, collision failure</td><td>High</td></tr>
+    <tr><td>Array merge bug</td><td>Settings corruption</td><td>Adversarial transaction + exact rollback tests</td><td>High</td></tr>
+    <tr><td>Host update</td><td>Stale support claim</td><td>Tuple/scenario freshness binding</td><td>High</td></tr>
+    <tr><td>Internal API coupling</td><td>Brittle integration</td><td>Package exports only; import/topology tests</td><td>High</td></tr>
+    <tr><td>Parity drift</td><td>Release red</td><td>Resolve concurrent drift; never weaken oracle</td><td>High</td></tr>
+  </tbody></table>
+  <div class="card warn-card"><strong>Explicitly unsupported in v1:</strong> private subagents RPC/async-file coupling; automatic subagents install/removal; project-scope install without a trust design; Pi-native durable foreground resume; semantic/full-parity claims without fresh E1–E6 and role scenarios.</div>
+  <p><strong>Overall:</strong> architecture and staged plan <span class="pass">high confidence</span>; package-local discovery/import mechanics <span class="sev warning">medium-high</span>; product support claim <span class="fail">unavailable today</span>.</p>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <ul>
+    <li><a href="../analysis/findings/01-maister-core-contract.md" target="_blank" rel="noopener">F1 — Maister Core Contract</a>: tracked source and tests at commit <code>debc79d…</code>.</li>
+    <li><a href="../analysis/findings/02-pi-host-contract.md" target="_blank" rel="noopener">F2 — Pi Host Contract</a>: active 0.80.10 host, package/RPC probes.</li>
+    <li><a href="../analysis/findings/03-pi-subagents-native-runtime.md" target="_blank" rel="noopener">F3 — Native Runtime</a>: installed 0.35.1 source and success/negative/cancel/background probes.</li>
+    <li><a href="../analysis/findings/04-distribution-installation.md" target="_blank" rel="noopener">F4 — Distribution and Installation</a>: ownership/lifecycle and safety tests.</li>
+    <li><a href="../analysis/findings/05-compatibility-validation.md" target="_blank" rel="noopener">F5 — Compatibility and Validation</a>: E1–E6, gaps and traceability.</li>
+    <li><a href="https://github.com/earendil-works/pi/tree/v0.80.10/packages/coding-agent">Pi v0.80.10 source</a>, accessed 2026-07-19.</li>
+  </ul>
+  <p class="muted small">No active Pi settings, credentials, sessions, installed package files, or Maister production sources were modified during research.</p>
+</section>
+</main>
+</body>
+</html>

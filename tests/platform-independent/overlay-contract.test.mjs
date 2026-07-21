@@ -98,7 +98,22 @@ const REQUIRED_INVENTORY = {
     "hooks/*.sh",
     "agent-tools.json",
   ],
+  pi: [
+    "package.json",
+    ".maister-source.json",
+    "agent-projection-v1.json",
+    "pi-command-projection-v1.json",
+    "extensions/maister.ts",
+    "skills/**/SKILL.md",
+    "prompts/*.md",
+    "agents/maister-*.md",
+    "common/**",
+    "lib/**",
+    "bin/**",
+    "orchestrator-framework/**",
+  ],
 };
+const LEGACY_PROJECTION_TARGET_IDS = ["codex", "cursor", "kiro-cli"];
 
 function fixturePaths(target) {
   const fixtureRoot = path.join(FIXTURE_ROOT, target);
@@ -157,7 +172,7 @@ function loadRealAgentIr() {
   });
 }
 
-test("accepts valid Codex, Cursor, and Kiro CLI fixtures with required inventories", () => {
+test("accepts valid registered target fixtures with required inventories", () => {
   for (const target of SUPPORTED_TARGET_IDS) {
     const loaded = loadOverlay(fixturePaths(target));
     const checkedIn = loadOverlay(checkedInOverlayPaths(target));
@@ -171,6 +186,89 @@ test("accepts valid Codex, Cursor, and Kiro CLI fixtures with required inventori
       REQUIRED_PRIMITIVES,
     );
     assert.deepEqual(checkedIn.overlay.agent_projection, loaded.overlay.agent_projection);
+  }
+});
+
+test("accepts the closed Pi target, ownership, compatibility, probes, bindings, and inventories", () => {
+  const { overlay, inventory } = loadOverlay(fixturePaths("pi"));
+
+  assert.deepEqual(overlay.target, {
+    id: "pi",
+    adapter_id: "pi.native",
+    projection: "pi.native",
+    host_version_constraint: "0.80.x",
+    platform: "posix",
+    discovery_roots: [".pi/agent/maister"],
+    path_policy: {
+      agent_root_env: "PI_CODING_AGENT_DIR",
+      default_agent_root: "$HOME/.pi/agent",
+      settings_path: "settings.json",
+      session_root_env: "PI_CODING_AGENT_SESSION_DIR",
+      package_root_env: "PI_PACKAGE_DIR",
+      package_path: "maister",
+      containment: "agent_root",
+    },
+  });
+  assert.deepEqual(overlay.compatibility, {
+    pi: "0.80.10",
+    node: "25.9.0",
+    pi_subagents: "0.35.1",
+    delegation_protocol: 1,
+  });
+  assert.deepEqual(overlay.probes, {
+    executable: {
+      command: "pi",
+      version_args: ["--version"],
+      expected_version: "0.80.10",
+      resolve_realpath: true,
+    },
+    prerequisite: {
+      package: "pi-subagents",
+      export: "pi-subagents/delegation",
+      version_range: ">=0.35.0 <0.36.0",
+      tested_version: "0.35.1",
+      protocol_version: 1,
+    },
+  });
+  assert.equal(overlay.layout[0].ownership, "plugin_private");
+  assert.equal(overlay.settings.length, 1);
+  assert.deepEqual(overlay.settings[0], {
+    path: "settings.json",
+    format: "json",
+    ownership: "managed_array_entries",
+    managed_keys: [],
+    array_path: "packages",
+    identity: "pi_local_package_v1",
+    entries: [{ source: "./maister" }],
+    merge_policy: "preserve_unmanaged_refuse_drift",
+  });
+  assert.deepEqual(Object.keys(overlay.semantic_bindings).sort(), REQUIRED_PRIMITIVES);
+  assert.equal(overlay.semantic_bindings.delegate_agent.adapter, "pi.native");
+  assert.equal(overlay.semantic_bindings.track_progress.adapter, "execution-event-writer");
+  assert.equal(overlay.inventory.command_origins.length, 14);
+  assert.equal(overlay.inventory.skill_origins.length, 29);
+  assert.equal(overlay.inventory.role_origins.length, 28);
+  assert.deepEqual(overlay.inventory.support_inventory, []);
+  assert.ok(overlay.validation.forbidden_topology.includes("commands/**"));
+  assert.ok(overlay.validation.forbidden_topology.includes("pi-subagents/**"));
+  assert.deepEqual(inventory.agent_projection, overlay.agent_projection);
+});
+
+test("rejects Pi unknown fields, unsafe paths, duplicate destinations, incomplete roles, missing bindings, and bundled pi-subagents", () => {
+  const mutations = [
+    (overlay) => { overlay.probes.unexpected = true; },
+    (overlay) => { overlay.layout[0].destination = "../outside"; },
+    (overlay) => { overlay.inventory.command_origins.push({ ...overlay.inventory.command_origins[0] }); },
+    (overlay) => { overlay.inventory.role_origins.pop(); },
+    (overlay) => { delete overlay.semantic_bindings.continue_workflow; },
+    (overlay) => { overlay.inventory.required.push("pi-subagents/**"); },
+  ];
+  for (const mutate of mutations) {
+    const overlay = readFixture("pi");
+    mutate(overlay);
+    expectOverlayError(() => validateOverlay(overlay), "E_OVERLAY_" + (
+      mutations.indexOf(mutate) === 1 ? "PATH" : mutations.indexOf(mutate) === 2 ? "COLLISION" : mutations.indexOf(mutate) === 3 ? "INVENTORY" : mutations.indexOf(mutate) === 4 ? "BINDINGS" : mutations.indexOf(mutate) === 5 ? "COLLISION" : "SCHEMA"
+    ));
   }
 });
 
@@ -447,12 +545,12 @@ test("rejects unknown projection fields, unsupported profile IDs, and incomplete
 test("builds a deterministic sorted manifest with exact target identities and profile bindings", () => {
   const ir = loadRealAgentIr();
   const contract = loadAgentProjectionContract({ projectionPath: AGENT_PROJECTION_PATH });
-  const overlays = Object.fromEntries(SUPPORTED_TARGET_IDS.map((target) => [target, loadOverlay(fixturePaths(target)).overlay]));
+  const overlays = Object.fromEntries(LEGACY_PROJECTION_TARGET_IDS.map((target) => [target, loadOverlay(fixturePaths(target)).overlay]));
   const first = buildAgentManifest({ agentIr: ir, projectionContract: contract, overlays });
   const second = buildAgentManifest({ agentIr: ir, projectionContract: contract, overlays });
 
   assert.deepEqual(second, first);
-  assert.equal(first.rows.length, EXPECTED_ROLE_IDS.length * SUPPORTED_TARGET_IDS.length);
+  assert.equal(first.rows.length, EXPECTED_ROLE_IDS.length * LEGACY_PROJECTION_TARGET_IDS.length);
   assert.match(first.manifest_digest, /^[0-9a-f]{64}$/u);
   assert.equal(first.canonical_set_digest, ir.canonical_set_digest);
   assert.deepEqual(first.support_inventory.map(({ support_id }) => support_id), [
@@ -476,7 +574,7 @@ test("builds a deterministic sorted manifest with exact target identities and pr
     assert.ok(rows.every((row) => typeof row.execution_profile_id === "string"));
     assert.ok(rows.every((row) => Object.isFrozen(row.execution_policy)));
   }
-  for (const target of SUPPORTED_TARGET_IDS) {
+  for (const target of LEGACY_PROJECTION_TARGET_IDS) {
     const executionProfileFor = (roleId) => first.rows.find((row) => row.role_id === roleId && row.target === target).execution_profile_id;
     assert.equal(executionProfileFor("advisor"), executionProfileFor("bottleneck-analyzer"));
   }
@@ -485,7 +583,7 @@ test("builds a deterministic sorted manifest with exact target identities and pr
 test("returns no manifest when IR, target, or profile validation fails", () => {
   const ir = loadRealAgentIr();
   const contract = readProjectionContract();
-  const overlays = Object.fromEntries(SUPPORTED_TARGET_IDS.map((target) => [target, loadOverlay(fixturePaths(target)).overlay]));
+  const overlays = Object.fromEntries(LEGACY_PROJECTION_TARGET_IDS.map((target) => [target, loadOverlay(fixturePaths(target)).overlay]));
   contract.roles[0].execution_profiles.codex = "codex.missing";
   let manifest;
 
@@ -538,7 +636,7 @@ test("rejects duplicate execution profiles and target-to-adapter identity mismat
 test("rejects unsupported overlay profile references during manifest construction", () => {
   const ir = loadRealAgentIr();
   const contract = loadAgentProjectionContract({ projectionPath: AGENT_PROJECTION_PATH });
-  const overlays = Object.fromEntries(SUPPORTED_TARGET_IDS.map((target) => [target, loadOverlay(fixturePaths(target)).overlay]));
+  const overlays = Object.fromEntries(LEGACY_PROJECTION_TARGET_IDS.map((target) => [target, loadOverlay(fixturePaths(target)).overlay]));
   overlays.codex.agent_projection.execution_profile_ids[0] = "codex.unknown";
 
   expectTypedError(

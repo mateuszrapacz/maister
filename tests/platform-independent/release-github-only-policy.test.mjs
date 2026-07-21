@@ -32,17 +32,17 @@ test("protected workflow proves tag, commit, package manifest, and artifact iden
   ]) assert.match(releaseWorkflow, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"));
 });
 
-test("strict parity runs before the prepare-owned manifest can dirty the checkout", () => {
+test("current all-target admission runs before the prepare-owned manifest can dirty the checkout", () => {
   const dependencyInstall = releaseWorkflow.indexOf("npm ci --ignore-scripts");
   const cleanAssertion = releaseWorkflow.indexOf("git status --porcelain");
-  const parity = releaseWorkflow.indexOf("make test-parity-release PARITY_REPORT=dist/parity-release.json");
+  const admission = releaseWorkflow.indexOf("make test-current-target-admission");
   const prepare = releaseWorkflow.indexOf("npm run prepare");
 
   assert.ok(dependencyInstall >= 0, "release dependencies must be installed without prepare side effects");
-  assert.ok(cleanAssertion > dependencyInstall && parity > cleanAssertion, "strict parity must receive a proven-clean checkout");
-  assert.ok(prepare > parity, "the resolved-commit manifest must be generated only at the package boundary");
+  assert.ok(cleanAssertion > dependencyInstall && admission > cleanAssertion, "current target admission must receive a proven-clean checkout");
+  assert.ok(prepare > admission, "the resolved-commit manifest must be generated only at the package boundary");
   assert.doesNotMatch(releaseWorkflow, /MAISTER_ALLOW_DIRTY_LOCAL/u);
-  assert.doesNotMatch(releaseWorkflow.slice(0, parity), /\.maister-resolved-commit\.json/u);
+  assert.doesNotMatch(releaseWorkflow.slice(0, admission), /\.maister-resolved-commit\.json/u);
 });
 
 test("protected release jobs pin one npm version and post-Release smoke all three operating systems", () => {

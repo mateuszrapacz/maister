@@ -27,6 +27,13 @@ export function createAgentRuntime({
     codex: workerManager ? { workerManager } : undefined,
     cursor: { nativePort: nativePorts.cursor, eventPort, clock },
     kiroCli: { nativePort: nativePorts.kiroCli, eventPort, clock },
+    pi: {
+      nativePort: nativePorts.pi,
+      eventBus: nativePorts.pi?.eventBus,
+      delegation: nativePorts.pi?.delegation,
+      eventPort,
+      clock,
+    },
   });
   const taskPreparer = createDispatchTaskPreparer({ projection, workingRoot });
   return Object.freeze({

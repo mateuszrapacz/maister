@@ -5,7 +5,7 @@ import { parseCliArgs } from "../../plugins/maister/lib/distribution/cli-contrac
 import { validateJournal } from "../../plugins/maister/lib/distribution/journal-schema.mjs";
 import { validateReceipt } from "../../plugins/maister/lib/distribution/receipt-schema.mjs";
 import { getTargetPaths } from "../../plugins/maister/lib/distribution/target-paths.mjs";
-import { SUPPORTED_TARGETS, SUPPORTED_TARGET_IDS } from "../../plugins/maister/lib/distribution/targets.mjs";
+import { getTargetDefinition, SUPPORTED_TARGETS, SUPPORTED_TARGET_IDS } from "../../plugins/maister/lib/distribution/targets.mjs";
 
 const JOURNAL = Object.freeze({
   schema_version: 2,
@@ -62,12 +62,48 @@ test("registered targets expose stable immutable managed-root ownership", () => 
       { rootId: "plugin_private", discoveryRoot: ".kiro-maister", ownership: "whole_tree" },
       { rootId: "kiro_native_agents", discoveryRoot: ".kiro/agents", ownership: "leaf_set" },
     ],
+    pi: [{ rootId: "plugin_private", discoveryRoot: ".pi/agent/maister", ownership: "whole_tree" }],
   });
   for (const target of SUPPORTED_TARGETS) {
     assert.equal(Object.isFrozen(target), true, target.id);
     assert.equal(Object.isFrozen(target.managedRoots), true, target.id);
     assert.equal(target.managedRoots.every(Object.isFrozen), true, target.id);
   }
+});
+
+test("Pi exposes the native identity, compatibility tuple, and closed path policy", () => {
+  const definition = getTargetDefinition("pi");
+
+  assert.deepEqual({
+    adapterId: definition.adapterId,
+    projectionId: definition.projectionId,
+    platform: definition.platform,
+    pathPolicy: definition.pathPolicy,
+    compatibility: definition.compatibility,
+    probes: definition.probes,
+  }, {
+    adapterId: "pi.native",
+    projectionId: "pi.native",
+    platform: "posix",
+    pathPolicy: {
+      agentRootEnv: "PI_CODING_AGENT_DIR",
+      defaultAgentRoot: ".pi/agent",
+      settingsPath: "settings.json",
+      sessionRootEnv: "PI_CODING_AGENT_SESSION_DIR",
+      packageRootEnv: "PI_PACKAGE_DIR",
+      packagePath: "maister",
+    },
+    compatibility: {
+      pi: "0.80.10",
+      node: "25.9.0",
+      piSubagents: "0.35.1",
+      delegationProtocol: 1,
+    },
+    probes: {
+      executable: "pi",
+      prerequisite: "pi-subagents",
+    },
+  });
 });
 
 test("target paths resolve every managed root under one target lock", () => {
@@ -82,6 +118,35 @@ test("target paths resolve every managed root under one target lock", () => {
     assert.equal(paths.managedRoots.every((root) => root.path.startsWith(`${home}/`)), true, target);
     assert.equal(paths.lockPath, `${env.XDG_STATE_HOME}/maister/${target}/install.lock`, target);
   }
+});
+
+test("Pi resolves its agent root from PI_CODING_AGENT_DIR before HOME and rejects non-POSIX platforms", () => {
+  const home = "/tmp/maister-pi-home";
+  const env = { XDG_STATE_HOME: "/tmp/maister-pi-state" };
+  const defaultPaths = getTargetPaths({ target: "pi", home, env, platform: "darwin" });
+  assert.equal(defaultPaths.agentRoot, `${home}/.pi/agent`);
+  assert.equal(defaultPaths.activeRoot, `${home}/.pi/agent/maister`);
+  assert.equal(defaultPaths.settingsPath, `${home}/.pi/agent/settings.json`);
+
+  const configuredPaths = getTargetPaths({
+    target: "pi",
+    home,
+    env: {
+      ...env,
+      PI_CODING_AGENT_DIR: "/tmp/configured-pi-agent",
+      PI_CODING_AGENT_SESSION_DIR: "/tmp/configured-pi-sessions",
+    },
+    platform: "linux",
+  });
+  assert.equal(configuredPaths.agentRoot, "/tmp/configured-pi-agent");
+  assert.equal(configuredPaths.activeRoot, "/tmp/configured-pi-agent/maister");
+  assert.equal(configuredPaths.settingsPath, "/tmp/configured-pi-agent/settings.json");
+  assert.equal(configuredPaths.sessionRoot, "/tmp/configured-pi-sessions");
+
+  assert.throws(
+    () => getTargetPaths({ target: "pi", home, env, platform: "win32" }),
+    (error) => error?.code === "E_USAGE" && /POSIX/u.test(error.message),
+  );
 });
 
 test("journal v2 validates root identity as part of the transaction contract", () => {

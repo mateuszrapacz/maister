@@ -16,24 +16,41 @@ function absoluteHome(home) {
   return resolved;
 }
 
-export function getTargetPaths({ target, home, env = process.env }) {
+export function getTargetPaths({ target, home, env = process.env, platform = process.platform }) {
   const definition = getTargetDefinition(target);
   if (!definition) {
     throwDistributionError("E_USAGE", `unsupported target: ${target}`, { target });
   }
   const homeRoot = absoluteHome(home);
+  if (target === "pi" && !["darwin", "linux"].includes(platform)) {
+    throwDistributionError("E_USAGE", "pi target supports POSIX platforms only", { target, platform });
+  }
+  const agentRoot = target === "pi"
+    ? path.resolve(homeRoot, env.PI_CODING_AGENT_DIR || definition.pathPolicy.defaultAgentRoot)
+    : null;
+  const rootBase = agentRoot || homeRoot;
   const stateBase = path.resolve(env.XDG_STATE_HOME || path.join(homeRoot, ".local", "state"));
   const stateRoot = path.join(stateBase, "maister", target);
   const managedRoots = Object.freeze(definition.managedRoots.map((root) => Object.freeze({
     rootId: root.rootId,
-    path: path.resolve(homeRoot, ...root.discoveryRoot.split("/")),
+    path: target === "pi"
+      ? path.resolve(rootBase, definition.pathPolicy.packagePath)
+      : path.resolve(homeRoot, ...root.discoveryRoot.split("/")),
     ownership: root.ownership,
   })));
   const activeRoot = managedRoots.find(({ rootId }) => rootId === "plugin_private").path;
+  const sessionRoot = target === "pi" && env.PI_CODING_AGENT_SESSION_DIR
+    ? path.resolve(homeRoot, env.PI_CODING_AGENT_SESSION_DIR)
+    : undefined;
   return Object.freeze({
     target,
     home: homeRoot,
     discoveryRoot: TARGETS[target],
+    ...(target === "pi" ? {
+      agentRoot,
+      settingsPath: path.join(agentRoot, definition.pathPolicy.settingsPath),
+      ...(sessionRoot ? { sessionRoot } : {}),
+    } : {}),
     activeRoot,
     managedRoots,
     stateRoot,

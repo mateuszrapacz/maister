@@ -14,11 +14,12 @@ const MANIFEST_ERROR_CODES = new Set([
   "E_AGENT_MANIFEST_SCHEMA",
   "E_AGENT_MANIFEST_TARGET",
 ]);
-const TARGET_IDS = ["codex", "cursor", "kiro-cli"];
+const TARGET_IDS = ["codex", "cursor", "kiro-cli", "pi"];
 const EXPECTED_TARGETS = Object.freeze({
   codex: Object.freeze({ adapter_id: "codex.exec", representation: "codex-prompt-schema", native_role_external_id_template: null }),
   cursor: Object.freeze({ adapter_id: "cursor.native", representation: "cursor-markdown", native_role_external_id_template: "maister-{role_id}" }),
   "kiro-cli": Object.freeze({ adapter_id: "kiro-cli.native", representation: "kiro-descriptor-prompt", native_role_external_id_template: "maister-{role_id}" }),
+  pi: Object.freeze({ adapter_id: "pi.native", representation: "pi-agent-frontmatter", native_role_external_id_template: "maister:{role_id}" }),
 });
 const SAFE_ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const SAFE_PROFILE_ID = /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$/u;
@@ -338,7 +339,7 @@ function validateSupportInventory(contract, catalogs) {
     const location = `support_inventory[${index}]`;
     ensureFields(entry, ["support_id", "target", "native_role_external_id", "execution_profile_id", "assets"], location);
     ensureString(entry.support_id, `${location}.support_id`);
-    if (!/^(?:codex|cursor|kiro-cli):[a-z][a-z0-9-]*$/u.test(entry.support_id)) {
+    if (!/^(?:codex|cursor|kiro-cli|pi):[a-z][a-z0-9-]*$/u.test(entry.support_id)) {
       fail("E_AGENT_MANIFEST_INVENTORY", `${location}.support_id must be target-qualified`, { supportId: entry.support_id });
     }
     supportIds.push(entry.support_id);
@@ -430,8 +431,14 @@ function validateAgentIr(agentIr, projectionContract) {
 
 function validateOverlayBindings(overlays, contract) {
   ensureMapping(overlays, "overlays", "E_AGENT_MANIFEST_TARGET");
-  ensureFields(overlays, TARGET_IDS, "overlays", { code: "E_AGENT_MANIFEST_TARGET" });
-  for (const targetId of TARGET_IDS) {
+  const suppliedTargets = Object.keys(overlays);
+  if (suppliedTargets.length === 0) {
+    fail("E_AGENT_MANIFEST_TARGET", "overlays must contain at least one registered target", {});
+  }
+  for (const targetId of suppliedTargets) {
+    if (!TARGET_IDS.includes(targetId)) {
+      fail("E_AGENT_MANIFEST_TARGET", `overlays has unknown field ${targetId}`, { field: targetId });
+    }
     const projection = overlays[targetId]?.agent_projection;
     ensureMapping(projection, `overlays.${targetId}.agent_projection`, "E_AGENT_MANIFEST_TARGET");
     const target = contract.targets[targetId];
@@ -498,7 +505,7 @@ export function buildAgentManifest({ agentIr, projectionContract, overlays } = {
   const rows = [];
   for (const roleContract of contract.roles) {
     const role = irByRole.get(roleContract.role_id);
-    for (const targetId of TARGET_IDS) {
+    for (const targetId of Object.keys(overlays).sort((left, right) => left.localeCompare(right, "en-US"))) {
       const target = contract.targets[targetId];
       const executionProfileId = roleContract.execution_profiles[targetId];
       const executionProfile = catalogs.execution.get(executionProfileId);

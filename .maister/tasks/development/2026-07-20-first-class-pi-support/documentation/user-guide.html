@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pi support guide</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, -apple-system, sans-serif; line-height: 1.5; }
+    body { max-width: 900px; margin: 0 auto; padding: 2rem; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre { overflow-x: auto; padding: 1rem; border: 1px solid #8886; border-radius: .4rem; }
+    .notice { border-left: .35rem solid #b7791f; padding: .7rem 1rem; background: #b7791f22; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Pi support guide</h1>
+    <p class="notice"><strong>Graduated support:</strong> A complete bound E1-E6 manifest publishes <code>pi.native-semantic</code>. If both native levels are unavailable, the explicit fallback is <code>pi.structural-transactional.provisional</code>. The current pinned host has passed E5/E6.</p>
+    <h2>Supported contract</h2>
+    <p>Pi 0.80.10, Node 25.9.0, pi-subagents 0.35.1, and public delegation protocol v1. Unsupported tuples fail closed. Operator-owned Pi state and external prerequisites are not bundled.</p>
+    <h2>Install</h2>
+    <pre><code>node plugins/maister/bin/maister-install.mjs install \
+  --target pi \
+  --source local:/path/to/extracted-package \
+  --evidence plugins/maister/.maister-e3-attestation.json \
+  --json</code></pre>
+    <h2>Lifecycle</h2>
+    <p>Use <code>verify</code>, <code>update</code>, <code>rollback</code>, <code>recover</code>, and <code>uninstall</code> through the same generated installer. Recovery selects an exact journal with <code>--journal-id</code> when multiple unresolved journals exist.</p>
+    <h2>Ownership and delegation</h2>
+    <p>Maister owns only its package tree and one identity-managed <code>packages[]</code> entry. The public <code>maister-delegate</code> extension command delegates through public v1 exports with bounded budgets, typed cancellation/process-loss outcomes, and durable redacted hash-chained observations.</p>
+    <h2>Evidence</h2>
+    <p>E5 proves the pinned host and public package identity. E6 proves the full ordinary/advisor delegation lifecycle. Both must pass together on one fresh binding; unavailable, mixed, stale, or expired records cannot publish a native-semantic claim.</p>
+    <h2>Verification</h2>
+    <pre><code>node --test tests/platform-independent/pi-integration.test.mjs
+make test-current-target-admission</code></pre>
+  </main>
+</body>
+</html>

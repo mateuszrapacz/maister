@@ -35,7 +35,11 @@
     "canonical-body-v1",
     "codex-output-schema-v1",
     "cursor-frontmatter-v1",
-    "kiro-descriptor-v1"
+    "kiro-descriptor-v1",
+    "pi-agent-frontmatter-v1",
+    "pi-prompt-v1",
+    "pi-reference-rewrite-v1",
+    "pi-skill-v1"
   ],
   "defaults": {
     "canonical_model_profile_id": "inherit"
@@ -44,15 +48,30 @@
     "tools": [
       {
         "id": "tools.read-only",
-        "tools": ["read", "search"]
+        "tools": [
+          "read",
+          "search"
+        ]
       },
       {
         "id": "tools.read-only-shell",
-        "tools": ["read", "search", "shell"]
+        "tools": [
+          "read",
+          "search",
+          "shell"
+        ]
       },
       {
         "id": "tools.workspace",
-        "tools": ["read", "search", "write", "shell", "web", "browser", "cloud"]
+        "tools": [
+          "read",
+          "search",
+          "write",
+          "shell",
+          "web",
+          "browser",
+          "cloud"
+        ]
       }
     ],
     "permissions": [
@@ -214,6 +233,17 @@
         "timeout_profile_id": "timeout.standard",
         "output_schema_profile_id": "output-schema.role-result-v1",
         "concurrency_profile_id": "concurrency.workspace-write"
+      },
+      {
+        "id": "pi.native",
+        "target": "pi",
+        "tools_profile_id": "tools.read-only",
+        "permissions_profile_id": "permissions.read-only",
+        "model_profile_id": "model.host-inherit",
+        "reasoning_profile_id": "reasoning.host-inherit",
+        "timeout_profile_id": "timeout.standard",
+        "output_schema_profile_id": "output-schema.role-result-v1",
+        "concurrency_profile_id": "concurrency.read-only"
       }
     ]
   },
@@ -234,7 +264,10 @@
           "mode": "0644"
         }
       ],
-      "transform_ids": ["canonical-body-v1", "codex-output-schema-v1"],
+      "transform_ids": [
+        "canonical-body-v1",
+        "codex-output-schema-v1"
+      ],
       "support_ids": []
     },
     "cursor": {
@@ -248,8 +281,13 @@
           "mode": "0644"
         }
       ],
-      "transform_ids": ["canonical-body-v1", "cursor-frontmatter-v1"],
-      "support_ids": ["cursor:explore"]
+      "transform_ids": [
+        "canonical-body-v1",
+        "cursor-frontmatter-v1"
+      ],
+      "support_ids": [
+        "cursor:explore"
+      ]
     },
     "kiro-cli": {
       "adapter_id": "kiro-cli.native",
@@ -267,39 +305,286 @@
           "mode": "0644"
         }
       ],
-      "transform_ids": ["canonical-body-v1", "kiro-descriptor-v1"],
-      "support_ids": ["kiro-cli:explore", "kiro-cli:maister"]
+      "transform_ids": [
+        "canonical-body-v1",
+        "kiro-descriptor-v1"
+      ],
+      "support_ids": [
+        "kiro-cli:explore",
+        "kiro-cli:maister"
+      ]
+    },
+    "pi": {
+      "adapter_id": "pi.native",
+      "representation": "pi-agent-frontmatter",
+      "native_role_external_id_template": "maister:{role_id}",
+      "destinations": [
+        {
+          "kind": "package-agent",
+          "path_template": "agents/maister-{role_id}.md",
+          "mode": "0644"
+        }
+      ],
+      "transform_ids": [
+        "canonical-body-v1",
+        "pi-agent-frontmatter-v1"
+      ],
+      "support_ids": []
     }
   },
   "roles": [
-    { "role_id": "advisor", "execution_profiles": { "codex": "codex.read-only", "cursor": "cursor.read-only", "kiro-cli": "kiro-cli.read-only" } },
-    { "role_id": "bottleneck-analyzer", "execution_profiles": { "codex": "codex.read-only", "cursor": "cursor.read-only", "kiro-cli": "kiro-cli.read-only" } },
-    { "role_id": "code-quality-pragmatist", "execution_profiles": { "codex": "codex.read-only-shell", "cursor": "cursor.read-only-shell", "kiro-cli": "kiro-cli.read-only-shell" } },
-    { "role_id": "code-reviewer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "codebase-analysis-reporter", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "docs-operator", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "e2e-test-verifier", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "gap-analyzer", "execution_profiles": { "codex": "codex.read-only", "cursor": "cursor.read-only", "kiro-cli": "kiro-cli.read-only" } },
-    { "role_id": "html-companion-writer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "implementation-completeness-checker", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "implementation-planner", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "information-gatherer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "production-readiness-checker", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "project-analyzer", "execution_profiles": { "codex": "codex.read-only", "cursor": "cursor.read-only", "kiro-cli": "kiro-cli.read-only" } },
-    { "role_id": "reality-assessor", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "research-planner", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "research-synthesizer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "solution-brainstormer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "solution-designer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "spec-auditor", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "specification-creator", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "task-classifier", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "task-group-implementer", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "test-suite-runner", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "thermo-nuclear-code-quality-review-subagent", "execution_profiles": { "codex": "codex.read-only", "cursor": "cursor.read-only", "kiro-cli": "kiro-cli.read-only" } },
-    { "role_id": "thermo-nuclear-review-subagent", "execution_profiles": { "codex": "codex.read-only-shell", "cursor": "cursor.read-only-shell", "kiro-cli": "kiro-cli.read-only-shell" } },
-    { "role_id": "ui-mockup-generator", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } },
-    { "role_id": "user-docs-generator", "execution_profiles": { "codex": "codex.workspace-write", "cursor": "cursor.workspace-write", "kiro-cli": "kiro-cli.workspace-write" } }
+    {
+      "role_id": "advisor",
+      "execution_profiles": {
+        "codex": "codex.read-only",
+        "cursor": "cursor.read-only",
+        "kiro-cli": "kiro-cli.read-only",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "bottleneck-analyzer",
+      "execution_profiles": {
+        "codex": "codex.read-only",
+        "cursor": "cursor.read-only",
+        "kiro-cli": "kiro-cli.read-only",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "code-quality-pragmatist",
+      "execution_profiles": {
+        "codex": "codex.read-only-shell",
+        "cursor": "cursor.read-only-shell",
+        "kiro-cli": "kiro-cli.read-only-shell",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "code-reviewer",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "codebase-analysis-reporter",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "docs-operator",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "e2e-test-verifier",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "gap-analyzer",
+      "execution_profiles": {
+        "codex": "codex.read-only",
+        "cursor": "cursor.read-only",
+        "kiro-cli": "kiro-cli.read-only",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "html-companion-writer",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "implementation-completeness-checker",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "implementation-planner",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "information-gatherer",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "production-readiness-checker",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "project-analyzer",
+      "execution_profiles": {
+        "codex": "codex.read-only",
+        "cursor": "cursor.read-only",
+        "kiro-cli": "kiro-cli.read-only",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "reality-assessor",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "research-planner",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "research-synthesizer",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "solution-brainstormer",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "solution-designer",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "spec-auditor",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "specification-creator",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "task-classifier",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "task-group-implementer",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "test-suite-runner",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "thermo-nuclear-code-quality-review-subagent",
+      "execution_profiles": {
+        "codex": "codex.read-only",
+        "cursor": "cursor.read-only",
+        "kiro-cli": "kiro-cli.read-only",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "thermo-nuclear-review-subagent",
+      "execution_profiles": {
+        "codex": "codex.read-only-shell",
+        "cursor": "cursor.read-only-shell",
+        "kiro-cli": "kiro-cli.read-only-shell",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "ui-mockup-generator",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    },
+    {
+      "role_id": "user-docs-generator",
+      "execution_profiles": {
+        "codex": "codex.workspace-write",
+        "cursor": "cursor.workspace-write",
+        "kiro-cli": "kiro-cli.workspace-write",
+        "pi": "pi.native"
+      }
+    }
   ],
   "support_inventory": [
     {
@@ -308,7 +593,12 @@
       "native_role_external_id": "explore",
       "execution_profile_id": "cursor.read-only",
       "assets": [
-        { "kind": "agent", "source": "assets/support-agents/explore.md", "destination": "agents/explore.md", "mode": "0644" }
+        {
+          "kind": "agent",
+          "source": "assets/support-agents/explore.md",
+          "destination": "agents/explore.md",
+          "mode": "0644"
+        }
       ]
     },
     {
@@ -317,8 +607,18 @@
       "native_role_external_id": "maister-explore",
       "execution_profile_id": "kiro-cli.read-only",
       "assets": [
-        { "kind": "descriptor", "source": "assets/support-agents/maister-explore.json", "destination": "maister-explore.json", "mode": "0644" },
-        { "kind": "prompt", "source": "assets/support-agents/instructions/maister-explore.md", "destination": "instructions/maister-explore.md", "mode": "0644" }
+        {
+          "kind": "descriptor",
+          "source": "assets/support-agents/maister-explore.json",
+          "destination": "maister-explore.json",
+          "mode": "0644"
+        },
+        {
+          "kind": "prompt",
+          "source": "assets/support-agents/instructions/maister-explore.md",
+          "destination": "instructions/maister-explore.md",
+          "mode": "0644"
+        }
       ]
     },
     {
@@ -327,8 +627,18 @@
       "native_role_external_id": "maister",
       "execution_profile_id": "kiro-cli.workspace-write",
       "assets": [
-        { "kind": "descriptor", "source": "assets/support-agents/maister.json", "destination": "maister.json", "mode": "0644" },
-        { "kind": "prompt", "source": "assets/support-agents/instructions/maister.md", "destination": "instructions/maister.md", "mode": "0644" }
+        {
+          "kind": "descriptor",
+          "source": "assets/support-agents/maister.json",
+          "destination": "maister.json",
+          "mode": "0644"
+        },
+        {
+          "kind": "prompt",
+          "source": "assets/support-agents/instructions/maister.md",
+          "destination": "instructions/maister.md",
+          "mode": "0644"
+        }
       ]
     }
   ]

@@ -51,6 +51,12 @@ function failure(plan, status, code, message, nativeObservations = {}, observedN
   });
 }
 
+function adapterErrorCode(error) {
+  return typeof error?.code === "string" && /^E_[A-Z0-9_]+$/u.test(error.code)
+    ? error.code
+    : "E_AGENT_ADAPTER_FAILURE";
+}
+
 function validateObservation(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError("adapter observation must be a mapping");
   const allowed = new Set(OBSERVATION_FIELDS);
@@ -84,10 +90,13 @@ export async function dispatchAgent({ plan: candidatePlan, task, adapters } = {}
       task: deepFreeze(structuredClone(task ?? null)),
     }));
   } catch (error) {
-    return failure(plan, "failed", "E_AGENT_ADAPTER_FAILURE", `exact adapter ${plan.adapter_id} failed: ${error.message}`);
+    const code = adapterErrorCode(error);
+    return failure(plan, error?.status === "unavailable" ? "unavailable" : "failed", code, `exact adapter ${plan.adapter_id} failed: ${error.message}`);
   }
 
-  if (observation.observed_native_role_external_id !== plan.native_role_external_id) {
+  const identityMismatch = observation.observed_native_role_external_id !== plan.native_role_external_id;
+  const adapterAlreadyTypedIdentityFailure = typeof observation.error?.code === "string" && observation.error.code.startsWith("E_PI_");
+  if (identityMismatch && (observation.status === "succeeded" || (!adapterAlreadyTypedIdentityFailure && observation.error === null))) {
     return failure(
       plan,
       "failed",

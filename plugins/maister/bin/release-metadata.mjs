@@ -5,15 +5,28 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import {
+  CURRENT_RELEASE_TARGETS,
+  PI_NATIVE_SEMANTIC_CLAIM,
+  PI_PROVISIONAL_CLAIM,
+  validateCurrentTargetAdmission,
+} from "./parity-release.mjs";
 import { e3AttestationDigest, validateE3Attestation } from "../lib/distribution/e3-attestation.mjs";
 import { SUPPORTED_TARGET_IDS } from "../lib/distribution/targets.mjs";
 
-const ARCHIVE_PATTERN = /^maister-(codex|cursor|kiro-cli)\.tar\.gz$/u;
+const ARCHIVE_PATTERN = /^maister-(codex|cursor|kiro-cli|pi)\.tar\.gz$/u;
 const FULL_COMMIT = /^[0-9a-f]{40}$/u;
 const METADATA_VERSION = 1;
 const SBOM_NAME = "SBOM.cdx.json";
 const PROVENANCE_NAME = "PROVENANCE.json";
 const EMBEDDED_ATTESTATION_PATH = "plugins/maister/.maister-e3-attestation.json";
+const PI_EXTERNAL_PREREQUISITE = Object.freeze({
+  name: "pi-subagents",
+  version: "0.35.1",
+  source: "operator-owned active Pi package-manager prerequisite",
+  bundled: false,
+  protocol: "public delegation v1",
+});
 const MAX_ARCHIVE_BYTES = 256 * 1024 * 1024;
 
 export class ReleaseMetadataError extends Error {
@@ -47,6 +60,9 @@ function readChecksums(archiveDir) {
     const match = /^(?<hash>[0-9a-f]{64})\s+(?:\*|)(?<name>[^\s]+)$/u.exec(line);
     if (!match || !ARCHIVE_PATTERN.test(match.groups.name)) {
       throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", "SHA256SUMS contains an invalid archive entry", { line });
+    }
+    if (checksums.has(match.groups.name)) {
+      throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", "SHA256SUMS contains a duplicate archive entry", { line });
     }
     checksums.set(match.groups.name, match.groups.hash);
   }
@@ -121,10 +137,31 @@ function archiveObservations(archiveDir) {
         actual: hash,
       });
     }
-    return Object.freeze({ target, name, sha256: hash, size: fs.statSync(filePath).size, attestation: readEmbeddedAttestation(filePath) });
+    let entries;
+    try {
+      entries = execFileSync("tar", ["-tzf", filePath], {
+        encoding: "utf8",
+        maxBuffer: MAX_ARCHIVE_BYTES,
+        stdio: ["ignore", "pipe", "pipe"],
+      }).split(/\r?\n/u).filter(Boolean);
+    } catch (error) {
+      throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", `could not inspect ${name}`, { filePath }, { cause: error });
+    }
+    const forbidden = entries.filter((entry) => /(?:^|\/)(?:\.pi|auth|credentials|node_modules|sessions|trust|pi-subagents)(?:\/|$)/u.test(entry));
+    if (forbidden.length > 0) {
+      throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", `${name} contains forbidden Pi state or an external prerequisite`, {
+        target,
+        forbidden,
+      });
+    }
+    const packageRootEntries = new Set(["plugins", "plugins/", "plugins/maister", "plugins/maister/"]);
+    if (entries.some((entry) => !packageRootEntries.has(entry) && !entry.startsWith("plugins/maister/"))) {
+      throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", `${name} contains files outside the Maister package closure`, { target });
+    }
+    return Object.freeze({ target, name, sha256: hash, size: fs.statSync(filePath).size, entries: entries.length, attestation: readEmbeddedAttestation(filePath) });
   });
   if (checksums.size !== archives.length) {
-    throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", "SHA256SUMS must contain exactly the three target archives", {
+    throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", "SHA256SUMS must contain exactly the four current target archives", {
       expected: archives.length,
       actual: checksums.size,
     });
@@ -152,21 +189,16 @@ function assertAttestationSet(archives, sourceCommit, sourceVersion) {
   return first;
 }
 
-function validateParityReport(parityReportPath) {
-  const report = readJson(parityReportPath, "parity report");
-  if (report.schema_version !== 1 || report.gate !== "three-target-shadow-parity" || report.ok !== true) {
-    throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", "parity report is not a successful three-target gate result", { parityReportPath });
+function readCurrentTargetAdmission(admissionReportPath) {
+  try {
+    return validateCurrentTargetAdmission(readJson(admissionReportPath, "current target admission report"));
+  } catch (error) {
+    if (error instanceof ReleaseMetadataError) throw error;
+    throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", "current target admission report is invalid", {
+      admissionReportPath,
+      cause: error.message,
+    }, { cause: error });
   }
-  if (!Array.isArray(report.targets) || report.targets.length !== SUPPORTED_TARGET_IDS.length) {
-    throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", "parity report does not cover all targets", { parityReportPath });
-  }
-  for (const target of SUPPORTED_TARGET_IDS) {
-    const entry = report.targets.find((candidate) => candidate?.target === target);
-    if (!entry || entry.ok !== true || entry.counts?.unresolved !== 0) {
-      throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", `parity report is not green for ${target}`, { target });
-    }
-  }
-  return report;
 }
 
 function writeJson(filePath, value) {
@@ -184,15 +216,22 @@ export function createReleaseMetadata({
   outputDir = archiveDir,
   sourceCommit,
   sourceVersion = "unknown",
-  parityReportPath,
+  admissionReportPath,
   sourceDateEpoch = process.env.SOURCE_DATE_EPOCH ?? "0",
 } = {}) {
-  if (!archiveDir || !parityReportPath) {
-    throw new ReleaseMetadataError("E_RELEASE_METADATA_USAGE", "archiveDir and parityReportPath are required");
+  if (!archiveDir || !admissionReportPath) {
+    throw new ReleaseMetadataError("E_RELEASE_METADATA_USAGE", "archiveDir and admissionReportPath are required");
   }
   validateSourceCommit(sourceCommit);
   const archives = archiveObservations(path.resolve(archiveDir));
-  const parityReport = validateParityReport(path.resolve(parityReportPath));
+  const admissionReport = readCurrentTargetAdmission(path.resolve(admissionReportPath));
+  if (admissionReport.pi_support.evidence_binding?.source_commit !== sourceCommit
+    || admissionReport.pi_support.evidence_binding?.source_version !== String(sourceVersion)) {
+    throw new ReleaseMetadataError("E_RELEASE_METADATA_INPUT", "Pi evidence binding does not match the release source identity", {
+      expected: { source_commit: sourceCommit, source_version: String(sourceVersion) },
+      actual: admissionReport.pi_support.evidence_binding,
+    });
+  }
   const attestation = assertAttestationSet(archives, sourceCommit, sourceVersion);
   const epoch = Number(sourceDateEpoch);
   if (!Number.isSafeInteger(epoch) || epoch < 0) {
@@ -211,20 +250,35 @@ export function createReleaseMetadata({
       component: { type: "application", name: "maister", version: String(sourceVersion) },
       properties: [
         { name: "maister.source.commit", value: sourceCommit },
-        { name: "maister.parity.report.sha256", value: sha256File(path.resolve(parityReportPath)) },
+        { name: "maister.current-target-admission.report.sha256", value: sha256File(path.resolve(admissionReportPath)) },
+        { name: "maister.pi.support.claim", value: admissionReport.pi_support.label },
       ],
     },
-    components: archives.map((archive) => ({
-      type: "file",
-      name: archive.name,
-      version: String(sourceVersion),
-      hashes: [{ alg: "SHA-256", content: archive.sha256 }],
-      properties: [
-        { name: "maister.target", value: archive.target },
-        { name: "maister.e3.attestation.digest", value: archive.attestation.digest },
-        { name: "maister.e3.attestation.sha256", value: archive.attestation.sha256 },
-      ],
-    })),
+    components: [
+      ...archives.map((archive) => ({
+        type: "file",
+        name: archive.name,
+        version: String(sourceVersion),
+        hashes: [{ alg: "SHA-256", content: archive.sha256 }],
+        properties: [
+          { name: "maister.target", value: archive.target },
+          { name: "maister.e3.attestation.digest", value: archive.attestation.digest },
+          { name: "maister.e3.attestation.sha256", value: archive.attestation.sha256 },
+        ],
+      })),
+      {
+        type: "library",
+        name: PI_EXTERNAL_PREREQUISITE.name,
+        version: PI_EXTERNAL_PREREQUISITE.version,
+        scope: "excluded",
+        properties: [
+          { name: "maister.external-prerequisite", value: "true" },
+          { name: "maister.bundled", value: "false" },
+          { name: "maister.source", value: PI_EXTERNAL_PREREQUISITE.source },
+          { name: "maister.protocol", value: PI_EXTERNAL_PREREQUISITE.protocol },
+        ],
+      },
+    ],
   };
 
   const provenance = {
@@ -238,13 +292,18 @@ export function createReleaseMetadata({
     },
     build: {
       source_date_epoch: epoch,
-      parity_gate: {
-        report: path.basename(parityReportPath),
-        sha256: sha256File(path.resolve(parityReportPath)),
+      target_admission: {
+        schema_version: admissionReport.schema_version,
+        gate: admissionReport.gate,
+        report: path.basename(admissionReportPath),
+        sha256: sha256File(path.resolve(admissionReportPath)),
         result: "passed",
+        target_set: [...CURRENT_RELEASE_TARGETS],
       },
       artifacts: archives,
     },
+    pi_support: admissionReport.pi_support,
+    external_prerequisites: [PI_EXTERNAL_PREREQUISITE],
     sbom: { file: SBOM_NAME, sha256: null },
     portable_core_attestation: {
       supplied: true,
@@ -259,7 +318,13 @@ export function createReleaseMetadata({
     },
     limitations: [
       "This record is unsigned and is not a cryptographic attestation.",
-      "Native host capability evidence E5/E6 may be unavailable or provisional on runners without the host runtime.",
+      ...(admissionReport.pi_support.label === PI_PROVISIONAL_CLAIM
+        ? ["Pi structural and transactional support is provisional until the pinned E1-E4 evidence set is renewed."]
+        : []),
+      ...(admissionReport.pi_support.label !== PI_NATIVE_SEMANTIC_CLAIM
+        ? ["Pi native discovery E5 and native runtime/semantic E6 remain explicitly unavailable until their full lifecycle evidence passes."]
+        : []),
+      "pi-subagents is an operator-owned external prerequisite and is never bundled in a Maister archive.",
     ],
   };
   writeJson(path.join(outputRoot, SBOM_NAME), sbom);
@@ -283,6 +348,43 @@ export function verifyReleaseMetadata({ archiveDir, outputDir = archiveDir } = {
   if (provenance.sbom?.sha256 !== sha256File(sbomPath)) {
     throw new ReleaseMetadataError("E_RELEASE_METADATA_VERIFY", "provenance does not bind the SBOM bytes", { sbomPath });
   }
+  const admission = provenance.build?.target_admission;
+  if (admission?.schema_version !== 1
+    || admission.gate !== "current-target-admission-v1"
+    || admission.result !== "passed"
+    || JSON.stringify(admission.target_set) !== JSON.stringify([...CURRENT_RELEASE_TARGETS])) {
+    throw new ReleaseMetadataError("E_RELEASE_METADATA_VERIFY", "provenance does not bind a passed four-target current admission", { provenancePath });
+  }
+  if (![PI_PROVISIONAL_CLAIM, PI_NATIVE_SEMANTIC_CLAIM].includes(provenance.pi_support?.label)) {
+    throw new ReleaseMetadataError("E_RELEASE_METADATA_VERIFY", "provenance does not publish a recognized Pi support claim", { provenancePath });
+  }
+  if (provenance.pi_support.evidence_binding?.source_commit !== provenance.source?.commit
+    || provenance.pi_support.evidence_binding?.source_version !== provenance.source?.version
+    || !provenance.pi_support.evidence_binding?.evidence_digest
+    || !Array.isArray(provenance.pi_support.evidence_records)) {
+    throw new ReleaseMetadataError("E_RELEASE_METADATA_VERIFY", "provenance does not bind Pi claims to current evidence records and source identity", { provenancePath });
+  }
+  const piEvidence = provenance.pi_support.evidence;
+  for (const level of ["E1", "E2", "E3", "E4"]) {
+    if (piEvidence?.[level] !== "passed") {
+      throw new ReleaseMetadataError("E_RELEASE_METADATA_VERIFY", `provenance does not bind passed ${level} evidence for Pi support`, { provenancePath, level });
+    }
+  }
+  const expectedNativeResult = provenance.pi_support.label === PI_NATIVE_SEMANTIC_CLAIM ? "passed" : "unavailable";
+  for (const level of ["E5", "E6"]) {
+    if (piEvidence?.[level] !== expectedNativeResult) {
+      throw new ReleaseMetadataError("E_RELEASE_METADATA_VERIFY", `provenance ${level} result does not match the Pi support claim`, {
+        provenancePath,
+        level,
+        expected: expectedNativeResult,
+        actual: piEvidence?.[level],
+      });
+    }
+  }
+  const externalPrerequisite = (provenance.external_prerequisites ?? []).find((entry) => entry?.name === PI_EXTERNAL_PREREQUISITE.name);
+  if (!externalPrerequisite || externalPrerequisite.bundled !== false || externalPrerequisite.version !== PI_EXTERNAL_PREREQUISITE.version) {
+    throw new ReleaseMetadataError("E_RELEASE_METADATA_VERIFY", "provenance does not identify pi-subagents as an external prerequisite", { provenancePath });
+  }
   const archives = archiveObservations(path.resolve(archiveDir));
   const expectedAttestation = provenance.portable_core_attestation;
   if (!expectedAttestation?.supplied || typeof expectedAttestation.digest !== "string" || typeof expectedAttestation.sha256 !== "string") {
@@ -294,6 +396,13 @@ export function verifyReleaseMetadata({ archiveDir, outputDir = archiveDir } = {
   const observed = new Map((provenance.build?.artifacts ?? []).map((entry) => [entry.name, entry.sha256]));
   const sbomComponents = new Map((sbom.components ?? []).map((entry) => [entry.name, entry.hashes?.find((hash) => hash.alg === "SHA-256")?.content]));
   const sbomAttestationProperties = new Map((sbom.components ?? []).map((entry) => [entry.name, new Map(entry.properties?.map((property) => [property.name, property.value]) ?? [])]));
+  const externalSbomComponent = (sbom.components ?? []).find((entry) => entry?.name === PI_EXTERNAL_PREREQUISITE.name);
+  if (!externalSbomComponent
+    || externalSbomComponent.scope !== "excluded"
+    || externalSbomComponent.version !== PI_EXTERNAL_PREREQUISITE.version
+    || new Map(externalSbomComponent.properties?.map((property) => [property.name, property.value]) ?? []).get("maister.bundled") !== "false") {
+    throw new ReleaseMetadataError("E_RELEASE_METADATA_VERIFY", "SBOM does not identify pi-subagents as an excluded external prerequisite", { sbomPath });
+  }
   for (const archive of archives) {
     if (observed.get(archive.name) !== archive.sha256) {
       throw new ReleaseMetadataError("E_RELEASE_METADATA_VERIFY", `provenance does not match ${archive.name}`, { archive });
@@ -316,7 +425,7 @@ export function verifyReleaseMetadata({ archiveDir, outputDir = archiveDir } = {
       throw new ReleaseMetadataError("E_RELEASE_METADATA_VERIFY", `SBOM does not bind embedded E3 attestation for ${archive.name}`, { archive });
     }
   }
-  return { ok: true, targets: archives.map((archive) => archive.target) };
+  return { ok: true, targets: archives.map((archive) => archive.target), pi_support: provenance.pi_support };
 }
 
 function parseArguments(argv) {
@@ -327,7 +436,7 @@ function parseArguments(argv) {
       options.check = true;
       continue;
     }
-    if (!["--archive-dir", "--output-dir", "--source-commit", "--source-version", "--parity-report", "--source-date-epoch"].includes(argument)) {
+    if (!["--archive-dir", "--output-dir", "--source-commit", "--source-version", "--admission-report", "--source-date-epoch"].includes(argument)) {
       throw new ReleaseMetadataError("E_RELEASE_METADATA_USAGE", `unknown argument: ${argument}`);
     }
     const value = argv[++index];
@@ -336,7 +445,7 @@ function parseArguments(argv) {
     if (argument === "--output-dir") options.outputDir = value;
     if (argument === "--source-commit") options.sourceCommit = value;
     if (argument === "--source-version") options.sourceVersion = value;
-    if (argument === "--parity-report") options.parityReportPath = value;
+    if (argument === "--admission-report") options.admissionReportPath = value;
     if (argument === "--source-date-epoch") options.sourceDateEpoch = value;
   }
   return options;

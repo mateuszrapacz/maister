@@ -317,6 +317,8 @@ function resolveArchive(root, requestedRef, options) {
     sourceVersion: options.sourceVersion ?? manifest.value.source_version ?? "unknown",
     contentHash,
     dirty: false,
+    statusFingerprint: "archive-clean",
+    statusEntries: [],
     archive: true,
   };
 }

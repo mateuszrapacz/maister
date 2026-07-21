@@ -1,9 +1,16 @@
 import crypto from "node:crypto";
 
+const ADVISOR_BEHAVIOR = [
+  'selected_option: "evidence-advisor-v1"',
+  'rationale: "Pi public v1 conformance probe."',
+  "confidence: high",
+  "escalate_to_user: false",
+].join("\n");
+
 const ROLE_SCENARIOS = Object.freeze([
   Object.freeze({ role_id: "code-reviewer", behavior: "evidence-code-reviewer-v1" }),
   Object.freeze({ role_id: "implementation-planner", behavior: "evidence-implementation-planner-v1" }),
-  Object.freeze({ role_id: "advisor", behavior: "evidence-advisor-v1" }),
+  Object.freeze({ role_id: "advisor", behavior: ADVISOR_BEHAVIOR }),
 ]);
 
 function digest(value) {
@@ -72,7 +79,24 @@ function scenarioRows(manifest, target, provenance) {
 function requestFor({ target, scenario, provenance }) {
   const logicalRoleId = `maister:${scenario.role_id}`;
   const dispatchId = `e6-${target}-${scenario.role_id}`;
-  const prompt = `Return only the ${scenario.role_id} evidence behavior for nonce-bound verification.`;
+  const prompt = target === "pi"
+    ? scenario.role_id === "advisor"
+      ? [
+        "Deterministic Maister host conformance gate. Use the Advisor output contract.",
+        "Gate question: Which option confirms the Pi public delegation v1 lifecycle?",
+        'The only supplied option is exactly "evidence-advisor-v1".',
+        "Context: the Pi public v1 request completed with a durable observation stream and exact role identity.",
+        "Return exactly this YAML and nothing else:",
+        scenario.behavior,
+      ].join("\n")
+      : `Reply exactly ${scenario.behavior}. Do not inspect files or use tools.`
+    : `Return only the ${scenario.role_id} evidence behavior for nonce-bound verification.`;
+  const requestedExecutionPolicy = target === "pi" && typeof scenario.row.execution_profile_id === "string"
+    ? {
+      ...scenario.row.execution_policy,
+      execution_profile_id: scenario.row.execution_profile_id,
+    }
+    : scenario.row.execution_policy;
   return {
     schema_version: 1,
     scenario_version: provenance.scenario_version,
@@ -87,7 +111,7 @@ function requestFor({ target, scenario, provenance }) {
     manifest_digest: provenance.manifest_digest,
     projected_tree_digest: provenance.projected_tree_digest,
     dispatch_id: dispatchId,
-    requested_execution_policy: scenario.row.execution_policy,
+    requested_execution_policy: requestedExecutionPolicy,
     expected_behavior: scenario.behavior,
   };
 }

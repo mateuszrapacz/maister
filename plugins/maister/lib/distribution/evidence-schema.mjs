@@ -5,6 +5,10 @@ import { SUPPORTED_TARGET_IDS } from "./targets.mjs";
 export const EVIDENCE_RESULTS = new Set(["passed", "failed", "unavailable"]);
 export const EVIDENCE_LEVELS = new Set(["E1", "E2", "E3", "E4", "E5", "E6"]);
 export const SUPPORTED_TARGETS = new Set(SUPPORTED_TARGET_IDS);
+export const EVIDENCE_EXPIRY_MS = Object.freeze({
+  baseline: 30 * 24 * 60 * 60 * 1000,
+  native: 14 * 24 * 60 * 60 * 1000,
+});
 const SHA256 = /^[0-9a-f]{64}$/u;
 const FULL_COMMIT = /^[0-9a-f]{40}$/u;
 const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/u;
@@ -32,6 +36,17 @@ const PROVENANCE_FIELDS = new Set([
   "timeout_ms",
   "discovery_subject",
   "native_role_external_ids",
+  "executable_realpath",
+  "node_version",
+  "prerequisite",
+  "prerequisite_version",
+  "prerequisite_source",
+  "prerequisite_digest",
+  "protocol_version",
+  "public_event_values",
+  "package_identity",
+  "package_root",
+  "remediation",
 ]);
 const REQUIRED_PROVENANCE_FIELDS = ["source_commit", "source_version", "overlay_version", "scenario_version"];
 const PROVENANCE_INPUT_FIELDS = new Set([
@@ -64,6 +79,18 @@ const PROVENANCE_INPUT_FIELDS = new Set([
   "hashes",
   "discoverySubject",
   "nativeRoleExternalIds",
+  "executableRealpath",
+  "nodeVersion",
+  "prerequisite",
+  "prerequisiteVersion",
+  "prerequisiteSource",
+  "prerequisiteDigest",
+  "protocolVersion",
+  "public_event_values",
+  "publicEventValues",
+  "packageIdentity",
+  "packageRoot",
+  "remediation",
 ]);
 const NATIVE_PROVENANCE_FIELDS = [
   "source_commit",
@@ -87,6 +114,14 @@ const RECORD_FIELDS = new Set([
   "result",
   "provenance",
   "expires_at",
+  "evidence_schema_version",
+  "evidence_id",
+  "target_id",
+  "scenario_id",
+  "observed_at",
+  "reason",
+  "remediation",
+  "artifacts",
 ]);
 
 const REQUIRED_FIELDS = [
@@ -136,6 +171,27 @@ function assertHash(value, location) {
   }
 }
 
+function canonicalEvidenceJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalEvidenceJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalEvidenceJson(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function evidenceId({ target, capability, hostVersion, scenario, timestamp, result, provenance, expiresAt }) {
+  return crypto.createHash("sha256").update(canonicalEvidenceJson({
+    target,
+    capability,
+    host_version: hostVersion,
+    scenario,
+    timestamp,
+    result,
+    provenance,
+    expires_at: expiresAt,
+  })).digest("hex");
+}
+
 function assertProvenance(provenance) {
   assertObject(provenance, "record.provenance");
   const unknown = Object.keys(provenance).find((field) => !PROVENANCE_FIELDS.has(field));
@@ -158,15 +214,27 @@ function assertProvenance(provenance) {
     "attestation_digest",
     "artifact_digest",
     "portable_core_tree_hash",
+    "prerequisite_digest",
   ]) {
     if (provenance[field] !== undefined) assertHash(provenance[field], `record.provenance.${field}`);
   }
   for (const field of ["overlay_id", "host", "projector_version", "discovery_subject"]) {
     if (provenance[field] !== undefined) assertText(provenance[field], `record.provenance.${field}`);
   }
+  for (const field of ["executable_realpath", "node_version", "prerequisite", "prerequisite_version", "prerequisite_source"]) {
+    if (provenance[field] !== undefined) assertText(provenance[field], `record.provenance.${field}`);
+  }
+  for (const field of ["package_identity", "package_root"]) {
+    if (provenance[field] !== undefined) assertText(provenance[field], `record.provenance.${field}`);
+  }
   if (provenance.schema_version !== undefined && (!Number.isSafeInteger(provenance.schema_version) || provenance.schema_version < 1)) {
     throw new EvidenceValidationError("record.provenance.schema_version must be a positive integer", {
       field: "provenance.schema_version",
+    });
+  }
+  if (provenance.protocol_version !== undefined && (!Number.isSafeInteger(provenance.protocol_version) || provenance.protocol_version < 1)) {
+    throw new EvidenceValidationError("record.provenance.protocol_version must be a positive integer", {
+      field: "provenance.protocol_version",
     });
   }
   for (const field of ["canonical_set_digest", "manifest_digest", "projected_tree_digest"]) {
@@ -186,6 +254,7 @@ function assertProvenance(provenance) {
     });
   }
   if (provenance.reason !== undefined) assertText(provenance.reason, "record.provenance.reason");
+  if (provenance.remediation !== undefined) assertText(provenance.remediation, "record.provenance.remediation");
   if (provenance.command !== undefined) assertText(provenance.command, "record.provenance.command");
   return provenance;
 }
@@ -225,6 +294,17 @@ export function normalizeEvidenceProvenance(value = {}, defaults = {}) {
     timeout_ms: value.timeout_ms,
     discovery_subject: value.discovery_subject ?? value.discoverySubject,
     native_role_external_ids: value.native_role_external_ids ?? value.nativeRoleExternalIds,
+    executable_realpath: value.executable_realpath ?? value.executableRealpath,
+    node_version: value.node_version ?? value.nodeVersion,
+    prerequisite: value.prerequisite,
+    prerequisite_version: value.prerequisite_version ?? value.prerequisiteVersion,
+    prerequisite_source: value.prerequisite_source ?? value.prerequisiteSource,
+    prerequisite_digest: value.prerequisite_digest ?? value.prerequisiteDigest,
+    protocol_version: value.protocol_version ?? value.protocolVersion,
+    public_event_values: value.public_event_values ?? value.publicEventValues,
+    package_identity: value.package_identity ?? value.packageIdentity,
+    package_root: value.package_root ?? value.packageRoot,
+    remediation: value.remediation,
   };
   return Object.fromEntries(Object.entries(normalized).filter(([, item]) => item !== undefined));
 }
@@ -262,6 +342,58 @@ export function validateEvidenceRecord(record) {
     throw new EvidenceValidationError(`unsupported evidence result: ${record.result}`, { result: record.result });
   }
   assertProvenance(record.provenance);
+  if (record.evidence_schema_version !== undefined && record.evidence_schema_version !== 1) {
+    throw new EvidenceValidationError("record.evidence_schema_version must be 1", { field: "evidence_schema_version" });
+  }
+  if (record.evidence_id !== undefined) assertHash(record.evidence_id, "record.evidence_id");
+  if (record.evidence_id !== undefined) {
+    const expectedEvidenceId = evidenceId({
+      target: record.target,
+      capability: record.capability,
+      hostVersion: record.host_version,
+      scenario: record.scenario,
+      timestamp: record.timestamp,
+      result: record.result,
+      provenance: record.provenance,
+      expiresAt: record.expires_at,
+    });
+    if (record.evidence_id !== expectedEvidenceId) {
+      throw new EvidenceValidationError("record.evidence_id does not bind the evidence contents", { field: "evidence_id" });
+    }
+  }
+  if (record.target_id !== undefined && record.target_id !== record.target) {
+    throw new EvidenceValidationError("record.target_id must match record.target", { field: "target_id" });
+  }
+  if (record.scenario_id !== undefined && record.scenario_id !== record.scenario) {
+    throw new EvidenceValidationError("record.scenario_id must match record.scenario", { field: "scenario_id" });
+  }
+  if (record.observed_at !== undefined) assertTimestamp(record.observed_at, "record.observed_at");
+  if (record.reason !== undefined) assertText(record.reason, "record.reason");
+  if (record.remediation !== undefined) assertText(record.remediation, "record.remediation");
+  if (record.artifacts !== undefined) {
+    assertObject(record.artifacts, "record.artifacts");
+    for (const [field, value] of Object.entries(record.artifacts)) assertHash(value, `record.artifacts.${field}`);
+  }
+  if (record.target === "pi" && record.result !== "unavailable") {
+    for (const field of ["evidence_schema_version", "evidence_id", "target_id", "scenario_id", "observed_at", "artifacts"]) {
+      if (!Object.hasOwn(record, field)) {
+        throw new EvidenceValidationError(`Pi evidence must include ${field}`, { field });
+      }
+    }
+    for (const field of [
+      "source_hash",
+      "overlay_hash",
+      "materialized_hash",
+      "provenance_hash",
+      "canonical_set_digest",
+      "manifest_digest",
+      "projected_tree_digest",
+    ]) {
+      if (!Object.hasOwn(record.provenance, field)) {
+        throw new EvidenceValidationError(`Pi evidence must bind provenance.${field}`, { field: `provenance.${field}` });
+      }
+    }
+  }
   if ((record.capability === "E5" || record.capability === "E6") && record.result !== "unavailable") {
     for (const field of NATIVE_PROVENANCE_FIELDS) {
       if (!Object.hasOwn(record.provenance, field)) {
@@ -303,16 +435,41 @@ export function createEvidenceRecord({
 }) {
   assertTimestamp(timestamp, "timestamp");
   if (expiresAt !== undefined) assertTimestamp(expiresAt, "expiresAt");
-  const effectiveExpiresAt = expiresAt ?? new Date(Date.parse(timestamp) + 24 * 60 * 60 * 1000).toISOString();
-  return validateEvidenceRecord({
+  const effectiveExpiresAt = expiresAt ?? new Date(Date.parse(timestamp) + (
+    capability === "E5" || capability === "E6" ? EVIDENCE_EXPIRY_MS.native : EVIDENCE_EXPIRY_MS.baseline
+  )).toISOString();
+  const normalizedProvenance = normalizeEvidenceProvenance(provenance);
+  const effectiveReason = result === "passed" ? undefined : normalizedProvenance.reason ?? "evidence-not-passed";
+  const effectiveRemediation = result === "passed"
+    ? undefined
+    : normalizedProvenance.remediation ?? `renew evidence after resolving ${effectiveReason}`;
+  const artifacts = Object.fromEntries(Object.entries({
+    source_tree_sha256: normalizedProvenance.source_hash,
+    overlay_sha256: normalizedProvenance.overlay_hash,
+    projection_sha256: normalizedProvenance.projected_tree_digest,
+    package_sha256: normalizedProvenance.materialized_hash,
+    attestation_sha256: normalizedProvenance.attestation_digest,
+  }).filter(([, value]) => value !== undefined));
+  const record = {
     target,
     capability,
     host_version: hostVersion,
     scenario,
     timestamp,
     result,
-    provenance: normalizeEvidenceProvenance(provenance),
+    provenance: normalizedProvenance,
     expires_at: effectiveExpiresAt,
+    evidence_schema_version: 1,
+    target_id: target,
+    scenario_id: scenario,
+    observed_at: timestamp,
+    artifacts,
+    ...(effectiveReason === undefined ? {} : { reason: effectiveReason }),
+    ...(effectiveRemediation === undefined ? {} : { remediation: effectiveRemediation }),
+  };
+  return validateEvidenceRecord({
+    ...record,
+    evidence_id: evidenceId({ target, capability, hostVersion, scenario, timestamp, result, provenance: normalizedProvenance, expiresAt: effectiveExpiresAt }),
   });
 }
 

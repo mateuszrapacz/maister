@@ -7,6 +7,13 @@ import {
   ExecutionEventValidationError,
   canonicalExecutionEventJson,
   createExecutionEvent,
+  MaisterObservationValidationError,
+  MAISTER_OBSERVATION_EVENT_TYPES,
+  canonicalObservationJson,
+  createObservationEvent,
+  validateObservationEvent,
+  validateObservationStream,
+  observationEventDigest,
   validateExecutionEventStream,
 } from "./execution-event-schema.mjs";
 
@@ -340,7 +347,7 @@ function validateCandidate(events, candidate) {
   }
 }
 
-export function appendExecutionEvent({ taskPath, dispatchId, event }) {
+function appendLegacyExecutionEvent({ taskPath, dispatchId, event }) {
   const paths = dispatchEventPaths({ taskPath, dispatchId });
   if (!event || event.dispatch_id !== dispatchId) fail("E_EVENT_IDENTITY", "event.dispatch_id must equal the requested dispatch ID", { dispatchId, eventDispatchId: event?.dispatch_id });
   ensureEventDirectory(paths);
@@ -376,15 +383,202 @@ export function appendExecutionEvent({ taskPath, dispatchId, event }) {
   });
 }
 
-export function readExecutionEventStream({ taskPath, dispatchId }) {
+function readLegacyExecutionEventStream({ taskPath, dispatchId }) {
   const paths = dispatchEventPaths({ taskPath, dispatchId });
   const state = readStreamFile(paths.streamPath);
   if (state.events[0].dispatch_id !== dispatchId) fail("E_EVENT_IDENTITY", "dispatch filename does not match stream identity", { dispatchId });
   return publicStreamResult(paths, state);
 }
 
-export function recoverExecutionEventStream({ taskPath, dispatchId }) {
-  return readExecutionEventStream({ taskPath, dispatchId });
+function recoverLegacyExecutionEventStream({ taskPath, dispatchId }) {
+  return readLegacyExecutionEventStream({ taskPath, dispatchId });
+}
+
+const OBSERVATION_EVENT_TYPE_SET = new Set(MAISTER_OBSERVATION_EVENT_TYPES);
+const OBSERVATION_TERMINAL_EVENT_TYPES = new Set(["terminal", "failure", "process_lost"]);
+
+function observationFailure(error, fallbackCode = "E_OBSERVATION_WRITE") {
+  if (error instanceof ExecutionEventWriterError) throw error;
+  if (error instanceof MaisterObservationValidationError) {
+    fail(error.code, error.message, error.details, { cause: error });
+  }
+  fail(fallbackCode, error instanceof Error ? error.message : String(error), {}, { cause: error });
+}
+
+function assertObservationStreamFile(streamPath) {
+  const stat = fs.lstatSync(streamPath, { throwIfNoEntry: false });
+  if (!stat) fail("E_OBSERVATION_MISSING", "Pi observation stream does not exist", { streamPath });
+  if (!stat.isFile() || stat.isSymbolicLink()) fail("E_OBSERVATION_CORRUPT", "Pi observation stream must be a regular file", { streamPath });
+  if ((stat.mode & 0o777) !== 0o600) fail("E_OBSERVATION_CORRUPT", "Pi observation stream mode must be 0600", { streamPath });
+}
+
+function readObservationStreamFile(streamPath) {
+  assertObservationStreamFile(streamPath);
+  let text;
+  try {
+    const descriptor = fs.openSync(streamPath, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
+    try { text = fs.readFileSync(descriptor, "utf8"); } finally { fs.closeSync(descriptor); }
+  } catch (error) {
+    observationFailure(error, "E_OBSERVATION_READ");
+  }
+  if (text.length === 0 || !text.endsWith("\n")) fail("E_OBSERVATION_CORRUPT", "Pi observation stream must be newline terminated", { streamPath });
+  const lines = text.slice(0, -1).split("\n");
+  if (lines.some((line) => line.length === 0)) fail("E_OBSERVATION_CORRUPT", "Pi observation stream contains an empty line", { streamPath });
+  const events = [];
+  try {
+    for (const line of lines) {
+      const event = JSON.parse(line);
+      if (canonicalObservationJson(event) !== line) fail("E_OBSERVATION_CORRUPT", "Pi observation stream contains non-canonical JSON", { streamPath });
+      events.push(event);
+    }
+    return { text, ...validateObservationStream(events) };
+  } catch (error) {
+    if (error instanceof ExecutionEventWriterError) throw error;
+    if (error instanceof MaisterObservationValidationError || error instanceof SyntaxError) {
+      fail("E_OBSERVATION_CORRUPT", `Pi observation stream validation failed: ${error.message}`, { streamPath }, { cause: error });
+    }
+    throw error;
+  }
+}
+
+function observationPublicResult(paths, state, status = "validated") {
+  return {
+    status,
+    dispatchId: state.events[0].dispatch_id,
+    streamId: state.events[0].stream_id,
+    streamPath: paths.streamPath,
+    events: structuredClone(state.events),
+    complete: state.complete,
+    nextEventTypes: [...state.nextEventTypes],
+  };
+}
+
+function observationReuseMatches(existing, proposed) {
+  return [
+    "stream_id",
+    "dispatch_id",
+    "request_id",
+    "target",
+    "adapter_id",
+    "protocol_version",
+    "logical_role_id",
+    "requested_agent",
+  ].every((field) => existing[field] === proposed[field]);
+}
+
+function prepareObservationEvent(event, events, dispatchId) {
+  if (!event || typeof event !== "object" || Array.isArray(event)) fail("E_OBSERVATION_SCHEMA", "observation event input must be a mapping");
+  const previous = events.at(-1) ?? null;
+  const candidate = {
+    ...structuredClone(event),
+    schema_version: 1,
+    stream_id: event.stream_id ?? dispatchId,
+    event_id: event.event_id ?? crypto.randomUUID(),
+    sequence: events.length,
+    dispatch_id: dispatchId,
+    request_id: dispatchId,
+    observed_agent: event.observed_agent ?? null,
+    previous_hash: previous?.hash ?? null,
+  };
+  delete candidate.hash;
+  try {
+    return createObservationEvent(candidate);
+  } catch (error) {
+    observationFailure(error, "E_OBSERVATION_SCHEMA");
+  }
+}
+
+function appendObservationDurably(streamPath, line, { create }) {
+  const noFollow = fs.constants.O_NOFOLLOW ?? 0;
+  const flags = fs.constants.O_WRONLY | (create ? fs.constants.O_CREAT | fs.constants.O_EXCL : fs.constants.O_APPEND) | noFollow;
+  let descriptor;
+  try {
+    try {
+      descriptor = fs.openSync(streamPath, flags, 0o600);
+    } catch (error) {
+      if (error.code === "EINVAL" || error.code === "ENOTSUP") descriptor = fs.openSync(streamPath, flags & ~noFollow, 0o600);
+      else throw error;
+    }
+    fs.fchmodSync(descriptor, 0o600);
+    fs.writeFileSync(descriptor, line, "utf8");
+    try { fs.fsyncSync(descriptor); } catch (error) { fail("E_OBSERVATION_FSYNC", `could not fsync Pi observation: ${error.message}`, { streamPath }, { cause: error }); }
+  } catch (error) {
+    if (error instanceof ExecutionEventWriterError) throw error;
+    fail("E_OBSERVATION_WRITE", `could not append Pi observation: ${error.message}`, { streamPath }, { cause: error });
+  } finally {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
+  }
+  if (create) {
+    try { flushDirectory(path.dirname(streamPath)); } catch (error) { fail("E_OBSERVATION_FSYNC", `could not persist Pi observation stream creation: ${error.message}`, { streamPath }, { cause: error }); }
+  }
+}
+
+export function appendObservationEvent({ taskPath, dispatchId, event }) {
+  const paths = dispatchEventPaths({ taskPath, dispatchId });
+  if (!event || event.dispatch_id !== dispatchId) fail("E_OBSERVATION_IDENTITY", "observation dispatch_id must equal the requested dispatch ID", { dispatchId });
+  if (!OBSERVATION_EVENT_TYPE_SET.has(event.event_type)) fail("E_OBSERVATION_SCHEMA", `unsupported Pi observation event type ${event.event_type}`);
+  ensureEventDirectory(paths);
+  return withDispatchLock(paths.lockPath, () => {
+    if (event.event_type === "dispatch_requested") {
+      if (fs.lstatSync(paths.streamPath, { throwIfNoEntry: false })) {
+        let existing;
+        try { existing = readObservationStreamFile(paths.streamPath); } catch (error) {
+          if (error.code === "E_OBSERVATION_CORRUPT") throw error;
+          fail("E_OBSERVATION_CONFLICT", "dispatch ID is already bound to a different stream", { dispatchId }, { cause: error });
+        }
+        const proposed = prepareObservationEvent(event, [], dispatchId);
+        if (!observationReuseMatches(existing.events[0], proposed)) fail("E_IDEMPOTENCY_CONFLICT", "dispatch ID is already bound to different immutable Pi context", { dispatchId });
+        return observationPublicResult(paths, existing, "reused");
+      }
+      const candidate = prepareObservationEvent(event, [], dispatchId);
+      appendObservationDurably(paths.streamPath, `${canonicalObservationJson(candidate)}\n`, { create: true });
+      const reread = readObservationStreamFile(paths.streamPath);
+      if (reread.events.length !== 1 || reread.events[0].hash !== candidate.hash) fail("E_OBSERVATION_CORRUPT", "Pi observation reread differs from the appended dispatch_requested event", { streamPath: paths.streamPath });
+      return { ...observationPublicResult(paths, reread, "recorded"), event: structuredClone(candidate) };
+    }
+
+    const current = readObservationStreamFile(paths.streamPath);
+    if (current.complete) fail("E_OBSERVATION_TERMINAL", "Pi observation stream is already terminal", { dispatchId });
+    const candidate = prepareObservationEvent(event, current.events, dispatchId);
+    const next = validateObservationStream([...current.events, candidate]);
+    appendObservationDurably(paths.streamPath, `${canonicalObservationJson(candidate)}\n`, { create: false });
+    const reread = readObservationStreamFile(paths.streamPath);
+    if (reread.events.length !== next.events.length || reread.events.at(-1).hash !== candidate.hash) fail("E_OBSERVATION_CORRUPT", "Pi observation reread differs from the appended event", { streamPath: paths.streamPath });
+    return { ...observationPublicResult(paths, reread, "recorded"), event: structuredClone(candidate) };
+  });
+}
+
+export function readObservationEventStream({ taskPath, dispatchId }) {
+  const paths = dispatchEventPaths({ taskPath, dispatchId });
+  const state = readObservationStreamFile(paths.streamPath);
+  if (state.events[0].dispatch_id !== dispatchId) fail("E_OBSERVATION_IDENTITY", "Pi observation filename does not match dispatch identity", { dispatchId });
+  return observationPublicResult(paths, state);
+}
+
+export function recoverObservationEventStream({ taskPath, dispatchId }) {
+  return readObservationEventStream({ taskPath, dispatchId });
+}
+
+export function appendExecutionEvent(request) {
+  if (OBSERVATION_EVENT_TYPE_SET.has(request?.event?.event_type)) return appendObservationEvent(request);
+  return appendLegacyExecutionEvent(request);
+}
+
+export function readExecutionEventStream(request) {
+  const paths = dispatchEventPaths(request);
+  const stat = fs.lstatSync(paths.streamPath, { throwIfNoEntry: false });
+  if (!stat) return readLegacyExecutionEventStream(request);
+  const firstLine = fs.readFileSync(paths.streamPath, "utf8").split("\n", 1)[0];
+  let firstEvent;
+  try { firstEvent = JSON.parse(firstLine); } catch { return readLegacyExecutionEventStream(request); }
+  return OBSERVATION_EVENT_TYPE_SET.has(firstEvent?.event_type)
+    ? readObservationEventStream(request)
+    : readLegacyExecutionEventStream(request);
+}
+
+export function recoverExecutionEventStream(request) {
+  const stream = readExecutionEventStream(request);
+  return stream;
 }
 
 function recordingFailure(error, phase, cancellationRequested, cancellationSucceeded) {

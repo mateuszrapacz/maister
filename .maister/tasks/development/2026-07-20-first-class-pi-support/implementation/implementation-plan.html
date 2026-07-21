@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Implementation Plan: First-Class Pi Support</title>
+  <style>
+    :root { color-scheme: light; --bg: #f6f7f9; --surface: #fff; --text: #1a1d23; --muted: #667085; --border: #d9dee7; --accent: #4338ca; --danger: #b42318; --good: #067647; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { max-width: 1180px; margin: 0 auto; padding: 40px 24px 80px; }
+    article { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px 40px; box-shadow: 0 2px 8px rgba(16,24,40,.05); }
+    h1, h2, h3 { line-height: 1.25; }
+    h1 { font-size: 30px; margin-top: 0; }
+    h2 { border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-top: 36px; }
+    h3 { margin-top: 28px; }
+    .summary { border-left: 4px solid var(--accent); background: #eef2ff; padding: 16px 20px; }
+    .contract { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin: 12px 0; }
+    .warning { border-left: 4px solid var(--danger); background: #fff4f2; }
+    .success { border-left: 4px solid var(--good); background: #ecfdf3; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    code { background: #f1f3f5; padding: 2px 5px; border-radius: 4px; }
+    pre { background: #111827; color: #e5e7eb; padding: 18px; overflow: auto; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th, td { text-align: left; vertical-align: top; border: 1px solid var(--border); padding: 9px 11px; }
+    th { background: #f8fafc; }
+    .muted { color: var(--muted); }
+    li { margin: 4px 0; }
+    .scope { font-size: .94em; }
+  </style>
+</head>
+<body>
+<main><article>
+  <h1>Implementation Plan: First-Class Pi Support</h1>
+
+  <section class="summary">
+    <h2>TL;DR</h2>
+    <p>Implement Pi as a fourth first-class Maister target through the existing target, overlay, materializer, transaction, runtime, evidence, and release seams. The result is one generated package under <code>&lt;agentRoot&gt;/maister</code>, a closed projection of 29 skills, 14 commands, and 28 agent descriptors, one identity-managed <code>settings.json:packages[]</code> member, and a <code>pi.native</code> adapter over public <code>pi-subagents/delegation</code> v1.</p>
+    <p>Work proceeds in dependency order: target/overlay closure, deterministic projection, managed-array transactions, public runtime/events, evidence, current four-target release admission, and finally the integrated lifecycle. Fresh E5/E6 passes promote the claim to <code>pi.native-semantic</code>; otherwise the release remains explicitly provisional or unavailable.</p>
+  </section>
+
+  <h2>Key Decisions</h2>
+  <div class="contract">Canonical behavior remains in <code>plugins/maister/</code>; Pi output is generated only in materializer staging. Target identity is <code>pi</code> and adapter identity is <code>pi.native</code>.</div>
+  <div class="contract">Skills become <code>skills/**</code>, commands become <code>prompts/**</code>, and agents become <code>agents/maister-&lt;role&gt;.md</code>. No Pi <code>agents</code> manifest key, generated <code>commands/**</code>, private import, or bundled <code>pi-subagents</code> is allowed.</div>
+  <div class="contract">Maister owns only the generated package tree and one normalized identity in <code>settings.json:packages[]</code>. Unrelated entries, fields, order, modes, symlinks, and topology remain operator-owned.</div>
+  <div class="contract">Current release admission is exactly <code>[codex, cursor, kiro-cli, pi]</code>. Historical three-target parity is no longer an active gate.</div>
+
+  <h2>Open Questions &amp; Risks</h2>
+  <ul>
+    <li>E1 must verify the actual Pi 0.80.10 <code>ExtensionAPI</code>/<code>EventBus</code> signatures.</li>
+    <li>E5 must prove package-agent discovery, <code>sourceInfo</code>, exact identity, and collision rejection for all 28 roles.</li>
+    <li>Process loss after <code>started</code> is terminal <code>process_lost</code>; retry uses a new dispatch ID and is never resume.</li>
+    <li>The managed-array ownership primitive must cover receipts, drift, rollback, recovery, and fault injection without touching unrelated packages.</li>
+    <li>Every changed historical parity assertion is recorded in <code>implementation-log.md</code> with a replacement current-state proof.</li>
+  </ul>
+
+  <h2>Dependency Graph and Execution Waves</h2>
+  <table><tr><th>Group</th><th>Purpose</th><th>Depends on</th><th>Parallelism</th></tr>
+    <tr><td>G1</td><td>Target registry, Pi overlay, schema, inventory</td><td>Specification approval</td><td>G3 after contract review</td></tr>
+    <tr><td>G2</td><td>Closed projection, package materialization, provenance</td><td>G1</td><td>None</td></tr>
+    <tr><td>G3</td><td>Managed-array ownership and transactions</td><td>G1</td><td>G2 after receipt shape is frozen</td></tr>
+    <tr><td>G4</td><td><code>pi.native</code>, delegation v1, durable observations</td><td>G2 and G3</td><td>None</td></tr>
+    <tr><td>G5</td><td>Host probes and E1–E6 evidence</td><td>G2, G3, G4</td><td>G6 fixture work after schema freeze</td></tr>
+    <tr><td>G6</td><td>Archive, release, Make, CI, current admission</td><td>G1, G2, G3, G5</td><td>Partly with G5</td></tr>
+    <tr><td>G7</td><td>Integrated lifecycle and handoff evidence</td><td>G4, G5, G6</td><td>None</td></tr>
+  </table>
+  <p>Wave 1 is G1; Wave 2 is G2/G3; Wave 3 is G4; Wave 4 is G5 plus release fixtures; Wave 5 completes G6 and runs G7.</p>
+
+  <h2>Task Groups</h2>
+
+  <h3>G1 — Register Pi and close the overlay contract</h3>
+  <p class="scope"><strong>Owned files:</strong> <code>lib/distribution/targets.mjs</code>, <code>target-paths.mjs</code>, <code>overlay-loader.mjs</code>, <code>overlays/schema/overlay-v1.schema.json</code>, <code>overlays/pi/overlay.yml</code>, <code>overlays/pi/inventory.yml</code>, Pi overlay fixtures, and Pi cases in <code>target-registry.test.mjs</code>/<code>overlay-contract.test.mjs</code>.</p>
+  <ol>
+    <li>Add <code>pi</code>, <code>pi.native</code>, target paths, <code>PI_CODING_AGENT_DIR</code> precedence, package containment, POSIX-only support, settings path, managed root, probes, and six semantic bindings.</li>
+    <li>Extend strict overlay validation for <code>managed_array_entries</code>, closed inventories, forbidden topology, compatibility tuple, and command/role maps.</li>
+    <li>Add acceptance and rejection fixtures for unknown fields, unsafe paths, duplicate destinations, incomplete roles, missing bindings, and bundled prerequisites.</li>
+  </ol>
+  <p><strong>Proof:</strong> target registry and overlay tests pass; E1 binds registry, overlay, and schema digests. No Pi path escapes <code>agentRoot</code>.</p>
+
+  <h3>G2 — Closed projection and deterministic package materialization</h3>
+  <p class="scope"><strong>Owned files:</strong> <code>agent-projector.mjs</code>, <code>agent-projection-validator.mjs</code>, <code>materializer.mjs</code>, <code>provenance.mjs</code>, new <code>pi-command-projection.mjs</code>, Pi cases in <code>agent-projection.test.mjs</code>/<code>source-materializer.test.mjs</code>, and new <code>pi-package-projection.test.mjs</code> fixtures.</p>
+  <ol>
+    <li>Read canonical 29 skills, 14 commands, and 28 agents; emit skills, prompts, and <code>maister:&lt;role&gt;</code> descriptors exactly once with source/projection digests.</li>
+    <li>Generate the exact package manifest, <code>agent-projection-v1.json</code>, <code>pi-command-projection-v1.json</code>, <code>.maister-source.json</code>, extension entry point, and overlay-listed runtime closure.</li>
+    <li>Reject omissions, duplicates, stale hashes, shadowed origins, unsafe outputs, wrong identities, symlinks, <code>node_modules</code>, credentials, sessions, other targets, and external <code>pi-subagents</code>.</li>
+    <li>Fix LF/UTF-8 encoding, bytewise order, inventory modes, package-root mode, and source/date provenance.</li>
+  </ol>
+  <p><strong>Proof:</strong> the Pi package projection suite proves exact counts, manifest shape, forbidden closure, and double-materialization byte identity. E2/E3 bind package, projection, source tree, and portable closure.</p>
+
+  <h3>G3 — Managed-array ownership and transactional lifecycle</h3>
+  <p class="scope"><strong>Owned files:</strong> <code>settings-owner.mjs</code>, <code>transaction-manager.mjs</code>, <code>receipt-schema.mjs</code>, <code>journal-schema.mjs</code>, <code>drift-detector.mjs</code>, <code>recovery.mjs</code>, <code>path-safety.mjs</code>, existing installer/crash tests, and new <code>pi-managed-array.test.mjs</code>.</p>
+  <ol>
+    <li>Parse settings strictly under the existing lock and normalize string/object sources to one contained NFC realpath identity.</li>
+    <li>Preserve matching representation and opaque fields; reject malformed/non-array settings, duplicate identities, conflicting filters, disabled autoload for native claims, symlink escapes, drift, and concurrent writes.</li>
+    <li>Create minimal settings only when absent, change only the owned member, and record <code>managed_array_entries_v1</code>/<code>pi_local_package_v1</code>, before/after hashes, unmanaged projection, modes, and backup.</li>
+    <li>Stage and commit package tree before settings member; verify both; roll back both on failure and retain backups for unresolved recovery.</li>
+  </ol>
+  <p><strong>Proof:</strong> string/object, duplicate/filter, drift, mode/order, concurrent writer, crash, and injected-failure tests compare bytes, modes, symlinks, existence, and topology. E4 is blocked until the full lifecycle is green.</p>
+
+  <h3>G4 — <code>pi.native</code>, public delegation v1, and durable observations</h3>
+  <p class="scope"><strong>Owned files:</strong> new <code>host-adapters/pi-native.mjs</code>; host-adapter index; <code>production-runtime.mjs</code>, <code>agent-resolver.mjs</code>, <code>dispatch-agent.mjs</code>, <code>dispatch-contract.mjs</code>; execution event schema/payload/writer; new canonical <code>lib/distribution/pi-extension-source.mjs</code>; adapter/runtime/event tests; and new <code>pi-native-adapter.test.mjs</code>.</p>
+  <ol>
+    <li>Resolve only exact receipt-backed <code>maister:&lt;role&gt;</code> IDs and freeze source digest/execution profile.</li>
+    <li>Import only named public delegation v1 exports. Build bounded requests with <code>requestId === dispatch_id</code>, subscribe before emit, and implement exact status/cancel/retry mapping.</li>
+    <li>Write <code>dispatch_requested</code> before side effects; sanitize updates; require exact terminal <code>response.agent</code>; classify malformed, wrong, missing, cancelled, timed-out, budget, and process-lost outcomes.</li>
+    <li>Implement <code>maister-observation-v1</code> JSONL: canonical JSON, sequence, SHA-256 chain, fsync, redaction, bounds, and read-time continuity checks.</li>
+    <li>Register exactly one <code>maister-delegate</code> command and use only public Pi <code>ExtensionAPI</code>/<code>EventBus</code> plus shutdown cleanup.</li>
+  </ol>
+  <p><strong>Proof:</strong> fake-public-module adapter tests cover subscriptions-before-emit, identity, cancellation, process loss, retry IDs, and bounded events. The fresh pinned-host probe now passes E5/E6 through the real public boundary.</p>
+
+  <h3>G5 — Version-bound host probes and E1–E6 evidence</h3>
+  <p class="scope"><strong>Owned files:</strong> <code>evidence-policy.mjs</code>, <code>evidence-schema.mjs</code>, <code>e3-attestation.mjs</code>, <code>host-probes/index.mjs</code>, new <code>host-probes/pi.mjs</code>/<code>scenarios/pi.mjs</code>, evidence fixtures/tests, and the evidence portions of the current topology suite.</p>
+  <ol>
+    <li>Resolve executable realpath/version, Node, Pi package manifest, active <code>pi-subagents</code> identity, and public delegation export in the authoritative order.</li>
+    <li>Emit typed unavailable reasons for missing/mismatched host, engine, prerequisite, export, protocol, platform, or readiness.</li>
+    <li>Bind E1–E6 records to source/overlay/projection/package hashes, host/prerequisite identity, schema/scenario versions, timestamps, and expiry.</li>
+    <li>Implement exact expiry/invalidation, the provisional label <code>pi.structural-transactional.provisional</code>, and full-pass promotion to <code>pi.native-semantic</code>.</li>
+    <li>Exercise all 28 discovery identities and the ordinary/advisor full delegation lifecycle, including collisions, cancellation, bounded failures, process loss, and hash chain.</li>
+  </ol>
+  <p><strong>Proof:</strong> <code>pi-evidence.test.mjs</code> rejects stale, mismatched, or coerced records. E5/E6 are passes only from the complete final-package/lifecycle scenarios.</p>
+
+  <h3>G6 — Current four-target release admission</h3>
+  <p class="scope"><strong>Owned files:</strong> <code>release-interface.mjs</code>, <code>release-metadata.mjs</code>, active parity-gate code as needed, <code>Makefile</code>, both relevant CI workflows, <code>make-interface.test.mjs</code>, <code>release-package.test.mjs</code>, <code>repository-topology.test.mjs</code>, <code>evidence-parity-topology.test.mjs</code>, new <code>current-target-admission.test.mjs</code>, and parity fixtures.</p>
+  <ol>
+    <li>Replace target loops with exactly <code>[codex, cursor, kiro-cli, pi]</code> and remove active historical parity metadata/gating while retaining useful target-independent checks.</li>
+    <li>Add deterministic Pi archive, checksums, SBOM/provenance, source-date epoch, modes, extracted lifecycle smoke, external prerequisite metadata, and forbidden-state checks.</li>
+    <li>Run Pi in validation CI and make structural packaging independent from optional E5/E6 host availability.</li>
+    <li>Hand each parity assertion rewrite to G7 for <code>implementation-log.md</code>; publish provisional claims only with explicit E5/E6 unavailable records and publish full claims only with bound passed records.</li>
+  </ol>
+  <p><strong>Proof:</strong> current-target admission, package, repository-topology, Make, release, and CI checks pass with no active three-target gate.</p>
+
+  <h3>G7 — Integrated lifecycle and handoff</h3>
+  <p class="scope"><strong>Owned files:</strong> new <code>tests/platform-independent/pi-integration.test.mjs</code>, task-local <code>implementation/implementation-log.md</code>, and task-local verification outputs only.</p>
+  <ol>
+    <li>Run materialize twice; install/verify/update/uninstall; drift, concurrent writer, fault, rollback, crash recovery, and extracted archive smoke.</li>
+    <li>Run E5/E6 and record a pass or typed unavailable with remediation. Assert operator-owned settings, auth, trust, sessions, packages, and external prerequisite remain untouched.</li>
+    <li>Run the traceability and acceptance matrix, then hand off only after all applicable criteria are evidenced.</li>
+  </ol>
+
+  <h2>Traceability Matrix</h2>
+  <table><tr><th>Contract</th><th>Group</th><th>Proof</th></tr>
+    <tr><td>Target/overlay/paths/bindings (Sections 2–3, A.5)</td><td>G1</td><td>Registry/overlay tests, E1</td></tr>
+    <tr><td>29 skills, 14 commands, exact digests (A.1)</td><td>G2</td><td>Projection/materializer tests, E2</td></tr>
+    <tr><td>28 role bijection and collision rules (A.2)</td><td>G2 + G5</td><td>Projection fixture, E2, E5</td></tr>
+    <tr><td>Version and executable resolution (A.3)</td><td>G5</td><td>Host/evidence tests, E1/E5</td></tr>
+    <tr><td>Package manifest and closure (A.4)</td><td>G2 + G6</td><td>Tree/archive/topology tests, E2/E3</td></tr>
+    <tr><td>Managed array and receipts (A.6)</td><td>G3</td><td>Identity/fault/drift tests, E4</td></tr>
+    <tr><td>Delegation v1 and status mapping (A.7)</td><td>G4</td><td>Native adapter tests, E5/E6</td></tr>
+    <tr><td>Durable observations (A.8)</td><td>G4</td><td>Event writer tests, E6</td></tr>
+    <tr><td>Evidence truth/freshness (A.9)</td><td>G5</td><td>Evidence tests and fixtures, E1–E6</td></tr>
+    <tr><td>Recovery and release (A.10)</td><td>G3 + G6</td><td>Crash/rollback/archive smoke, E4</td></tr>
+    <tr><td>Current admission and implementation log (A.11)</td><td>G6 + G7</td><td>Current-target/integration tests</td></tr>
+  </table>
+
+  <h2>Risk Register</h2>
+  <table><tr><th>ID</th><th>Risk</th><th>Mitigation</th><th>Exit signal</th></tr>
+    <tr><td>R1</td><td>Pi public signatures differ</td><td>E1 exact host probe, fail closed</td><td>E1 pass or typed unavailable</td></tr>
+    <tr><td>R2</td><td>Discovery collision/missing source info</td><td>Hermetic all-28 discovery fixtures</td><td>E5 pass or remediation</td></tr>
+    <tr><td>R3</td><td>Unrelated settings mutation</td><td>Identity, unmanaged hash, snapshots, fault injection</td><td>Full E4 lifecycle green</td></tr>
+    <tr><td>R4</td><td>Process loss reported as success/resume</td><td>Terminal process_lost and new retry IDs</td><td>E6 process-loss case green</td></tr>
+    <tr><td>R5</td><td>Parity removal loses shared coverage</td><td>Log each rewrite and retain target-independent tests</td><td>Current-target suite green</td></tr>
+    <tr><td>R6</td><td>Provisional mistaken for native</td><td>Evidence truth table rejects absent E5/E6</td><td>Claim tests green</td></tr>
+    <tr><td>R7</td><td>Generated closure drifts</td><td>Exact bijection/digest and deterministic double build</td><td>E2/E3 green</td></tr>
+  </table>
+
+  <h2>Verification and Definition of Done</h2>
+  <div class="success contract">Unit/contract, transaction/recovery, runtime/event, evidence, package/release, and integrated lifecycle layers must all pass their group exit conditions. E1–E4 are required for structural/transactional claims; complete E1-E6 passes publish <code>pi.native-semantic</code>, while explicit unavailable records retain the provisional path. The archive has no forbidden or operator-owned state, the current target set has four members, and implementation approval is explicit before the executor starts.</div>
+  <p class="muted">The pinned host observation is now resolved: Pi 0.80.10, Node 25.9.0, pi-subagents 0.35.1, public v1, and all 28 generated identities passed the fresh probe.</p>
+</article></main>
+</body>
+</html>

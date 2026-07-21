@@ -115,6 +115,11 @@ export function evidenceNeedsRenewal(record, {
   canonicalSetDigest,
   manifestDigest,
   projectedTreeDigest,
+  executableRealpath,
+  nodeVersion,
+  prerequisiteVersion,
+  prerequisiteDigest,
+  protocolVersion,
 } = {}) {
   const validated = validateEvidenceRecord(record);
   if (validated.result !== "passed") return true;
@@ -132,6 +137,11 @@ export function evidenceNeedsRenewal(record, {
   if (canonicalSetDigest !== undefined && provenance.canonical_set_digest !== canonicalSetDigest) return true;
   if (manifestDigest !== undefined && provenance.manifest_digest !== manifestDigest) return true;
   if (projectedTreeDigest !== undefined && provenance.projected_tree_digest !== projectedTreeDigest) return true;
+  if (executableRealpath !== undefined && provenance.executable_realpath !== executableRealpath) return true;
+  if (nodeVersion !== undefined && provenance.node_version !== nodeVersion) return true;
+  if (prerequisiteVersion !== undefined && provenance.prerequisite_version !== prerequisiteVersion) return true;
+  if (prerequisiteDigest !== undefined && provenance.prerequisite_digest !== prerequisiteDigest) return true;
+  if (protocolVersion !== undefined && provenance.protocol_version !== protocolVersion) return true;
   return false;
 }
 
@@ -162,6 +172,11 @@ export function evaluateCapability({
   canonicalSetDigest,
   manifestDigest,
   projectedTreeDigest,
+  executableRealpath,
+  nodeVersion,
+  prerequisiteVersion,
+  prerequisiteDigest,
+  protocolVersion,
 }) {
   assertTarget(target);
   if (!CAPABILITY_CLASSES.has(capabilityClass)) {
@@ -185,6 +200,11 @@ export function evaluateCapability({
     canonicalSetDigest,
     manifestDigest,
     projectedTreeDigest,
+    executableRealpath,
+    nodeVersion,
+    prerequisiteVersion,
+    prerequisiteDigest,
+    protocolVersion,
   };
   const passed = [];
   const unavailable = [];

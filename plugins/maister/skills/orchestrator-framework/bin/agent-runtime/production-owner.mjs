@@ -19,7 +19,7 @@ const REQUEST_FIELDS = [
   "automatic_continuation_supported",
   "interactive",
 ];
-const TARGETS = new Set(["codex", "cursor", "kiro-cli"]);
+const TARGETS = new Set(["codex", "cursor", "kiro-cli", "pi"]);
 const PACKAGED_PLUGIN_ROOT = path.resolve(import.meta.dirname, "../../../..");
 
 export class ProductionOwnerError extends Error {
@@ -64,7 +64,7 @@ function realPath(value, label, { file = false } = {}) {
 function validateRequest(candidate) {
   exactFields(candidate, REQUEST_FIELDS, "owner request");
   if (candidate.schema_version !== 1 || candidate.operation !== "evaluate_gate") fail("E_AGENT_OWNER_INPUT", "owner request must use schema_version 1 and operation evaluate_gate");
-  if (!TARGETS.has(candidate.target)) fail("E_AGENT_OWNER_TARGET", "target must be codex, cursor, or kiro-cli", { target: candidate.target });
+  if (!TARGETS.has(candidate.target)) fail("E_AGENT_OWNER_TARGET", "target must be codex, cursor, kiro-cli, or pi", { target: candidate.target });
   if (typeof candidate.automatic_continuation_supported !== "boolean" || candidate.interactive !== false) {
     fail("E_AGENT_OWNER_INPUT", "automatic_continuation_supported must be boolean and interactive must be false");
   }
@@ -93,6 +93,22 @@ function validateBridge(target, bridge) {
   if (target === "codex") {
     exactFields(port, ["inspect"], "Codex capability port");
     if (typeof port.inspect !== "function") fail("E_AGENT_BRIDGE_CONTRACT", "Codex capability_port.inspect must be a function");
+  } else if (target === "pi") {
+    exactFields(port, ["hostVersion", "authenticated", "externalCollisions", "inspect", "eventBus", "delegation"], "Pi native port", ["onProcessLoss", "importer"]);
+    if (typeof port.hostVersion !== "string" || port.hostVersion.length === 0 || typeof port.authenticated !== "boolean" || !Array.isArray(port.externalCollisions)) {
+      fail("E_AGENT_BRIDGE_CONTRACT", "Pi native host metadata is invalid");
+    }
+    if (typeof port.inspect !== "function"
+      || !port.eventBus
+      || typeof port.eventBus.on !== "function"
+      || typeof port.eventBus.emit !== "function"
+      || !port.delegation
+      || typeof port.delegation !== "object") {
+      fail("E_AGENT_BRIDGE_CONTRACT", "Pi native port must expose the public EventBus, delegation exports, and inspect");
+    }
+    if (Object.hasOwn(port, "onProcessLoss") && typeof port.onProcessLoss !== "function") {
+      fail("E_AGENT_BRIDGE_CONTRACT", "Pi native onProcessLoss, when present, must be a function");
+    }
   } else {
     exactFields(port, ["hostVersion", "authenticated", "externalCollisions", "inspect", "launch"], "exact-native port", ["cancel"]);
     if (typeof port.hostVersion !== "string" || port.hostVersion.length === 0 || typeof port.authenticated !== "boolean" || !Array.isArray(port.externalCollisions)) {
@@ -141,7 +157,13 @@ export async function runProductionAgentGate(candidate, { env = process.env } = 
     env: { ...env, XDG_STATE_HOME: request.state_root },
     workingRoot: request.working_root,
     capabilityPort: request.target === "codex" ? port : null,
-    nativePorts: request.target === "cursor" ? { cursor: port } : request.target === "kiro-cli" ? { kiroCli: port } : {},
+    nativePorts: request.target === "cursor"
+      ? { cursor: port }
+      : request.target === "kiro-cli"
+        ? { kiroCli: port }
+        : request.target === "pi"
+          ? { pi: port }
+          : {},
   });
   return evaluateGate({
     statePath: request.state_path,

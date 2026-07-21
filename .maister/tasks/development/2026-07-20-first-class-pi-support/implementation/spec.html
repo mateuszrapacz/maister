@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Specification: First-Class Pi Support</title>
+  <style>
+    :root { color-scheme: light; --bg: #f6f7f9; --surface: #fff; --text: #1a1d23; --muted: #667085; --border: #d9dee7; --accent: #4338ca; --danger: #b42318; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { max-width: 1120px; margin: 0 auto; padding: 40px 24px 80px; }
+    article { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px 40px; box-shadow: 0 2px 8px rgba(16,24,40,.05); }
+    h1, h2, h3 { line-height: 1.25; }
+    h1 { font-size: 30px; margin-top: 0; }
+    h2 { border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-top: 36px; }
+    h3 { margin-top: 28px; }
+    .summary { border-left: 4px solid var(--accent); background: #eef2ff; padding: 16px 20px; }
+    .contract { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin: 12px 0; }
+    .warning { border-left-color: var(--danger); background: #fff4f2; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    code { background: #f1f3f5; padding: 2px 5px; border-radius: 4px; }
+    pre { background: #111827; color: #e5e7eb; padding: 18px; overflow: auto; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th, td { text-align: left; vertical-align: top; border: 1px solid var(--border); padding: 9px 11px; }
+    th { background: #f8fafc; }
+    .muted { color: var(--muted); }
+    li { margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <main><article>
+    <h1>Specification: First-Class Pi Support</h1>
+    <section class="summary"><h2>TL;DR</h2><p>Add Pi as a fourth first-class Maister target through one deterministic generated package, a closed hybrid projection, one identity-managed <code>packages[]</code> member, and a thin public <code>pi-subagents/delegation</code> v1 adapter.</p><p>The normative contract is complete in <code>spec.md</code> Appendix A. A complete bound E1-E6 manifest publishes <code>pi.native-semantic</code>; when both native levels are unavailable, structural/transactional packaging remains explicitly provisional.</p></section>
+
+    <h2>Decisions</h2>
+    <div class="contract">Target identity is <code>pi</code> / <code>pi.native</code>. Current release admission is exactly Codex, Cursor, Kiro CLI, and Pi; historical parity machinery is removed from active code and metadata.</div>
+    <div class="contract">The package is generated at <code>&lt;PI_CODING_AGENT_DIR&gt;/maister</code>, defaulting to <code>~/.pi/agent/maister</code>. Pi, <code>pi-subagents</code>, settings outside one member, auth, trust, sessions, and unrelated packages remain operator-owned.</div>
+    <div class="contract">All 29 canonical skills, 14 canonical commands, and 28 canonical agents are represented exactly once. Skills remain skills, commands become prompts, and one generated extension contains only imperative registration/delegation.</div>
+    <div class="contract">Settings ownership is versioned <code>managed_array_entries_v1</code> / <code>pi_local_package_v1</code>. The public runtime boundary is versioned delegation protocol v1 and Maister owns the durable observation stream.</div>
+
+    <h2>Compatibility and claims</h2>
+    <table><tr><th>Policy</th><th>Normative value</th><th>Meaning</th></tr>
+      <tr><td>Pi engine floor</td><td><code>Node &gt;=22.19.0</code></td><td>Structural host floor from the active Pi executable package.</td></tr>
+      <tr><td>Tested native tuple</td><td>Pi <code>0.80.10</code>, Node <code>25.9.0</code></td><td>Exact E5/E6 evidence tuple.</td></tr>
+      <tr><td>Prerequisite</td><td><code>pi-subagents &gt;=0.35.0 &lt;0.36.0</code>, tested at <code>0.35.1</code></td><td>Operator-owned public delegation package.</td></tr>
+      <tr><td>Protocol</td><td><code>SUBAGENT_DELEGATION_PROTOCOL_VERSION === 1</code></td><td>Required public export and event protocol.</td></tr>
+    </table>
+    <p>Resolution follows the executable realpath, its own package manifest, <code>process.execPath</code>, and the active Pi package-manager identity. A matching package elsewhere in <code>node_modules</code> is not evidence. Mismatches produce typed unavailable/blocked results without fallback.</p>
+
+    <h2>Closed source projection</h2>
+    <p>The canonical source counts are 29 skill directories below <code>plugins/maister/skills</code>, 14 Markdown commands below <code>plugins/maister/commands</code>, and 28 agents below <code>plugins/maister/agents</code>. Each source has a SHA-256 digest in <code>pi-command-projection-v1.json</code>/<code>agent-projection-v1.json</code>; stale, missing, duplicate, shadowed, or unmappable rows fail validation.</p>
+    <table><tr><th>Source class</th><th>Destination</th><th>Representation</th><th>Closure rule</th></tr>
+      <tr><td>Skills (29)</td><td><code>skills/&lt;id&gt;/**</code></td><td>Pi skill</td><td>Recursive copy with source digest and reference rewrite.</td></tr>
+      <tr><td>Commands (14)</td><td><code>prompts/&lt;id&gt;.md</code></td><td>Pi prompt template</td><td>One prompt per canonical command; no <code>commands/</code> directory.</td></tr>
+      <tr><td>Agents (28)</td><td><code>agents/maister-&lt;role&gt;.md</code></td><td>Package-agent descriptor</td><td>Frontmatter name is exactly <code>maister:&lt;role&gt;</code>.</td></tr>
+      <tr><td>Runtime</td><td><code>common/**</code>, <code>lib/**</code>, <code>bin/**</code>, <code>orchestrator-framework/**</code></td><td>Portable closure</td><td>Only overlay-listed files; no other targets or external prerequisite.</td></tr>
+    </table>
+    <p class="muted">The complete command table and all current source digests are in Appendix A.1 of the Markdown specification. The complete role list is bound to the checked-in projection contract and reproduced below.</p>
+    <pre>advisor, bottleneck-analyzer, code-quality-pragmatist, code-reviewer,
+codebase-analysis-reporter, docs-operator, e2e-test-verifier, gap-analyzer,
+html-companion-writer, implementation-completeness-checker, implementation-planner,
+information-gatherer, production-readiness-checker, project-analyzer,
+reality-assessor, research-planner, research-synthesizer, solution-brainstormer,
+solution-designer, spec-auditor, specification-creator, task-classifier,
+task-group-implementer, test-suite-runner, thermo-nuclear-code-quality-review-subagent,
+thermo-nuclear-review-subagent, ui-mockup-generator, user-docs-generator</pre>
+
+    <h2>Generated package and ownership</h2>
+    <pre>~/.pi/agent/maister/
+├── package.json
+├── .maister-source.json
+├── extensions/maister.ts
+├── skills/&lt;id&gt;/**
+├── prompts/&lt;command&gt;.md
+├── agents/maister-&lt;role&gt;.md
+├── agent-projection-v1.json
+├── common/  lib/  bin/  orchestrator-framework/</pre>
+    <p>The manifest has only <code>name</code>, <code>version</code>, <code>private</code>, <code>description</code>, and Pi <code>extensions</code>/<code>skills</code>/<code>prompts</code> fields. Agent discovery is performed by the public <code>pi-subagents</code> package contract, not by inventing a Pi <code>agents</code> manifest key. Generated output is LF, bytewise sorted, deterministic, symlink-free, and contains no credentials, sessions, auth, <code>node_modules</code>, or bundled <code>pi-subagents</code>.</p>
+
+    <h2>Settings contract</h2>
+    <div class="contract"><code>settings.json</code> is <code>&lt;agentRoot&gt;/settings.json</code>; only <code>packages[]</code> is managed. Strings and objects with <code>source</code> normalize to one absolute NFC path identity. Existing representation and unrelated fields/order are preserved; duplicate identities, conflicting filters, malformed JSON, non-array packages, escaping symlinks, drift, and concurrent writes fail before mutation.</div>
+    <div class="contract">Missing settings creates a minimal file; a missing <code>packages</code> property is added; a non-array property is rejected. Receipts record ownership/merge schema versions, normalized identity, before/after hashes, unmanaged projection hash, modes, and backup reference. Rejected or rolled-back changes restore bytes and topology exactly.</div>
+
+    <h2>Runtime and durable events</h2>
+    <p>The adapter imports only the public <code>pi-subagents/delegation</code> export and uses these exact v1 event constants:</p>
+    <pre>prompt-template:subagent:request
+prompt-template:subagent:started
+prompt-template:subagent:update
+prompt-template:subagent:response
+prompt-template:subagent:cancel</pre>
+    <p>It freezes the role identity from Maister's receipt, subscribes before request emission, writes <code>dispatch_requested</code> before side effects, bounds/sanitizes updates, and requires exact terminal <code>response.agent</code> equality for candidate success. Duplicate IDs, missing terminal responses, wrong identity, malformed events, exit 0 without response, cancellation uncertainty, and process loss are typed failures; retry uses a new dispatch ID.</p>
+    <p><code>maister-observation-v1</code> JSONL records use sequence numbers, event type, dispatch/request IDs, requested/observed identity, status, bounded payload, previous hash, and SHA-256 hash over canonical JSON. The writer fsyncs each append and verifies chain continuity. Raw transcripts, auth, cookies, and unbounded tool arguments/output are never persisted.</p>
+
+    <h2>Evidence and release truth</h2>
+    <table><tr><th>Claim</th><th>Required evidence</th><th>Unavailable policy</th></tr>
+      <tr><td>Registered</td><td>E1</td><td>Pi may be absent; registry/overlay contract is still validated.</td></tr>
+      <tr><td>Structural</td><td>E1 + E2</td><td>Deterministic package and projection are required.</td></tr>
+      <tr><td>Transactional</td><td>E1–E4</td><td>Settings, rollback, recovery, and receipts are required.</td></tr>
+      <tr><td>Native + semantic</td><td>E1–E6</td><td>Both native levels pass together for <code>pi.native-semantic</code>; mixed or stale evidence fails closed.</td></tr>
+      <tr><td>Provisional</td><td>E1–E4 passed, E5/E6 explicitly unavailable</td><td>Allowed only as <code>pi.structural-transactional.provisional</code>.</td></tr>
+    </table>
+    <p>Evidence binds source commit/tree, overlay/projection/package hashes, scenario/schema versions, executable realpath/version, Node, prerequisite identity/version/digest, timestamps, and expiry (30 days for E1–E4, 14 days for E5–E6). Any newer failed/unavailable observation invalidates the prior pass.</p>
+
+    <h2>Lifecycle, recovery, and traceability</h2>
+    <p>Install locks the Pi agent root, stages on the same filesystem, commits the package tree before the one settings member, verifies receipt/discovery, and journals every boundary. Rollback preserves backups; unresolved recovery is never silently overwritten. The deterministic archive fixes source-date epoch, path order, modes, uid/gid, gzip timestamp, and external prerequisite metadata.</p>
+    <table><tr><th>Contract</th><th>Artifact</th><th>Proof</th></tr>
+      <tr><td>Target/overlay</td><td><code>overlays/pi/overlay.yml</code>, <code>inventory.yml</code></td><td>E1 schema/topology</td></tr>
+      <tr><td>Projection/roles</td><td>Pi projection manifests</td><td>E2 exact-once/origin and E5 collisions</td></tr>
+      <tr><td>Settings/transactions</td><td>managed-array receipt and journals</td><td>E4 mutation, drift, rollback, recovery</td></tr>
+      <tr><td>Runtime/events</td><td><code>pi.native</code>, observation v1</td><td>E5/E6 identity, lifecycle, limits, hash chain</td></tr>
+      <tr><td>Release</td><td>archive/SBOM/provenance/admission</td><td>determinism and extracted lifecycle smoke</td></tr>
+    </table>
+    <p class="warning contract">Implementation remains blocked until the revised Markdown specification passes the independent specification audit. No production source is changed by this artifact revision.</p>
+  </article></main>
+</body>
+</html>

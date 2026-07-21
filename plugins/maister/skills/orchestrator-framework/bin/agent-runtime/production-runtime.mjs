@@ -198,7 +198,7 @@ function nativeResolverHooks(target, nativePort) {
 }
 
 export function loadInstalledAgentRuntimeInputs({ target, home, env = process.env, pluginSourceRoot = PACKAGED_PLUGIN_ROOT } = {}) {
-  if (!SUPPORTED_TARGET_IDS.includes(target)) fail("E_RUNTIME_TARGET", "target must be codex, cursor, or kiro-cli", { target });
+  if (!SUPPORTED_TARGET_IDS.includes(target)) fail("E_RUNTIME_TARGET", "target must be codex, cursor, kiro-cli, or pi", { target });
   const paths = getTargetPaths({ target, home, env });
   const active = readActiveReceipt(paths);
   if (!active) fail("E_RUNTIME_INSTALL_STATE", "no active installed receipt exists", { target });
@@ -248,7 +248,9 @@ export function createProductionAgentRuntime({
     ? nativePorts.cursor ?? unavailableNativePort()
     : target === "kiro-cli"
       ? nativePorts.kiroCli ?? unavailableNativePort()
-      : null;
+      : target === "pi"
+        ? nativePorts.pi ?? unavailableNativePort()
+        : null;
   const resolverHooks = target === "codex" ? codexResolverHooks(codexPort) : nativeResolverHooks(target, nativePort);
   return createAgentRuntime({
     target,
@@ -257,7 +259,13 @@ export function createProductionAgentRuntime({
     paths: installed.paths,
     resolverHooks,
     capabilityPort: target === "codex" ? codexPort : undefined,
-    nativePorts: target === "cursor" ? { cursor: nativePort } : target === "kiro-cli" ? { kiroCli: nativePort } : {},
+    nativePorts: target === "cursor"
+      ? { cursor: nativePort }
+      : target === "kiro-cli"
+        ? { kiroCli: nativePort }
+        : target === "pi"
+          ? { pi: nativePort }
+          : {},
     workingRoot: path.resolve(workingRoot),
     processPort,
     eventPort,

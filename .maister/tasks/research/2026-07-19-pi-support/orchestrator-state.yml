@@ -1,0 +1,965 @@
+orchestrator:
+  schema_version: 2
+  revision: 22
+  initial_phase: "phase-1"
+  current_phase: "phase-6"
+  completed_phases: ["phase-1", "phase-2", "phase-3", "phase-4", "phase-5", "phase-6"]
+  failed_phases: []
+  gate_history:
+    - schema_version: 2
+      idempotency_key: "sha256:8dc80ac772693c815f0dfac96f7baa45a3cded3e406f16c6f5a42756f1e157d4"
+      phase_id: "phase-1"
+      gate_type: "phase-1-exit"
+      question: "Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?"
+      options:
+        - "Continue to brainstorming evaluation"
+        - "Pause workflow"
+      original_recommendation: "Continue to brainstorming evaluation"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Continue to brainstorming evaluation"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T12:59:59Z"
+      updated_at: "2026-07-19T17:09:41Z"
+      decided_at: "2026-07-19T17:09:41Z"
+    - schema_version: 2
+      idempotency_key: "sha256:c97acea1633f9e9a5b457044606447a8f102872be4f60f31f6e49d895f4b2aed"
+      phase_id: "phase-2"
+      gate_type: "optional-phase-selection"
+      question: "The synthesis identifies several viable Pi integration choices with material trade-offs in package discovery, command projection, agent projection, settings ownership, and greenfield admission. Would you like to explore solution alternatives?"
+      options:
+        - "Yes, explore alternatives"
+        - "No, skip brainstorming"
+      original_recommendation: "Yes, explore alternatives"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Yes, explore alternatives"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T17:10:57Z"
+      updated_at: "2026-07-19T17:14:34Z"
+      decided_at: "2026-07-19T17:14:34Z"
+    - schema_version: 2
+      idempotency_key: "sha256:5a8f89bc2dd155f393adf41031ba776cb43e4583c55bf2607e51e9580eadc4e0"
+      phase_id: "phase-2"
+      gate_type: "optional-phase-selection"
+      question: "The Pi target requires new architectural contracts for pi.native dispatch, managed array-entry ownership, 28-agent projection, evidence admission, and the historical-parity boundary. Would you like to generate a high-level design?"
+      options:
+        - "Yes, generate design"
+        - "No, skip design"
+      original_recommendation: "Yes, generate design"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Yes, generate design"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T17:14:34Z"
+      updated_at: "2026-07-19T17:34:14Z"
+      decided_at: "2026-07-19T17:34:14Z"
+    - schema_version: 2
+      idempotency_key: "sha256:b44cce49b270e039db9825c224697b82b1f7ac236d4a1a361cd36e21a6e3cd13"
+      phase_id: "phase-3"
+      gate_type: "phase-3-exit"
+      question: "Continue to solution convergence?"
+      options:
+        - "Continue to solution convergence"
+        - "Pause workflow"
+      original_recommendation: "Continue to solution convergence"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Continue to solution convergence"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T17:40:19Z"
+      updated_at: "2026-07-19T18:14:20Z"
+      decided_at: "2026-07-19T18:14:20Z"
+    - schema_version: 2
+      idempotency_key: "sha256:3bc71757d1e743e79e1d4429ff19b129b7fb50e9e00c6bba411dbff397742c9e"
+      phase_id: "phase-4"
+      gate_type: "research-convergence"
+      question: "Which package and discovery integration should Maister use for Pi?"
+      options:
+        - "One private generated Pi package (Recommended)"
+        - "Loose global resources"
+        - "Self-contained npm package including subagents"
+        - "Need more info"
+      original_recommendation: "One private generated Pi package (Recommended)"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "One private generated Pi package (Recommended)"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T18:14:20Z"
+      updated_at: "2026-07-19T18:31:01Z"
+      decided_at: "2026-07-19T18:31:01Z"
+    - schema_version: 2
+      idempotency_key: "sha256:445cce4546c92dea1d6ff546a015e73bdc3a201c4b54df1be275f1ffc8d84cd5"
+      phase_id: "phase-4"
+      gate_type: "research-convergence"
+      question: "Which command and skill projection strategy should Maister use for Pi?"
+      options:
+        - "Hybrid semantic projection (Recommended)"
+        - "Everything as prompt templates"
+        - "Everything as extension commands"
+        - "Need more info"
+      original_recommendation: "Hybrid semantic projection (Recommended)"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Hybrid semantic projection (Recommended)"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T18:31:01Z"
+      updated_at: "2026-07-19T18:39:52Z"
+      decided_at: "2026-07-19T18:39:52Z"
+    - schema_version: 2
+      idempotency_key: "sha256:641b785d5e8e6254d030529f8dacab8f95a6aa2850886b6146d3ca638dfe844c"
+      phase_id: "phase-4"
+      gate_type: "research-convergence"
+      question: "Which native bridge shape should Maister use for Pi agents?"
+      options:
+        - "Thin direct-import delegation adapter (Recommended)"
+        - "Parent-facing Pi tool/RPC mediation"
+        - "Maister-owned child-process reimplementation"
+        - "Need more info"
+      original_recommendation: "Thin direct-import delegation adapter (Recommended)"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Thin direct-import delegation adapter (Recommended)"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option after confirming that it directly uses pi-subagents/delegation v1."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T18:39:52Z"
+      updated_at: "2026-07-19T18:45:09Z"
+      decided_at: "2026-07-19T18:45:09Z"
+    - schema_version: 2
+      idempotency_key: "sha256:2ff0350b0ec7d63a416b3a99f64d5248d3fe5b8653698fcef29ed4734d8a33d8"
+      phase_id: "phase-4"
+      gate_type: "research-convergence"
+      question: "Which settings and package ownership model should Maister use for Pi?"
+      options:
+        - "Identity-aware managed array entries (Recommended)"
+        - "Own the complete packages key"
+        - "Manual operator registration"
+        - "Need more info"
+      original_recommendation: "Identity-aware managed array entries (Recommended)"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Identity-aware managed array entries (Recommended)"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T18:45:09Z"
+      updated_at: "2026-07-19T18:50:55Z"
+      decided_at: "2026-07-19T18:50:55Z"
+    - schema_version: 2
+      idempotency_key: "sha256:1f11b2cd328adaf480d907aa904ffbe1357fe7a1114cde884ef87e3d71fa2c05"
+      phase_id: "phase-4"
+      gate_type: "research-convergence"
+      question: "Which greenfield admission and release architecture should Maister use for Pi?"
+      options:
+        - "Dual-track historical parity plus greenfield admission (Recommended)"
+        - "Expand historical parity oracle to four targets"
+        - "Experimental Pi release outside main matrix"
+        - "Need more info"
+      original_recommendation: "Dual-track historical parity plus greenfield admission (Recommended)"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Need more info"
+      final_actor: "user"
+      rationale: "The user rejected the historical-parity premise and clarified that only the current product version and current support contract matter."
+      confidence: null
+      escalate_to_user: false
+      user_override: true
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T18:50:55Z"
+      updated_at: "2026-07-19T18:59:06Z"
+      decided_at: "2026-07-19T18:59:06Z"
+    - schema_version: 2
+      idempotency_key: "sha256:0b150c156aa7f648c91f6958f53eefb0c8e75742edfd5c1ee9f40360cce38c24"
+      phase_id: "phase-4"
+      gate_type: "research-convergence"
+      question: "Which current-state admission and release architecture should Maister use for Pi?"
+      options:
+        - "Current-state all-target admission only (Recommended)"
+        - "Current-state admission with non-blocking legacy audit"
+        - "Experimental Pi release outside main matrix"
+        - "Need more info"
+      original_recommendation: "Current-state all-target admission only (Recommended)"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Current-state all-target admission only (Recommended)"
+      final_actor: "user"
+      rationale: "The user selected one current-state admission and release matrix for all supported targets, with historical parity removed from the active product architecture."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T18:59:06Z"
+      updated_at: "2026-07-19T19:05:50Z"
+      decided_at: "2026-07-19T19:05:50Z"
+    - schema_version: 2
+      idempotency_key: "sha256:deff7dc9407e4bf7bd8e9825c224697b82b1f7ac236d4a1a361cd36e21a6e3cd13"
+      phase_id: "phase-4"
+      gate_type: "phase-4-exit"
+      question: "Brainstorming complete. Continue to high-level design?"
+      options:
+        - "Continue to high-level design"
+        - "Pause workflow"
+      original_recommendation: "Continue to high-level design"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Continue to high-level design"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T19:05:50Z"
+      updated_at: "2026-07-19T19:11:59Z"
+      decided_at: "2026-07-19T19:11:59Z"
+    - schema_version: 2
+      idempotency_key: "sha256:85ebcfe50a109a5497b7334440a4fcdd13d33273667da1b847c76cea54a75806"
+      phase_id: "phase-5"
+      gate_type: "research-clarification"
+      question: "The high-level design will use the five selected approaches, target only the current four-host product contract, keep pi-subagents operator-owned, and treat command-by-command projection as a closed implementation mapping. Confirm these assumptions?"
+      options:
+        - "Confirm assumptions"
+        - "Correct assumptions"
+        - "Provide more context"
+      original_recommendation: "Confirm assumptions"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Confirm assumptions"
+      final_actor: "user"
+      rationale: "The user confirmed the complete design assumptions."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T19:11:59Z"
+      updated_at: "2026-07-19T19:16:35Z"
+      decided_at: "2026-07-19T19:16:35Z"
+    - schema_version: 2
+      idempotency_key: "sha256:6bdf08499f5ea52adcb109887df08612b87fed5c1a2a6ba779d4fc70c9cb160e"
+      phase_id: "phase-5"
+      gate_type: "phase-5-exit"
+      question: "Design complete. Continue to output generation?"
+      options:
+        - "Continue to output generation"
+        - "Pause workflow"
+      original_recommendation: "Continue to output generation"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "configurable"
+      status: "decided"
+      selected_option: "Continue to output generation"
+      final_actor: "user"
+      rationale: "The user selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T19:29:06Z"
+      updated_at: "2026-07-19T19:38:04Z"
+      decided_at: "2026-07-19T19:38:04Z"
+    - schema_version: 2
+      idempotency_key: "sha256:a911d2d98079011e70c45578d7ab4f6f25fac7ad44fc44db849374cf82ed5c75"
+      phase_id: "phase-6"
+      gate_type: "final-handoff-approval"
+      question: "Research and design outputs are complete. Approve the final handoff and complete the workflow?"
+      options:
+        - "Complete workflow"
+        - "Keep workflow open"
+      original_recommendation: "Complete workflow"
+      configured_policy: "fully_automatic"
+      policy: "manual"
+      safety_classification: "denylisted"
+      status: "decided"
+      selected_option: "Complete workflow"
+      final_actor: "user"
+      rationale: "The user approved the final handoff and selected an exact supplied option."
+      confidence: null
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        agent: null
+        model: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: "complete"
+      legacy_record: null
+      created_at: "2026-07-19T19:38:04Z"
+      updated_at: "2026-07-19T19:42:03Z"
+      decided_at: "2026-07-19T19:42:03Z"
+  work:
+    phase-1: { inventory_version: "research-phase-1", items: [] }
+    phase-2: { inventory_version: "research-phase-2", items: [] }
+    phase-3: { inventory_version: "research-phase-3", items: [] }
+    phase-4: { inventory_version: "research-phase-4", items: [] }
+    phase-5: { inventory_version: "research-phase-5", items: [] }
+    phase-6: { inventory_version: "research-phase-6", items: [] }
+  dispatch_outbox: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    html_output: true
+    brainstorming_enabled: true
+    design_enabled: true
+    advisor:
+      enabled: true
+      gate_policies:
+        phase-exit: "fully_automatic"
+        optional-phase: "fully_automatic"
+        clarify: "fully_automatic"
+        convergence: "fully_automatic"
+        verify-matrix: "fully_automatic"
+      advisor_agent: "advisor"
+      advisor_model: "gpt-5.6-sol"
+      arbiter_agent: "arbiter"
+      arbiter_model: "gpt-5.6-sol"
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: "exponential"
+  created: "2026-07-19T12:23:32Z"
+  updated: "2026-07-19T19:42:03Z"
+  task_path: ".maister/tasks/research/2026-07-19-pi-support"
+  task_ids:
+    phase-1: "research-phase-1"
+    phase-2: "research-phase-2"
+    phase-3: "research-phase-3"
+    phase-4: "research-phase-4"
+    phase-5: "research-phase-5"
+    phase-6: "research-phase-6"
+  implementation_approval:
+    status: "not_required"
+    approved_by: null
+    approved_at: null
+    approved_scope: []
+  research_context:
+    research_type: "mixed"
+    research_question: "How should Maister add first-class support for the Pi coding agent, including target packaging, installation, commands/skills, and native-agent orchestration built on Pi's installed subagents extension?"
+    scope:
+      included:
+        - "Current Maister canonical plugin and target adapter architecture"
+        - "Installed Pi runtime and extensions, especially the subagents extension"
+        - "Pi extension, prompt, skill, command, and packaging APIs"
+        - "Mapping Maister native subagent delegation semantics onto Pi subagents"
+        - "Build, install, validation, compatibility, and testing implications"
+      excluded:
+        - "Implementing Pi support in this research workflow"
+        - "Rewriting Pi or its subagents extension"
+        - "Unrelated host integrations"
+      constraints:
+        - "Use the already installed Pi with extensions for empirical tests"
+        - "Base native-agent support on the installed subagents plugin"
+        - "Additional extensions may be installed only when needed for evidence"
+        - "Preserve Maister safety, auditability, resumability, and canonical-source ownership"
+    methodology:
+      - "mixed research decomposition"
+      - "iterative deepening"
+      - "multi-source triangulation"
+      - "version-bound empirical probes"
+      - "four-target comparative gap analysis"
+    sources:
+      - "current Maister repository and behavior tests"
+      - "installed @earendil-works/pi-coding-agent 0.79.10"
+      - "installed pi-subagents 0.35.1"
+      - "isolated empirical Pi/subagent probes"
+      - "official earendil-works/pi and nicobailon/pi-subagents upstream sources"
+    confidence_level: "high"
+    gathering_strategy:
+      categories:
+        - "maister-core-contract"
+        - "pi-host-contract"
+        - "pi-subagents-native-runtime"
+        - "distribution-installation"
+        - "compatibility-validation"
+      count: 5
+      source: "planner"
+    project_doc_paths:
+      - ".maister/docs/project/vision.md"
+      - ".maister/docs/project/roadmap.md"
+      - ".maister/docs/project/tech-stack.md"
+      - ".maister/docs/project/architecture.md"
+    phase_summaries:
+      phase-1:
+        summary: "Pi is feasible as a fourth generated target using a private Pi package and pi-subagents/delegation v1 for dispatch, while Maister retains role resolution, durable events, transactions, and evidence ownership. Product support remains unavailable until E1-E6 implementation and admission."
+        steps_completed: ["initialize", "plan", "gather", "synthesize"]
+        decisions:
+          - decision: "Use five parallel, non-overlapping research categories."
+            rationale: "They cover the current Maister contract, Pi host contract, subagent runtime, distribution lifecycle, and validation independently."
+          - decision: "Correct the active runtime baseline to Pi 0.80.10 on Node 25.9.0 with pi-subagents 0.35.1."
+            rationale: "PATH resolution and isolated runtime probes supersede the stale 0.79.10 nested package copy."
+          - decision: "Use pi-subagents/delegation v1 only as the dispatch adapter."
+            rationale: "It exposes exact agent identity, progress, cancellation, limits, and terminal results while Maister retains resolution and durable events."
+          - decision: "Install Maister as one private local Pi package and manage one identity-aware packages entry."
+            rationale: "This keeps canonical projections in one transactional tree and preserves unrelated Pi state."
+          - decision: "Keep the immutable historical parity oracle scoped to three migrated targets and add a four-target greenfield admission gate."
+            rationale: "Pi has no truthful pre-migration legacy tree."
+          - decision: "Publish graduated Pi support levels from E1-E6 evidence."
+            rationale: "Research probes prove feasibility but cannot authorize a product support claim."
+        risks:
+          - "resolved: active PATH Pi is 0.80.10; the nested 0.79.10 package is stale and non-authoritative."
+          - "The future package must prove discovery of all 28 namespaced descriptors without ambient shadowing."
+          - "The historical parity oracle cannot truthfully contain a greenfield Pi legacy tree and needs a separate admission path."
+          - "Current managed_keys cannot safely own one member of Pi's packages array; an identity-aware managed_array_entries contract is required."
+          - "PI_CODING_AGENT_DIR does not suppress ambient ~/.agents/skills discovery in hermetic tests."
+          - "Foreground delegation has no public durable replay or same-run resume; process loss must become typed failure."
+          - "The existing parity-release baseline currently fails closed on an unrelated exact-native.mjs observation mismatch."
+        artifacts:
+          - path: "planning/research-brief.md"
+            label: "Research brief"
+            html: null
+          - path: "planning/research-plan.md"
+            label: "Research plan"
+            html: null
+          - path: "planning/sources.md"
+            label: "Source catalog"
+            html: null
+          - path: "analysis/findings/01-maister-core-contract.md"
+            label: "Maister core contract"
+            html: null
+          - path: "analysis/findings/02-pi-host-contract.md"
+            label: "Pi host contract"
+            html: null
+          - path: "analysis/findings/03-pi-subagents-native-runtime.md"
+            label: "Pi subagents native runtime"
+            html: null
+          - path: "analysis/findings/04-distribution-installation.md"
+            label: "Distribution and installation"
+            html: null
+          - path: "analysis/findings/05-compatibility-validation.md"
+            label: "Compatibility and validation"
+            html: null
+          - path: "analysis/synthesis.md"
+            label: "Research synthesis"
+            html: null
+          - path: "outputs/research-report.md"
+            label: "Research report"
+            html: "outputs/research-report.html"
+      phase-2:
+        summary: "Brainstorming and high-level design are enabled."
+        decisions:
+          - decision: "Enable brainstorming and explore Pi solution alternatives."
+            rationale: "The synthesis contains several material integration trade-offs."
+          - decision: "Generate a high-level Pi target design."
+            rationale: "The target introduces new runtime, projection, ownership, evidence, and admission contracts."
+        risks: []
+        artifacts: []
+      phase-3:
+        summary: "Five decision areas and fifteen genuine alternatives were generated; the recommended combination preserves canonical ownership, uses public delegation v1, and adds narrow settings ownership plus greenfield admission."
+        decisions:
+          - decision: "Recommend one private generated Pi package."
+            rationale: "It provides deterministic ownership and native discovery."
+          - decision: "Recommend hybrid skill, prompt, and minimal-extension projection."
+            rationale: "It preserves workflow semantics with the smallest executable surface."
+          - decision: "Recommend a thin pi.native adapter over public delegation v1."
+            rationale: "It keeps policy, resolver, evidence, and durable events in Maister."
+          - decision: "Recommend identity-aware managed_array_entries."
+            rationale: "It owns only the Maister package membership in shared Pi settings."
+          - decision: "Recommend dual-track historical parity and greenfield admission."
+            rationale: "It preserves historical evidence while admitting a new target honestly."
+        risks:
+          - "Cancellation and resumed inspection are not full public delegation-v1 capabilities."
+          - "Exact prompt-versus-skill mapping needs a reviewed per-command table."
+          - "Array-entry normalization and rollback require strong negative tests."
+        artifacts:
+          - path: "outputs/solution-exploration.md"
+            label: "Solution exploration"
+            html: "outputs/solution-exploration.html"
+      phase-4:
+        summary: "All five Pi architecture areas converged: private package, hybrid semantic projection, direct pi-subagents delegation, narrow array-entry ownership, and one current-state all-target admission matrix."
+        decisions:
+          - decision: "Use one private generated Pi package."
+            rationale: "It preserves deterministic ownership, native discovery, receipts, and transactional lifecycle."
+          - decision: "Use hybrid semantic projection."
+            rationale: "Skills, prompts, and a minimal extension preserve semantics with the smallest executable surface."
+          - decision: "Use a thin direct-import adapter over pi-subagents/delegation v1."
+            rationale: "It directly uses the native plugin while Maister retains resolver, policy, durable events, and evidence."
+          - decision: "Use identity-aware managed array entries."
+            rationale: "It owns only the Maister package membership and preserves all unrelated Pi state."
+          - decision: "Use current-state all-target admission only."
+            rationale: "Only the current product contract matters; historical parity is removed from the active release architecture."
+        risks: []
+        artifacts:
+          - path: "outputs/solution-exploration.md"
+            label: "Solution exploration"
+            html: "outputs/solution-exploration.html"
+        decision_areas:
+          - area: "Package and discovery integration"
+            alternatives_count: 3
+            chosen_approach: "One private generated Pi package"
+          - area: "Command and skill projection strategy"
+            alternatives_count: 3
+            chosen_approach: "Hybrid semantic projection"
+          - area: "Native bridge shape"
+            alternatives_count: 3
+            chosen_approach: "Thin direct-import delegation adapter over pi-subagents/delegation v1"
+          - area: "Settings and package ownership"
+            alternatives_count: 3
+            chosen_approach: "Identity-aware managed array entries"
+          - area: "Current-state admission and release architecture"
+            alternatives_count: 3
+            chosen_approach: "Current-state all-target admission only"
+        deferred_ideas:
+          - "Npm marketplace publication"
+          - "Vendored pi-subagents"
+          - "Full background resume and cancel control"
+          - "Generic multi-host array-entry framework"
+          - "Ambient cross-harness skill federation"
+      phase-5:
+        summary: "Canonical Core + Generated Host Adapter design completed with eight accepted MADRs for current-state first-class Pi support."
+        decisions:
+          - decision: "Design only for the current four-target product contract."
+            rationale: "Historical parity and migration concerns are explicitly excluded."
+          - decision: "Keep pi-subagents operator-owned and use only its public delegation v1 API."
+            rationale: "This preserves the chosen native-agent boundary without bundling or reimplementation."
+          - decision: "Generate a private Pi package with hybrid semantic projection."
+            rationale: "Canonical behavior remains the sole source and Pi receives native resource forms."
+          - decision: "Add managed_array_entries_v1 and pi_local_package_v1."
+            rationale: "Shared settings ownership stays narrow and transactional."
+          - decision: "Use one current-state four-target admission matrix with E1-E6 evidence."
+            rationale: "Only the current product contract governs support and release."
+        risks:
+          - "The exact command-by-command projection table still needs implementation review."
+          - "Foreground delegation cannot resume a lost child process."
+          - "Array-entry normalization and multi-resource recovery require exhaustive fault-injection tests."
+          - "E5 must prove exact installed origins for all 28 namespaced agents."
+        artifacts:
+          - path: "outputs/high-level-design.md"
+            label: "High-level design"
+            html: "outputs/high-level-design.html"
+          - path: "outputs/decision-log.md"
+            label: "Decision log"
+            html: "outputs/decision-log.html"
+        architecture_style: "Canonical Core + Generated Host Adapter (ports and adapters with transactional projection boundary)"
+        decisions_count: 8
+      phase-6:
+        summary: "All research, exploration, design, and audit artifacts are complete; the protected final handoff was approved."
+        decisions:
+          - decision: "Hand off the accepted current-state Pi architecture to a fresh development workflow."
+            rationale: "The research report, selected approaches, HLD, and eight MADRs provide an implementation contract."
+        risks:
+          - "Implementation must prove all 28 effective agent origins and E1-E6 before claiming support."
+          - "managed_array_entries_v1 requires fault-injection and recovery coverage before active settings mutation."
+        artifacts:
+          - path: "outputs/decision-summary.md"
+            label: "Decision summary"
+            html: "outputs/decision-summary.html"
+    design_preferences:
+      assumptions_status: "confirmed"
+      current_state_only: true
+      selected_approaches:
+        - "One private generated Pi package"
+        - "Hybrid semantic projection"
+        - "Thin direct-import adapter over pi-subagents/delegation v1"
+        - "Identity-aware managed array entries"
+        - "Current-state all-target admission only"
+      pi_subagents_ownership: "operator-owned prerequisite"
+      historical_parity: "excluded from active architecture"
+      documentation_style: "standard MADR"
+task:
+  title: "Research first-class Pi support"
+  description: "Research how Maister should support the Pi coding agent, using the installed Pi extensions for tests and the subagents plugin as the foundation for native agents."
+  status: "completed"
+  tags: ["research", "pi", "platform-parity", "subagents"]
+  priority: "high"
+  completed_at: "2026-07-19T19:42:03Z"
+phases:
+  - id: "phase-1"
+    name: "Research foundation"
+    status: "completed"
+    blocked_by: []
+    started: "2026-07-19T12:23:32Z"
+    completed: "2026-07-19T17:09:41Z"
+    skip_reason: null
+    gate:
+      idempotency_key: "sha256:8dc80ac772693c815f0dfac96f7baa45a3cded3e406f16c6f5a42756f1e157d4"
+      gate_type: "phase-1-exit"
+      question: "Research foundation complete (initialized, planned, gathered, synthesized). Continue to brainstorming evaluation?"
+      options:
+        - "Continue to brainstorming evaluation"
+        - "Pause workflow"
+      recommendation: "Continue to brainstorming evaluation"
+      answer: "Continue to brainstorming evaluation"
+      status: "decided"
+  - id: "phase-2"
+    name: "Evaluate optional phases"
+    status: "completed"
+    blocked_by: ["phase-1"]
+    started: "2026-07-19T17:09:41Z"
+    completed: "2026-07-19T17:34:14Z"
+    skip_reason: null
+    gate:
+      idempotency_key: "sha256:5a8f89bc2dd155f393adf41031ba776cb43e4583c55bf2607e51e9580eadc4e0"
+      gate_type: "optional-phase-selection"
+      question: "The Pi target requires new architectural contracts for pi.native dispatch, managed array-entry ownership, 28-agent projection, evidence admission, and the historical-parity boundary. Would you like to generate a high-level design?"
+      options:
+        - "Yes, generate design"
+        - "No, skip design"
+      recommendation: "Yes, generate design"
+      answer: "Yes, generate design"
+      status: "decided"
+  - id: "phase-3"
+    name: "Generate solution alternatives"
+    status: "completed"
+    blocked_by: ["phase-2"]
+    started: "2026-07-19T17:34:14Z"
+    completed: "2026-07-19T18:14:20Z"
+    skip_reason: null
+    gate:
+      idempotency_key: "sha256:b44cce49b270e039db9825c224697b82b1f7ac236d4a1a361cd36e21a6e3cd13"
+      gate_type: "phase-3-exit"
+      question: "Continue to solution convergence?"
+      options:
+        - "Continue to solution convergence"
+        - "Pause workflow"
+      recommendation: "Continue to solution convergence"
+      answer: "Continue to solution convergence"
+      status: "decided"
+  - id: "phase-4"
+    name: "Evaluate solution alternatives"
+    status: "completed"
+    blocked_by: ["phase-3"]
+    started: "2026-07-19T18:14:20Z"
+    completed: "2026-07-19T19:11:59Z"
+    skip_reason: null
+    gate:
+      idempotency_key: "sha256:deff7dc9407e4bf7bd8e9825c224697b82b1f7ac236d4a1a361cd36e21a6e3cd13"
+      gate_type: "phase-4-exit"
+      question: "Brainstorming complete. Continue to high-level design?"
+      options:
+        - "Continue to high-level design"
+        - "Pause workflow"
+      recommendation: "Continue to high-level design"
+      answer: "Continue to high-level design"
+      status: "decided"
+  - id: "phase-5"
+    name: "Design high-level architecture"
+    status: "completed"
+    blocked_by: ["phase-2", "phase-4"]
+    started: "2026-07-19T19:11:59Z"
+    completed: "2026-07-19T19:38:04Z"
+    skip_reason: null
+    gate:
+      idempotency_key: "sha256:6bdf08499f5ea52adcb109887df08612b87fed5c1a2a6ba779d4fc70c9cb160e"
+      gate_type: "phase-5-exit"
+      question: "Design complete. Continue to output generation?"
+      options:
+        - "Continue to output generation"
+        - "Pause workflow"
+      recommendation: "Continue to output generation"
+      answer: "Continue to output generation"
+      status: "decided"
+  - id: "phase-6"
+    name: "Summarize research and hand off"
+    status: "completed"
+    blocked_by: ["phase-5"]
+    started: "2026-07-19T19:38:04Z"
+    completed: "2026-07-19T19:42:03Z"
+    skip_reason: null
+    gate:
+      idempotency_key: "sha256:a911d2d98079011e70c45578d7ab4f6f25fac7ad44fc44db849374cf82ed5c75"
+      gate_type: "final-handoff-approval"
+      question: "Research and design outputs are complete. Approve the final handoff and complete the workflow?"
+      options:
+        - "Complete workflow"
+        - "Keep workflow open"
+      recommendation: "Complete workflow"
+      answer: "Complete workflow"
+      status: "decided"

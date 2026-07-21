@@ -1,6 +1,7 @@
 import { probeCodex } from "./codex.mjs";
 import { probeCursor } from "./cursor.mjs";
 import { probeKiroCli } from "./kiro-cli.mjs";
+import { probePi } from "./pi.mjs";
 import { DEFAULT_TIMEOUT_MS, HostProbeTimeoutError, MAX_TIMEOUT_MS } from "./base.mjs";
 import { SUPPORTED_TARGET_IDS, getTargetDefinition } from "../targets.mjs";
 
@@ -8,6 +9,7 @@ const PROBE_IMPLEMENTATIONS = Object.freeze({
   codex: probeCodex,
   cursor: probeCursor,
   "kiro-cli": probeKiroCli,
+  pi: probePi,
 });
 const PROBES = Object.freeze(Object.fromEntries(
   SUPPORTED_TARGET_IDS.map((target) => [target, PROBE_IMPLEMENTATIONS[getTargetDefinition(target).probe]]),
@@ -27,4 +29,5 @@ export {
   probeCodex,
   probeCursor,
   probeKiroCli,
+  probePi,
 };

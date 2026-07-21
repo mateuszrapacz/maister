@@ -44,8 +44,9 @@ jobs:
           make test-overlay TARGET=codex
           make test-overlay TARGET=cursor
           make test-overlay TARGET=kiro-cli
+          make test-overlay TARGET=pi
       - name: Run portable runtime and distribution tests
-        run: make test-core test-runtime test-evidence
+        run: make test-core test-runtime test-pi test-evidence
       - name: Enforce GitHub-only distribution and requirement drift gates
         run: |
           npm ci
@@ -54,5 +55,5 @@ jobs:
           node --test tests/platform-independent/requirement-artifact-drift.test.mjs
       - name: Verify repository topology
         run: make test-topology
-      - name: Run reviewed three-target parity release gate
-        run: make test-parity-release
+      - name: Run current four-target admission
+        run: make test-current-target-admission

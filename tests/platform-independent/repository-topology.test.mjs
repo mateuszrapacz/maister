@@ -33,16 +33,17 @@ function filesUnder(relativeRoot) {
   return files;
 }
 
-test("release CI uses a reproducible clean-checkout parity gate", () => {
+test("release CI uses current four-target admission without an active historical parity gate", () => {
   const makefile = fs.readFileSync(path.join(ROOT, "Makefile"), "utf8");
   const release = fs.readFileSync(path.join(ROOT, ".github/workflows/release.yml"), "utf8");
   const gate = fs.readFileSync(path.join(ROOT, "plugins/maister/bin/parity-release.mjs"), "utf8");
   const releaseInterface = fs.readFileSync(path.join(ROOT, "plugins/maister/bin/release-interface.mjs"), "utf8");
-  assert.match(makefile, /test-parity-release:/u);
-  assert.match(makefile, /release-interface\.mjs parity-release/u);
-  assert.doesNotMatch(makefile, /LEGACY_ROOT|MATERIALIZED_ROOT/u);
+  assert.match(makefile, /test-current-target-admission:/u);
+  assert.match(makefile, /release-interface\.mjs current-target-admission/u);
+  assert.doesNotMatch(makefile, /test-parity-release|PARITY_ORACLE|PARITY_REPORT/u);
   assert.match(release, /fetch-depth:\s*0/u);
-  assert.match(release, /make test-parity-release PARITY_REPORT=dist\/parity-release\.json/u);
+  assert.match(release, /make test-current-target-admission/u);
+  assert.doesNotMatch(release, /three-target|test-parity-release|parity-release/u);
   assert.match(makefile, /generate-e3-attestation:/u);
   assert.match(makefile, /release-interface\.mjs generate-e3/u);
   assert.match(releaseInterface, /E3_RESULT must be passed/u);
@@ -53,8 +54,9 @@ test("release CI uses a reproducible clean-checkout parity gate", () => {
   const lifecycleIndex = release.indexOf("MAISTER_PACKAGE_DIR: dist");
   assert.ok(coreIndex >= 0 && e3Index > coreIndex && packageIndex > e3Index && lifecycleIndex > packageIndex, "release must test core, generate E3, package, then smoke extracted archives");
   assert.match(release, /release-metadata\.mjs/u);
-  assert.match(gate, /git.*archive/u);
-  assert.match(gate, /parity-oracle\/manifest\.json/u);
+  assert.match(gate, /CURRENT_RELEASE_TARGETS/u);
+  assert.match(gate, /current-target-admission-v1/u);
+  assert.match(releaseInterface, /runCurrentTargetAdmission/u);
 });
 
 test("all third-party workflow actions are immutable commit pins", () => {
