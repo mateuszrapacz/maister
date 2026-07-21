@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import path from "node:path";
 
 import {
   normalizedPathKey,
@@ -222,7 +223,8 @@ function validateKiroReferences(projection) {
         prompt: descriptor.prompt,
       }, { cause: error });
     }
-    if (normalizedPromptPath !== promptPath || !outputPaths.has(promptPath)) {
+    const resolvedPromptPath = path.posix.join(path.posix.dirname(output.path), normalizedPromptPath);
+    if (normalizedPromptPath !== promptPath || !outputPaths.has(resolvedPromptPath)) {
       failAgentProjection("E_AGENT_PROJECTION_REFERENCE", `${output.path} prompt URI does not resolve`, {
         path: output.path,
         prompt: descriptor.prompt,

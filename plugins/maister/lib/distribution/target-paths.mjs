@@ -83,13 +83,7 @@ export function getManagedRoot(paths, rootId) {
 
 export function projectedOutputIdentity(paths, outputPath) {
   const normalized = normalizeRelativePath(outputPath, "projected output path");
-  if (paths.target !== "kiro-cli") {
-    return Object.freeze({ rootId: "plugin_private", path: normalized });
-  }
-  return Object.freeze({
-    rootId: "kiro_native_agents",
-    path: normalized.startsWith("agents/") ? normalized.slice("agents/".length) : normalized,
-  });
+  return Object.freeze({ rootId: "plugin_private", path: normalized });
 }
 
 export function resolveManagedInventoryPath(paths, { root_id: rootId, path: relativePath }) {

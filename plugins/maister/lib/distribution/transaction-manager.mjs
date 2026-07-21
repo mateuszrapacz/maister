@@ -770,16 +770,13 @@ function ownershipFor(plan, relative) {
 }
 
 function receiptInventory(stagingRoot, plan, paths, projection) {
-  const projectedPaths = new Set((projection?.outputs ?? []).map(({ path: outputPath }) => outputPath));
-  const isProjectedPath = (entryPath) => projectedPaths.has(entryPath)
-    || [...projectedPaths].some((outputPath) => outputPath.startsWith(`${entryPath}/`));
   const entries = [];
   const seen = new Set();
+  const rootOwnership = new Map(paths.managedRoots.map((r) => [r.rootId, r.ownership]));
   for (const entry of hashTree(stagingRoot).entries) {
-    const native = paths.target === "kiro-cli" && isProjectedPath(entry.path);
-    if (native && entry.type === "directory") continue;
-    const rootId = native ? "kiro_native_agents" : "plugin_private";
-    const relativePath = native && entry.path.startsWith("agents/") ? entry.path.slice("agents/".length) : entry.path;
+    const rootId = "plugin_private";
+    const relativePath = entry.path;
+    if (rootOwnership.get(rootId) === "leaf_set" && entry.type === "directory") continue;
     const identity = `${rootId}\0${relativePath}`;
     if (seen.has(identity)) throwDistributionError("E_MATERIALIZE_COLLISION", "materialized outputs collide in a managed root", { root_id: rootId, path: relativePath });
     seen.add(identity);
