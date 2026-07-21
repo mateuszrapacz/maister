@@ -1,5 +1,5 @@
 ---
-name: maister:quick-transcript-critic
+name: maister-quick-transcript-critic
 description: Audit meeting transcripts for decision-process problems with structured critique report
 ---
 

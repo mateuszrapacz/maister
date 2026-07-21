@@ -1,5 +1,5 @@
 ---
-name: maister:modeling-context-distiller
+name: maister-modeling-context-distiller
 description: Distill bounded contexts by finding safe generalizations across domain concepts
 ---
 

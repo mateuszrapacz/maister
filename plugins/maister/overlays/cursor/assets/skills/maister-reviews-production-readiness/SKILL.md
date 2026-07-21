@@ -29,7 +29,7 @@ You are performing comprehensive production readiness analysis covering configur
 **Resolve and dispatch exact production-readiness-checker NOW:**
 
 ```
-resolveAgent({ logical_role_id: "maister:production-readiness-checker" })
+resolveAgent({ logical_role_id: "maister-production-readiness-checker" })
 dispatchAgent:
   actor: reviews-production-readiness
   work_item: production-readiness

@@ -41,7 +41,7 @@ Team aliases work — "provider/consumer", "library/client", "core/plugin" are f
 ### Adoption
 Optional per project. Teams adopt `language.md` when using DDD-style bounded contexts or the `linguistic-boundary-verifier` skill.
 
-Not required by `maister:init` by default. Future init flags may scaffold stubs; manual creation is the current path.
+Not required by `maister-init` by default. Future init flags may scaffold stubs; manual creation is the current path.
 
 ### Cross-Reference
 The `linguistic-boundary-verifier` skill reads `language.md` files to detect language leakage (strings, events, API calls across boundaries). Without these files, the skill degrades gracefully and outputs adoption guidance pointing to this standard.

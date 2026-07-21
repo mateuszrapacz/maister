@@ -1,5 +1,5 @@
 ---
-name: maister:quick-problem-classifier
+name: maister-quick-problem-classifier
 description: Classify business requirements into modeling problem classes with targeted clarifying questions
 ---
 

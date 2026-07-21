@@ -25,10 +25,10 @@ When a phase requires delegation:
 
 | Anti-Pattern | Why It's Wrong | Correct Approach |
 |--------------|----------------|------------------|
-| "I'll analyze the codebase..." | Bypasses codebase-analyzer skill | Use `Skill` tool with `maister:codebase-analyzer` |
-| "Let me create the specification..." | Bypasses specification-creator | Use `Task` tool with `maister:specification-creator` subagent |
-| "Looking at the gaps between..." | Bypasses gap-analyzer subagent | Use `Task` tool with `maister:gap-analyzer` |
-| "I'll implement this by..." | Bypasses implementation-plan-executor skill | Use `Skill` tool with `maister:implementation-plan-executor` |
+| "I'll analyze the codebase..." | Bypasses codebase-analyzer skill | Use `Skill` tool with `maister-codebase-analyzer` |
+| "Let me create the specification..." | Bypasses specification-creator | Use `Task` tool with `maister-specification-creator` subagent |
+| "Looking at the gaps between..." | Bypasses gap-analyzer subagent | Use `Task` tool with `maister-gap-analyzer` |
+| "I'll implement this by..." | Bypasses implementation-plan-executor skill | Use `Skill` tool with `maister-implementation-plan-executor` |
 | Reading a SKILL.md then doing the work | Skill files are instructions FOR skills | Use Skill tool to invoke |
 | Spawning Explore agents in orchestrator | Codebase-analyzer manages its own agents | Invoke skill, let IT spawn agents |
 
@@ -45,13 +45,13 @@ These do NOT require delegation:
 For all analysis, planning, implementation, and verification phases: **ALWAYS DELEGATE**.
 
 **Never acceptable inline** (regardless of perceived task simplicity):
-- Specification creation → always delegate to `maister:specification-creator` subagent
-- Implementation planning → always delegate to `maister:implementation-planner` subagent
-- Gap analysis → always delegate to `maister:gap-analyzer` subagent
-- Codebase analysis → always delegate to `maister:codebase-analyzer` skill
-- Code review → always delegate to `maister:code-reviewer` subagent
-- Test execution → always delegate to `maister:test-suite-runner` subagent
-- Implementation completeness → always delegate to `maister:implementation-completeness-checker` subagent
+- Specification creation → always delegate to `maister-specification-creator` subagent
+- Implementation planning → always delegate to `maister-implementation-planner` subagent
+- Gap analysis → always delegate to `maister-gap-analyzer` subagent
+- Codebase analysis → always delegate to `maister-codebase-analyzer` skill
+- Code review → always delegate to `maister-code-reviewer` subagent
+- Test execution → always delegate to `maister-test-suite-runner` subagent
+- Implementation completeness → always delegate to `maister-implementation-completeness-checker` subagent
 
 "The task is simple" is NOT a valid reason to skip delegation.
 
@@ -108,7 +108,7 @@ Advisor mode changes who analyzes a gate response; it does not grant an agent pe
 
 Every canonical-role delegation uses the common runtime in two fail-closed
 steps. Resolve the requested role with
-`resolveAgent({ logical_role_id: "maister:<role_id>", target, dispatch_id, manifest, projection, paths, hooks })`,
+`resolveAgent({ logical_role_id: "maister-<role_id>", target, dispatch_id, manifest, projection, paths, hooks })`,
 then invoke
 `dispatchAgent({ plan, task: { actor, work_item, output, bounded_task }, adapters })`.
 The bounded task carries the decision actor or workflow actor, stable work-item
@@ -271,7 +271,7 @@ Every timestamp — `created`, `updated`, `phases[].started/completed`, `generat
 
 ### Project Configuration (`.maister/config.yml`)
 
-An optional project-level config file at `.maister/config.yml` (sibling of `.maister/docs/` and `.maister/tasks/`) holds defaults that apply to every workflow. It is scaffolded by `/maister:init` but is not required — when absent, every key falls back to its default.
+An optional project-level config file at `.maister/config.yml` (sibling of `.maister/docs/` and `.maister/tasks/`) holds defaults that apply to every workflow. It is scaffolded by `/maister-init` but is not required — when absent, every key falls back to its default.
 
 ```yaml
 # Maister project configuration.
@@ -293,8 +293,8 @@ advisor:
     clarify: manual
     convergence: manual
     verify-matrix: manual
-  advisor_agent: maister:advisor
-  arbiter_agent: maister:advisor
+  advisor_agent: maister-advisor
+  arbiter_agent: maister-advisor
   arbiter_enabled_on_disagreement: true
   retry:
     advisor_attempts: 3
@@ -330,8 +330,8 @@ orchestrator:
     advisor:
       enabled: false
       gate_policies: {}               # gate_type -> manual | advisor | fully_automatic
-      advisor_agent: maister:advisor
-      arbiter_agent: maister:advisor
+      advisor_agent: maister-advisor
+      arbiter_agent: maister-advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3

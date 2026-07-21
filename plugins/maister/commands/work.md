@@ -1,5 +1,5 @@
 ---
-name: maister:work
+name: maister-work
 description: Unified entry point — auto-classifies tasks and routes to appropriate workflow. ALWAYS execute when invoked via slash command.
 ---
 
@@ -55,11 +55,11 @@ Auto-classifies tasks and routes to the appropriate workflow orchestrator. Suppo
 
 | Classification | Routes To (Skill) |
 |----------------|-------------------|
-| development | `maister:development` |
-| performance | `maister:performance` |
-| migration | `maister:migration` |
-| research | `maister:research` |
-| product-design | `maister:product-design` |
+| development | `maister-development` |
+| performance | `maister-performance` |
+| migration | `maister-migration` |
+| research | `maister-research` |
+| product-design | `maister-product-design` |
 
 ---
 
@@ -135,14 +135,14 @@ Options:
 
 ```
 Use Skill tool:
-  skill: "maister:[orchestrator-name]"
+  skill: "maister-[orchestrator-name]"
   args: "--resume [task_path] [flags]"
 ```
 
 Examples:
-- Resume development: `skill: "maister:development"` with `args: "--resume .maister/tasks/development/2025-10-23-fix"`
-- Restart from phase: `skill: "maister:development"` with `args: "--resume .maister/tasks/development/2025-10-26-auth --from=verify"`
-- Fresh attempts: `skill: "maister:migration"` with `args: "--resume .maister/tasks/migrations/2025-10-20-redux --reset-attempts"`
+- Resume development: `skill: "maister-development"` with `args: "--resume .maister/tasks/development/2025-10-23-fix"`
+- Restart from phase: `skill: "maister-development"` with `args: "--resume .maister/tasks/development/2025-10-26-auth --from=verify"`
+- Fresh attempts: `skill: "maister-migration"` with `args: "--resume .maister/tasks/migrations/2025-10-20-redux --reset-attempts"`
 
 ### Step 3: Classify & Route New Task
 
@@ -151,7 +151,7 @@ Examples:
 1. **Resolve and dispatch exact task-classifier** to determine workflow type:
 
 ```
-resolveAgent({ logical_role_id: "maister:task-classifier" })
+resolveAgent({ logical_role_id: "maister-task-classifier" })
 dispatchAgent:
   actor: work
   work_item: classify-new-task
@@ -183,14 +183,14 @@ Display:
   Routing to [task_type] workflow...
 
 Use Skill tool:
-  skill: "maister:[orchestrator-name]"
+  skill: "maister-[orchestrator-name]"
   args: "[description]"
 ```
 
 **Routing examples:**
-- development (92%): `skill: "maister:development"` with `args: "Fix login timeout error"`
-- development (88%): `skill: "maister:development"` with `args: "Add filtering to user table"`
-- performance (95%): `skill: "maister:performance"` with `args: "Optimize slow dashboard queries"`
+- development (92%): `skill: "maister-development"` with `args: "Fix login timeout error"`
+- development (88%): `skill: "maister-development"` with `args: "Add filtering to user table"`
+- performance (95%): `skill: "maister-performance"` with `args: "Optimize slow dashboard queries"`
 
 ---
 
@@ -220,7 +220,7 @@ Display:
 "Task cancelled. You can:
 - Run /work again when ready
 - Use specific workflow commands directly:
-  /maister:development, /maister:performance, etc."
+  /maister-development, /maister-performance, etc."
 ```
 
 ---
@@ -229,11 +229,11 @@ Display:
 
 | Workflow Type | Skill | Args |
 |---------------|-------|------|
-| development | `maister:development` | `--resume [path] [--from=PHASE] [--reset-attempts]` |
-| performance | `maister:performance` | `--resume [path] [--from=PHASE]` |
-| migration | `maister:migration` | `--resume [path] [--from=PHASE]` |
-| research | `maister:research` | `--resume [path] [--from=PHASE]` |
-| product-design | `maister:product-design` | `--resume [path] [--from=PHASE]` |
+| development | `maister-development` | `--resume [path] [--from=PHASE] [--reset-attempts]` |
+| performance | `maister-performance` | `--resume [path] [--from=PHASE]` |
+| migration | `maister-migration` | `--resume [path] [--from=PHASE]` |
+| research | `maister-research` | `--resume [path] [--from=PHASE]` |
+| product-design | `maister-product-design` | `--resume [path] [--from=PHASE]` |
 
 ---
 
@@ -241,7 +241,7 @@ Display:
 
 ### With Task Classifier
 
-The `/work` command delegates classification through exact `maister:task-classifier` dispatch, which:
+The `/work` command delegates classification through exact `maister-task-classifier` dispatch, which:
 - Fetches issue details from GitHub/Jira/Azure DevOps (via MCP, CLI tools, or WebFetch)
 - Analyzes codebase context for better classification
 - Uses confidence-based user confirmation

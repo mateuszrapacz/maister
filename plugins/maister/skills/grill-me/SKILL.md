@@ -59,4 +59,4 @@ If the user wants documentation maintained during grilling, suggest `grill-with-
 
 ## Recommended Next Steps
 
-After confirmed shared understanding, the user may use `/maister:quick-plan`, `/maister:development`, or `grill-with-docs` to harden vocabulary before building.
+After confirmed shared understanding, the user may use `/maister-quick-plan`, `/maister-development`, or `grill-with-docs` to harden vocabulary before building.

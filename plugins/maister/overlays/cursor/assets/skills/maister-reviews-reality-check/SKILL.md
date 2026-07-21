@@ -24,7 +24,7 @@ You are performing no-nonsense reality assessment to determine if completed work
 **Resolve and dispatch exact reality-assessor NOW:**
 
 ```
-resolveAgent({ logical_role_id: "maister:reality-assessor" })
+resolveAgent({ logical_role_id: "maister-reality-assessor" })
 dispatchAgent:
   actor: reviews-reality-check
   work_item: reality-assessment

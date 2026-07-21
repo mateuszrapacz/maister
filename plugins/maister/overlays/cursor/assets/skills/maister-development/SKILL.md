@@ -255,7 +255,7 @@ Use for **all development tasks**: bug fixes, enhancements, new features, and an
 
 **Purpose**: Compare current vs desired state, detect task characteristics, then resolve scope/approach decisions
 **Execute**:
-1. Common runtime — `resolveAgent({ logical_role_id: "maister:gap-analyzer" })`, then dispatch actor `development`, work item `gap-analysis`, output `analysis/gap-analysis.md`, and the bounded current/desired-state context.
+1. Common runtime — `resolveAgent({ logical_role_id: "maister-gap-analyzer" })`, then dispatch actor `development`, work item `gap-analysis`, output `analysis/gap-analysis.md`, and the bounded current/desired-state context.
 2. **Extract and store structured data from gap-analyzer result**:
    a. Read `task_characteristics` from gap-analyzer output — 5 fields: `has_reproducible_defect`, `modifies_existing_code`, `creates_new_entities`, `involves_data_operations`, `ui_heavy`
    b. Write all 5 fields to `orchestrator-state.yml` at `task_context.task_characteristics`
@@ -325,7 +325,7 @@ Invoke the engine as `phase-3-exit` with question "TDD red gate complete. Contin
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Generate ASCII mockups showing UI integration
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:ui-mockup-generator" })`, then dispatch actor `development`, work item `ui-mockups`, the documented mockup output paths, and the bounded design context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-ui-mockup-generator" })`, then dispatch actor `development`, work item `ui-mockups`, the documented mockup output paths, and the bounded design context.
 **Output**: `analysis/design-context/ascii/ui-mockups.md` + appended entries in `analysis/design-context/INDEX.md`
 **State**: Update `phase_summaries.ui_mockups`, `phase_summaries.design`
 
@@ -385,11 +385,11 @@ Invoke the engine as `phase-4-exit` with question "UI mockups complete. Continue
 
 **INVOKE NOW** — common runtime call:
 
-6. `resolveAgent({ logical_role_id: "maister:specification-creator" })`, then dispatch actor `development`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
+6. `resolveAgent({ logical_role_id: "maister-specification-creator" })`, then dispatch actor `development`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
 
 **Context to pass to subagent**: task_path, task_description, task_characteristics, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), risk_level, phase_summaries (codebase_analysis, gap_analysis, clarifications, scope_clarifications, ui_mockups, design), research_context (if any), design_reference (if any — points spec-creator to `analysis/design-context/` for mockups and brief), html_style_guide_path (for the spec.html companion)
 
-**SELF-CHECK**: Did you resolve and dispatch exact `maister:specification-creator`? Or did you start writing spec.md yourself? If the latter, STOP immediately and use the common runtime instead.
+**SELF-CHECK**: Did you resolve and dispatch exact `maister-specification-creator`? Or did you start writing spec.md yourself? If the latter, STOP immediately and use the common runtime instead.
 
 **Output**: `analysis/technical-clarifications.md` (conditional), `analysis/requirements.md`, `implementation/spec.md`
 **State**: Update `task_context.tech_clarified`, `task_context.architecture_decision`, `phase_summaries.specification`
@@ -405,7 +405,7 @@ Invoke the engine as `phase-5-exit` with question "Continue to specification aud
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Independent review of specification before implementation
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:spec-auditor" })`, then dispatch actor `development`, work item `spec-audit`, output `verification/spec-audit.md`, and the bounded specification context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-spec-auditor" })`, then dispatch actor `development`, work item `spec-audit`, output `verification/spec-audit.md`, and the bounded specification context.
 **Output**: `verification/spec-audit.md`
 **State**: Update `options.spec_audit_enabled`
 
@@ -432,13 +432,13 @@ Invoke the engine as `phase-6-exit` with question "Continue to implementation pl
 
 **INVOKE NOW** — common runtime call:
 
-**Execute**: `resolveAgent({ logical_role_id: "maister:implementation-planner" })`, then dispatch actor `development`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and the bounded context below.
+**Execute**: `resolveAgent({ logical_role_id: "maister-implementation-planner" })`, then dispatch actor `development`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and the bounded context below.
 **Output**: `implementation/implementation-plan.md`
 **State**: Update task groups and dependencies
 
 **Context to pass to subagent**: task_path, task_description, task_characteristics, phase_summaries (specification, gap_analysis, codebase_analysis, design), research_context (if any), design_reference (if any — when `analysis/design-context/INDEX.md` exists, planner MUST enumerate every screen/component, map task groups to them via the required `Visual References` field, and produce `implementation/visual-coverage.md` proving every screen is covered by ≥1 group), html_style_guide_path (for the implementation-plan.html companion)
 
-**SELF-CHECK**: Did you resolve and dispatch exact `maister:implementation-planner`? Or did you start writing implementation-plan.md yourself? If the latter, STOP immediately and use the common runtime instead.
+**SELF-CHECK**: Did you resolve and dispatch exact `maister-implementation-planner`? Or did you start writing implementation-plan.md yourself? If the latter, STOP immediately and use the common runtime instead.
 
 → **MANDATORY GATE** — invoke the shared gate engine now; `AskQuestion` is only its user-gate adapter. Proceeding without a persisted terminal engine record is a protocol violation.
 
@@ -605,7 +605,7 @@ Invoke the engine as `phase-11-exit` with question "Continue to Phase 12?", opti
 > **⚠ Serialization rule**: Phases 12 and 13 share the Playwright MCP browser instance. They MUST run strictly sequentially. Do NOT dispatch both common-runtime calls together, even when both are enabled. Wait for Phase 12 to return, honor the `→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).` / `AskQuestion` gate below, then start Phase 13. Concurrent dispatch will corrupt both browser sessions.
 
 **Purpose**: Runtime browser verification with screenshots (via Playwright MCP tools, not test file generation)
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:e2e-test-verifier" })`, then dispatch actor `development`, work item `e2e-verification`, the report/screenshot output contract, and the bounded browser-verification context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-e2e-test-verifier" })`, then dispatch actor `development`, work item `e2e-verification`, the report/screenshot output contract, and the bounded browser-verification context.
 **Prompt must include**: task_path (absolute), spec_path, base_url, html_style_guide_path (for the HTML companion reports). If `analysis/design-context/mockups/` exists, also include `design_context_path` so the verifier performs an LLM-judged structural visual-fidelity comparison and writes `verification/visual-fidelity.md`. Report saves to `{task_path}/verification/e2e-verification-report.md`.
 **Output**: `verification/e2e-verification-report.md` (+ `.html` companion), screenshots, `verification/visual-fidelity.md` (+ `.html` companion) (when mockups present — report-only, never gates completion)
 **State**: Update E2E results; on success mark Phase 12 in `completed_phases` (Phase 13 reads this as a precondition).
@@ -627,7 +627,7 @@ Invoke the engine as `phase-12-exit` with question "E2E complete. Continue to Ph
 **Preconditions**: If `options.e2e_enabled = true`, Phase 12 MUST be present in `completed_phases` before Phase 13 starts. If it is not yet completed (e.g., E2E is still running or failed), do not start Phase 13 — return to the Phase 12 gate.
 
 **Purpose**: Generate user-facing documentation with screenshots
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:user-docs-generator" })`, then dispatch actor `development`, work item `user-documentation`, the guide/screenshot output contract, and the bounded documentation context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-user-docs-generator" })`, then dispatch actor `development`, work item `user-documentation`, the guide/screenshot output contract, and the bounded documentation context.
 **Prompt must include**: task_path (absolute), spec_path, base_url. **When Phase 12 ran successfully** (E2E enabled and completed), also include `e2e_screenshots_path: {task_path}/verification/screenshots/` together with the instruction *"Reuse applicable E2E screenshots from this directory before capturing new ones via Playwright."* When Phase 12 was skipped or failed, omit `e2e_screenshots_path` entirely. Guide saves to `{task_path}/documentation/user-guide.md`.
 **Output**: `documentation/user-guide.md`, screenshots (reused from E2E run when applicable)
 **State**: Update docs generation status
@@ -683,8 +683,8 @@ orchestrator:
         clarify: manual
         convergence: manual
         verify-matrix: manual
-      advisor_agent: maister:advisor
-      arbiter_agent: maister:advisor
+      advisor_agent: maister-advisor
+      arbiter_agent: maister-advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3

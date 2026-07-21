@@ -1,5 +1,5 @@
 ---
-name: maister:reviews-spec-audit
+name: maister-reviews-spec-audit
 description: Independent specification audit to verify completeness and clarity before implementation
 ---
 
@@ -28,7 +28,7 @@ You are performing senior auditor review of specifications to verify completenes
 **Resolve and dispatch exact spec-auditor NOW:**
 
 ```
-resolveAgent({ logical_role_id: "maister:spec-auditor" })
+resolveAgent({ logical_role_id: "maister-spec-auditor" })
 dispatchAgent:
   actor: reviews-spec-audit
   work_item: specification-audit
@@ -73,17 +73,17 @@ The spec-auditor agent will:
 
 **Example 1**: Pre-implementation spec audit
 ```
-User: /maister:reviews-spec-audit .maister/tasks/development/2025-11-17-user-auth/implementation/spec.md
+User: /maister-reviews-spec-audit .maister/tasks/development/2025-11-17-user-auth/implementation/spec.md
 ```
 
 **Example 2**: Post-implementation audit
 ```
-User: /maister:reviews-spec-audit .maister/tasks/development/2025-11-17-user-auth/ --post-implementation
+User: /maister-reviews-spec-audit .maister/tasks/development/2025-11-17-user-auth/ --post-implementation
 ```
 
 **Example 3**: Audit with clarification focus
 ```
-User: /maister:reviews-spec-audit spec.md --focus=ambiguity
+User: /maister-reviews-spec-audit spec.md --focus=ambiguity
 ```
 
 ## What to Expect

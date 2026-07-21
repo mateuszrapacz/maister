@@ -1,5 +1,5 @@
 ---
-name: maister:reviews-reality-check
+name: maister-reviews-reality-check
 description: Comprehensive reality assessment of completed work to verify it actually works and is production-ready
 ---
 
@@ -24,7 +24,7 @@ You are performing no-nonsense reality assessment to determine if completed work
 **Resolve and dispatch exact reality-assessor NOW:**
 
 ```
-resolveAgent({ logical_role_id: "maister:reality-assessor" })
+resolveAgent({ logical_role_id: "maister-reality-assessor" })
 dispatchAgent:
   actor: reviews-reality-check
   work_item: reality-assessment
@@ -68,17 +68,17 @@ The reality-assessor agent will:
 
 **Example 1**: Reality check before deployment
 ```
-User: /maister:reviews-reality-check .maister/tasks/development/2025-11-17-payment-processing/
+User: /maister-reviews-reality-check .maister/tasks/development/2025-11-17-payment-processing/
 ```
 
 **Example 2**: Verify claimed completion
 ```
-User: /maister:reviews-reality-check .maister/tasks/development/2025-11-17-login-timeout/
+User: /maister-reviews-reality-check .maister/tasks/development/2025-11-17-login-timeout/
 ```
 
 **Example 3**: Production readiness check
 ```
-User: /maister:reviews-reality-check .maister/tasks/development/2025-11-17-user-dashboard/ --production
+User: /maister-reviews-reality-check .maister/tasks/development/2025-11-17-user-dashboard/ --production
 ```
 
 ## What to Expect

@@ -6,13 +6,13 @@ user-invocable: false
 
 # Codebase Analyzer Skill
 
-Orchestrates parallel codebase analysis using exact `maister:project-analyzer` dispatches with distinct bounded concerns, then delegates report synthesis to exact `maister:codebase-analysis-reporter`.
+Orchestrates parallel codebase analysis using exact `maister-project-analyzer` dispatches with distinct bounded concerns, then delegates report synthesis to exact `maister-codebase-analysis-reporter`.
 
 ## Core Principles
 
 1. **Adaptive Agent Selection**: Select roles from a pool based on task complexity — no fixed count
 2. **Task-Type Awareness**: Adapt prompts and focus based on task type
-3. **Delegated Reporting**: Raw findings go to exact `maister:codebase-analysis-reporter` for synthesis
+3. **Delegated Reporting**: Raw findings go to exact `maister-codebase-analysis-reporter` for synthesis
 
 ---
 
@@ -94,7 +94,7 @@ If combining roles into one agent, also read `references/combined.md` for mergin
 
 **3b. Adapt templates** — Replace `[description]` with the actual task description. Select the correct task-type section (Bug / Enhancement / Feature).
 
-**3c. Launch analysis work** — For each selected concern, use `resolveAgent({ logical_role_id: "maister:project-analyzer" })`, then dispatch actor `codebase-analyzer`, a stable concern-specific work item, response-only findings output, and the adapted bounded prompt. Dispatch all selected concerns as one parallel batch.
+**3c. Launch analysis work** — For each selected concern, use `resolveAgent({ logical_role_id: "maister-project-analyzer" })`, then dispatch actor `codebase-analyzer`, a stable concern-specific work item, response-only findings output, and the adapted bounded prompt. Dispatch all selected concerns as one parallel batch.
 
 **IMPORTANT**: Every Explore agent prompt MUST include this instruction:
 > IMPORTANT: Do NOT create, write, or modify any files. Output all findings as text in your response only.
@@ -103,10 +103,10 @@ If combining roles into one agent, also read `references/combined.md` for mergin
 
 ### Step 4: Delegate Report Generation
 
-After all analysis dispatches complete, resolve exact `maister:codebase-analysis-reporter` and provide the collected response outputs:
+After all analysis dispatches complete, resolve exact `maister-codebase-analysis-reporter` and provide the collected response outputs:
 
 ```
-resolveAgent({ logical_role_id: "maister:codebase-analysis-reporter" })
+resolveAgent({ logical_role_id: "maister-codebase-analysis-reporter" })
 dispatchAgent:
   actor: codebase-analyzer
   work_item: merge-analysis-findings

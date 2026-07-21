@@ -1,5 +1,5 @@
 ---
-name: maister:performance
+name: maister-performance
 description: Orchestrates performance optimization workflows using static code analysis to identify bottlenecks (N+1 queries, missing indexes, O(n^2) algorithms, blocking I/O, memory leaks). Accepts optional user-provided profiling data. Reuses standard specification, planning, implementation, and verification phases.
 user-invocable: true
 ---
@@ -180,7 +180,7 @@ Use for:
 
 **Purpose**: Comprehensive codebase exploration for performance context, followed by scope/requirements clarification
 **Execute**:
-1. Skill tool - `maister:codebase-analyzer`
+1. Skill tool - `maister-codebase-analyzer`
 2. Update state with analysis results
 3. For each critical clarification, invoke `phase-1-clarification` through the shared engine with exact ordered options and full read-only context.
 4. Save clarifications to `analysis/clarifications.md`
@@ -196,7 +196,7 @@ Pass `task_type="enhancement"` and the performance-focused description. The code
 ### Phase 2: Static Performance Analysis
 
 **Purpose**: Identify bottlenecks through static code analysis + optional user profiling data
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:bottleneck-analyzer" })`, then dispatch actor `performance`, work item `bottleneck-analysis`, output `analysis/performance-analysis.md`, and bounded code/profiling context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-bottleneck-analyzer" })`, then dispatch actor `performance`, work item `bottleneck-analysis`, output `analysis/performance-analysis.md`, and bounded code/profiling context.
 **Output**: `analysis/performance-analysis.md`
 **State**: Update `performance_context.bottlenecks_identified`, `performance_context.user_data_available`, `performance_context.bottleneck_priorities`
 
@@ -213,11 +213,11 @@ Pass `task_type="enhancement"` and the performance-focused description. The code
 
 **INVOKE NOW** — common runtime call:
 
-4. `resolveAgent({ logical_role_id: "maister:bottleneck-analyzer" })`, then dispatch the actor, work item, output, and bounded context described above.
+4. `resolveAgent({ logical_role_id: "maister-bottleneck-analyzer" })`, then dispatch the actor, work item, output, and bounded context described above.
 
 **Context to pass**: task_path, description, codebase analysis summary from Phase 1, user data paths (if any)
 
-**SELF-CHECK**: Did you resolve and dispatch exact `maister:bottleneck-analyzer`? Or did you start analyzing code yourself? If the latter, STOP and use the common runtime.
+**SELF-CHECK**: Did you resolve and dispatch exact `maister-bottleneck-analyzer`? Or did you start analyzing code yourself? If the latter, STOP and use the common runtime.
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -252,11 +252,11 @@ Invoke the engine as `phase-2-exit` with question "Performance analysis complete
 
 **INVOKE NOW** — common runtime call:
 
-4. `resolveAgent({ logical_role_id: "maister:specification-creator" })`, then dispatch actor `performance`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
+4. `resolveAgent({ logical_role_id: "maister-specification-creator" })`, then dispatch actor `performance`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
 
 **Context to pass**: task_path, task_type="performance", task_description, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), phase_summaries (codebase_analysis, bottleneck_analysis), html_style_guide_path (for the spec.html companion)
 
-**SELF-CHECK**: Did you resolve and dispatch exact `maister:specification-creator`? Or did you start writing spec.md yourself? If the latter, STOP and use the common runtime.
+**SELF-CHECK**: Did you resolve and dispatch exact `maister-specification-creator`? Or did you start writing spec.md yourself? If the latter, STOP and use the common runtime.
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -269,7 +269,7 @@ Invoke the engine as `phase-3-exit` with question "Continue to specification aud
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Independent review of optimization specification
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:spec-auditor" })`, then dispatch actor `performance`, work item `spec-audit`, output `verification/spec-audit.md`, and bounded optimization-spec context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-spec-auditor" })`, then dispatch actor `performance`, work item `spec-audit`, output `verification/spec-audit.md`, and bounded optimization-spec context.
 **Output**: `verification/spec-audit.md`
 **State**: Update `options.spec_audit_enabled`
 
@@ -298,13 +298,13 @@ Invoke the engine as `phase-4-exit` with question "Continue to implementation pl
 
 **INVOKE NOW** — common runtime call:
 
-**Execute**: `resolveAgent({ logical_role_id: "maister:implementation-planner" })`, then dispatch actor `performance`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and the bounded context below.
+**Execute**: `resolveAgent({ logical_role_id: "maister-implementation-planner" })`, then dispatch actor `performance`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and the bounded context below.
 **Output**: `implementation/implementation-plan.md`
 **State**: Update task groups and dependencies
 
 **Context to pass**: task_path, task_type="performance", task_description, phase_summaries (specification, bottleneck_analysis, codebase_analysis), html_style_guide_path (for the implementation-plan.html companion)
 
-**SELF-CHECK**: Did you resolve and dispatch exact `maister:implementation-planner`? Or did you start writing the plan yourself? If the latter, STOP and use the common runtime.
+**SELF-CHECK**: Did you resolve and dispatch exact `maister-implementation-planner`? Or did you start writing the plan yourself? If the latter, STOP and use the common runtime.
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -326,11 +326,11 @@ Invoke the engine as `phase-5-exit` with question "Continue to implementation?",
 
 **INVOKE NOW** — Skill tool call:
 
-**Execute**: Skill tool - `maister:implementation-plan-executor`
+**Execute**: Skill tool - `maister-implementation-plan-executor`
 **Output**: Implemented optimizations, `implementation/work-log.md`
 **State**: Update implementation progress, extract phase_summaries.implementation
 
-**SELF-CHECK**: Did you just invoke the Skill tool with `maister:implementation-plan-executor`? Or did you start writing code yourself? If the latter, STOP immediately and invoke the Skill tool instead.
+**SELF-CHECK**: Did you just invoke the Skill tool with `maister-implementation-plan-executor`? Or did you start writing code yourself? If the latter, STOP immediately and invoke the Skill tool instead.
 
 **⚠️ POST-IMPLEMENTATION CONTINUATION** — After the skill completes and returns control:
 1. **HTML plan reconciliation** (backstop for syncs missed during waves): if `implementation/implementation-plan.html` exists, for every group whose md checkboxes are all `[x]`, run the executor's idempotent marker-flip command (`sed` flipping `data-step="N\.[0-9]*" class="step todo"` and `data-group="N" class="group todo"` to `done`). VERIFY: when all md steps are checked, `grep -c 'class="step todo"' implementation/implementation-plan.html` must return 0.
@@ -376,7 +376,7 @@ Invoke the engine as `phase-7-exit` with question "Options selected. Continue to
 
 **Execute**:
 
-**Step 1**: Invoke Skill tool - `maister:implementation-verifier`
+**Step 1**: Invoke Skill tool - `maister-implementation-verifier`
 
 **Step 2**: Display detailed issue breakdown grouped by category and severity (critical/warning/info), listing location, description, and fixability for each.
 
@@ -390,7 +390,7 @@ Invoke the engine as `phase-7-exit` with question "Options selected. Continue to
 3. Fix selected issues
 4. After fixes: set `skip_test_suite: false` (code changed, tests must re-run)
 5. Invoke `verification-rerun` — "Re-run verification to check fixes?" with exact options `["Yes, re-run verification", "No, proceed to the next phase"]`.
-6. If re-run → re-invoke `maister:implementation-verifier` → return to Step 2
+6. If re-run → re-invoke `maister-implementation-verifier` → return to Step 2
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskUserQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -460,8 +460,8 @@ orchestrator:
         clarify: manual
         convergence: manual
         verify-matrix: manual
-      advisor_agent: maister:advisor
-      arbiter_agent: maister:advisor
+      advisor_agent: maister-advisor
+      arbiter_agent: maister-advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3
@@ -521,8 +521,8 @@ Creation normalizes the project configuration once into the complete block above
 ## Command Integration
 
 Invoked via:
-- `/maister:performance [description] [--sequential]` (new)
-- `/maister:performance [task-path] [--from=PHASE] [--sequential]` (resume)
+- `/maister-performance [description] [--sequential]` (new)
+- `/maister-performance [task-path] [--from=PHASE] [--sequential]` (resume)
 
 Flags:
 - `--from=PHASE`: Resume from specific phase

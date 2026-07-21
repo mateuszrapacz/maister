@@ -13,7 +13,7 @@ Before considering an orchestrator complete, verify ALL items:
 - [ ] **Phase structure** — Each phase has: Purpose, Execute, Output, State, Transition (`→ Pause` / `→ AUTO-CONTINUE`)
 - [ ] **Delegation enforcement** — Each delegated phase has: ANTI-PATTERN block, INVOKE NOW block, SELF-CHECK
 - [ ] **POST-CONTINUATION blocks** — After Skill tool phases, explicit instructions to read state, update completed_phases, and continue
-- [ ] **Exact role dispatch** — Every canonical role uses the exact resolver and bounded dispatch contract with a literal `maister:<role_id>`
+- [ ] **Exact role dispatch** — Every canonical role uses the exact resolver and bounded dispatch contract with a literal `maister-<role_id>`
 - [ ] **Context passing** — Every bounded task includes actor, work item, output contract/path, state summaries, and relevant prior phase summaries
 - [ ] **Context extraction** — Each phase's State Update extracts findings to `phase_summaries`
 - [ ] **Decision gates** — Phases receiving `decisions_needed` present to user via AskUserQuestion

@@ -151,7 +151,7 @@ Examples:
 1. **Resolve and dispatch exact task-classifier** to determine workflow type:
 
 ```
-resolveAgent({ logical_role_id: "maister:task-classifier" })
+resolveAgent({ logical_role_id: "maister-task-classifier" })
 dispatchAgent:
   actor: work
   work_item: classify-new-task
@@ -241,7 +241,7 @@ Display:
 
 ### With Task Classifier
 
-The `/work` command delegates classification through exact `maister:task-classifier` dispatch, which:
+The `/work` command delegates classification through exact `maister-task-classifier` dispatch, which:
 - Fetches issue details from GitHub/Jira/Azure DevOps (via MCP, CLI tools, or WebFetch)
 - Analyzes codebase context for better classification
 - Uses confidence-based user confirmation

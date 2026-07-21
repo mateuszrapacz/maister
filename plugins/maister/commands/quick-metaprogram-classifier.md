@@ -1,5 +1,5 @@
 ---
-name: maister:quick-metaprogram-classifier
+name: maister-quick-metaprogram-classifier
 description: Classify NLP metaprograms and suggest communication strategies for stakeholder conversations
 ---
 
