@@ -948,6 +948,7 @@ test("Codex native deployment is receipt-bound across install, update, rollback,
         stdout: JSON.stringify({
           installed: [...installedPlugins.entries()].map(([pluginId, installedPath]) => ({
             pluginId,
+            name: "maister",
             installed: true,
             enabled: true,
             source: { path: pluginSources.get(pluginId) },

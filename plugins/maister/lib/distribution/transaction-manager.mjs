@@ -1342,15 +1342,18 @@ async function installOrUpdate(command, options, paths) {
       });
       nativeDurableBoundary(options, "native-deployment-prepared", { journal_id: journalId, marketplace_root: prepared.marketplace_root });
       writeJournal(paths, journal);
+      const allowedNativePluginIds = previousNativeDeployment?.plugin_id ? [previousNativeDeployment.plugin_id] : [];
       nativeDeployment = installPreparedCodexDeployment({
         deployment: prepared,
         run: codexDeploymentRunner(options),
         env: codexDeploymentEnvironment(options),
+        allowedPluginIds: allowedNativePluginIds,
       });
       verifyCodexDeployment({
         deployment: nativeDeployment,
         run: codexDeploymentRunner(options),
         env: codexDeploymentEnvironment(options),
+        allowedPluginIds: allowedNativePluginIds,
       });
       journal = transition(paths, journal, "committed", {
         native_deployment: nativeDeployment,

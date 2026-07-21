@@ -62,6 +62,7 @@ function fakeCodex(paths, { failPluginAdd = false, omitSourcePath = false } = {}
         stdout: JSON.stringify({
           installed: installed ? [{
             pluginId: installedPluginId,
+            name: "maister",
             installed: true,
             enabled: true,
             source: omitSourcePath ? {} : { path: sourcePath },
@@ -101,7 +102,7 @@ test("Codex native deployment materializes a private marketplace and registers t
       () => verifyCodexDeployment({ deployment: installed, run: codex.run }),
       (error) => error?.kind === "E_CODEX_DEPLOYMENT",
     );
-    assert.deepEqual(codex.calls.slice(0, 2).map((call) => call.slice(0, 4)), [
+    assert.deepEqual(codex.calls.filter((call) => call[2] !== "list").slice(0, 2).map((call) => call.slice(0, 4)), [
       ["codex", "plugin", "marketplace", "add"],
       ["codex", "plugin", "add", prepared.plugin_id],
     ]);
@@ -110,6 +111,197 @@ test("Codex native deployment materializes a private marketplace and registers t
     attachCodexDeployment({ deployment: installed, run: codex.run });
     removeCodexDeployment({ deployment: installed, run: codex.run });
     assert.equal(fs.existsSync(prepared.marketplace_root), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("Codex native deployment rejects an enabled same-name plugin before registration", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-codex-deployment-collision-"));
+  try {
+    const paths = pathsFor(root);
+    activePlugin(paths);
+    const codex = fakeCodex(paths);
+    const prepared = prepareCodexDeployment({ paths, deploymentId: "44444444-4444-4444-8444-444444444444" });
+    const calls = [];
+    const run = (command, args, options) => {
+      calls.push([command, ...args]);
+      if (args[0] === "plugin" && args[1] === "list") {
+        return {
+          status: 0,
+          stdout: JSON.stringify({
+            installed: [{
+              pluginId: "maister@foreign-marketplace",
+              name: "maister",
+              installed: true,
+              enabled: true,
+              source: { path: "/tmp/foreign-maister/plugins/maister" },
+            }],
+            available: [],
+          }),
+          stderr: "",
+        };
+      }
+      return codex.run(command, args, options);
+    };
+
+    assert.throws(
+      () => installPreparedCodexDeployment({ deployment: prepared, run }),
+      (error) => error?.kind === "E_CODEX_DEPLOYMENT"
+        && error.details?.collisions?.some((collision) => collision.plugin_id === "maister@foreign-marketplace"),
+    );
+    assert.equal(calls.some((call) => call[1] === "plugin" && call[2] === "add"), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("Codex native deployment fails closed when the plugin registry shape is invalid", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-codex-deployment-invalid-registry-"));
+  try {
+    const paths = pathsFor(root);
+    activePlugin(paths);
+    const codex = fakeCodex(paths);
+    const prepared = prepareCodexDeployment({ paths, deploymentId: "88888888-8888-4888-8888-888888888888" });
+    const calls = [];
+    const run = (command, args, options) => {
+      calls.push([command, ...args]);
+      if (args[0] === "plugin" && args[1] === "list") {
+        return { status: 0, stdout: JSON.stringify({ available: [] }), stderr: "" };
+      }
+      return codex.run(command, args, options);
+    };
+
+    assert.throws(
+      () => installPreparedCodexDeployment({ deployment: prepared, run }),
+      (error) => error?.kind === "E_CODEX_DEPLOYMENT"
+        && error.details?.installed === null,
+    );
+    assert.equal(calls.some((call) => call[1] === "plugin" && call[2] === "add"), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("Codex native deployment allows only the explicitly previous receipt during replacement", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-codex-deployment-update-"));
+  try {
+    const paths = pathsFor(root);
+    activePlugin(paths);
+    const prepared = prepareCodexDeployment({ paths, deploymentId: "55555555-5555-4555-8555-555555555555" });
+    const previousPluginId = "maister@previous-receipt";
+    let registered = false;
+    const calls = [];
+    const run = (command, args) => {
+      calls.push([command, ...args]);
+      if (args[0] === "plugin" && args[1] === "list") {
+        const installed = [{
+          pluginId: previousPluginId,
+          name: "maister",
+          installed: true,
+          enabled: true,
+          source: { path: "/tmp/previous-receipt/plugins/maister" },
+        }];
+        if (registered) installed.push({
+          pluginId: prepared.plugin_id,
+          name: "maister",
+          installed: true,
+          enabled: true,
+          source: { path: prepared.plugin_root },
+        });
+        return { status: 0, stdout: JSON.stringify({ installed, available: [] }), stderr: "" };
+      }
+      if (args[0] === "plugin" && args[1] === "add") {
+        registered = true;
+        return { status: 0, stdout: JSON.stringify({ installedPath: path.join(paths.home, "codex-cache/maister/update") }), stderr: "" };
+      }
+      return { status: 0, stdout: "{}", stderr: "" };
+    };
+
+    const installed = installPreparedCodexDeployment({
+      deployment: prepared,
+      run,
+      allowedPluginIds: [previousPluginId],
+    });
+    assert.equal(installed.plugin_id, prepared.plugin_id);
+    assert.equal(verifyCodexDeployment({
+      deployment: installed,
+      run,
+      allowedPluginIds: [previousPluginId],
+    }), true);
+    assert.equal(calls.some((call) => call[1] === "plugin" && call[2] === "marketplace" && call[3] === "add"), true);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("Codex deployment verification rejects a foreign same-name plugin", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-codex-deployment-verify-collision-"));
+  try {
+    const paths = pathsFor(root);
+    activePlugin(paths);
+    const prepared = prepareCodexDeployment({ paths, deploymentId: "66666666-6666-4666-8666-666666666666" });
+    const run = (command, args) => {
+      if (args[0] === "plugin" && args[1] === "list") {
+        return {
+          status: 0,
+          stdout: JSON.stringify({
+            installed: [
+              { pluginId: prepared.plugin_id, name: "maister", installed: true, enabled: true, source: { path: prepared.plugin_root } },
+              { pluginId: "maister@foreign-marketplace", name: "maister", installed: true, enabled: true, source: { path: "/tmp/foreign/plugins/maister" } },
+            ],
+            available: [],
+          }),
+          stderr: "",
+        };
+      }
+      return { status: 0, stdout: "{}", stderr: "" };
+    };
+
+    assert.throws(
+      () => verifyCodexDeployment({ deployment: prepared, run }),
+      (error) => error?.kind === "E_CODEX_DEPLOYMENT"
+        && error.details?.collisions?.some((collision) => collision.plugin_id === "maister@foreign-marketplace"),
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("Codex native deployment attach rejects a foreign same-name plugin before registration", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-codex-deployment-attach-collision-"));
+  try {
+    const paths = pathsFor(root);
+    activePlugin(paths);
+    const prepared = prepareCodexDeployment({ paths, deploymentId: "77777777-7777-4777-8777-777777777777" });
+    const calls = [];
+    const run = (command, args) => {
+      calls.push([command, ...args]);
+      if (args[0] === "plugin" && args[1] === "list") {
+        return {
+          status: 0,
+          stdout: JSON.stringify({
+            installed: [{
+              pluginId: "maister@foreign-marketplace",
+              name: "maister",
+              installed: true,
+              enabled: true,
+              source: { path: "/tmp/foreign-maister/plugins/maister" },
+            }],
+            available: [],
+          }),
+          stderr: "",
+        };
+      }
+      return { status: 0, stdout: "{}", stderr: "" };
+    };
+
+    assert.throws(
+      () => attachCodexDeployment({ deployment: prepared, run }),
+      (error) => error?.kind === "E_CODEX_DEPLOYMENT"
+        && error.details?.collisions?.some((collision) => collision.plugin_id === "maister@foreign-marketplace"),
+    );
+    assert.equal(calls.some((call) => call[1] === "plugin" && call[2] === "marketplace"), false);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

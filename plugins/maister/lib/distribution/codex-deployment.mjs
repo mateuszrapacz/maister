@@ -85,6 +85,42 @@ function parseJson(result, label) {
   }
 }
 
+function normalizeAllowedPluginIds(value) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.some((pluginId) => typeof pluginId !== "string" || pluginId.length === 0)) {
+    fail("Codex deployment allowedPluginIds must be a non-empty-string array", { allowed_plugin_ids: value });
+  }
+  return [...new Set(value)];
+}
+
+function listInstalledPlugins(run, env) {
+  const result = parseJson(runCommand(run, ["plugin", "list", "--json"], { env }), "plugin list");
+  if (!result || typeof result !== "object" || Array.isArray(result) || !Array.isArray(result.installed)) {
+    fail("Codex plugin list response has an invalid installed inventory", {
+      installed: result?.installed ?? null,
+    });
+  }
+  return result.installed;
+}
+
+function assertNoPluginNameCollisions({ installed, deployment, allowedPluginIds }) {
+  const allowed = new Set(allowedPluginIds);
+  const collisions = installed
+    .filter((entry) => entry?.name === PLUGIN_NAME && entry?.installed === true && entry?.enabled === true)
+    .filter((entry) => entry?.pluginId !== deployment.plugin_id && !allowed.has(entry?.pluginId))
+    .map((entry) => ({
+      plugin_id: typeof entry?.pluginId === "string" ? entry.pluginId : null,
+      name: entry.name,
+      source_path: typeof entry?.source?.path === "string" ? entry.source.path : null,
+    }));
+  if (collisions.length > 0) {
+    fail("Codex has an enabled plugin name collision", {
+      plugin_id: deployment.plugin_id,
+      collisions,
+    });
+  }
+}
+
 function equivalentPath(first, second) {
   if (typeof first !== "string" || typeof second !== "string") return false;
   try {
@@ -191,9 +227,15 @@ export function prepareCodexDeployment({ paths, deploymentId, activeRoot = null 
   }
 }
 
-export function installPreparedCodexDeployment({ deployment, run = defaultRun, env = process.env }) {
+export function installPreparedCodexDeployment({ deployment, run = defaultRun, env = process.env, allowedPluginIds = undefined }) {
   if (!deployment || deployment.schema_version !== CODEX_NATIVE_DEPLOYMENT_SCHEMA_VERSION) fail("Codex deployment descriptor is invalid", {});
+  const normalizedAllowedPluginIds = normalizeAllowedPluginIds(allowedPluginIds);
   try {
+    assertNoPluginNameCollisions({
+      installed: listInstalledPlugins(run, env),
+      deployment,
+      allowedPluginIds: normalizedAllowedPluginIds,
+    });
     runCommand(run, ["plugin", "marketplace", "add", deployment.marketplace_root, "--json"], { env });
     const result = parseJson(runCommand(run, ["plugin", "add", deployment.plugin_id, "--json"], { env }), "plugin add");
     const installedPath = result.installedPath ?? result.installed_path;
@@ -207,10 +249,11 @@ export function installPreparedCodexDeployment({ deployment, run = defaultRun, e
   }
 }
 
-export function verifyCodexDeployment({ deployment, run = defaultRun, env = process.env }) {
+export function verifyCodexDeployment({ deployment, run = defaultRun, env = process.env, allowedPluginIds = undefined }) {
   if (!deployment?.plugin_id) fail("Codex deployment descriptor has no plugin identity", {});
-  const result = parseJson(runCommand(run, ["plugin", "list", "--json"], { env }), "plugin list");
-  const installed = Array.isArray(result.installed) ? result.installed : [];
+  const normalizedAllowedPluginIds = normalizeAllowedPluginIds(allowedPluginIds);
+  const installed = listInstalledPlugins(run, env);
+  assertNoPluginNameCollisions({ installed, deployment, allowedPluginIds: normalizedAllowedPluginIds });
   const match = installed.find((entry) => entry?.pluginId === deployment.plugin_id);
   if (!match || match.installed !== true || match.enabled !== true) {
     fail("Codex plugin is not installed and enabled", { plugin_id: deployment.plugin_id });
@@ -239,8 +282,14 @@ export function detachCodexDeployment({ deployment, run = defaultRun, env = proc
   return true;
 }
 
-export function attachCodexDeployment({ deployment, run = defaultRun, env = process.env }) {
+export function attachCodexDeployment({ deployment, run = defaultRun, env = process.env, allowedPluginIds = undefined }) {
   if (!deployment?.marketplace_root || !deployment.plugin_id) fail("Codex deployment cannot be attached without its marketplace identity", {});
+  const normalizedAllowedPluginIds = normalizeAllowedPluginIds(allowedPluginIds);
+  assertNoPluginNameCollisions({
+    installed: listInstalledPlugins(run, env),
+    deployment,
+    allowedPluginIds: normalizedAllowedPluginIds,
+  });
   runCommand(run, ["plugin", "marketplace", "add", deployment.marketplace_root, "--json"], { env });
   const result = parseJson(runCommand(run, ["plugin", "add", deployment.plugin_id, "--json"], { env }), "plugin add");
   const installedPath = result.installedPath ?? result.installed_path ?? deployment.installed_path;
