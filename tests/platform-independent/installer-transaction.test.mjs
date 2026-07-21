@@ -9,7 +9,7 @@ import { runCli } from "../../plugins/maister/bin/maister-install.mjs";
 import { hashTree } from "../../plugins/maister/lib/distribution/hash-tree.mjs";
 import { materialize } from "../../plugins/maister/lib/distribution/materializer.mjs";
 import { readJournal } from "../../plugins/maister/lib/distribution/journal-schema.mjs";
-import { recoverJournal, removeEntry, restoreFullBackup, snapshotState } from "../../plugins/maister/lib/distribution/recovery.mjs";
+import { readManifest, recoverJournal, removeEntry, restoreFullBackup, snapshotState } from "../../plugins/maister/lib/distribution/recovery.mjs";
 import { atomicWriteSetting } from "../../plugins/maister/lib/distribution/settings-owner.mjs";
 import { getTargetPaths } from "../../plugins/maister/lib/distribution/target-paths.mjs";
 import { readReceipt, validateReceipt } from "../../plugins/maister/lib/distribution/receipt-schema.mjs";
@@ -484,6 +484,38 @@ function recoveryFixture() {
   const manifest = snapshotState({ managedRoots, managedInventory: [], settings, backupRoot, activeReceiptPath, home });
   return { root, home, stateRoot, activeRoot, settingsPath, activeReceiptPath, backupRoot, outside, paths, manifest };
 }
+
+function canonical(value) {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+  if (value && typeof value === "object") return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`;
+  return JSON.stringify(value);
+}
+
+function manifestHash(manifest) {
+  return crypto.createHash("sha256").update(canonical({
+    schema_version: manifest.schema_version,
+    home: manifest.home,
+    roots: manifest.roots,
+    settings: manifest.settings,
+    active_receipt: manifest.active_receipt,
+  })).digest("hex");
+}
+
+test("historical backup manifests remain readable after the settings root changes", () => {
+  const fixture = recoveryFixture();
+  const manifestPath = path.join(fixture.backupRoot, "manifest.json");
+  const historical = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  historical.settings[0].targetPath = path.join(fixture.home, "settings/settings.json");
+  historical.manifest_hash = manifestHash(historical);
+  fs.writeFileSync(manifestPath, `${JSON.stringify(historical, null, 2)}\n`);
+
+  assert.doesNotThrow(() => readManifest(fixture.backupRoot));
+  assert.throws(
+    () => readManifest(fixture.backupRoot, { paths: fixture.paths }),
+    (error) => error?.kind === "E_RECOVERY_BACKUP",
+  );
+  fs.rmSync(fixture.root, { recursive: true, force: true });
+});
 
 test("rejects backup tampering of bytes, modes, symlink targets, types, existence, and topology before restore", () => {
   const cases = [

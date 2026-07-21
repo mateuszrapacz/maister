@@ -1424,7 +1424,10 @@ async function uninstall(options, paths) {
     while (originalReceipt.transaction.previous_receipt_id) {
       originalReceipt = readReceiptById(paths, originalReceipt.transaction.previous_receipt_id).receipt;
     }
-    const originalTopology = readManifest(originalReceipt.transaction.backup_root, { paths });
+    // The oldest backup may have been created by a previous settings-root
+    // layout. Its topology is only used for parent-directory pruning, so
+    // validate it against its recorded paths rather than today's resolver.
+    const originalTopology = readManifest(originalReceipt.transaction.backup_root);
     journal = transition(paths, journal, "snapshotted", { backup_root: backupRoot, backup_manifest_hash: backupManifest.manifest_hash, steps: [{ name: "snapshot", status: "completed", timestamp: now(), before_ref: backupRoot, after_hash: null }] });
     durableBoundary(options, "backup-captured", { journal_id: journalId, backup_root: backupRoot, backup_manifest_hash: backupManifest.manifest_hash });
     journal = transition(paths, journal, "committing");

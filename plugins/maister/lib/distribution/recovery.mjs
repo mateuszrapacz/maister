@@ -427,7 +427,7 @@ function validateTopology(topology, location, home, expectedRoot) {
 
 function expectedSettingTargetPath(setting, paths) {
   if (paths) return resolveTargetSettingPath(paths, setting.path);
-  return path.resolve(paths?.home ?? path.dirname(setting.targetPath), ...setting.path.split("/"));
+  return setting.targetPath;
 }
 
 function validateManifest(manifest, backupRoot, paths = null) {
