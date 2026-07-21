@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Plan — fix-cursor-agents-runtime-discovery</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.tldr { background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--accent);
+  border-radius:var(--radius); padding:16px 18px; margin:14px 0; }
+.toc { font-size:13px; color:var(--dim); margin:12px 0 8px; }
+.toc a { margin:0 2px; }
+.chip { display:inline-block; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.5px;
+  background:var(--accent-soft); color:var(--accent); padding:2px 7px; border-radius:6px; margin:2px 3px 2px 0; }
+.g-badge { font-size:11px; color:var(--dim); margin-left:8px; }
+.group h3 { margin:0 0 8px; font-size:15px; }
+.group ul { margin:8px 0 0; padding-left:0; list-style:none; }
+.step { margin:4px 0; padding:4px 0; }
+.step.todo::before  { content:"☐ "; color:var(--dim); }
+.step.done::before  { content:"☑ "; color:var(--ok); }
+.step.done          { color:var(--dim); }
+.group.todo .g-badge::after { content:"pending"; }
+.group.done .g-badge::after { content:"✓ completed"; color:var(--ok); }
+.dep { font-size:13px; color:var(--dim); margin:6px 0 10px; }
+.wave { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:10px 0; font-size:13px; }
+.wave .box { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 12px; }
+.arrow { color:var(--dim); }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="spec.html">Spec</a>
+  <span class="here">Plan</span>
+  <a href="../verification/implementation-verification.html">Verification</a>
+  <a href="implementation-plan.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <span class="badge">implementation plan</span>
+  <h1>Fix Cursor agents runtime discovery</h1>
+  <p style="color:var(--dim);margin:0">Generated 2026-07-21T21:35:36Z · Task <code>2026-07-21-fix-cursor-agents-runtime-discovery</code></p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>5</b><span>task groups</span></div>
+  <div class="tile"><b>47</b><span>checkbox steps</span></div>
+  <div class="tile"><b>4</b><span>TDD tests</span></div>
+  <div class="tile"><b>G1→G2→G5</b><span>critical path</span></div>
+  <div class="tile"><b>A1+A2</b><span>audit highs</span></div>
+</div>
+
+<section class="tldr" id="tldr">
+  <h2 style="margin-top:0">TL;DR</h2>
+  <p>Package Cursor exact-native bridge (distribution + overlay), hybrid E5 from <code>pluginRoot/agents/*.md</code>, honor <code>hostVersion</code>/<code>clock</code> seams, parse <code>--agents-fallback</code> with minimal dual-write, document reload — then green the 4 TDD tests. Automated Done ≠ Task enum (S7 manual).</p>
+  <h3>Key Decisions</h3>
+  <ul>
+    <li>Full exact-native bridge shape (release-package), not TDD minimum alone</li>
+    <li><strong>A1:</strong> <code>expectedNativeInventory</code> accepts top-level <code>manifest.target</code> when rows omit <code>row.target</code></li>
+    <li><strong>A2:</strong> injected <code>hostVersion</code> ⇒ available; <code>clock()</code> ⇒ timestamp</li>
+    <li>Fallback = <strong>copy</strong> to home + cwd <code>.cursor/agents</code>; flag alone (no exhaustion detector)</li>
+  </ul>
+  <h3>Risks</h3>
+  <p><span class="sev warning">warning</span> Hybrid disk ≠ live Task · <span class="sev warning">warning</span> Bridge mockable not real Task · <span class="sev info">info</span> Support <code>explore</code> ID skew out of scope</p>
+</section>
+
+<nav class="toc">Contents:
+  <a href="#waves">Waves</a> ·
+  <a href="#g1">G1 Bridge</a> ·
+  <a href="#g2">G2 Hybrid+A1/A2</a> ·
+  <a href="#g3">G3 CLI</a> ·
+  <a href="#g4">G4 Reload</a> ·
+  <a href="#g5">G5 Green</a> ·
+  <a href="#files">Files</a>
+</nav>
+
+<main>
+<section id="waves" class="card">
+  <h2 style="margin-top:0">Dependency waves</h2>
+  <div class="wave">
+    <div class="box">Wave 1: G1 ∥ G2 ∥ G3(parse) ∥ G4</div>
+    <span class="arrow">→</span>
+    <div class="box">Wave 2: G3 dual-write</div>
+    <span class="arrow">→</span>
+    <div class="box">Wave 3: G5 tip</div>
+  </div>
+  <table>
+    <thead><tr><th>Group</th><th>Depends</th><th>Parallel</th></tr></thead>
+    <tbody>
+      <tr><td>G1 Bridge/overlay</td><td>Spec</td><td>G2, G3 parse, G4</td></tr>
+      <tr><td>G2 Hybrid + A1/A2</td><td>Spec</td><td>G1</td></tr>
+      <tr><td>G3 CLI + dual-write</td><td>Spec; dual-write after plugin path</td><td>Parse with Wave 1</td></tr>
+      <tr><td>G4 Reload messaging</td><td>Spec</td><td>G1–G3</td></tr>
+      <tr><td>G5 TDD + regression</td><td>G1, G2, G3 parse</td><td>—</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section data-group="1" class="group todo card" id="g1">
+  <h3>G1 — Bridge + overlay asset/layout/inventory <span class="g-badge"></span></h3>
+  <p class="dep">FR1 · TDD tests 1–2 · Depends: Spec</p>
+  <p>Files: <code class="chip">bridges/cursor-bridge-v1.mjs</code> <code class="chip">assets/runtime/cursor-bridge-v1.mjs</code> <code class="chip">overlay.yml</code> <code class="chip">inventory.yml</code></p>
+  <ul>
+    <li data-step="1.1" class="step todo">Confirm RED on missing bridge paths</li>
+    <li data-step="1.2" class="step todo">Create distribution bridges/cursor-bridge-v1.mjs export</li>
+    <li data-step="1.3" class="step todo">Model factory on release-package Cursor fixture</li>
+    <li data-step="1.4" class="step todo">native_port closed set (hostVersion, authenticated, collisions, inspect, launch)</li>
+    <li data-step="1.5" class="step todo">inspect → schema_version + exact_launch + observable_identity</li>
+    <li data-step="1.6" class="step todo">launch echoes observed_native_role_external_id + full closed fields</li>
+    <li data-step="1.7" class="step todo">Package overlay assets/runtime/cursor-bridge-v1.mjs</li>
+    <li data-step="1.8" class="step todo">layout kind:file → runtime/cursor-bridge-v1.mjs</li>
+    <li data-step="1.9" class="step todo">inventory.required in overlay.yml + inventory.yml</li>
+    <li data-step="1.10" class="step todo">Skip native_assets sha unless required</li>
+    <li data-step="1.11" class="step todo">Spot-check dynamic import + production-owner shape</li>
+  </ul>
+  <p><strong>AC:</strong> TDD 1–2 pass; inventory fail-closed if leaf missing.</p>
+</section>
+
+<section data-group="2" class="group todo card" id="g2">
+  <h3>G2 — Hybrid discover + A1 + A2 seams <span class="g-badge"></span></h3>
+  <p class="dep">FR2 · TDD test 3 · Audit High A1/A2 · Depends: Spec · ∥ G1</p>
+  <p>Files: <code class="chip">host-probes/base.mjs</code> <code class="chip">host-probes/cursor.mjs</code></p>
+  <p><span class="sev critical">A1</span> expectedNativeInventory dual-shape · <span class="sev critical">A2</span> hostVersion/clock seams</p>
+  <ul>
+    <li data-step="2.1" class="step todo">Reproduce top-level target → null expected set</li>
+    <li data-step="2.2" class="step todo">A1: accept row.target===target OR (manifest.target===target ∧ missing row.target)</li>
+    <li data-step="2.3" class="step todo">A1: preserve per-row parity fixtures</li>
+    <li data-step="2.4" class="step todo">Optional focused unit assertion; do not weaken parity</li>
+    <li data-step="2.5" class="step todo">A2: destructure hostVersion + clock in probeHost</li>
+    <li data-step="2.6" class="step todo">A2: clock() → evidence timestamp</li>
+    <li data-step="2.7" class="step todo">A2: injected hostVersion ⇒ available (skip version spawn)</li>
+    <li data-step="2.8" class="step todo">Keep run: availableVersion path for parity</li>
+    <li data-step="2.9" class="step todo">Injected discover wins over hybrid</li>
+    <li data-step="2.10" class="step todo">Hybrid: read agents/*.md frontmatter name → compareNativeInventory</li>
+    <li data-step="2.11" class="step todo">Missing pluginRoot → honest unavailable</li>
+    <li data-step="2.12" class="step todo">Pass pluginRoot/hostVersion/clock/manifest through probeCursor</li>
+    <li data-step="2.13" class="step todo">Confirm TDD test 3 E5 passed</li>
+  </ul>
+  <p><strong>AC:</strong> TDD 3 green; A1 dual shape; A2 CI-safe without live <code>agent</code>.</p>
+</section>
+
+<section data-group="3" class="group todo card" id="g3">
+  <h3>G3 — CLI --agents-fallback + dual-write <span class="g-badge"></span></h3>
+  <p class="dep">FR3 · TDD test 4 (parse) · Depends: Spec; dual-write after plugin commit</p>
+  <p>Files: <code class="chip">cli-contract.mjs</code> <code class="chip">transaction-manager.mjs</code> <code class="chip">maister-install.mjs</code> <code class="chip">cursor-agents-fallback.mjs?</code></p>
+  <ul>
+    <li data-step="3.1" class="step todo">Confirm RED unknown option</li>
+    <li data-step="3.2" class="step todo">Parse --agents-fallback → agentsFallback: true</li>
+    <li data-step="3.3" class="step todo">Absent flag ⇒ no dual-write; other unknowns still reject</li>
+    <li data-step="3.4" class="step todo">Thread agentsFallback into lifecycle for cursor</li>
+    <li data-step="3.5" class="step todo">Copy agents/*.md to ~/.cursor/agents and cwd/.cursor/agents</li>
+    <li data-step="3.6" class="step todo">Flag absent ⇒ plugin-only</li>
+    <li data-step="3.7" class="step todo">No exhaustion detector (flag alone)</li>
+    <li data-step="3.8" class="step todo">Cursor-only; do not change managedRoots to primary dual-write</li>
+  </ul>
+  <p><strong>AC:</strong> TDD 4 green; dual-write labeled fallback.</p>
+</section>
+
+<section data-group="4" class="group todo card" id="g4">
+  <h3>G4 — Reload / docs messaging <span class="g-badge"></span></h3>
+  <p class="dep">FR4 · S5 · ∥ G1–G3</p>
+  <p>Files: <code class="chip">maister-install.mjs</code> envelope message (± overlay docs)</p>
+  <ul>
+    <li data-step="4.1" class="step todo">Cursor install/update success message requires reload before Task claims</li>
+    <li data-step="4.2" class="step todo">Mention fallback still needs reload when flag used</li>
+    <li data-step="4.3" class="step todo">Honest messaging — no fake Task observation</li>
+    <li data-step="4.4" class="step todo">No mass skill rewrite</li>
+  </ul>
+  <p><strong>AC:</strong> S5 reload guidance on operator-facing success path.</p>
+</section>
+
+<section data-group="5" class="group todo card" id="g5">
+  <h3>G5 — TDD green + regression <span class="g-badge"></span></h3>
+  <p class="dep">FR5 · S6 · Depends: G1, G2, G3 parse</p>
+  <ul>
+    <li data-step="5.1" class="step todo">cursor-agents-runtime-discovery.test.mjs → 4 pass</li>
+    <li data-step="5.2" class="step todo">evidence-parity-topology Cursor E5 cases green</li>
+    <li data-step="5.3" class="step todo">release-package Cursor bridge paths green</li>
+    <li data-step="5.4" class="step todo">CLI/launcher regressions for known options</li>
+    <li data-step="5.5" class="step todo">Confirm Codex paths untouched</li>
+    <li data-step="5.6" class="step todo">Log automated Done vs S7 manual split</li>
+    <li data-step="5.7" class="step todo">Manual S7 checklist: reload + Task maister-explore / maister-code-reviewer</li>
+  </ul>
+  <p><strong>AC:</strong> S6 automated gate; S7 remains operator smoke.</p>
+</section>
+
+<section id="files" class="card">
+  <h2 style="margin-top:0">File touch list</h2>
+  <table>
+    <thead><tr><th>Path</th><th>Action</th><th>Group</th></tr></thead>
+    <tbody>
+      <tr><td><code>lib/distribution/bridges/cursor-bridge-v1.mjs</code></td><td>Create</td><td>G1</td></tr>
+      <tr><td><code>overlays/cursor/assets/runtime/cursor-bridge-v1.mjs</code></td><td>Create</td><td>G1</td></tr>
+      <tr><td><code>overlays/cursor/{overlay,inventory}.yml</code></td><td>Edit</td><td>G1</td></tr>
+      <tr><td><code>host-probes/{base,cursor}.mjs</code></td><td>Edit A1/A2/hybrid</td><td>G2</td></tr>
+      <tr><td><code>cli-contract.mjs</code></td><td>Edit</td><td>G3</td></tr>
+      <tr><td><code>transaction-manager.mjs</code> / <code>maister-install.mjs</code></td><td>Edit</td><td>G3/G4</td></tr>
+      <tr><td><code>cursor-agents-runtime-discovery.test.mjs</code></td><td>Run only</td><td>G5</td></tr>
+    </tbody>
+  </table>
+</section>
+</main>
+</body>
+</html>

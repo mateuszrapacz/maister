@@ -78,28 +78,41 @@ export function probeHost({
   overlayVersion = "1.0.0",
   scenarioVersion = "1.0.0",
   now = new Date().toISOString(),
+  clock,
+  hostVersion: injectedHostVersion,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   provenance: provenanceOverrides = {},
 } = {}) {
   assertTimeout(timeoutMs);
+  const evidenceTimestamp = typeof clock === "function" ? clock() : now;
   let versionResult;
   let timeoutError = null;
-  try {
-    versionResult = run(command, ["--version"], { timeoutMs });
-  } catch (error) {
-    if (error?.kind !== "E_HOST_PROBE_TIMEOUT") throw error;
-    timeoutError = error instanceof HostProbeTimeoutError
-      ? error
-      : new HostProbeTimeoutError(command, ["--version"], timeoutMs, { cause: error });
-    versionResult = { status: null, stdout: "", stderr: "", timedOut: true };
+  let executableMissing = false;
+  let available;
+  let versionFailed;
+  let hostVersion;
+  if (typeof injectedHostVersion === "string" && injectedHostVersion.length > 0) {
+    available = true;
+    versionFailed = false;
+    hostVersion = injectedHostVersion;
+  } else {
+    try {
+      versionResult = run(command, ["--version"], { timeoutMs });
+    } catch (error) {
+      if (error?.kind !== "E_HOST_PROBE_TIMEOUT") throw error;
+      timeoutError = error instanceof HostProbeTimeoutError
+        ? error
+        : new HostProbeTimeoutError(command, ["--version"], timeoutMs, { cause: error });
+      versionResult = { status: null, stdout: "", stderr: "", timedOut: true };
+    }
+    if (timedOut(versionResult) && !timeoutError) {
+      timeoutError = new HostProbeTimeoutError(command, ["--version"], timeoutMs);
+    }
+    executableMissing = versionResult.error?.code === "ENOENT";
+    available = timeoutError === null && versionResult.status === 0;
+    versionFailed = timeoutError !== null || (!available && !executableMissing);
+    hostVersion = available ? versionFromOutput(`${versionResult.stdout}\n${versionResult.stderr}`) : "unknown";
   }
-  if (timedOut(versionResult) && !timeoutError) {
-    timeoutError = new HostProbeTimeoutError(command, ["--version"], timeoutMs);
-  }
-  const executableMissing = versionResult.error?.code === "ENOENT";
-  const available = timeoutError === null && versionResult.status === 0;
-  const versionFailed = timeoutError !== null || (!available && !executableMissing);
-  const hostVersion = available ? versionFromOutput(`${versionResult.stdout}\n${versionResult.stderr}`) : "unknown";
   const provenance = {
     source_commit: sourceCommit,
     source_version: sourceVersion,
@@ -163,7 +176,7 @@ export function probeHost({
       scenario: discoveryScenario,
       result: versionFailed ? "failed" : available ? normalizedDiscovery.result : "unavailable",
       provenance: versionFailed ? failureProvenance : discoveryProvenance,
-      timestamp: now,
+      timestamp: evidenceTimestamp,
     }),
     createEvidenceRecord({
       target,
@@ -172,7 +185,7 @@ export function probeHost({
       scenario,
       result: versionFailed ? "failed" : available ? normalizedScenario.result : "unavailable",
       provenance: versionFailed ? failureProvenance : scenarioProvenance,
-      timestamp: now,
+      timestamp: evidenceTimestamp,
     }),
   ];
   return {
@@ -206,8 +219,12 @@ function normalizeProbeOutcome(value, name) {
 export function expectedNativeInventory(manifest, target) {
   const rows = manifest?.rows;
   if (!Array.isArray(rows)) return null;
+  const subjectMatch = manifest?.target === target;
   const nativeIds = rows
-    .filter((row) => row?.target === target)
+    .filter((row) => {
+      if (!row || typeof row !== "object") return false;
+      return row.target === target || (subjectMatch && !Object.hasOwn(row, "target"));
+    })
     .map((row) => row?.native_role_external_id);
   if (nativeIds.length === 0 || nativeIds.some((id) => typeof id !== "string" || id.length === 0)) return null;
   return [...nativeIds].sort((left, right) => left.localeCompare(right, "en-US"));
@@ -233,10 +250,15 @@ export function compareNativeInventory({ manifest, target, observation } = {}) {
   if (normalized.length !== expected.length || normalized.some((id, index) => id !== expected[index])) {
     return { result: "failed", reason: "native-inventory-mismatch" };
   }
-  return {
-    result: "passed",
-    provenance: { native_role_external_ids: normalized },
-  };
+  const provenance = { native_role_external_ids: normalized };
+  if (typeof observation.discovery_subject === "string" && observation.discovery_subject.length > 0) {
+    provenance.discovery_subject = observation.discovery_subject;
+  }
+  if (observation.discovery_subject === "plugin-disk-agents") {
+    provenance.remediation =
+      "plugin-disk inventory match is not live Task/subagent_type enumeration; reload Cursor and smoke-test Task before claiming product discovery";
+  }
+  return { result: "passed", provenance };
 }
 
 export { defaultRun, versionFromOutput };

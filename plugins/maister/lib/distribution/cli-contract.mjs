@@ -34,6 +34,7 @@ export function parseCliArgs(argv, env = process.env) {
   for (let index = 1; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--json") options.json = true;
+    else if (argument === "--agents-fallback") options.agentsFallback = true;
     else if (["--target", "--source", "--ref", "--home", "--failure-point", "--journal-id"].includes(argument)) {
       const value = argv[++index];
       if (!value || value.startsWith("--")) throw distributionError("E_USAGE", `${argument} requires a value`, { argument });

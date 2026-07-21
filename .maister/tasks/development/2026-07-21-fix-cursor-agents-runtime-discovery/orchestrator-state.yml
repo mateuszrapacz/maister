@@ -1,0 +1,626 @@
+orchestrator:
+  schema_version: 2
+  started_phase: phase-1
+  current_phase: completed
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-3
+    - phase-4
+    - phase-5
+    - phase-6
+    - phase-7
+    - phase-8
+    - phase-9
+    - phase-10
+    - phase-11
+    - phase-12
+    - phase-13
+    - phase-14
+  failed_phases: []
+  created: 2026-07-21T21:00:01Z
+  updated: 2026-07-21T22:16:25Z
+  task_path: .maister/tasks/development/2026-07-21-fix-cursor-agents-runtime-discovery
+  task_ids: {}
+  worktree:
+    path: /Users/mrapacz/Workspace/maister-wt-fix-cursor-agents
+    branch: fix/cursor-agents-runtime-discovery
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+    phase-7: 0
+    phase-8: 0
+    phase-9: 0
+    phase-10: 0
+    phase-11: 0
+    phase-12: 0
+    phase-13: 0
+    phase-14: 0
+  options:
+    html_output: true
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: false
+    user_docs_enabled: true
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+    sequential: true
+    advisor:
+      enabled: true
+      gate_policies:
+        phase-exit: fully_automatic
+        optional-phase: fully_automatic
+        clarify: fully_automatic
+        convergence: fully_automatic
+        verify-matrix: fully_automatic
+      advisor_agent: advisor
+      advisor_model: gpt-5.6-sol
+      arbiter_agent: arbiter
+      arbiter_model: gpt-5.6-sol
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
+  gate_history:
+    - gate_id: phase-1-clarification-q1
+      gate_type: clarify
+      phase: phase-1
+      question: "Success criterion: Task sees and invokes maister-* agents?"
+      options:
+        - Confirm assumptions
+        - Correct assumptions
+        - Provide more context
+      original_recommendation: Confirm assumptions
+      selected_option: Confirm assumptions
+      actor: user
+      confidence: high
+      rationale: "User answered Q1 ok."
+      timestamp: 2026-07-21T21:07:49Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-1-clarification-q2
+      gate_type: clarify
+      phase: phase-1
+      question: "Delivery via Cursor plugin (not dual-install as primary)?"
+      options:
+        - Confirm dual-install
+        - Cursor plugin path
+        - Bridge only
+        - Other
+      original_recommendation: Confirm dual-install
+      selected_option: Cursor plugin path
+      actor: user
+      confidence: high
+      rationale: "User: zrob plugin do cursora i jego uzyj."
+      timestamp: 2026-07-21T21:07:49Z
+      provenance_kind: complete
+      user_override: true
+    - gate_id: phase-1-clarification-q3
+      gate_type: clarify
+      phase: phase-1
+      question: "Scope: installer+tests only vs everything needed?"
+      options:
+        - Confirm limited scope
+        - Everything needed to work
+      original_recommendation: Confirm limited scope
+      selected_option: Everything needed to work
+      actor: user
+      confidence: high
+      rationale: "User: wszystko co trzeba zeby to dzialalo."
+      timestamp: 2026-07-21T21:07:49Z
+      provenance_kind: complete
+      user_override: true
+    - gate_id: phase-1-exit
+      gate_type: phase-exit
+      phase: phase-1
+      question: Continue to Phase 2?
+      options:
+        - Continue to Phase 2
+        - Pause workflow
+      original_recommendation: Continue to Phase 2
+      selected_option: Continue to Phase 2
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T21:09:07Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-2-scope-decision-verify-task-discovery-proof
+      gate_type: decisions-needed
+      phase: phase-2
+      question: "How to prove Task discovery in verify/E5?"
+      options:
+        - Inject/implement host discover observation wired into probeCursor + optional verify
+        - Documented manual smoke (reload + Task enum) as acceptance; keep E5 unavailable by default
+        - "Hybrid: automated discover when available, else provisional + mandatory manual smoke"
+      original_recommendation: Hybrid
+      selected_option: "Hybrid: automated discover when available, else provisional + mandatory manual smoke"
+      actor: user
+      confidence: high
+      rationale: "User: reszta zgodnie z rekomendacjami"
+      timestamp: 2026-07-21T21:13:31Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-2-scope-decision-plugin-path-fallback
+      gate_type: decisions-needed
+      phase: phase-2
+      question: "Fallback if plugin-path insufficient?"
+      options:
+        - Plugin-only; escalate as Cursor product limitation (no dual-copy)
+        - After exhaustion, optional fallback copy/symlink behind explicit flag
+        - Always dual-write
+      original_recommendation: Optional fallback after documented plugin-path exhaustion
+      selected_option: After exhaustion, optional fallback copy/symlink behind explicit flag
+      actor: user
+      confidence: high
+      rationale: "User: reszta zgodnie z rekomendacjami"
+      timestamp: 2026-07-21T21:13:31Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-2-scope-decision-e6-bridge-packaging
+      gate_type: decisions-needed
+      phase: phase-2
+      question: "E6 bridge packaging in scope?"
+      options:
+        - "In-scope: ship/document Task-backed or host bridge for E6"
+        - "Out-of-scope: Task list/invoke only; leave E6 unavailable"
+        - Document bridge_module injection without shipping a bridge
+      original_recommendation: Out-of-scope for Done unless gates require E6
+      selected_option: "In-scope: ship/document Task-backed or host bridge for E6"
+      actor: user
+      confidence: high
+      rationale: "User: napraw odrazu (E6 bridge)"
+      timestamp: 2026-07-21T21:13:31Z
+      provenance_kind: complete
+      user_override: true
+    - gate_id: phase-2-scope-decision-skill-text-delegation-story
+      gate_type: decisions-needed
+      phase: phase-2
+      question: "Skill text delegation story?"
+      options:
+        - Keep Task-only skill text
+        - Task-primary plus short bridge note
+        - Rewrite skills bridge-first
+      original_recommendation: Keep Task-only
+      selected_option: Keep Task-only skill text
+      actor: user
+      confidence: high
+      rationale: "User: reszta zgodnie z rekomendacjami"
+      timestamp: 2026-07-21T21:13:31Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-2-scope-decision-frontmatter-filename-normalization
+      gate_type: decisions-needed
+      phase: phase-2
+      question: "Normalize frontmatter/filename?"
+      options:
+        - Change only if controlled smoke proves they matter
+        - Proactively match Cursor plugin-template shape
+        - Leave projection unchanged
+      original_recommendation: Change only with smoke evidence
+      selected_option: Change only if controlled smoke proves they matter
+      actor: user
+      confidence: high
+      rationale: "User: reszta zgodnie z rekomendacjami"
+      timestamp: 2026-07-21T21:13:31Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-2-routing
+      gate_type: phase-exit
+      phase: phase-2
+      question: Continue to Phase 3: TDD Red Gate?
+      options:
+        - Continue to Phase 3
+        - Pause workflow
+      original_recommendation: Continue to Phase 3
+      selected_option: Continue to Phase 3
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T21:14:21Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-3-exit
+      gate_type: phase-exit
+      phase: phase-3
+      question: TDD red gate complete. Continue to Phase 4?
+      options:
+        - Continue to Phase 4
+        - Pause workflow
+      original_recommendation: Continue to Phase 4
+      selected_option: Continue to Phase 4
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T21:19:44Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-4-skip
+      gate_type: optional-phase
+      phase: phase-4
+      question: Run UI mockup generation?
+      options:
+        - Run optional phase
+        - Skip optional phase
+      original_recommendation: Skip optional phase
+      selected_option: Skip optional phase
+      actor: system
+      confidence: high
+      rationale: "ui_heavy=false — Phase 4 skipped per task_characteristics"
+      timestamp: 2026-07-21T21:19:44Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: requirements-clarification
+      gate_type: clarify
+      phase: phase-5
+      question: Confirm Phase 5 requirements assumptions R1-R4?
+      options:
+        - Confirm all
+        - Correct assumptions
+      original_recommendation: Confirm all
+      selected_option: Confirm all
+      actor: user
+      confidence: high
+      rationale: "User: wszystkie confirm"
+      timestamp: 2026-07-21T21:20:35Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-5-exit
+      gate_type: phase-exit
+      phase: phase-5
+      question: Continue to specification audit?
+      options:
+        - Continue to specification audit
+        - Pause workflow
+      original_recommendation: Continue to specification audit
+      selected_option: Continue to specification audit
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T21:32:00Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: optional-phase-selection-spec-audit
+      gate_type: optional-phase
+      phase: phase-6
+      question: "Run specification audit? (Recommended)"
+      options:
+        - "Yes, run audit (Recommended)"
+        - "No, skip audit"
+      original_recommendation: "Yes, run audit (Recommended)"
+      selected_option: "Yes, run audit (Recommended)"
+      actor: user
+      confidence: high
+      rationale: "User continued to specification audit (implies run recommended audit)"
+      timestamp: 2026-07-21T21:32:00Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-6-exit
+      gate_type: phase-exit
+      phase: phase-6
+      question: Continue to implementation planning?
+      options:
+        - Continue to implementation planning
+        - Pause workflow
+      original_recommendation: Continue to implementation planning
+      selected_option: Continue to implementation planning
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T21:35:03Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-7-exit
+      gate_type: phase-exit
+      phase: phase-7
+      question: Continue to implementation approval?
+      options:
+        - Continue to implementation approval
+        - Pause workflow
+      original_recommendation: Continue to implementation approval
+      selected_option: Continue to implementation approval
+      actor: user
+      confidence: high
+      rationale: User said approve (implies continue + approve)
+      timestamp: 2026-07-21T21:38:07Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: implementation-approval
+      gate_type: implementation-approval
+      phase: phase-7
+      question: Approve this complete implementation scope?
+      options:
+        - Approve complete implementation scope
+        - Reject implementation scope
+        - Request scope changes
+      original_recommendation: Approve complete implementation scope
+      selected_option: Approve complete implementation scope
+      actor: user
+      confidence: high
+      rationale: User said approve
+      timestamp: 2026-07-21T21:38:07Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-8-exit
+      gate_type: phase-exit
+      phase: phase-8
+      question: Continue to verification?
+      options:
+        - Continue to verification
+        - Pause workflow
+      original_recommendation: Continue to verification
+      selected_option: Continue to verification
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T21:43:33Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-9-exit
+      gate_type: phase-exit
+      phase: phase-9
+      question: TDD gate passed. Continue to Phase 10?
+      options:
+        - Continue to Phase 10
+        - Pause workflow
+      original_recommendation: Continue to Phase 10
+      selected_option: Continue to Phase 10
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T21:49:58Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: verification-options
+      gate_type: verify-matrix
+      phase: phase-10
+      question: Which standard verifications to run?
+      options:
+        - Code review (Recommended)
+        - Pragmatic review (Recommended)
+        - Reality check (Recommended)
+        - Production readiness (Recommended)
+      original_recommendation: all recommended
+      selected_option: all recommended
+      actor: user
+      confidence: high
+      rationale: "User: Q1 - all"
+      timestamp: 2026-07-21T21:54:32Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: optional-phase-selection-user-docs
+      gate_type: optional-phase
+      phase: phase-10
+      question: Generate user documentation?
+      options:
+        - "Yes (Recommended)"
+        - "No, skip"
+      original_recommendation: "Yes (Recommended)"
+      selected_option: "Yes (Recommended)"
+      actor: user
+      confidence: high
+      rationale: "User: Q3 - yes"
+      timestamp: 2026-07-21T21:54:32Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: verification-fix-selection
+      gate_type: fix-loop
+      phase: phase-11
+      question: Which issues should I fix?
+      options:
+        - Fix all fixable issues
+        - Let me choose specific issues
+        - Skip fixes, proceed as-is
+      original_recommendation: Fix all fixable issues
+      selected_option: Fix all fixable issues
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T21:59:36Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: verification-rerun
+      gate_type: fix-loop
+      phase: phase-11
+      question: Re-run verification to check fixes?
+      options:
+        - Yes, re-run verification
+        - No, proceed to the next phase
+      original_recommendation: Yes, re-run verification
+      selected_option: Yes, re-run verification
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T22:01:06Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-11-exit
+      gate_type: phase-exit
+      phase: phase-11
+      question: Continue to Phase 12?
+      options:
+        - Continue to Phase 12
+        - Pause workflow
+      original_recommendation: Continue to Phase 12
+      selected_option: Continue to Phase 12
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T22:09:11Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: optional-phase-selection-e2e
+      gate_type: optional-phase
+      phase: phase-12
+      question: Enable E2E browser verification?
+      options:
+        - "Yes (Recommended)"
+        - "No, skip"
+      original_recommendation: "No, skip"
+      selected_option: "No, skip"
+      actor: system
+      confidence: high
+      rationale: "e2e_enabled=false — Phase 12 skipped"
+      timestamp: 2026-07-21T22:09:11Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: phase-13-exit
+      gate_type: phase-exit
+      phase: phase-13
+      question: Documentation complete. Continue to Phase 14?
+      options:
+        - Continue to Phase 14
+        - Pause workflow
+      original_recommendation: Continue to Phase 14
+      selected_option: Continue to Phase 14
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T22:15:11Z
+      provenance_kind: complete
+      user_override: false
+    - gate_id: final-handoff-approval
+      gate_type: final-handoff-approval
+      phase: phase-14
+      question: "Complete workflow?"
+      options:
+        - Complete workflow
+        - Keep workflow open
+      original_recommendation: Complete workflow
+      selected_option: Complete workflow
+      actor: user
+      confidence: high
+      rationale: User selected option 1.
+      timestamp: 2026-07-21T22:16:25Z
+      provenance_kind: complete
+      user_override: false
+  implementation_approval:
+    status: approved
+    approved_by: user
+    approved_at: 2026-07-21T21:38:07Z
+    approved_scope:
+      - G1-bridge
+      - G2-hybrid-discover
+      - G3-agents-fallback
+      - G4-reload-docs
+      - G5-tdd-green
+  tdd_red_passed: true
+  tdd_green_passed: true
+  task_context:
+    risk_level: high
+    clarifications_resolved: true
+    scope_expanded: true  # E6 bridge in-scope
+    architecture_decision: null
+    task_characteristics:
+      has_reproducible_defect: true
+      modifies_existing_code: true
+      creates_new_entities: true
+      involves_data_operations: false
+      ui_heavy: false
+    research_reference:
+      path: null
+      research_question: null
+      research_type: null
+      confidence_level: null
+    design_reference:
+      source: null
+      product_design_path: null
+      mockup_count: 0
+      has_brief: false
+      index_path: null
+    project_doc_paths:
+      - .maister/docs/project/vision.md
+      - .maister/docs/project/roadmap.md
+      - .maister/docs/project/tech-stack.md
+      - .maister/docs/project/architecture.md
+    phase_summaries:
+      research: {summary: null, key_findings: [], recommended_approach: null}
+      design: {summary: null, screen_count: 0, component_count: 0, index_path: null}
+      codebase_analysis:
+        key_files:
+          - plugins/maister/lib/distribution/agent-projector.mjs
+          - plugins/maister/lib/distribution/host-probes/cursor.mjs
+          - plugins/maister/overlays/cursor/overlay.yml
+          - plugins/maister/lib/distribution/targets.mjs
+        primary_language: JavaScript ESM
+        summary: "Install projects 29 agents correctly; Task discovery gap is host/runtime (E5/E6 unavailable). User confirmed Task visibility success via Cursor plugin path; full vertical fix in worktree."
+        decisions: []
+        risks:
+          - "Success criterion ambiguous: Task enum vs cursor.native bridge"
+          - "Session reload may confound reproduction"
+        artifacts:
+          - path: analysis/codebase-analysis.md
+            label: Codebase analysis
+            html: null
+      clarifications:
+        - "Success = Task discovers/invokes maister-* agents"
+        - "Primary delivery = Cursor plugin (Maister overlay)"
+        - "Scope = everything needed end-to-end on worktree"
+      gap_analysis:
+        integration_points:
+          - host-probes/cursor.mjs
+          - transaction-manager verify
+          - agent-projector / plugin.json
+          - cursor-skill-projector
+        summary: "Disk install OK; Task discovery missing. Need plugin-path fixes + honest E5/verify. TDD applicable."
+        decisions: []
+        risks:
+          - "Cursor product/session loader may block plugin agents"
+        artifacts:
+          - path: analysis/gap-analysis.md
+            label: Gap analysis
+            html: null
+      scope_clarifications:
+        scope_expanded: true
+        summary: "Hybrid E5/verify; optional fallback flag; E6 bridge IN SCOPE; Task-only skills; frontmatter only with evidence."
+        artifacts:
+          - path: analysis/scope-clarifications.md
+            label: Scope clarifications
+            html: null
+      ui_mockups:
+        components_designed: []
+        summary: "Skipped — ui_heavy=false"
+        decisions: []
+        risks: []
+        artifacts: []
+      specification:
+        summary: "Spec covers packaged Cursor E6 bridge, hybrid probeCursor discover, --agents-fallback, reload guidance; acceptance = 4 TDD tests green."
+        decisions: []
+        risks: []
+        artifacts:
+          - path: implementation/spec.md
+            label: Specification
+            html: implementation/spec.html
+          - path: analysis/requirements.md
+            label: Requirements
+            html: null
+      architecture_decision: {decision: null, summary: null}
+      advisor: {summary: null, decisions: [], risks: [], artifacts: []}
+
+task:
+  title: Fix Cursor agents runtime discovery
+  description: >
+    Napraw problem z agentami: smoke-test po instalacji pluginu Maister dla Cursor
+    wykazał, że 29 agentów jest na dysku (~/.cursor/plugins/local/maister/agents)
+    i w plugin.json (agents: ./agents/), ale w runtime Task/subagent_type sesji
+    Cursor widoczne są tylko built-iny (generalPurpose, cursor-guide, bugbot,
+    security-review, best-of-n-runner). Skills (35) działają. Celem jest sprawienie,
+    by agenci Maister (np. maister-code-reviewer, maister-explore) byli odkrywalni
+    i wywoływalni przez Task w runtime Cursor — albo udokumentowanie/zaimplementowanie
+    poprawnego mostu delegacji, jeśli natywny Task nie jest docelowym mechanizmem.
+  status: completed
+  workflow: development
+
+project_context:
+  project_doc_paths:
+    - .maister/docs/project/vision.md
+    - .maister/docs/project/roadmap.md
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/project/architecture.md

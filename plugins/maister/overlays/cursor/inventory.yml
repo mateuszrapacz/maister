@@ -7,6 +7,7 @@ required:
   - "agents/*.md"
   - "rules/*.mdc"
   - hooks/hooks.json
+  - runtime/cursor-bridge-v1.mjs
 optional:
   - "hooks/*.sh"
 forbidden:

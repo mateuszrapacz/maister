@@ -17,6 +17,44 @@ import { executeLifecycle } from "../lib/distribution/transaction-manager.mjs";
 
 const OVERLAY_ROOT = path.resolve(import.meta.dirname, "../overlays");
 
+/**
+ * Operator-facing success text. For Cursor install/update/verify, reload is a
+ * prerequisite before claiming Task / subagent_type discovery of maister-*.
+ * Disk or hybrid discover alone is not Task enum evidence.
+ */
+export function successMessage(options, extras = {}) {
+  if (options.command === "status") return "installation status loaded";
+  const completed = `${options.command} completed`;
+  const cursorReloadCommands = ["install", "update", "verify"];
+  if (options.target !== "cursor" || !cursorReloadCommands.includes(options.command)) {
+    return completed;
+  }
+  const reloadGuidance =
+    "Reload or restart Cursor before claiming Task or subagent_type discovery of maister-*. " +
+    "Agent files on disk alone do not mean the Task enum has enumerated them.";
+  const parts = [completed];
+  if (options.command !== "verify" && options.agentsFallback) {
+    const dualWrite = extras.dualWrite;
+    if (dualWrite?.attempted) {
+      if (dualWrite.ok) {
+        parts.push(
+          `--agents-fallback dual-write copied ${dualWrite.copied} leaf(ves) to ${dualWrite.destinations.join(", ")} (secondary to the Cursor plugin path; priors backed up under .maister-backup/)`,
+        );
+      } else {
+        const detail = dualWrite.errors?.map((entry) => `${entry.destination}: ${entry.message}`).join("; ")
+          || "unknown dual-write failure";
+        parts.push(
+          `--agents-fallback dual-write did not fully succeed (${detail}); plugin path remains primary`,
+        );
+      }
+    } else {
+      parts.push("--agents-fallback dual-write is secondary to the Cursor plugin path");
+    }
+  }
+  parts.push(reloadGuidance);
+  return parts.join(". ");
+}
+
 function checkoutOverlayRoot(root, target) {
   const candidates = [
     path.join(root, "plugins", "maister", "overlays"),
@@ -93,7 +131,7 @@ export async function runCli(argv, { env = process.env, git, github } = {}) {
       command: options.command,
       target: options.target,
       code: 0,
-      message: options.command === "status" ? "installation status loaded" : `${options.command} completed`,
+      message: successMessage(options, { dualWrite: result.dualWrite }),
       receiptPath: result.receiptPath,
       journalPath: result.journalPath,
       receipt: result.receipt,

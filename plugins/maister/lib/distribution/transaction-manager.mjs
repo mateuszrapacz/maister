@@ -46,6 +46,7 @@ import {
   restoreFullBackup,
   snapshotState,
 } from "./recovery.mjs";
+import { maybeDualWriteCursorAgents } from "./cursor-agents-fallback.mjs";
 
 const INSTALLER_VERSION = "1.0.0";
 const CONTROL_PLANE_SCHEMA_VERSION = 1;
@@ -1884,12 +1885,32 @@ export async function executeLifecycle(command, options) {
   try {
     durableBoundary(options, "lock-created", { target: paths.target, lock_path: paths.lockPath });
     if (command === "install" || command === "update") {
-      return await installOrUpdate(command, {
+      const result = await installOrUpdate(command, {
         ...options,
         resolvedSource,
         resolvedSourceRoot,
         portableCoreHash,
       }, paths);
+      // Fallback dual-write is secondary to the committed plugin path; never fail install/update.
+      let dualWrite = { attempted: false, ok: true, copied: 0, destinations: [], backups: [], errors: [] };
+      try {
+        dualWrite = maybeDualWriteCursorAgents({
+          target: paths.target,
+          agentsFallback: options.agentsFallback,
+          activeRoot: paths.activeRoot,
+          home: paths.home,
+        });
+      } catch (error) {
+        dualWrite = {
+          attempted: options.agentsFallback === true && paths.target === "cursor",
+          ok: false,
+          copied: 0,
+          destinations: [],
+          backups: [],
+          errors: [{ destination: paths.activeRoot, message: error.message }],
+        };
+      }
+      return { ...result, dualWrite };
     }
     if (command === "uninstall") return await uninstall(options, paths);
     if (command === "rollback") return await rollback(options, paths);

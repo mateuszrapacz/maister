@@ -32,6 +32,11 @@ layout:
     kind: tree
     mode: "0755"
     ownership: whole_file
+  - source: assets/runtime/cursor-bridge-v1.mjs
+    destination: runtime/cursor-bridge-v1.mjs
+    kind: file
+    mode: "0644"
+    ownership: whole_file
 settings:
   - path: .cursor/settings.json
     format: json
@@ -71,6 +76,7 @@ inventory:
     - "agents/*.md"
     - "rules/*.mdc"
     - hooks/hooks.json
+    - runtime/cursor-bridge-v1.mjs
   optional:
     - "hooks/*.sh"
   forbidden:
