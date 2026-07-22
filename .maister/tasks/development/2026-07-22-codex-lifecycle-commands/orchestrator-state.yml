@@ -1,0 +1,750 @@
+orchestrator:
+  schema_version: 2
+  revision: 20
+  initial_phase: phase-1
+  current_phase: phase-11
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-5
+    - phase-6
+    - phase-7
+    - phase-8
+    - phase-10
+  failed_phases: []
+  created: 2026-07-22T12:05:00Z
+  updated: 2026-07-22T17:24:00Z
+  task_path: .maister/tasks/development/2026-07-22-codex-lifecycle-commands
+  gate_history:
+    - schema_version: 2
+      idempotency_key: sha256:phase-1-exit-codex-lifecycle-commands
+      phase_id: phase-1
+      gate_type: phase-exit
+      question: Continue to Phase 2?
+      options:
+        - Continue to Phase 2
+        - Pause workflow
+      original_recommendation: Continue to Phase 2
+      configured_policy: manual
+      policy: manual
+      safety_classification: phase-exit
+      status: decided
+      selected_option: Continue to Phase 2
+      final_actor: user
+      rationale: User said go.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T12:05:00Z
+      updated_at: 2026-07-22T13:03:55Z
+      decided_at: 2026-07-22T13:03:55Z
+    - schema_version: 2
+      idempotency_key: sha256:phase-2-scope-codex-utility-boundary
+      phase_id: phase-2
+      gate_type: scope-decision
+      question: Which Codex integration boundary should this task use?
+      options:
+        - Codex overlay-only utility skills (Recommended)
+        - Promote utility skills into common source
+        - Restore the removed host-specific builders
+      original_recommendation: Codex overlay-only utility skills (Recommended)
+      configured_policy: manual
+      policy: manual
+      safety_classification: scope-decision
+      status: decided
+      selected_option: Codex overlay-only utility skills (Recommended)
+      final_actor: user
+      rationale: User selected option 1.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T13:03:55Z
+      updated_at: 2026-07-22T13:43:11Z
+      decided_at: 2026-07-22T13:43:11Z
+    - schema_version: 2
+      idempotency_key: sha256:phase-2-exit-codex-lifecycle-commands
+      phase_id: phase-2
+      gate_type: phase-exit
+      question: "Continue to Phase 5: Technical Approach, Requirements & Specification?"
+      options:
+        - Continue to Phase 5
+        - Pause workflow
+      original_recommendation: Continue to Phase 5
+      configured_policy: manual
+      policy: manual
+      safety_classification: phase-exit
+      status: decided
+      selected_option: Continue to Phase 5
+      final_actor: user
+      rationale: User selected option 1.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T13:43:11Z
+      updated_at: 2026-07-22T13:47:32Z
+      decided_at: 2026-07-22T13:47:32Z
+    - schema_version: 2
+      idempotency_key: sha256:phase-5-requirements-codex-lifecycle-commands
+      phase_id: phase-5
+      gate_type: requirements-clarification
+      question: "I assume the Phase 5 requirements are the direct Codex skill journey, historical behavior reuse, and no visual UI work. Is that correct?"
+      options:
+        - Confirm assumptions
+        - Correct assumptions
+        - Provide more context
+      original_recommendation: Confirm assumptions
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: Confirm assumptions
+      final_actor: user
+      rationale: User confirmed the Phase 5 requirements assumptions.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T13:47:32Z
+      updated_at: 2026-07-22T13:51:19Z
+      decided_at: 2026-07-22T13:51:19Z
+    - schema_version: 2
+      idempotency_key: sha256:phase-6-spec-audit-selection-codex-lifecycle-commands
+      phase_id: phase-6
+      gate_type: optional-phase-selection-spec-audit
+      question: "Run specification audit? (Recommended)"
+      options:
+        - "Yes, run audit (Recommended)"
+        - "No, skip audit"
+      original_recommendation: "Yes, run audit (Recommended)"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: "Yes, run audit (Recommended)"
+      final_actor: user
+      rationale: User selected option 1.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T13:57:39Z
+      updated_at: 2026-07-22T15:57:29Z
+      decided_at: 2026-07-22T15:57:29Z
+    - schema_version: 2
+      idempotency_key: sha256:phase-6-exit-codex-lifecycle-commands
+      phase_id: phase-6
+      gate_type: phase-exit
+      question: Continue to implementation planning?
+      options:
+        - Continue to implementation planning
+        - Pause workflow
+      original_recommendation: Continue to implementation planning
+      configured_policy: manual
+      policy: manual
+      safety_classification: phase-exit
+      status: decided
+      selected_option: Continue to implementation planning
+      final_actor: user
+      rationale: User selected option 1.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T16:00:08Z
+      updated_at: 2026-07-22T16:04:55Z
+      decided_at: 2026-07-22T16:04:55Z
+    - schema_version: 2
+      idempotency_key: sha256:phase-7-exit-codex-lifecycle-commands
+      phase_id: phase-7
+      gate_type: phase-exit
+      question: Continue to implementation approval?
+      options:
+        - Continue to implementation approval
+        - Pause workflow
+      original_recommendation: Continue to implementation approval
+      configured_policy: manual
+      policy: manual
+      safety_classification: phase-exit
+      status: decided
+      selected_option: Continue to implementation approval
+      final_actor: user
+      rationale: User selected option 1.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T16:08:16Z
+      updated_at: 2026-07-22T16:14:34Z
+      decided_at: 2026-07-22T16:14:34Z
+    - schema_version: 2
+      idempotency_key: sha256:implementation-approval-codex-lifecycle-commands
+      phase_id: phase-8
+      gate_type: implementation-approval
+      question: Approve this complete implementation scope?
+      options:
+        - Approve complete implementation scope
+        - Reject implementation scope
+        - Request scope changes
+      original_recommendation: Approve complete implementation scope
+      configured_policy: manual
+      policy: manual
+      safety_classification: protected
+      status: decided
+      selected_option: Approve complete implementation scope
+      final_actor: user
+      rationale: User explicitly approved the complete implementation scope.
+      confidence: high
+      escalate_to_user: true
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T16:14:34Z
+      updated_at: 2026-07-22T16:17:06Z
+      decided_at: 2026-07-22T16:17:06Z
+    - schema_version: 2
+      idempotency_key: sha256:phase-8-exit-codex-lifecycle-commands
+      phase_id: phase-8
+      gate_type: phase-exit
+      question: Continue to verification?
+      options:
+        - Continue to verification
+        - Pause workflow
+      original_recommendation: Continue to verification
+      configured_policy: manual
+      policy: manual
+      safety_classification: phase-exit
+      status: decided
+      selected_option: Continue to verification
+      final_actor: user
+      rationale: User selected option 1.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T16:26:57Z
+      updated_at: 2026-07-22T16:28:19Z
+      decided_at: 2026-07-22T16:28:19Z
+    - schema_version: 2
+      idempotency_key: sha256:phase-10-verification-options-codex-lifecycle-commands
+      phase_id: phase-10
+      gate_type: verification-options
+      question: Which standard verifications to run?
+      options:
+        - "Run all recommended standard verifications"
+        - "Code review (Recommended)"
+        - "Pragmatic review (Recommended)"
+        - "Reality check (Recommended)"
+        - "Production readiness (Recommended)"
+      original_recommendation: "Run all recommended standard verifications"
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: Run all recommended standard verifications
+      final_actor: user
+      rationale: User selected option 1 to run all recommended standard verifications.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T16:28:19Z
+      updated_at: 2026-07-22T16:29:57Z
+      decided_at: 2026-07-22T16:29:57Z
+    - schema_version: 2
+      idempotency_key: sha256:b116eb495a70a3aff77d4b5321afa3986b82bb82422ea1fb37807b8ddcfa88b5
+      phase_id: phase-11
+      gate_type: verification-fix-selection
+      question: Which issues should I fix?
+      options:
+        - Fix all fixable issues
+        - Let me choose specific issues
+        - Skip fixes, proceed as-is
+      original_recommendation: Fix all fixable issues
+      configured_policy: manual
+      policy: manual
+      safety_classification: test-gate
+      status: decided
+      selected_option: Fix all fixable issues
+      final_actor: user
+      rationale: User selected option 1 and approved narrowing native precedence plus adding the direct collision-matrix coverage. Unrelated repository-wide projection and deployment failures remain outside scope.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T16:38:00Z
+      updated_at: 2026-07-22T16:52:00Z
+      decided_at: 2026-07-22T16:52:00Z
+    - schema_version: 2
+      idempotency_key: sha256:7fa93f0f3f0a21d0b29f409d79b74f5d2bbe6dba3db1ef92d2f8a6d889ac22cb
+      phase_id: phase-11
+      gate_type: verification-rerun
+      question: Re-run verification to check fixes?
+      options:
+        - Yes, re-run verification
+        - No, proceed to the next phase
+      original_recommendation: Yes, re-run verification
+      configured_policy: manual
+      policy: manual
+      safety_classification: test-gate
+      status: decided
+      selected_option: Yes, re-run verification
+      final_actor: user
+      rationale: User selected option 1 to rerun the complete verification matrix after the collision-safety fixes.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T16:57:00Z
+      updated_at: 2026-07-22T17:02:00Z
+      decided_at: 2026-07-22T17:02:00Z
+    - schema_version: 2
+      idempotency_key: sha256:df643697fd61019ce7eeb8e2ecc715c2f413c7c5fdcba3e7d8a8c0f62b39a33a
+      phase_id: phase-11
+      gate_type: verification-known-issues
+      question: Proceed with known issues?
+      options:
+        - Proceed with known issues
+        - Stop workflow
+      original_recommendation: Proceed with known issues
+      configured_policy: manual
+      policy: manual
+      safety_classification: configurable
+      status: decided
+      selected_option: Proceed with known issues
+      final_actor: user
+      rationale: User requested committing and pushing the completed Codex lifecycle implementation while preserving the known external repository and deployment blockers.
+      confidence: high
+      escalate_to_user: false
+      user_override: false
+      error: null
+      advisor:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      arbiter:
+        logical_role_id: null
+        dispatch_id: null
+        terminal_dispatch: null
+        response: null
+        attempts: []
+        exhausted: false
+      continuation: null
+      provenance_kind: complete
+      legacy_record: null
+      created_at: 2026-07-22T17:12:00Z
+      updated_at: 2026-07-22T17:24:00Z
+      decided_at: 2026-07-22T17:24:00Z
+  implementation_approval:
+    status: approved
+    approved_by: user
+    approved_at: 2026-07-22T16:17:06Z
+    approved_scope:
+      - Add five Codex-only lifecycle skill assets: bye, dev, next, resume, and status.
+      - Wire the merged assets/skills tree into the Codex overlay.
+      - Add focused Codex materialization coverage.
+      - Make native precedence explicit for the Codex skills tree and preserve fail-closed behavior for unrelated collisions.
+      - Add direct native/common collision-matrix coverage.
+      - Reconcile exactly ten lifecycle paths in the Codex parity baseline.
+      - Document the Codex lifecycle commands and run the planned verification suite.
+  work: {}
+  dispatch_outbox: []
+  options:
+    html_output: true
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: false
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+    advisor:
+      enabled: true
+      gate_policies:
+        phase-exit: fully_automatic
+        optional-phase: fully_automatic
+        clarify: fully_automatic
+        convergence: fully_automatic
+        verify-matrix: fully_automatic
+      advisor_agent: advisor
+      arbiter_agent: arbiter
+      arbiter_enabled_on_disagreement: true
+      retry:
+        advisor_attempts: 3
+        arbiter_attempts: 3
+        backoff: exponential
+task:
+  title: Add Codex Maister lifecycle skills
+  description: Add Codex support for maister:bye, maister:resume, maister:status, and the related dev/next session shortcuts in parity with Cursor.
+  workflow_type: development
+  status: in_progress
+  task_path: .maister/tasks/development/2026-07-22-codex-lifecycle-commands
+  project_doc_paths:
+    - .maister/docs/INDEX.md
+    - .maister/docs/project/architecture.md
+    - .maister/docs/project/tech-stack.md
+    - .maister/docs/standards/global/build-pipeline.md
+    - .maister/docs/standards/global/coding-style.md
+    - .maister/docs/standards/global/conventions.md
+    - .maister/docs/standards/global/error-handling.md
+    - .maister/docs/standards/global/validation.md
+    - .maister/docs/standards/testing/test-writing.md
+  task_context:
+    risk_level: medium
+    clarifications_resolved: true
+    scope_expanded: false
+    architecture_decision: Codex-only native utility skills in the Codex overlay, matching the historical Cursor/Codex implementation without changing the canonical portable skill inventory.
+    task_characteristics:
+      has_reproducible_defect: false
+      modifies_existing_code: true
+      creates_new_entities: true
+      involves_data_operations: false
+      ui_heavy: false
+  phase_summaries:
+    codebase_analysis:
+      summary: The historical implementation generated five Codex utility skills. The current distribution model materializes Codex from overlay contracts, but the Codex overlay has no utility-skill asset tree, while Cursor retains hash-locked equivalents.
+      decisions:
+        - Add bye, dev, next, resume, and status as Codex-native overlay skills with host-relative names.
+        - Keep the canonical portable skill inventory unchanged because these lifecycle entrypoints are host-specific adapters.
+      risks:
+        - Overlay behavior must remain free of Cursor/Claude vocabulary and must be covered by materialization tests.
+      artifacts:
+        - path: analysis/codebase-analysis.md
+          label: Codebase analysis
+          html: null
+    clarifications:
+      - User wording explicitly names bye, resume, and status and says etc.; historical parity defines etc. as dev and next.
+    gap_analysis:
+      summary: The requested lifecycle entrypoints are absent from the current Codex overlay even though equivalent Cursor projections and the historical Codex target exist. The safest current integration point is a Codex-only merged utility-skill tree.
+      decisions:
+        - Keep the common portable skill inventory unchanged.
+        - Add five host-relative Codex utility skills: bye, dev, next, resume, and status.
+        - Preserve deterministic overlay materialization and verify the produced package.
+        - Use the Codex overlay-only integration boundary selected by the user.
+      risks:
+        - A stale parity baseline may treat the new Codex paths as forbidden additions.
+        - The utility skills must not collide with common skills or leak Cursor/Claude vocabulary.
+        - bye is an instruction for preserving state, not a native process shutdown primitive.
+        - resume/status/next must resolve active task state consistently.
+      artifacts: []
+    requirements:
+      summary: The user confirmed direct Codex skill invocation, reuse of existing orchestrator state and historical lifecycle behavior, and no UI work. The specification must cover five Codex overlay skills and target-aware evidence.
+      decisions:
+        - Expose bye, dev, next, resume, and status through Codex host-relative skill names.
+        - Keep state handling in orchestrator-state.yml and preserve read-only behavior for next/status.
+      risks:
+        - Codex skill instructions must remain compatible with current workflow continuation semantics.
+      artifacts:
+        - path: analysis/requirements.md
+          label: Requirements
+          html: null
+    specification:
+      summary: The implementation-ready specification defines five Codex overlay assets, a merged skills tree, parity reconciliation, focused materialization coverage, command documentation, acceptance criteria, and verification commands.
+      decisions:
+        - Use host-relative skill frontmatter so Codex exposes the commands under the maister namespace.
+        - Adapt the historical behavior without restoring the removed Codex builders.
+      risks:
+        - Specification audit should verify that the parity and test contracts cover all five paths.
+      artifacts:
+        - path: implementation/spec.md
+          label: Implementation specification
+          html: implementation/spec.html
+    spec_audit:
+      summary: The specification is implementation-ready with no critical or major gaps. The ten historical Codex lifecycle paths must be removed precisely from the expected-deletion parity rule during implementation.
+      decisions:
+        - Proceed to implementation planning.
+      risks:
+        - Parity baseline reconciliation must preserve unrelated expected-deletion observations.
+      artifacts:
+        - path: verification/spec-audit.md
+          label: Specification audit
+          html: null
+    implementation_plan:
+      summary: The plan divides the work into five dependency-ordered groups: assets, overlay wiring, focused materialization test, exact parity reconciliation, and documentation/full verification.
+      decisions:
+        - Keep implementation writes confined to Codex overlay assets, the Codex overlay contract, focused test, parity baseline, and command documentation.
+      risks:
+        - Existing user-owned Pi modifications must remain untouched.
+      artifacts:
+        - path: implementation/implementation-plan.md
+          label: Implementation plan
+          html: implementation/implementation-plan.html
+    implementation:
+      summary: The five approved implementation groups are complete. Codex materializes the five lifecycle skills through native overlay precedence, focused deterministic coverage passes, parity evidence passes, and command documentation is updated.
+      decisions:
+        - Preserve unrelated Cursor projection and Pi evidence drift as pre-existing failures; do not modify those files in this task.
+        - Treat the Codex native overlay precedence rule as the minimal architecture change needed because common source already contains same-path host-specific lifecycle files.
+      risks:
+        - Core/release suites remain partially blocked by pre-existing Cursor/source projection drift and an unrelated Codex deployment rollback failure.
+      artifacts:
+        - path: implementation/work-log.md
+          label: Implementation work log
+          html: null
+    verification:
+      summary: Task-specific Codex verification passes after the explicit native-precedence fix and collision-matrix coverage. Repository-wide verification remains passed with issues because unrelated Cursor/source projection drift, stale Pi command digests, and a native deployment rollback failure remain.
+      decisions:
+        - Keep the approved Codex-only implementation unchanged.
+        - Reconcile native precedence explicitly in the overlay contract and test its collision matrix.
+        - Do not expand scope to repair unrelated Cursor projection, Pi agent-binding, or deployment recovery failures.
+      risks:
+        - The repository-wide core and release gates remain non-green until unrelated baseline and environment issues are resolved.
+      artifacts:
+        - path: verification/implementation-verification.md
+          label: Implementation verification
+          html: verification/implementation-verification.html
+        - path: verification/completeness-report.md
+          label: Completeness report
+          html: null
+        - path: verification/code-review-report.md
+          label: Code review report
+          html: null
+        - path: verification/pragmatic-review.md
+          label: Pragmatic review report
+          html: null
+        - path: verification/reality-check.md
+          label: Reality check report
+          html: null
+        - path: verification/production-readiness-report.md
+          label: Production readiness report
+          html: null
+        - path: verification/test-suite-results.md
+          label: Test suite results
+          html: null
+phases:
+  - id: phase-1
+    status: completed
+  - id: phase-2
+    status: completed
+  - id: phase-3
+    status: skipped
+  - id: phase-4
+    status: skipped
+  - id: phase-5
+    status: completed
+  - id: phase-6
+    status: completed
+  - id: phase-7
+    status: completed
+  - id: phase-8
+    status: completed
+  - id: phase-9
+    status: skipped
+  - id: phase-10
+    status: completed
+  - id: phase-11
+    status: in_progress
+  - id: phase-12
+    status: skipped
+  - id: phase-13
+    status: skipped
+  - id: phase-14
+    status: pending

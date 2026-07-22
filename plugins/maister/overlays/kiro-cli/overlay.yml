@@ -21,6 +21,7 @@ layout:
     ownership: whole_file
     child_prefix: "maister-"
     merge: true
+    native: true
   - source: assets/steering
     destination: steering
     kind: tree

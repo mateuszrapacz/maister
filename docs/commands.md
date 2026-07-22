@@ -51,6 +51,23 @@ Arguments are passed unchanged. Example:
 
 `/maister-development Add filtering --e2e`
 
+## Codex lifecycle shortcuts
+
+The Codex plugin exposes the following native skills under the `$maister:*`
+namespace:
+
+| Command | Behavior |
+| --- | --- |
+| `$maister:bye` | Preserve the active `orchestrator-state.yml` and summarize a resumable handoff. |
+| `$maister:dev` | Forward the supplied input to `$maister:development`. |
+| `$maister:next` | Suggest exactly one next workflow action without executing it. |
+| `$maister:resume` | Resume the matching workflow from persisted `orchestrator-state.yml` state. |
+| `$maister:status` | Report workflow state, blockers, pending gates, and the next incomplete action without changing state. |
+
+Pass an explicit task path to `resume`, `status`, `next`, or `bye` when working
+with a task other than the latest active state. `bye` never marks an in-progress
+workflow as completed; `next` and `status` are read-only.
+
 ## Development
 
 ### `/maister:development [description | task-path]`

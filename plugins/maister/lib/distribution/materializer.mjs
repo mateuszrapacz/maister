@@ -274,7 +274,7 @@ export function buildAssemblyPlan({ sourceRoot, overlay, overlayBase, stagingRoo
       sourceLocation.boundary,
       true,
       layout.merge === true,
-      source.startsWith("assets/"),
+      layout.native === true,
       layout.child_prefix ?? "",
     );
   }
@@ -282,6 +282,11 @@ export function buildAssemblyPlan({ sourceRoot, overlay, overlayBase, stagingRoo
   for (const entry of entries) {
     const key = normalizedPathKey(entry.destination);
     const previous = destinations.get(key);
+    if (previous && previous.type !== "directory" && entry.type !== "directory" && entry.native && !previous.native) {
+      destinations.set(key, entry);
+      continue;
+    }
+    if (previous && previous.type !== "directory" && entry.type !== "directory" && previous.native && !entry.native) continue;
     if (previous && !(previous.type === "directory" && entry.type === "directory" && (previous.merge || entry.merge))) {
       throwDistributionError("E_MATERIALIZE_COLLISION", `destination collision after normalization: ${entry.destination}`, {
         destination: entry.destination,
@@ -311,7 +316,7 @@ export function buildAssemblyPlan({ sourceRoot, overlay, overlayBase, stagingRoo
   if (stagingRoot) {
     for (const entry of entries) resolveInside(stagingRoot, entry.destination, "assembly destination");
   }
-  return Object.freeze(entries.map((entry) => Object.freeze(entry)));
+  return Object.freeze(entries.filter((entry) => destinations.get(normalizedPathKey(entry.destination)) === entry).map((entry) => Object.freeze(entry)));
 }
 
 function piPackageEntryMode(destination, type) {

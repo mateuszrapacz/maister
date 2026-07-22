@@ -21,10 +21,6 @@
       "rationale": "These exact paths belong only to the read-only generated target tree: aliases, host builder output, migration-only support files, or old generated layout. Their planned removal is an expected deletion, not a portable behavior claim.",
       "paths": [
         "README.md",
-        "skills/bye",
-        "skills/bye/SKILL.md",
-        "skills/dev",
-        "skills/dev/SKILL.md",
         "skills/docs-manager/references/claude-md-template.md",
         "skills/init/bin/advisor.toml",
         "skills/init/bin/arbiter.toml",
@@ -32,8 +28,6 @@
         "skills/modeling-aggregate-designer/SKILL.md",
         "skills/modeling-context-distiller",
         "skills/modeling-context-distiller/SKILL.md",
-        "skills/next",
-        "skills/next/SKILL.md",
         "skills/orchestrator-framework/bin/fully-automatic-gate.mjs",
         "skills/quick-metaprogram-classifier",
         "skills/quick-metaprogram-classifier/SKILL.md",
@@ -43,8 +37,6 @@
         "skills/quick-requirements-critic/SKILL.md",
         "skills/quick-transcript-critic",
         "skills/quick-transcript-critic/SKILL.md",
-        "skills/resume",
-        "skills/resume/SKILL.md",
         "skills/reviews-code",
         "skills/reviews-code/SKILL.md",
         "skills/reviews-linguistic-boundaries",
@@ -59,8 +51,6 @@
         "skills/reviews-spec-audit/SKILL.md",
         "skills/reviews-test-strategy",
         "skills/reviews-test-strategy/SKILL.md",
-        "skills/status",
-        "skills/status/SKILL.md",
         "skills/work",
         "skills/work/SKILL.md",
         "skills/init/bin/reconcile-advisor-config.sh"
@@ -72,48 +62,6 @@
             "type": "file",
             "mode": "0644",
             "sha256": "5bc06abb97afa1631d61f1ca4965b83085205588f3c4088be5311d25ba0a5d80"
-          },
-          "materialized": {
-            "present": false
-          }
-        },
-        "skills/bye": {
-          "legacy": {
-            "present": true,
-            "type": "directory",
-            "mode": "0755"
-          },
-          "materialized": {
-            "present": false
-          }
-        },
-        "skills/bye/SKILL.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "132f0e19cea0282fec71fbf139cbe9da1109ed65430f47be18cee17c1ee51f53"
-          },
-          "materialized": {
-            "present": false
-          }
-        },
-        "skills/dev": {
-          "legacy": {
-            "present": true,
-            "type": "directory",
-            "mode": "0755"
-          },
-          "materialized": {
-            "present": false
-          }
-        },
-        "skills/dev/SKILL.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "5c748cb1775cfe334974bdec8f5e0e3b886c72e017a1df86006d0011ea7b8455"
           },
           "materialized": {
             "present": false
@@ -189,27 +137,6 @@
             "type": "file",
             "mode": "0644",
             "sha256": "7e83a02d013b70a01b9c33713485c717c86dbe8b2efc122cd99642dc958b9c8b"
-          },
-          "materialized": {
-            "present": false
-          }
-        },
-        "skills/next": {
-          "legacy": {
-            "present": true,
-            "type": "directory",
-            "mode": "0755"
-          },
-          "materialized": {
-            "present": false
-          }
-        },
-        "skills/next/SKILL.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "b5fc0e5e5a17d13a501e1bca95a4be83f564ef445c3c0940ace2a74c0c83be49"
           },
           "materialized": {
             "present": false
@@ -305,27 +232,6 @@
             "type": "file",
             "mode": "0644",
             "sha256": "48886c3140290c285adbd3c7b2772e37c815b932f1025d2996d18c8b22ad4915"
-          },
-          "materialized": {
-            "present": false
-          }
-        },
-        "skills/resume": {
-          "legacy": {
-            "present": true,
-            "type": "directory",
-            "mode": "0755"
-          },
-          "materialized": {
-            "present": false
-          }
-        },
-        "skills/resume/SKILL.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "20e138f1fa88de21d84a6cf4c53161dda12076ab2ae3af9c4334edee47232b95"
           },
           "materialized": {
             "present": false
@@ -473,27 +379,6 @@
             "type": "file",
             "mode": "0644",
             "sha256": "9d9e21880488d1ecced92f89b83f5418d75b9eaf85fb65c24756c8988196a327"
-          },
-          "materialized": {
-            "present": false
-          }
-        },
-        "skills/status": {
-          "legacy": {
-            "present": true,
-            "type": "directory",
-            "mode": "0755"
-          },
-          "materialized": {
-            "present": false
-          }
-        },
-        "skills/status/SKILL.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "88aee991ffe54b48a2f0aef275bc807c62f71da21abb4a44e0d98615a5e3868c"
           },
           "materialized": {
             "present": false

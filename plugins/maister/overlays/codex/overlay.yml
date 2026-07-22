@@ -18,6 +18,13 @@ layout:
     mode: "0755"
     ownership: whole_file
     merge: true
+  - source: assets/skills
+    destination: skills
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+    merge: true
+    native: true
   - source: common/agents
     destination: skills/orchestrator-framework/agents
     kind: tree

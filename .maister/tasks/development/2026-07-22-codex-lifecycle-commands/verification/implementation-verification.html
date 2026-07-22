@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Implementation Verification - Codex lifecycle commands</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #1f2937; }
+    .verdict { padding: 1rem; border-left: 4px solid #b7791f; background: #fffbeb; }
+    code { background: #f3f4f6; padding: .1rem .25rem; }
+  </style>
+</head>
+<body>
+  <h1>Implementation Verification</h1>
+  <div class="verdict"><strong>Verdict: Passed with Issues</strong> — task-specific Codex checks pass; unrelated repository-wide blockers remain.</div>
+  <h2>Coverage</h2>
+  <p>All 24 implementation-plan steps across five groups are complete. The five Codex lifecycle skills, overlay wiring, focused materialization test, parity evidence, and command documentation are present.</p>
+  <h2>Passing evidence</h2>
+  <ul>
+    <li>Focused Codex test: 1 passed.</li>
+    <li>Codex overlay validation: passed.</li>
+    <li>Evidence suite: 46 passed, 0 failed.</li>
+    <li>Topology suite: passed with no violations.</li>
+    <li>Diff check and test syntax check: passed.</li>
+  </ul>
+  <h2>Known issues</h2>
+  <ul>
+    <li>Cursor projection has pre-existing canonical-source drift for <code>development</code>.</li>
+    <li>Core verification has a stale unrelated agent-projection binding digest.</li>
+    <li>Release verification also reports an unrelated Codex native deployment rollback/recovery failure.</li>
+  </ul>
+  <p>See the companion Markdown reports for completeness, code review, pragmatic review, reality check, production readiness, and exact test output.</p>
+</body>
+</html>

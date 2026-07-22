@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex Maister lifecycle skills — implementation plan</title>
+  <style>
+    :root { color-scheme: light; --bg:#f5f7fb; --card:#fff; --ink:#172033; --muted:#5e6b82; --line:#dce3ef; --accent:#315dd8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, sans-serif; }
+    main { max-width: 980px; margin: 0 auto; }
+    header, section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px 28px; margin-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2 { margin: 0 0 12px; font-size: 21px; }
+    h3 { margin-bottom: 6px; font-size: 17px; }
+    p, li { color: var(--muted); }
+    code { color: #2448aa; background: #eef2ff; border-radius: 4px; padding: 1px 4px; }
+    .badge { display: inline-block; color: var(--accent); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; font-size: 12px; }
+    .group { border-top: 1px solid var(--line); padding-top: 14px; margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <span class="badge">Implementation plan</span>
+      <h1>Codex Maister lifecycle skills</h1>
+      <p>Five dependency-ordered groups implement the Codex-only overlay change while preserving the common inventory and unrelated worktree modifications.</p>
+    </header>
+    <section>
+      <h2>Delivery sequence</h2>
+      <div class="group"><h3>1. Utility assets</h3><p>Add <code>bye</code>, <code>dev</code>, <code>next</code>, <code>resume</code>, and <code>status</code> with host-relative frontmatter and safe state semantics.</p></div>
+      <div class="group"><h3>2. Overlay contract</h3><p>Merge <code>assets/skills</code> into the Codex <code>skills</code> tree with explicit native precedence and fail-closed unrelated collision handling.</p></div>
+      <div class="group"><h3>3. Focused test</h3><p>Materialize the production overlay twice and assert paths, behavior markers, vocabulary, deterministic output, and the native/common collision matrix.</p></div>
+      <div class="group"><h3>4. Parity baseline</h3><p>Remove only the ten lifecycle directory/file entries from the expected-deletion rule.</p></div>
+      <div class="group"><h3>5. Docs and verification</h3><p>Document the five Codex commands and run focused, core, evidence, topology, projection, and release checks.</p></div>
+    </section>
+    <section>
+      <h2>Safety constraints</h2>
+      <ul><li>Do not add utilities to common source.</li><li>Do not restore removed host builders.</li><li>Do not touch unrelated modified Pi files.</li><li>Review the parity JSON diff narrowly.</li></ul>
+    </section>
+  </main>
+</body>
+</html>

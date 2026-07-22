@@ -79,7 +79,7 @@ const OVERLAY_OPTIONAL_FIELDS = ["compatibility", "probes"];
 const TARGET_FIELDS = ["id", "host_version_constraint", "discovery_roots"];
 const TARGET_OPTIONAL_FIELDS = ["adapter_id", "projection", "platform", "path_policy"];
 const LAYOUT_FIELDS = ["source", "destination", "kind", "mode", "ownership"];
-const LAYOUT_OPTIONAL_FIELDS = ["merge", "child_prefix"];
+const LAYOUT_OPTIONAL_FIELDS = ["merge", "child_prefix", "native"];
 const SETTING_FIELDS = ["path", "format", "ownership", "managed_keys", "merge_policy"];
 const SETTING_OPTIONAL_FIELDS = ["array_path", "identity", "entries"];
 const BINDING_FIELDS = ["adapter", "capability", "fail_closed"];
@@ -323,6 +323,9 @@ function validateLayout(layout) {
     ensureFields(entry, LAYOUT_FIELDS, location, "E_OVERLAY_SCHEMA", { optional: LAYOUT_OPTIONAL_FIELDS });
     if (Object.hasOwn(entry, "merge") && typeof entry.merge !== "boolean") {
       throwOverlayError("E_OVERLAY_SCHEMA", `${location}.merge must be boolean`, { location });
+    }
+    if (Object.hasOwn(entry, "native") && typeof entry.native !== "boolean") {
+      throwOverlayError("E_OVERLAY_SCHEMA", `${location}.native must be boolean`, { location });
     }
     ensureRelativePath(entry.source, `${location}.source`);
     const destination = ensureRelativePath(entry.destination, `${location}.destination`);
