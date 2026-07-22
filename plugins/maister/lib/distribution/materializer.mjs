@@ -1173,6 +1173,35 @@ function writeGeneratedPackageFile(stagingRoot, relativePath, content, mode = "0
   });
 }
 
+const PI_SKILL_NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+
+function piSkillName(name) {
+  const normalized = name.replace(/^maister:/u, "maister-");
+  return normalized.startsWith("maister-") ? normalized : `maister-${normalized}`;
+}
+
+function normalizePiSkillNames(stagingRoot, origins) {
+  for (const origin of origins) {
+    const skillPath = resolveInside(stagingRoot, `${origin.destination}/SKILL.md`, "Pi skill path");
+    const content = fs.readFileSync(skillPath, "utf8");
+    const frontmatter = /^(---\r?\n)([\s\S]*?)(\r?\n---(?:\r?\n|$))/u.exec(content);
+    if (!frontmatter) continue;
+    const name = /^name:\s*([^\r\n#]+?)\s*$/mu.exec(frontmatter[2]);
+    if (!name) continue;
+    const projectedName = piSkillName(name[1].trim());
+    if (!PI_SKILL_NAME_PATTERN.test(projectedName)) {
+      throwDistributionError("E_MATERIALIZE_SYNTAX", `invalid projected Pi skill name: ${projectedName}`, {
+        path: `${origin.destination}/SKILL.md`,
+        name: projectedName,
+      });
+    }
+    if (projectedName === name[1].trim()) continue;
+    const projectedFrontmatter = frontmatter[2].replace(name[0], `name: ${projectedName}`);
+    const projectedContent = `${frontmatter[1]}${projectedFrontmatter}${frontmatter[3]}${content.slice(frontmatter[0].length)}`;
+    fs.writeFileSync(skillPath, projectedContent, "utf8");
+  }
+}
+
 function piPackageManifestText() {
   return `${JSON.stringify(PI_PACKAGE_MANIFEST, null, 2)}\n`;
 }
@@ -1218,6 +1247,7 @@ function preparePiPackage({ sourceRoot, stagingRoot, overlay, projectionContract
   );
   writeGeneratedPackageFile(stagingRoot, "extensions/maister.ts", PI_EXTENSION_SOURCE, "0644");
   for (const output of commandOutputs) writeGeneratedPackageFile(stagingRoot, output.path, output.content, output.mode);
+  normalizePiSkillNames(stagingRoot, overlay.inventory.skill_origins ?? []);
   return Object.freeze({ commandProjection, commandOutputs });
 }
 

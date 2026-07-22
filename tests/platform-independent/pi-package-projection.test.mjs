@@ -189,6 +189,16 @@ test("materializes a deterministic Pi package with exact public inventory and ma
     assert.equal(agentFiles.length, 28);
     assert.ok(agentFiles.every((file) => /^maister-[^/]+\.md$/u.test(file)));
 
+    const skillNames = skillDirectories.map((directory) => {
+      const skill = fs.readFileSync(path.join(first.stagingRoot, "skills", directory, "SKILL.md"), "utf8");
+      return /^name:\s*(\S+)$/mu.exec(skill)?.[1];
+    });
+    assert.equal(new Set(skillNames).size, 29);
+    assert.ok(skillNames.every((name) => /^maister-[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(name)));
+    assert.equal(skillNames.includes("maister-development"), true);
+    assert.equal(skillNames.includes("maister-grill-me"), true);
+    assert.equal(skillNames.some((name) => name.startsWith("maister-maister-")), false);
+
     const treePaths = snapshotTree(first.stagingRoot).map(({ path: treePath }) => treePath);
     assert.equal(treePaths.some((treePath) => treePath.startsWith("commands/")), false);
     assert.equal(treePaths.some((treePath) => treePath.startsWith("pi-subagents/")), false);
