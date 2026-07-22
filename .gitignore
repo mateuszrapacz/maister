@@ -14,3 +14,6 @@
 # Pix Agent
 .pi/
 .pi-lens/
+
+# Maister local workflow artifacts
+.maister/
