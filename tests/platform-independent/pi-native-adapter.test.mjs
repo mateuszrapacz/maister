@@ -384,22 +384,13 @@ test("the generated ExtensionAPI bridge registers orchestration commands and cle
     ["maister-delegate", ...PI_ORCHESTRATION_COMMANDS.map(({ name }) => name)],
   );
   assert.deepEqual(userMessages, [
-    { message: "/work Add a feature", options: undefined },
-    { message: "/skill:maister:development Add a feature --e2e", options: undefined },
-    { message: "/skill:maister:init", options: undefined },
-    {
-      message: "End the Maister session gracefully. Preserve the active orchestrator-state.yml, summarize completed and remaining work, and do not mark an in-progress workflow completed. Keep this path",
-      options: undefined,
-    },
-    {
-      message: "Resume the Maister workflow from orchestrator-state.yml. Preserve the task path and continue from the first incomplete phase; if no active state exists, report that clearly. .maister/tasks/development/example",
-      options: undefined,
-    },
-    {
-      message: "Read the active Maister orchestrator-state.yml and report the task path, workflow type, status, current or next phase, completed and failed phases, blockers, and pending gates. Do not modify state or start a workflow.",
-      options: undefined,
-    },
-    { message: "/skill:maister:development Queue this", options: { deliverAs: "followUp" } },
+    { message: "/skill:maister-work Add a feature", options: undefined },
+    { message: "/skill:maister-development Add a feature --e2e", options: undefined },
+    { message: "/skill:maister-init", options: undefined },
+    { message: "/skill:maister-bye Keep this path", options: undefined },
+    { message: "/skill:maister-resume .maister/tasks/development/example", options: undefined },
+    { message: "/skill:maister-status", options: undefined },
+    { message: "/skill:maister-development Queue this", options: { deliverAs: "followUp" } },
   ]);
   assert.equal(result.status, "succeeded");
   assert.equal(requests.length, 1);

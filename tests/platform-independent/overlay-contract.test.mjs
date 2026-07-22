@@ -248,7 +248,7 @@ test("accepts the closed Pi target, ownership, compatibility, probes, bindings, 
   assert.equal(overlay.semantic_bindings.delegate_agent.adapter, "pi.native");
   assert.equal(overlay.semantic_bindings.track_progress.adapter, "execution-event-writer");
   assert.equal(overlay.inventory.command_origins.length, 14);
-  assert.equal(overlay.inventory.skill_origins.length, 29);
+  assert.equal(overlay.inventory.skill_origins.length, 35);
   assert.equal(overlay.inventory.role_origins.length, 28);
   assert.deepEqual(overlay.inventory.support_inventory, []);
   assert.ok(overlay.validation.forbidden_topology.includes("commands/**"));

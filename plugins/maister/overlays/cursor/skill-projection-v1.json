@@ -185,8 +185,16 @@
   ],
   "source_exclusions": [
     {
+      "source": "bye",
+      "rationale": "Pi-facing lifecycle skill; Cursor keeps the preserved_exception asset."
+    },
+    {
       "source": "codebase-analyzer",
       "rationale": "Internal engine materialized under Cursor lib/skills by the package overlay, outside this public-skill projection."
+    },
+    {
+      "source": "dev",
+      "rationale": "Pi-facing development alias; Cursor keeps the preserved_exception asset."
     },
     {
       "source": "docs-manager",
@@ -201,8 +209,24 @@
       "rationale": "Internal engine materialized under Cursor lib/skills by the package overlay, outside this public-skill projection."
     },
     {
+      "source": "next",
+      "rationale": "Pi-facing lifecycle skill; Cursor keeps the preserved_exception asset."
+    },
+    {
       "source": "orchestrator-framework",
       "rationale": "Framework content is materialized under Cursor lib/orchestrator-framework, outside this public-skill projection."
+    },
+    {
+      "source": "resume",
+      "rationale": "Pi-facing lifecycle skill; Cursor keeps the preserved_exception asset."
+    },
+    {
+      "source": "status",
+      "rationale": "Pi-facing lifecycle skill; Cursor keeps the preserved_exception asset."
+    },
+    {
+      "source": "work",
+      "rationale": "Pi-facing skill; Cursor projects work from commands/work.md via command_mappings."
     }
   ],
   "preserved_exceptions": [

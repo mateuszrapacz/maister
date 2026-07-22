@@ -124,8 +124,10 @@ const PI_COMMAND_IDS = [
 ];
 const PI_SKILL_IDS = [
   "aggregate-designer",
+  "bye",
   "codebase-analyzer",
   "context-distiller",
+  "dev",
   "development",
   "docs-manager",
   "grill-me",
@@ -136,6 +138,7 @@ const PI_SKILL_IDS = [
   "linguistic-boundary-verifier",
   "metaprogram-classifier",
   "migration",
+  "next",
   "orchestrator-framework",
   "performance",
   "problem-classifier",
@@ -145,13 +148,16 @@ const PI_SKILL_IDS = [
   "quick-plan",
   "requirements-critic",
   "research",
+  "resume",
   "standards-discover",
   "standards-update",
+  "status",
   "test-strategy-reviewer",
   "thermo-nuclear-code-quality-review",
   "thermo-nuclear-review",
   "thermos",
   "transcript-critic",
+  "work",
 ];
 const PI_REQUIRED_INVENTORY = [
   "package.json",

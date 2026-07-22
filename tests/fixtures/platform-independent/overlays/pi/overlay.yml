@@ -159,12 +159,20 @@ inventory:
       destination: skills/aggregate-designer
       kind: skill
       transform_id: pi-skill-v1
+    - source: skills/bye
+      destination: skills/bye
+      kind: skill
+      transform_id: pi-skill-v1
     - source: skills/codebase-analyzer
       destination: skills/codebase-analyzer
       kind: skill
       transform_id: pi-skill-v1
     - source: skills/context-distiller
       destination: skills/context-distiller
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/dev
+      destination: skills/dev
       kind: skill
       transform_id: pi-skill-v1
     - source: skills/development
@@ -207,6 +215,10 @@ inventory:
       destination: skills/migration
       kind: skill
       transform_id: pi-skill-v1
+    - source: skills/next
+      destination: skills/next
+      kind: skill
+      transform_id: pi-skill-v1
     - source: skills/orchestrator-framework
       destination: skills/orchestrator-framework
       kind: skill
@@ -243,12 +255,20 @@ inventory:
       destination: skills/research
       kind: skill
       transform_id: pi-skill-v1
+    - source: skills/resume
+      destination: skills/resume
+      kind: skill
+      transform_id: pi-skill-v1
     - source: skills/standards-discover
       destination: skills/standards-discover
       kind: skill
       transform_id: pi-skill-v1
     - source: skills/standards-update
       destination: skills/standards-update
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/status
+      destination: skills/status
       kind: skill
       transform_id: pi-skill-v1
     - source: skills/test-strategy-reviewer
@@ -269,6 +289,10 @@ inventory:
       transform_id: pi-skill-v1
     - source: skills/transcript-critic
       destination: skills/transcript-critic
+      kind: skill
+      transform_id: pi-skill-v1
+    - source: skills/work
+      destination: skills/work
       kind: skill
       transform_id: pi-skill-v1
   role_origins:
