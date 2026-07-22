@@ -13,6 +13,14 @@ layout:
     mode: "0755"
     ownership: whole_file
     child_prefix: "maister-"
+    merge: true
+  - source: assets/skills
+    destination: skills
+    kind: tree
+    mode: "0755"
+    ownership: whole_file
+    child_prefix: "maister-"
+    merge: true
   - source: assets/steering
     destination: steering
     kind: tree
