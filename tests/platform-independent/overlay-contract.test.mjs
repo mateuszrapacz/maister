@@ -198,7 +198,7 @@ test("accepts the closed Pi target, ownership, compatibility, probes, bindings, 
     id: "pi",
     adapter_id: "pi.native",
     projection: "pi.native",
-    host_version_constraint: "0.80.x",
+    host_version_constraint: ">=0.80.10 <0.82.0",
     platform: "posix",
     discovery_roots: [".pi/agent/maister"],
     path_policy: {

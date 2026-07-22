@@ -77,6 +77,7 @@ function environmentObservation(overrides = {}) {
   return {
     executable_realpath: "/opt/pi/bin/pi",
     pi_version: PI_COMPATIBILITY.pi,
+    pi_engine_version: PI_COMPATIBILITY.pi,
     node_version: PI_COMPATIBILITY.node,
     pi_subagents_version: PI_COMPATIBILITY.piSubagents,
     pi_subagents_source: "/opt/pi/node_modules/pi-subagents/package.json",
@@ -131,7 +132,7 @@ function probe(overrides = {}) {
   });
 }
 
-test("Pi probe is registered and passes only the pinned executable, Node, public export, and inventory tuple", () => {
+test("Pi probe is registered and passes only a supported executable range, Node, public export, and inventory tuple", () => {
   const result = probe();
   assert.equal(probeTarget("pi", {
     now: NOW,
@@ -151,6 +152,26 @@ test("Pi probe is registered and passes only the pinned executable, Node, public
     "maister:code-reviewer",
     "maister:implementation-planner",
   ]);
+});
+
+test("Pi probe accepts Pi 0.81.1 and rejects the exclusive range boundaries", () => {
+  const current = probe({
+    run: () => availableVersion("Pi 0.81.1\n"),
+    discover: () => environmentObservation({ pi_version: "0.81.1", pi_engine_version: "0.81.1" }),
+  });
+  assert.deepEqual(current.records.map((record) => record.result), ["passed", "passed"]);
+
+  const belowMinimum = probe({
+    run: () => availableVersion("Pi 0.80.9\n"),
+    discover: () => environmentObservation({ pi_version: "0.80.9", pi_engine_version: "0.80.9" }),
+  });
+  assert.deepEqual(belowMinimum.records.map((record) => record.provenance.reason), ["pi_version_mismatch", "pi_version_mismatch"]);
+
+  const atMaximum = probe({
+    run: () => availableVersion("Pi 0.82.0\n"),
+    discover: () => environmentObservation({ pi_version: "0.82.0", pi_engine_version: "0.82.0" }),
+  });
+  assert.deepEqual(atMaximum.records.map((record) => record.provenance.reason), ["pi_version_mismatch", "pi_version_mismatch"]);
 });
 
 test("Pi probe fails closed with typed unavailable reasons and does not infer native support from version alone", () => {

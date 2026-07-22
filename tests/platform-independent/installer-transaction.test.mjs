@@ -288,7 +288,7 @@ function addReceiptOwnedStaleLeaf(receiptPath, nativeRoot, { path: relativePath,
   fs.chmodSync(targetPath, mode);
   const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
   receipt.managed_inventory.push({
-    root_id: "kiro_native_agents",
+    root_id: "plugin_private",
     path: relativePath,
     type: "file",
     mode: mode.toString(8).padStart(4, "0"),
@@ -1570,23 +1570,20 @@ test("receipt and journal v2 bind managed roots, root-scoped inventory, and proj
   assert.doesNotThrow(() => validateJournal(journal, { paths }));
 });
 
-test("Kiro installs canonical and support leaves into the native leaf-set root only", async () => {
+test("Kiro installs canonical and support leaves into the managed Kiro root only", async () => {
   const box = sandbox();
   const unrelated = seedMultiRootHome(box);
   const installed = output(await invoke("install", "kiro-cli", box));
-  const receipt = JSON.parse(fs.readFileSync(installed.receipt_path, "utf8"));
-  const nativeRoot = managedRootPath(box, "kiro-cli", "kiro_native_agents");
-  const privateRoot = managedRootPath(box, "kiro-cli", "plugin_private");
-
   assert.equal(installed.code, 0, JSON.stringify(installed));
-  assert.equal(fs.existsSync(path.join(nativeRoot, "maister-advisor.json")), true);
-  assert.equal(fs.existsSync(path.join(nativeRoot, "instructions/maister-advisor.md")), true);
-  assert.equal(fs.existsSync(path.join(nativeRoot, "maister.json")), true);
-  assert.equal(fs.existsSync(path.join(nativeRoot, "instructions/maister.md")), true);
-  assert.equal(fs.existsSync(path.join(privateRoot, "maister-advisor.json")), false);
-  assert.equal(fs.existsSync(path.join(privateRoot, "agents")), false);
-  assert.equal(receipt.managed_inventory.filter((entry) => entry.root_id === "kiro_native_agents").length, 60);
-  assert.equal(receipt.managed_inventory.some((entry) => entry.root_id === "kiro_native_agents" && entry.path.startsWith("agents/")), false);
+  const receipt = JSON.parse(fs.readFileSync(installed.receipt_path, "utf8"));
+  const nativeRoot = managedRootPath(box, "kiro-cli", "plugin_private");
+
+  assert.equal(fs.existsSync(path.join(nativeRoot, "agents/maister-advisor.json")), true);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "agents/instructions/maister-advisor.md")), true);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "agents/maister.json")), true);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "agents/instructions/maister.md")), true);
+  assert.equal(receipt.managed_inventory.filter((entry) => entry.root_id === "plugin_private").length, 60);
+  assert.equal(receipt.managed_inventory.some((entry) => entry.root_id === "plugin_private" && entry.path.startsWith("agents/")), true);
   assertUnrelatedKiroContent(box, unrelated);
 });
 
@@ -1628,7 +1625,7 @@ test("Kiro preserves existing native MCP settings while managing Maister's serve
 test("status and verify both detect drift in a Kiro native managed leaf", async () => {
   const box = sandbox();
   await invoke("install", "kiro-cli", box);
-  const nativeLeaf = path.join(managedRootPath(box, "kiro-cli", "kiro_native_agents"), "maister-advisor.json");
+  const nativeLeaf = path.join(managedRootPath(box, "kiro-cli", "plugin_private"), "agents/maister-advisor.json");
   fs.appendFileSync(nativeLeaf, "\n");
 
   for (const command of ["status", "verify"]) {
@@ -1641,12 +1638,12 @@ test("status and verify both detect drift in a Kiro native managed leaf", async 
 test("byte-identical unmanaged Kiro native leaves collide before any mutation", async () => {
   const sourceBox = sandbox();
   await invoke("install", "kiro-cli", sourceBox);
-  const identicalBytes = fs.readFileSync(path.join(managedRootPath(sourceBox, "kiro-cli", "kiro_native_agents"), "maister-advisor.json"));
+  const identicalBytes = fs.readFileSync(path.join(managedRootPath(sourceBox, "kiro-cli", "plugin_private"), "agents/maister-advisor.json"));
 
   const box = sandbox();
   const unrelated = seedMultiRootHome(box);
   const paths = prepareStateLayout(box);
-  fs.writeFileSync(path.join(paths.managedRoots.find(({ rootId }) => rootId === "kiro_native_agents").path, "maister-advisor.json"), identicalBytes);
+  fs.writeFileSync(path.join(paths.managedRoots.find(({ rootId }) => rootId === "plugin_private").path, "agents/maister-advisor.json"), identicalBytes);
   const homeBefore = snapshotManagedHome(box);
   const stateBefore = snapshotStateRoot(box);
 
@@ -1665,15 +1662,15 @@ test("update removes an unchanged receipt-owned stale Kiro leaf", async () => {
   const installed = output(await invoke("install", "kiro-cli", box));
   const stalePath = addReceiptOwnedStaleLeaf(
     installed.receipt_path,
-    managedRootPath(box, "kiro-cli", "kiro_native_agents"),
-    { path: "maister-stale.json", bytes: Buffer.from("stale-owned\n") },
+    managedRootPath(box, "kiro-cli", "plugin_private"),
+    { path: "agents/maister-stale.json", bytes: Buffer.from("stale-owned\n") },
   );
 
   const updated = output(await invoke("update", "kiro-cli", box));
   assert.equal(updated.code, 0);
   assert.equal(fs.existsSync(stalePath), false);
   const receipt = JSON.parse(fs.readFileSync(updated.receipt_path, "utf8"));
-  assert.equal(receipt.managed_inventory.some((entry) => entry.root_id === "kiro_native_agents" && entry.path === "maister-stale.json"), false);
+  assert.equal(receipt.managed_inventory.some((entry) => entry.root_id === "plugin_private" && entry.path === "agents/maister-stale.json"), false);
 });
 
 test("modified receipt-owned stale Kiro leaves fail update with zero mutation", async () => {
@@ -1682,8 +1679,8 @@ test("modified receipt-owned stale Kiro leaves fail update with zero mutation", 
   const installed = output(await invoke("install", "kiro-cli", box));
   const stalePath = addReceiptOwnedStaleLeaf(
     installed.receipt_path,
-    managedRootPath(box, "kiro-cli", "kiro_native_agents"),
-    { path: "maister-stale.json", bytes: Buffer.from("receipt-owned\n") },
+    managedRootPath(box, "kiro-cli", "plugin_private"),
+    { path: "agents/maister-stale.json", bytes: Buffer.from("receipt-owned\n") },
   );
   fs.writeFileSync(stalePath, "operator-modified\n");
   const homeBefore = snapshotManagedHome(box);
@@ -1701,19 +1698,18 @@ test("Kiro uninstall removes only receipt-owned leaves and restores minimum pare
   const box = sandbox();
   const unrelated = seedMultiRootHome(box);
   await invoke("install", "kiro-cli", box);
-  const nativeRoot = managedRootPath(box, "kiro-cli", "kiro_native_agents");
+  const nativeRoot = managedRootPath(box, "kiro-cli", "plugin_private");
 
   const result = output(await invoke("uninstall", "kiro-cli", box));
   assert.equal(result.code, 0);
-  assert.equal(fs.existsSync(path.join(nativeRoot, "maister-advisor.json")), false);
-  assert.equal(fs.existsSync(path.join(nativeRoot, "instructions/maister-advisor.md")), false);
-  assert.equal(fs.existsSync(path.join(nativeRoot, "maister.json")), false);
-  assert.equal(fs.existsSync(managedRootPath(box, "kiro-cli", "plugin_private")), false);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "agents/maister-advisor.json")), false);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "agents/instructions/maister-advisor.md")), false);
+  assert.equal(fs.existsSync(path.join(nativeRoot, "agents/maister.json")), false);
   assert.equal(fs.existsSync(nativeRoot), true, "operator-owned siblings keep the shared native root present");
   assertUnrelatedKiroContent(box, unrelated);
 });
 
-test("Kiro rollback restores both managed roots while preserving unrelated native agents", async () => {
+test("Kiro rollback restores the managed root while preserving unrelated native agents", async () => {
   const box = sandbox();
   const unrelated = seedMultiRootHome(box);
   await invoke("install", "kiro-cli", box);
@@ -1815,10 +1811,6 @@ test("Kiro failure after the private root restores every root and unrelated leaf
   await assertKiroFailureRestores("after-root-plugin_private");
 });
 
-test("Kiro failure after the native leaf-set root restores every root and unrelated leaf", async () => {
-  await assertKiroFailureRestores("after-root-kiro_native_agents");
-});
-
 test("Kiro failure after all root mutations restores every root and unrelated leaf", async () => {
   await assertKiroFailureRestores("after-tree-swap");
 });
@@ -1839,7 +1831,7 @@ test("Kiro failure after receipt publication restores the prior receipt and ever
   await assertKiroFailureRestores("after-receipt");
 });
 
-test("one Kiro target lock protects both managed roots with stable busy semantics", async () => {
+test("one Kiro target lock protects the managed root with stable busy semantics", async () => {
   const box = sandbox();
   const unrelated = seedMultiRootHome(box);
   const paths = prepareStateLayout(box);

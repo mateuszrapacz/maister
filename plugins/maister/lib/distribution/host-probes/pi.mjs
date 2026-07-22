@@ -16,6 +16,28 @@ export const PI_COMPATIBILITY = Object.freeze({
   delegationProtocol: 1,
 });
 
+const SUPPORTED_PI_VERSION_MIN = [0, 80, 10];
+const SUPPORTED_PI_VERSION_MAX_EXCLUSIVE = [0, 82, 0];
+
+function parsePiVersion(value) {
+  const match = /^(\d+)\.(\d+)\.(\d+)$/u.exec(value);
+  return match ? match.slice(1).map(Number) : null;
+}
+
+function compareVersions(left, right) {
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) return left[index] - right[index];
+  }
+  return 0;
+}
+
+function isSupportedPiVersion(value) {
+  const version = parsePiVersion(value);
+  return version !== null
+    && compareVersions(version, SUPPORTED_PI_VERSION_MIN) >= 0
+    && compareVersions(version, SUPPORTED_PI_VERSION_MAX_EXCLUSIVE) < 0;
+}
+
 export const PI_DELEGATION_PUBLIC_EXPORTS = Object.freeze([
   "SUBAGENT_DELEGATION_PROTOCOL_VERSION",
   "SUBAGENT_DELEGATION_REQUEST_EVENT",
@@ -301,11 +323,11 @@ function piDiscovery({ manifest, target, hostVersion, observation, expectedExecu
   if (expectedExecutableRealpath !== null && observation.executable_realpath !== expectedExecutableRealpath) {
     return unavailable("pi_executable_mismatch", metadata);
   }
-  if (hostVersion !== PI_COMPATIBILITY.pi || observation.pi_version !== PI_COMPATIBILITY.pi) {
+  if (!isSupportedPiVersion(hostVersion) || !isSupportedPiVersion(observation.pi_version)) {
     return unavailable("pi_version_mismatch", metadata);
   }
   if (Object.hasOwn(observation, "pi_engine_version")
-    && (typeof observation.pi_engine_version !== "string" || observation.pi_engine_version !== PI_COMPATIBILITY.pi)) {
+    && (typeof observation.pi_engine_version !== "string" || !isSupportedPiVersion(observation.pi_engine_version))) {
     return unavailable("pi_version_mismatch", metadata);
   }
   if (observation.node_version !== PI_COMPATIBILITY.node) return unavailable("node_engine_mismatch", metadata);
@@ -384,9 +406,9 @@ export function probePi(options = {}) {
       command,
       discoveryScenario: "pi-native-discovery-v1",
       scenario: "pi-native-runtime-v1",
-      // probeHost intentionally keeps its synchronous contract.  The default
-      // Pi invoker is installed lazily after E5 has verified the exact host
-      // and generated package, while tests and callers may inject an invoke
+      // probeHost intentionally keeps its synchronous contract. The default
+      // Pi invoker is installed lazily after E5 has verified the supported host
+      // range and generated package, while tests and callers may inject an invoke
       // function as before.
       invoke: typeof options.invoke === "function" ? options.invoke : () => null,
       discover: (context) => {
@@ -416,12 +438,13 @@ export function probePi(options = {}) {
         return discoveryOutcome;
       },
       runScenario: ({ hostVersion, ...context }) => {
-        if (hostVersion !== PI_COMPATIBILITY.pi) return unavailable("pi_version_mismatch");
+        if (!isSupportedPiVersion(hostVersion)) return unavailable("pi_version_mismatch");
         if (discoveryOutcome?.result !== "passed") return unavailable(discoveryOutcome?.reason ?? "native-discovery-unavailable");
         let invoke = options.invoke;
         if (typeof invoke !== "function") {
           liveRuntime ??= createPiNativeInvoker({
             command,
+            hostVersion,
             packageRoot: discoveryObservation?.package_root ?? packageRoot,
             delegationPackageJson: discoveryObservation?.pi_subagents_source,
             env: options.env ?? process.env,

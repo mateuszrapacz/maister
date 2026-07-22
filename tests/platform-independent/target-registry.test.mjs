@@ -58,9 +58,7 @@ test("registered targets expose stable immutable managed-root ownership", () => 
   assert.deepEqual(rootsByTarget, {
     codex: [{ rootId: "plugin_private", discoveryRoot: ".codex/plugins/local/maister", ownership: "whole_tree" }],
     cursor: [{ rootId: "plugin_private", discoveryRoot: ".cursor/plugins/local/maister", ownership: "whole_tree" }],
-    "kiro-cli": [
-      { rootId: "plugin_private", discoveryRoot: ".kiro", ownership: "leaf_set" },
-    ],
+    "kiro-cli": [{ rootId: "plugin_private", discoveryRoot: ".kiro", ownership: "leaf_set" }],
     pi: [{ rootId: "plugin_private", discoveryRoot: ".pi/agent/maister", ownership: "whole_tree" }],
   });
   for (const target of SUPPORTED_TARGETS) {

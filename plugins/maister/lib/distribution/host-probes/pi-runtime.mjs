@@ -5,7 +5,8 @@ import { spawnSync } from "node:child_process";
 
 import { readObservationEventStream } from "../../../skills/orchestrator-framework/bin/agent-runtime/execution-event-writer.mjs";
 
-const LIVE_PROBE_EXTENSION = `import fs from "node:fs";
+function liveProbeExtension(hostVersion) {
+  return `import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 
 const resultPath = process.env.MAISTER_PI_PROBE_RESULT;
@@ -32,7 +33,7 @@ export default function maisterLiveProbe(pi) {
       const { createPiNativeAdapter } = await import(pathToFileURL(adapterPath).href);
       const adapter = createPiNativeAdapter({
         eventBus: pi.events,
-        nativePort: { eventBus: pi.events, hostVersion: "0.80.10" },
+        nativePort: { eventBus: pi.events, hostVersion: ${JSON.stringify(hostVersion)} },
       });
       const result = await adapter({
         plan,
@@ -56,6 +57,7 @@ export default function maisterLiveProbe(pi) {
   });
 }
 `;
+}
 
 function safeJson(value) {
   return Buffer.from(JSON.stringify(value), "utf8").toString("base64");
@@ -80,7 +82,7 @@ function policyForPi(request) {
   };
 }
 
-function planForPi(request) {
+function planForPi(request, hostVersion = "0.80.10") {
   const policy = policyForPi(request);
   if (!policy) return null;
   return {
@@ -94,7 +96,7 @@ function planForPi(request) {
     adapter_id: "pi.native",
     native_role_external_id: request.native_role_external_id,
     host: "pi",
-    host_version: "0.80.10",
+    host_version: hostVersion,
     policy,
     provenance: {
       receipt_id: "pi-native-probe-v1",
@@ -186,6 +188,7 @@ function resultObservation({ request, childResult, durable } = {}) {
 
 export function createPiNativeInvoker({
   command,
+  hostVersion = "0.80.10",
   packageRoot,
   delegationPackageJson,
   env = process.env,
@@ -206,7 +209,7 @@ export function createPiNativeInvoker({
   }
   const workspace = makeProbeWorkspace({ packageRoot, home, env });
   const extensionPath = path.join(workspace.root, "probe-extension.ts");
-  fs.writeFileSync(extensionPath, LIVE_PROBE_EXTENSION, { mode: 0o600 });
+  fs.writeFileSync(extensionPath, liveProbeExtension(hostVersion), { mode: 0o600 });
   const invoke = (request) => {
     // The shared scenario request deliberately carries host-independent
     // evidence fields only. Pi-subagents writes project-scoped debug
@@ -218,7 +221,7 @@ export function createPiNativeInvoker({
       ...request,
       cwd: workspace.taskRoot,
     };
-    const plan = planForPi(invocationRequest);
+    const plan = planForPi(invocationRequest, hostVersion);
     if (!plan) return null;
     const resultPath = path.join(workspace.root, `${invocationRequest.dispatch_id}.json`);
     fs.rmSync(resultPath, { force: true });
