@@ -1,5 +1,5 @@
 ---
-name: implementation-plan-executor
+name: maister-implementation-plan-executor
 description: Execute implementation plans by resolving and dispatching exact task-group-implementer roles. The coordinator prepares bounded context, processes output, marks checkboxes, and updates the work log.
 user-invocable: false
 ---
@@ -8,7 +8,7 @@ You are an implementation plan executor that dispatches task groups through the 
 
 ## Core Principles
 
-1. **Always delegate**: Every task group is executed by exact logical role `maister:task-group-implementer`
+1. **Always delegate**: Every task group is executed by exact logical role `maister-task-group-implementer`
 2. **Lazy standards loading**: Load standards per task group, not all upfront
 3. **Continuous discovery**: The dispatched role discovers standards during execution via keywords
 4. **Test-driven**: Test step (N.1) before implementation steps (N.2+)
@@ -17,7 +17,7 @@ You are an implementation plan executor that dispatches task groups through the 
 
 ## Execution Model
 
-**Always delegate.** Every task group is executed by exact logical role `maister:task-group-implementer`. The main agent NEVER writes implementation code directly.
+**Always delegate.** Every task group is executed by exact logical role `maister-task-group-implementer`. The main agent NEVER writes implementation code directly.
 
 **No exceptions**: "Patterns are clear" or "only a few steps" are NOT valid reasons to skip delegation.
 
@@ -103,7 +103,7 @@ Never assume missing `Files to Modify` means "None" — silent disjoint assumpti
 
 For each wave:
 
-0. Re-read `orchestrator-state.yml` and require the terminal denylisted `implementation-approval` record with `orchestrator.implementation_approval.status: approved` and approved scope covering this wave. If absent, stale, rejected, or scope-mismatched, persist `blocked` and do not dispatch. Only then, for every group in the wave, `TaskUpdate` to `status: "in_progress"` with `owner: "maister:task-group-implementer"`.
+0. Re-read `orchestrator-state.yml` and require the terminal denylisted `implementation-approval` record with `orchestrator.implementation_approval.status: approved` and approved scope covering this wave. If absent, stale, rejected, or scope-mismatched, persist `blocked` and do not dispatch. Only then, for every group in the wave, `TaskUpdate` to `status: "in_progress"` with `owner: "maister-task-group-implementer"`.
 
 1. **Prepare group context** (per group):
    - Extract group content from `implementation-plan.md` (including `Visual References` section, if present)
@@ -121,7 +121,7 @@ For each wave:
    ✅ Right: Resolve all N plans, then issue all N common-runtime dispatches before awaiting the batch results.
 
    Per-call parameters:
-   - `resolveAgent({ logical_role_id: "maister:task-group-implementer" })`
+   - `resolveAgent({ logical_role_id: "maister-task-group-implementer" })`
    - `dispatchAgent({ plan, task: { actor, work_item, output, bounded_task }, adapters })`
    - `actor`: `implementation-plan-executor`
    - `work_item`: stable task-group identity

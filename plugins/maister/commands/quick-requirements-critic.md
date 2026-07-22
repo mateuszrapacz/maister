@@ -1,5 +1,5 @@
 ---
-name: maister:quick-requirements-critic
+name: maister-quick-requirements-critic
 description: Critique requirements quality with interactive 4-check rubric
 ---
 

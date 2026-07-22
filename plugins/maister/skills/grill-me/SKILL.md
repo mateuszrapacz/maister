@@ -1,5 +1,5 @@
 ---
-name: grill-me
+name: maister-grill-me
 description: Relentless interactive interview to stress-test a plan or design until shared understanding. Invoked ONLY on explicit request — e.g. "grill me", "stress-test this plan".
 argument-hint: "[plan or topic]"
 ---
@@ -59,4 +59,4 @@ If the user wants documentation maintained during grilling, suggest `grill-with-
 
 ## Recommended Next Steps
 
-After confirmed shared understanding, the user may use `/maister:quick-plan`, `/maister:development`, or `grill-with-docs` to harden vocabulary before building.
+After confirmed shared understanding, the user may use `/maister-quick-plan`, `/maister-development`, or `grill-with-docs` to harden vocabulary before building.

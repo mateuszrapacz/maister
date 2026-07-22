@@ -1,5 +1,5 @@
 ---
-name: implementation-verifier
+name: maister-implementation-verifier
 description: Verify completed implementations for quality assurance. Delegates all verification work to specialized subagents - completeness checking, test execution, code review, pragmatic review, production readiness, and reality assessment. Compiles results into comprehensive verification report. Read-only verification - reports issues but does not fix them. Use after implementation is complete and before code review/commit.
 user-invocable: false
 ---
@@ -104,7 +104,7 @@ If prerequisites missing, report and stop.
 **Why sequential**: Test-suite-runner and reality-assessor both run tests. Running them in parallel causes conflicts. Test-suite-runner runs first and writes results to a file that reality-assessor reads.
 
 Common runtime call (if NOT skip_test_suite):
-- `resolveAgent({ logical_role_id: "maister:test-suite-runner" })`
+- `resolveAgent({ logical_role_id: "maister-test-suite-runner" })`
 - actor: `implementation-verifier`
 - work item: `test-suite`
 - output: `verification/test-suite-results.md`
@@ -118,15 +118,15 @@ Common runtime call (if NOT skip_test_suite):
 
 **INVOKE NOW** — resolve and dispatch ALL remaining enabled roles in one parallel common-runtime batch:
 
-Common runtime call (always): `resolveAgent({ logical_role_id: "maister:implementation-completeness-checker" })`. Dispatch actor `implementation-verifier`, work item `implementation-completeness`, output `verification/completeness-report.md`, and bounded task_path/plan/standards context.
+Common runtime call (always): `resolveAgent({ logical_role_id: "maister-implementation-completeness-checker" })`. Dispatch actor `implementation-verifier`, work item `implementation-completeness`, output `verification/completeness-report.md`, and bounded task_path/plan/standards context.
 
-Common runtime call (if code_review_enabled): `resolveAgent({ logical_role_id: "maister:code-reviewer" })`. Dispatch actor `implementation-verifier`, work item `code-review`, output `[task_path]/verification/code-review-report.md`, and bounded task_path/scope context.
+Common runtime call (if code_review_enabled): `resolveAgent({ logical_role_id: "maister-code-reviewer" })`. Dispatch actor `implementation-verifier`, work item `code-review`, output `[task_path]/verification/code-review-report.md`, and bounded task_path/scope context.
 
-Common runtime call (if pragmatic_review_enabled): `resolveAgent({ logical_role_id: "maister:code-quality-pragmatist" })`. Dispatch actor `implementation-verifier`, work item `pragmatic-review`, output `[task_path]/verification/pragmatic-review.md`, and bounded task context.
+Common runtime call (if pragmatic_review_enabled): `resolveAgent({ logical_role_id: "maister-code-quality-pragmatist" })`. Dispatch actor `implementation-verifier`, work item `pragmatic-review`, output `[task_path]/verification/pragmatic-review.md`, and bounded task context.
 
-Common runtime call (if production_check_enabled): `resolveAgent({ logical_role_id: "maister:production-readiness-checker" })`. Dispatch actor `implementation-verifier`, work item `production-readiness`, output `[task_path]/verification/production-readiness-report.md`, and bounded task_path/production-target context.
+Common runtime call (if production_check_enabled): `resolveAgent({ logical_role_id: "maister-production-readiness-checker" })`. Dispatch actor `implementation-verifier`, work item `production-readiness`, output `[task_path]/verification/production-readiness-report.md`, and bounded task_path/production-target context.
 
-Common runtime call (if reality_check_enabled): `resolveAgent({ logical_role_id: "maister:reality-assessor" })`. Dispatch actor `implementation-verifier`, work item `reality-check`, output `[task_path]/verification/reality-check.md`, and bounded task_path/test-evidence context.
+Common runtime call (if reality_check_enabled): `resolveAgent({ logical_role_id: "maister-reality-assessor" })`. Dispatch actor `implementation-verifier`, work item `reality-check`, output `[task_path]/verification/reality-check.md`, and bounded task_path/test-evidence context.
   - **If test-suite-runner ran (Step 3a)**: Include `skip_test_execution: true` and path to `verification/test-suite-results.md`. Reality-assessor should read test results from that file instead of running tests.
   - **If test-suite-runner was skipped**: Include `skip_test_execution: false`. Reality-assessor should run tests itself since no other agent did.
 
@@ -276,11 +276,11 @@ issue_counts:
 
 ### Anti-Patterns to AVOID
 
-- ❌ Running Bash commands to execute tests → Dispatch exact `maister:test-suite-runner`
-- ❌ Reading implementation-plan.md to check completion → Dispatch exact `maister:implementation-completeness-checker`
-- ❌ Reading INDEX.md to check standards compliance → Dispatch exact `maister:implementation-completeness-checker`
-- ❌ Reading source code for quality/security analysis → Dispatch exact `maister:code-reviewer`
-- ❌ Checking config/monitoring/resilience directly → Dispatch exact `maister:production-readiness-checker`
+- ❌ Running Bash commands to execute tests → Dispatch exact `maister-test-suite-runner`
+- ❌ Reading implementation-plan.md to check completion → Dispatch exact `maister-implementation-completeness-checker`
+- ❌ Reading INDEX.md to check standards compliance → Dispatch exact `maister-implementation-completeness-checker`
+- ❌ Reading source code for quality/security analysis → Dispatch exact `maister-code-reviewer`
+- ❌ Checking config/monitoring/resilience directly → Dispatch exact `maister-production-readiness-checker`
 - ❌ Performing ANY verification work inline → ALL verification is delegated to subagents
 
 ### Clear Communication

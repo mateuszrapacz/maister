@@ -1,5 +1,5 @@
 ---
-name: maister:modeling-aggregate-designer
+name: maister-modeling-aggregate-designer
 description: Design resource-contention consistency units through a multi-phase DDD wizard
 ---
 

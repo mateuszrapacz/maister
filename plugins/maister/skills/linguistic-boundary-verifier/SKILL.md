@@ -1,5 +1,5 @@
 ---
-name: linguistic-boundary-verifier
+name: maister-linguistic-boundary-verifier
 description: Verifies linguistic boundaries between bounded contexts by analyzing language.md files. Each language.md declares context role, relationships, and integration points — no separate context-map needed. Detects typical language leakage patterns (strings, events, API calls), proposes type-specific fixes (generalization, ACL, dependency inversion), and interactively validates with user. For single-module PRs, checks whether new concepts fit the module's linguistic space. Strictly read-only.
 argument-hint: "[module names to check, or 'all', or module name --pr for single-module new concept check]"
 ---

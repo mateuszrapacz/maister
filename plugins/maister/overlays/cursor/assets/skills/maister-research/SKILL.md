@@ -219,7 +219,7 @@ This phase executes 4 sequential steps. On resume, check existing artifacts to s
 
 **Read `references/research-methodologies.md` NOW using the Read tool** — research type classification, methodology selection, gathering strategies
 
-**INVOKE NOW**: `resolveAgent({ logical_role_id: "maister:research-planner" })`, then dispatch actor `research`, work item `research-plan`, the planning output contract, and the bounded research brief.
+**INVOKE NOW**: `resolveAgent({ logical_role_id: "maister-research-planner" })`, then dispatch actor `research`, work item `research-plan`, the planning output contract, and the bounded research brief.
 
 **Context to pass**: task_path, research_brief_path, research_type, research_question, scope, project_doc_paths (from state)
 
@@ -242,7 +242,7 @@ Update state: `research_context.methodology`, `sources`
 ```
 Read gathering strategy from research-plan.md
 For each category in strategy:
-  Resolve `resolveAgent({ logical_role_id: "maister:information-gatherer" })`, then dispatch actor `research`, one stable work item per `source_category`, output `analysis/findings/[prefix]-*.md`, and that category's bounded gathering context.
+  Resolve `resolveAgent({ logical_role_id: "maister-information-gatherer" })`, then dispatch actor `research`, one stable work item per `source_category`, output `analysis/findings/[prefix]-*.md`, and that category's bounded gathering context.
 ```
 
 #### Step 4: Synthesize (Subagent)
@@ -250,7 +250,7 @@ For each category in strategy:
 **Artifacts**: `analysis/synthesis.md`, `outputs/research-report.md`
 **Resume check**: If `analysis/synthesis.md` AND `outputs/research-report.md` exist, skip (Phase 1 complete)
 
-**INVOKE NOW**: `resolveAgent({ logical_role_id: "maister:research-synthesizer" })`, then dispatch actor `research`, work item `research-synthesis`, the synthesis/report output contract, and bounded findings context.
+**INVOKE NOW**: `resolveAgent({ logical_role_id: "maister-research-synthesizer" })`, then dispatch actor `research`, work item `research-synthesis`, the synthesis/report output contract, and bounded findings context.
 
 **Context to pass**: task_path, findings_directory_path, research_question, research_type, methodology, html_style_guide_path (for the research-report.html companion)
 
@@ -316,7 +316,7 @@ Invoke the engine as `phase-1-exit` with question "Research foundation complete 
 
 > **ANTI-PATTERN**: Do NOT generate solution alternatives inline. The solution-brainstormer agent has specialized multi-perspective analysis capabilities.
 
-**INVOKE NOW**: `resolveAgent({ logical_role_id: "maister:solution-brainstormer" })`, then dispatch actor `research`, work item `solution-exploration`, output `outputs/solution-exploration.md`, and the bounded context below.
+**INVOKE NOW**: `resolveAgent({ logical_role_id: "maister-solution-brainstormer" })`, then dispatch actor `research`, work item `solution-exploration`, output `outputs/solution-exploration.md`, and the bounded context below.
 
 **Context to pass** (Pattern 7):
 - `task_path`, `synthesis_path`, `research_report_path`
@@ -394,7 +394,7 @@ Invoke the engine as `phase-4-exit` with question "Brainstorming complete. Conti
 
 > **ANTI-PATTERN**: Do NOT generate C4 architecture diagrams or ADRs inline. The solution-designer agent has specialized architecture and MADR documentation capabilities.
 
-**INVOKE NOW**: `resolveAgent({ logical_role_id: "maister:solution-designer" })`, then dispatch actor `research`, work item `solution-design`, the high-level-design/decision-log output contract, and the bounded context below.
+**INVOKE NOW**: `resolveAgent({ logical_role_id: "maister-solution-designer" })`, then dispatch actor `research`, work item `solution-design`, the high-level-design/decision-log output contract, and the bounded context below.
 
 **Context to pass** (Pattern 7):
 - `task_path`, `synthesis_path`, `research_report_path`
@@ -493,8 +493,8 @@ orchestrator:
         clarify: manual
         convergence: manual
         verify-matrix: manual
-      advisor_agent: maister:advisor
-      arbiter_agent: maister:advisor
+      advisor_agent: maister-advisor
+      arbiter_agent: maister-advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3

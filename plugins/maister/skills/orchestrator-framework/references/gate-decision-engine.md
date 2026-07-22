@@ -50,7 +50,7 @@ native continuation support.
 Read `enabled`, every gate policy, both exact logical role names,
 `arbiter_enabled_on_disagreement`, retry attempt limits, and backoff only from
 the complete `orchestrator.options.advisor` workflow snapshot. The logical role
-names are both `maister:advisor`; native role resolution belongs to the common
+names are both `maister-advisor`; native role resolution belongs to the common
 runtime adapter selected by the resolved dispatch plan.
 Invalid or incomplete workflow snapshots fail closed to a manual user gate, or
 to persisted `blocked` when no user gate is available. They are never repaired
@@ -197,14 +197,14 @@ normalized_gate_result:
   final_actor: advisor # user | advisor | arbiter | system
   original_recommendation: "Manual fallback for every platform"
   advisor:
-    logical_role_id: maister:advisor
+    logical_role_id: maister-advisor
     dispatch_id: gate-advisor-...
     terminal_dispatch: null
     response: null
     attempts: []
     exhausted: false
   arbiter:
-    logical_role_id: maister:advisor
+    logical_role_id: maister-advisor
     dispatch_id: gate-arbiter-...
     terminal_dispatch: null
     response: null
@@ -558,7 +558,7 @@ user-gate and lifecycle primitives below explicitly:
 | Primitive | Required contract |
 |---|---|
 | `read_state` | Read `orchestrator-state.yml`; never read dashboard data as state. |
-| `resolve_agent` | Resolve the exact `maister:advisor` logical role to one immutable common dispatch plan. Both decision actors use this same resolver path. |
+| `resolve_agent` | Resolve the exact `maister-advisor` logical role to one immutable common dispatch plan. Both decision actors use this same resolver path. |
 | `dispatch_agent` | Dispatch the resolved plan with actor, gate context, work item, idempotency context, output schema, and bounded task. It returns a validated terminal result only after durable event recording. |
 | `present_user_gate` | Present the exact supplied options and return one exact option or cancel/block. |
 | `write_state` / `write_state_atomic` | Persist attempt, pending, and terminal records before any continuation; reject partial writes. |
@@ -601,11 +601,11 @@ Required host mapping:
 
 | Capability | Cursor | Kiro | Codex |
 |---|---|---|---|
-| Invoke advisor | `resolveAgent` then `dispatchAgent` for `maister:advisor` | `resolveAgent` then `dispatchAgent` for `maister:advisor` | `resolveAgent` then `dispatchAgent` for `maister:advisor` |
-| Invoke arbiter | `resolveAgent` then `dispatchAgent` for `maister:advisor` | `resolveAgent` then `dispatchAgent` for `maister:advisor` | `resolveAgent` then `dispatchAgent` for `maister:advisor` |
+| Invoke advisor | `resolveAgent` then `dispatchAgent` for `maister-advisor` | `resolveAgent` then `dispatchAgent` for `maister-advisor` | `resolveAgent` then `dispatchAgent` for `maister-advisor` |
+| Invoke arbiter | `resolveAgent` then `dispatchAgent` for `maister-advisor` | `resolveAgent` then `dispatchAgent` for `maister-advisor` | `resolveAgent` then `dispatchAgent` for `maister-advisor` |
 | User gate | `AskUserQuestion` | chat gate | plain-text user question |
 | State write | orchestrator writes YAML atomically | orchestrator writes YAML atomically | orchestrator writes YAML atomically |
-| Resume | `maister:resume` state read | `maister-resume`/chat state read | `$maister:resume` state read |
+| Resume | `maister-resume` state read | `maister-resume`/chat state read | `$maister-resume` state read |
 | Automatic answer injection | `phase_continue` supported by orchestrator | `phase_continue` supported by orchestrator | `phase_continue` supported by orchestrator |
 
 If a host cannot consume a validated decision through `phase_continue`, its

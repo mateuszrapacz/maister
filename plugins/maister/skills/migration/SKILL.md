@@ -1,5 +1,5 @@
 ---
-name: migration
+name: maister-migration
 description: Orchestrates the complete migration workflow from current state analysis through implementation to compatibility verification. Handles technology migrations, platform changes, and architecture pattern transitions with adaptive risk assessment, incremental execution, and rollback planning. Use when migrating technologies, platforms, or architecture patterns.
 user-invocable: true
 ---
@@ -186,7 +186,7 @@ Use for:
 
 **Purpose**: Comprehensive analysis of current system before migration, followed by scope/requirements clarification
 **Execute**:
-1. Skill tool - `maister:codebase-analyzer`
+1. Skill tool - `maister-codebase-analyzer`
 2. Update state with analysis results
 3. For each critical clarification, invoke `phase-1-clarification` through the shared engine with exact ordered options and full read-only context.
 4. Save clarifications to `analysis/clarifications.md`
@@ -200,7 +200,7 @@ Use for:
 ### Phase 2: Target State Planning & Gap Analysis
 
 **Purpose**: Define target system and identify migration gaps
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:gap-analyzer" })`, then dispatch actor `migration`, work item `target-gap-analysis`, output `analysis/target-state-plan.md`, and the bounded current/target context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-gap-analyzer" })`, then dispatch actor `migration`, work item `target-gap-analysis`, output `analysis/target-state-plan.md`, and the bounded current/target context.
 **Output**: `analysis/target-state-plan.md`
 **State**: Update `migration_context.migration_type`, `target_system`, `risk_level`, `breaking_changes`
 
@@ -235,7 +235,7 @@ Invoke the engine as `phase-2-exit` with question "Continue to migration strateg
 2. Save gathered requirements to `analysis/requirements.md`
 
 **Part B — Specification Creation (subagent)**:
-3. Common runtime — `resolveAgent({ logical_role_id: "maister:specification-creator" })`, then dispatch actor `migration`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
+3. Common runtime — `resolveAgent({ logical_role_id: "maister-specification-creator" })`, then dispatch actor `migration`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
 
 **Context to pass to subagent**: task_path, task_type (migration), task_description, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), migration_type, current_system, target_system, risk_level, breaking_changes, phase_summaries (current_state_analysis, gap_analysis), html_style_guide_path (for the spec.html companion)
 
@@ -253,7 +253,7 @@ Invoke the engine as `phase-3-exit` with question "Continue to implementation pl
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Break migration into task groups with rollback steps
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:implementation-planner" })`, then dispatch actor `migration`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and bounded migration/rollback context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-implementation-planner" })`, then dispatch actor `migration`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and bounded migration/rollback context.
 **Output**: `implementation/implementation-plan.md` with rollback procedures
 **State**: Update task groups and dependencies
 
@@ -277,13 +277,13 @@ Invoke the engine as `phase-4-exit` with question "Continue to execute migration
 
 **INVOKE NOW** — Skill tool call:
 
-**Execute**: Skill tool - `maister:implementation-plan-executor`
+**Execute**: Skill tool - `maister-implementation-plan-executor`
 **Output**: Implemented migration changes, `implementation/work-log.md`
 **State**: Update implementation progress, extract phase_summaries.implementation
 
 📋 **Standards Reminder**: Review `.maister/docs/INDEX.md` before implementing.
 
-**SELF-CHECK**: Did you just invoke the Skill tool with `maister:implementation-plan-executor`? Or did you start writing migration code yourself? If the latter, STOP immediately and invoke the Skill tool instead.
+**SELF-CHECK**: Did you just invoke the Skill tool with `maister-implementation-plan-executor`? Or did you start writing migration code yourself? If the latter, STOP immediately and invoke the Skill tool instead.
 
 **⚠️ POST-IMPLEMENTATION CONTINUATION** — After the skill completes and returns control:
 1. **HTML plan reconciliation** (backstop for syncs missed during waves): if `implementation/implementation-plan.html` exists, for every group whose md checkboxes are all `[x]`, run the executor's idempotent marker-flip command (`sed` flipping `data-step="N\.[0-9]*" class="step todo"` and `data-group="N" class="group todo"` to `done`). VERIFY: when all md steps are checked, `grep -c 'class="step todo"' implementation/implementation-plan.html` must return 0.
@@ -302,7 +302,7 @@ Invoke the engine as `phase-5-exit` with question "Continue to verification?", o
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Verify migration success with compatibility and rollback testing
-**Execute**: Skill tool - `maister:implementation-verifier`
+**Execute**: Skill tool - `maister-implementation-verifier`
 **Output**: `verification/implementation-verification.md`, `verification/compatibility-test-results.md`
 **State**: Update verification results
 
@@ -340,7 +340,7 @@ Invoke the engine as `phase-6-exit` with question "Continue to Phase [7 or 8]?",
 3. Invoke `verification-fix-selection` — "Which issues should I fix?" with exact options `["Fix all fixable issues", "Let me choose specific issues", "Skip fixes, proceed as-is"]`.
 4. Fix selected issues
 5. Invoke `verification-rerun` — "Re-run verification to check fixes?" with exact options `["Yes, re-run verification", "No, proceed to the next phase"]`.
-6. If re-run → re-invoke `maister:implementation-verifier` → return to Step 1
+6. If re-run → re-invoke `maister-implementation-verifier` → return to Step 1
 7. Max 3 iterations
 
 **Data Safety Critical**: HALT on any data integrity issue - never auto-fix data problems. Always present data issues to user with rollback option.
@@ -361,7 +361,7 @@ Invoke the engine as `phase-7-exit` with question "Continue to documentation?", 
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Create migration guide for end users
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:user-docs-generator" })`, then dispatch actor `migration`, work item `migration-guide`, output `documentation/migration-guide.md`, and bounded user-facing migration context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-user-docs-generator" })`, then dispatch actor `migration`, work item `migration-guide`, output `documentation/migration-guide.md`, and bounded user-facing migration context.
 **Output**: `documentation/migration-guide.md`
 **State**: Set documentation complete
 
@@ -426,8 +426,8 @@ orchestrator:
         clarify: manual
         convergence: manual
         verify-matrix: manual
-      advisor_agent: maister:advisor
-      arbiter_agent: maister:advisor
+      advisor_agent: maister-advisor
+      arbiter_agent: maister-advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3
@@ -485,8 +485,8 @@ Creation normalizes the project configuration once into the complete block above
 ## Command Integration
 
 Invoked via:
-- `/maister:migration [description] [--type=TYPE] [--sequential]` (new)
-- `/maister:migration [task-path] [--from=PHASE] [--sequential]` (resume)
+- `/maister-migration [description] [--type=TYPE] [--sequential]` (new)
+- `/maister-migration [task-path] [--from=PHASE] [--sequential]` (resume)
 
 Flags:
 - `--type=TYPE`: Migration category (e.g. database, api, framework)

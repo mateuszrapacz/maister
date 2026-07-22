@@ -1,5 +1,5 @@
 ---
-name: standards-discover
+name: maister-standards-discover
 description: Discover coding standards from project configuration files, code patterns, documentation, and external sources (PRs, CI/CD)
 ---
 
@@ -66,7 +66,7 @@ Custom scope values are matched against existing `.maister/docs/standards/*/` di
 ### Phase 1: Planning & Initialization
 
 1. **Parse options** from command arguments
-2. **Check prerequisites**: Verify `.maister/docs/` exists. If not, offer to run `/maister:init` first
+2. **Check prerequisites**: Verify `.maister/docs/` exists. If not, offer to run `/maister-init` first
 3. **Read existing standards** from `.maister/docs/INDEX.md` to identify updates vs creates and avoid duplicates
 4. **Display discovery plan** showing scope, sources, and estimated time
 5. **Get user confirmation** via AskUserQuestion before proceeding
@@ -98,7 +98,7 @@ Use the Read tool to load ONLY the reference files for phases you will execute:
 
 **Step 3: Adapt templates** — Replace `[scope]`, `[confidence]`, and other placeholders with actual values. Replace the `[output_file]` placeholder in each template with the actual temp file path for that phase (e.g., `{tmpdir}/config.yml`).
 
-**Step 4: Launch bounded discovery in parallel** — For each phase, use `resolveAgent({ logical_role_id: "maister:information-gatherer" })`, then dispatch actor `standards-discover`, a stable phase work item, response-only findings output, and that phase's bounded read-only discovery context.
+**Step 4: Launch bounded discovery in parallel** — For each phase, use `resolveAgent({ logical_role_id: "maister-information-gatherer" })`, then dispatch actor `standards-discover`, a stable phase work item, response-only findings output, and that phase's bounded read-only discovery context.
 
 > ❌ **WRONG** — launching one agent per message, waiting for result, then launching the next.
 > ✅ **CORRECT** — launching ALL applicable agents (2–4 Task calls) in a SINGLE message.
@@ -164,7 +164,7 @@ If `--auto-apply` is set, automatically approve findings with confidence >= 90% 
 
 ### Phase 8: Application
 
-> **DELEGATION REQUIRED**: Do NOT write standard files directly using Write/Edit tools. ALL file operations MUST go through exact `maister:docs-operator` dispatch.
+> **DELEGATION REQUIRED**: Do NOT write standard files directly using Write/Edit tools. ALL file operations MUST go through exact `maister-docs-operator` dispatch.
 >
 > **SELF-CHECK before each file operation**: "Am I about to write a file directly? STOP — dispatch exact docs-operator instead."
 
@@ -172,9 +172,9 @@ For each approved standard:
 
 1. **Prepare content** — Standard name, description, examples (preferred/avoid), rationale from evidence, source citations. Format each standard as a `###` heading with 1-10 lines description (excluding code snippets). Group related standards into the same topic file. Add brief code examples only when they clarify the practice.
 2. **Check if file exists** — Determine create vs update action
-3. Resolve `resolveAgent({ logical_role_id: "maister:docs-operator" })`, then dispatch actor `standards-discover`, one stable apply-standard work item, the standard file output, and bounded prepared content. For updates, include the existing content and merge requirement. Wait for completion before the next standard.
-4. After all standards are applied, dispatch exact `maister:docs-operator` with actor `standards-discover`, work item `regenerate-index`, output `.maister/docs/INDEX.md`, and bounded index context.
-5. Dispatch exact `maister:docs-operator` with actor `standards-discover`, work item `verify-project-instructions`, response-only verification output, and bounded integration context. Then display the application summary.
+3. Resolve `resolveAgent({ logical_role_id: "maister-docs-operator" })`, then dispatch actor `standards-discover`, one stable apply-standard work item, the standard file output, and bounded prepared content. For updates, include the existing content and merge requirement. Wait for completion before the next standard.
+4. After all standards are applied, dispatch exact `maister-docs-operator` with actor `standards-discover`, work item `regenerate-index`, output `.maister/docs/INDEX.md`, and bounded index context.
+5. Dispatch exact `maister-docs-operator` with actor `standards-discover`, work item `verify-project-instructions`, response-only verification output, and bounded integration context. Then display the application summary.
 
 Display application summary: created count, updated count, total active.
 
@@ -194,7 +194,7 @@ Display final results:
 
 | Situation | Strategy |
 |-----------|----------|
-| `.maister/docs/` missing | Offer `/maister:init`, abort if declined |
+| `.maister/docs/` missing | Offer `/maister-init`, abort if declined |
 | gh CLI unavailable | Skip PR analysis, continue with other sources |
 | GitHub API rate limit | Skip PR analysis, note in report |
 | Config file parse error | Skip that file, log warning, continue |
@@ -218,17 +218,17 @@ Display final results:
 
 ```bash
 # Full discovery (default)
-/maister:standards-discover
+/maister-standards-discover
 
 # Quick scan (config files only, ~30-60s)
-/maister:standards-discover --scope=quick
+/maister-standards-discover --scope=quick
 
 # Frontend standards only
-/maister:standards-discover --scope=frontend
+/maister-standards-discover --scope=frontend
 
 # High confidence, auto-apply
-/maister:standards-discover --confidence=80 --auto-apply
+/maister-standards-discover --confidence=80 --auto-apply
 
 # Skip external analysis (offline/no GitHub)
-/maister:standards-discover --skip-external
+/maister-standards-discover --skip-external
 ```

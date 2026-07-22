@@ -1,5 +1,5 @@
 ---
-name: maister:reviews-test-strategy
+name: maister-reviews-test-strategy
 description: Review whether test strategy matches the problem class of production code
 ---
 

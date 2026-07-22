@@ -1,5 +1,5 @@
 ---
-name: maister:reviews-production-readiness
+name: maister-reviews-production-readiness
 description: Verify production deployment readiness with comprehensive checks
 ---
 
@@ -29,7 +29,7 @@ You are performing comprehensive production readiness analysis covering configur
 **Resolve and dispatch exact production-readiness-checker NOW:**
 
 ```
-resolveAgent({ logical_role_id: "maister:production-readiness-checker" })
+resolveAgent({ logical_role_id: "maister-production-readiness-checker" })
 dispatchAgent:
   actor: reviews-production-readiness
   work_item: production-readiness
@@ -55,17 +55,17 @@ The production-readiness-checker subagent will:
 
 **Example 1**: Check specific task for production
 ```
-User: /maister:reviews-production-readiness .maister/tasks/development/2025-10-24-payment-api/
+User: /maister-reviews-production-readiness .maister/tasks/development/2025-10-24-payment-api/
 ```
 
 **Example 2**: Check feature for staging
 ```
-User: /maister:reviews-production-readiness src/features/notifications/ --target=staging
+User: /maister-reviews-production-readiness src/features/notifications/ --target=staging
 ```
 
 **Example 3**: Comprehensive project check
 ```
-User: /maister:reviews-production-readiness .
+User: /maister-reviews-production-readiness .
 ```
 
 ## What to Expect

@@ -1,5 +1,5 @@
 ---
-name: metaprogram-classifier
+name: maister-metaprogram-classifier
 description: Recognize and classify NLP metaprograms from utterances, written communication, or described behavior. Identifies which of 7 metaprograms are active, detects compound patterns, and suggests communication strategies adapted to the person's cognitive filters. Invoke when the user asks about metaprograms, communication style diagnosis, "jak rozmawiać z tą osobą", "jaki metaprogram", "jak się komunikować", or wants to analyze someone's communication patterns.
 argument-hint: "[utterance, email text, or described behavior to analyze]"
 ---

@@ -200,7 +200,7 @@ Use for:
 ### Phase 2: Target State Planning & Gap Analysis
 
 **Purpose**: Define target system and identify migration gaps
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:gap-analyzer" })`, then dispatch actor `migration`, work item `target-gap-analysis`, output `analysis/target-state-plan.md`, and the bounded current/target context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-gap-analyzer" })`, then dispatch actor `migration`, work item `target-gap-analysis`, output `analysis/target-state-plan.md`, and the bounded current/target context.
 **Output**: `analysis/target-state-plan.md`
 **State**: Update `migration_context.migration_type`, `target_system`, `risk_level`, `breaking_changes`
 
@@ -235,7 +235,7 @@ Invoke the engine as `phase-2-exit` with question "Continue to migration strateg
 2. Save gathered requirements to `analysis/requirements.md`
 
 **Part B — Specification Creation (subagent)**:
-3. Common runtime — `resolveAgent({ logical_role_id: "maister:specification-creator" })`, then dispatch actor `migration`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
+3. Common runtime — `resolveAgent({ logical_role_id: "maister-specification-creator" })`, then dispatch actor `migration`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
 
 **Context to pass to subagent**: task_path, task_type (migration), task_description, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), migration_type, current_system, target_system, risk_level, breaking_changes, phase_summaries (current_state_analysis, gap_analysis), html_style_guide_path (for the spec.html companion)
 
@@ -253,7 +253,7 @@ Invoke the engine as `phase-3-exit` with question "Continue to implementation pl
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Break migration into task groups with rollback steps
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:implementation-planner" })`, then dispatch actor `migration`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and bounded migration/rollback context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-implementation-planner" })`, then dispatch actor `migration`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and bounded migration/rollback context.
 **Output**: `implementation/implementation-plan.md` with rollback procedures
 **State**: Update task groups and dependencies
 
@@ -361,7 +361,7 @@ Invoke the engine as `phase-7-exit` with question "Continue to documentation?", 
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Create migration guide for end users
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:user-docs-generator" })`, then dispatch actor `migration`, work item `migration-guide`, output `documentation/migration-guide.md`, and bounded user-facing migration context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-user-docs-generator" })`, then dispatch actor `migration`, work item `migration-guide`, output `documentation/migration-guide.md`, and bounded user-facing migration context.
 **Output**: `documentation/migration-guide.md`
 **State**: Set documentation complete
 
@@ -426,8 +426,8 @@ orchestrator:
         clarify: manual
         convergence: manual
         verify-matrix: manual
-      advisor_agent: maister:advisor
-      arbiter_agent: maister:advisor
+      advisor_agent: maister-advisor
+      arbiter_agent: maister-advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3

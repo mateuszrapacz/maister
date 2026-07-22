@@ -4,61 +4,256 @@
   "source_root": "plugins/maister/skills",
   "output_root": "plugins/maister/overlays/cursor/assets/skills",
   "transformations": [
-    { "id": "cursor-skill-name-v1", "rationale": "Cursor slash skills use maister-* names instead of Claude-style maister:* names." },
-    { "id": "cursor-question-tool-v1", "rationale": "Cursor exposes AskQuestion rather than AskUserQuestion." },
-    { "id": "cursor-framework-path-v1", "rationale": "The Cursor package materializes the orchestrator framework below lib/." },
-    { "id": "cursor-skill-references-v1", "rationale": "References must use Cursor's maister-* public skill names." },
-    { "id": "cursor-todowrite-v1", "rationale": "Cursor workflow state uses TodoWrite rather than Claude task tools." },
-    { "id": "cursor-host-neutralization-v1", "rationale": "Known legacy-host references in validated Cursor assets are neutralized at narrowly scoped init, migration-reference, and standards-reference seams." }
+    {
+      "id": "cursor-skill-name-v1",
+      "rationale": "Cursor slash skills use maister-* names instead of Claude-style maister:* names."
+    },
+    {
+      "id": "cursor-question-tool-v1",
+      "rationale": "Cursor exposes AskQuestion rather than AskUserQuestion."
+    },
+    {
+      "id": "cursor-framework-path-v1",
+      "rationale": "The Cursor package materializes the orchestrator framework below lib/."
+    },
+    {
+      "id": "cursor-skill-references-v1",
+      "rationale": "References must use Cursor's maister-* public skill names."
+    },
+    {
+      "id": "cursor-todowrite-v1",
+      "rationale": "Cursor workflow state uses TodoWrite rather than Claude task tools."
+    },
+    {
+      "id": "cursor-host-neutralization-v1",
+      "rationale": "Known legacy-host references in validated Cursor assets are neutralized at narrowly scoped init, migration-reference, and standards-reference seams."
+    }
   ],
   "mappings": [
-    { "source": "aggregate-designer", "target": "maister-aggregate-designer", "source_fingerprint": "74230a0306f3a9f80b99246c4cc8fa56475a2535bb503b7cf3ba88cd52a99734" },
-    { "source": "context-distiller", "target": "maister-context-distiller", "source_fingerprint": "c9ce3e216707913d19d3af2edcb803ce7e86aff501a0ddc041036e4c5b39b736" },
-    { "source": "development", "target": "maister-development", "source_fingerprint": "37cc7aa9962e9ba9d280d635cf852b84520941bf277e7993b2c8a9ab03922a29" },
-    { "source": "grill-me", "target": "maister-grill-me", "source_fingerprint": "fe57990a1c83cf4ba639df135fb73e3053b9122012acf32a63525eceb7c2e461" },
-    { "source": "grill-with-docs", "target": "maister-grill-with-docs", "source_fingerprint": "1852c89b0e5bd8fd0922fed83f72f098b7b7c3d8e2d09360cf798cf79911fe51" },
-    { "source": "init", "target": "maister-init", "source_fingerprint": "f6f5674bff840e9a72380092b0668b75bd86697d2aaae4b1e0622c7eb5db91ba" },
-    { "source": "linguistic-boundary-verifier", "target": "maister-linguistic-boundary-verifier", "source_fingerprint": "b69d653f578e8007759bec72a2ebdb660bbf3b4fe3a9e20871b5b8e96a3f9cc8" },
-    { "source": "metaprogram-classifier", "target": "maister-metaprogram-classifier", "source_fingerprint": "e4a71cfc23d31723e2630f16db72bd2d26462df6720e9675a3849f8b1fd86997" },
-    { "source": "migration", "target": "maister-migration", "source_fingerprint": "eb83cbb7d4db078a96e21140dbf09c336ff8c2e941badff5d684d1658c40a1c9" },
-    { "source": "performance", "target": "maister-performance", "source_fingerprint": "5c780f5624b9da97368d8112a14b7806201d4ab91592297866c2571bd516ac06" },
-    { "source": "problem-classifier", "target": "maister-problem-classifier", "source_fingerprint": "5d4167cd7fc681d61a0b5f787ab34bcde5230b4dc76840b530c86a43ed04441f" },
-    { "source": "product-design", "target": "maister-product-design", "source_fingerprint": "d6dbece439d669d287fb81eba2f7ef3864ef29f6519cf9b36519ce057754c7d0" },
-    { "source": "quick-bugfix", "target": "maister-quick-bugfix", "source_fingerprint": "162254f90c61039c6edd869b4e8a244dfee694dc1ac0472be12d00e36e100606" },
-    { "source": "quick-dev", "target": "maister-quick-dev", "source_fingerprint": "729af2676b296ce731b2f8f3f3546df690419c252766381e5a15c7be6109d325" },
-    { "source": "quick-plan", "target": "maister-quick-plan", "source_fingerprint": "0a051ed5530ea55674fea5498df83a376a353ad18dee42d410ee18ca77b20b64" },
-    { "source": "requirements-critic", "target": "maister-requirements-critic", "source_fingerprint": "5feb4fba0f818f7720cb22d9b806412843bd9af376642dd24551c3157c7febfc" },
-    { "source": "research", "target": "maister-research", "source_fingerprint": "596ce2c0ee9f44a831663f1092d42e1852d2bf34b9e6ccc012ea2eabfad0500d" },
-    { "source": "standards-discover", "target": "maister-standards-discover", "source_fingerprint": "4b9b705e742592af509910e513d7d7b47d2a3c6112f286ccd1e236e880f4a081" },
-    { "source": "standards-update", "target": "maister-standards-update", "source_fingerprint": "9a81e3a71cd0b0052bf906090de2b3c376882fc66bd79255524a58ff3b8aa08d" },
-    { "source": "test-strategy-reviewer", "target": "maister-test-strategy-reviewer", "source_fingerprint": "413170e6d7a734f9acdd2f284edd286299c83f4b6f25ffef53baa87b26fa6443" },
-    { "source": "thermo-nuclear-code-quality-review", "target": "maister-thermo-nuclear-code-quality-review", "source_fingerprint": "961ea24423202728975c64d71cb17f9524aa07c18b1af4c80ba056ab659fa745" },
-    { "source": "thermo-nuclear-review", "target": "maister-thermo-nuclear-review", "source_fingerprint": "e132329949a134c2ed5824d413255b310d88f621bef3d95c333744f2a3397b78" },
-    { "source": "thermos", "target": "maister-thermos", "source_fingerprint": "be2be7cb9e70338157151ea95abec62a4f6b789ebd05906bd08af04f161ca1e7" },
-    { "source": "transcript-critic", "target": "maister-transcript-critic", "source_fingerprint": "957f7c457b607e4a07c71be83d55bab2ddf1038df43ab3e487a5cf6645b83f4b" }
+    {
+      "source": "aggregate-designer",
+      "target": "maister-aggregate-designer",
+      "source_fingerprint": "92d0d4360caef35a924202e14b322b3224ce6f728c4d1aae40e43ddf032b1cc5"
+    },
+    {
+      "source": "context-distiller",
+      "target": "maister-context-distiller",
+      "source_fingerprint": "6de0661949ffa9bc17f5903e21bc44858f2fdda1a6df819a6a8eb3c2760000ed"
+    },
+    {
+      "source": "development",
+      "target": "maister-development",
+      "source_fingerprint": "4fb5185d50a644ae6bb4a95720318d19aa88b785374b1134d319107cb7699db8"
+    },
+    {
+      "source": "grill-me",
+      "target": "maister-grill-me",
+      "source_fingerprint": "f3d5484cbecf44031a0fd62ad240cff9a318275ebdd61d37963af7110401a12a"
+    },
+    {
+      "source": "grill-with-docs",
+      "target": "maister-grill-with-docs",
+      "source_fingerprint": "2dc0a99cbfc9b833ddfb4f2ccef5ead03f679932265ab6cc4db4c8e86689a7a4"
+    },
+    {
+      "source": "init",
+      "target": "maister-init",
+      "source_fingerprint": "31d67862bc44fbe1931ed224eae7dda8fbb59151d4faef28a73e6b461c7e81c5"
+    },
+    {
+      "source": "linguistic-boundary-verifier",
+      "target": "maister-linguistic-boundary-verifier",
+      "source_fingerprint": "dc2f7e5eababee736d7f2e057e8368f22a591cfa57ca18131a269a356a5ad76e"
+    },
+    {
+      "source": "metaprogram-classifier",
+      "target": "maister-metaprogram-classifier",
+      "source_fingerprint": "c4d845f6ee617f995304746a0af7a27b831f0c3965c4a5b4f881c9c245cf28ae"
+    },
+    {
+      "source": "migration",
+      "target": "maister-migration",
+      "source_fingerprint": "42a946f2529990122c59ef8c8de0b7cbf44e344f168693ea78e7d25b2e90829d"
+    },
+    {
+      "source": "performance",
+      "target": "maister-performance",
+      "source_fingerprint": "030cc51c27ee8e319eb1b12dce5b94704077931b4143c3144e299e93e7d2db28"
+    },
+    {
+      "source": "problem-classifier",
+      "target": "maister-problem-classifier",
+      "source_fingerprint": "b194fdf3674db6bbd4cfc0870d80ac4079317c6a527b6f0df8f53a5b06348053"
+    },
+    {
+      "source": "product-design",
+      "target": "maister-product-design",
+      "source_fingerprint": "ae07642a81536a9d87fdc96104042fae72513db02ab96e690f7645e570dc38a3"
+    },
+    {
+      "source": "quick-bugfix",
+      "target": "maister-quick-bugfix",
+      "source_fingerprint": "92c25667e7fde563573cf85d865df7490d98f905f77865d640ff66d958af4b42"
+    },
+    {
+      "source": "quick-dev",
+      "target": "maister-quick-dev",
+      "source_fingerprint": "d106a9faefcf53754f6b2d26c43fd97b4d894d57f48bb494caa4054c5122e2c3"
+    },
+    {
+      "source": "quick-plan",
+      "target": "maister-quick-plan",
+      "source_fingerprint": "3dd31f991adfe603f626a2de7211069ec705edccac1f90d16ae1ac6360d9d346"
+    },
+    {
+      "source": "requirements-critic",
+      "target": "maister-requirements-critic",
+      "source_fingerprint": "5764d0f031d86cbc80ed6bdaeaa32a37349d9854e77de9bb5ac13851f4f76350"
+    },
+    {
+      "source": "research",
+      "target": "maister-research",
+      "source_fingerprint": "9a29b611f3ea774a2811b02143e30f6fd54ced9412cbbb74e1e3fb739818372a"
+    },
+    {
+      "source": "standards-discover",
+      "target": "maister-standards-discover",
+      "source_fingerprint": "68feaf408c098925aecd7f029c0525b4d7d4684bde49a97c54cd96a402531a70"
+    },
+    {
+      "source": "standards-update",
+      "target": "maister-standards-update",
+      "source_fingerprint": "dd46e34e9a785dae2513f4f8b65e10d4c349822b8242e45e153778fb37e342ce"
+    },
+    {
+      "source": "test-strategy-reviewer",
+      "target": "maister-test-strategy-reviewer",
+      "source_fingerprint": "c0d9ff187e2ccf3f7a33c0d17cf42a28b32644d568e580b3592533e1b6a16879"
+    },
+    {
+      "source": "thermo-nuclear-code-quality-review",
+      "target": "maister-thermo-nuclear-code-quality-review",
+      "source_fingerprint": "e48a18b6fa7fd937c96878e95d7540c2d680baea9873983d86381623cac45239"
+    },
+    {
+      "source": "thermo-nuclear-review",
+      "target": "maister-thermo-nuclear-review",
+      "source_fingerprint": "d3fad7f824e9830832692f6b9d40d8e95a99c34aa29ddd7fa4498712f2a7debf"
+    },
+    {
+      "source": "thermos",
+      "target": "maister-thermos",
+      "source_fingerprint": "3f247885306fbbbce26da9cc96df04f896f004ac7b81a466e09fac2ab36a0281"
+    },
+    {
+      "source": "transcript-critic",
+      "target": "maister-transcript-critic",
+      "source_fingerprint": "2f1ea65fb2f9a78589004704d5030bfd085e6a0ea83d968c2e22dc6165bb4640"
+    }
   ],
   "command_mappings": [
-    { "source": "plugins/maister/commands/reviews-code.md", "target": "maister-reviews-code/SKILL.md", "source_sha256": "41f74eddea48b0c95e7d0381317b23e6379a6a9d670f8585d6afabba6a58acca" },
-    { "source": "plugins/maister/commands/reviews-pragmatic.md", "target": "maister-reviews-pragmatic/SKILL.md", "source_sha256": "b07186d87723010cb28ef8a4ba8eecbcaf854991125ed57c17857a6e00f6117f" },
-    { "source": "plugins/maister/commands/reviews-production-readiness.md", "target": "maister-reviews-production-readiness/SKILL.md", "source_sha256": "6f743f360cbf3415d63d6befbdad4e762655e53a385ba170ccd18d620f930ae7" },
-    { "source": "plugins/maister/commands/reviews-reality-check.md", "target": "maister-reviews-reality-check/SKILL.md", "source_sha256": "a98ec01a40b89c04bef21ee25fc0445880a0fa12debf8489ff0a3ede6e86e38e" },
-    { "source": "plugins/maister/commands/reviews-spec-audit.md", "target": "maister-reviews-spec-audit/SKILL.md", "source_sha256": "0103c7c2c504c343277a48d85326ad14e6628fec957041fff260d33a0edae8b6" },
-    { "source": "plugins/maister/commands/work.md", "target": "maister-work/SKILL.md", "source_sha256": "f3fd5d90f76362c88df32a46fc1b7ba86dc67a13b83c0f8495a9f661d24326f7" }
+    {
+      "source": "plugins/maister/commands/reviews-code.md",
+      "target": "maister-reviews-code/SKILL.md",
+      "source_sha256": "41f74eddea48b0c95e7d0381317b23e6379a6a9d670f8585d6afabba6a58acca"
+    },
+    {
+      "source": "plugins/maister/commands/reviews-pragmatic.md",
+      "target": "maister-reviews-pragmatic/SKILL.md",
+      "source_sha256": "b07186d87723010cb28ef8a4ba8eecbcaf854991125ed57c17857a6e00f6117f"
+    },
+    {
+      "source": "plugins/maister/commands/reviews-production-readiness.md",
+      "target": "maister-reviews-production-readiness/SKILL.md",
+      "source_sha256": "6f743f360cbf3415d63d6befbdad4e762655e53a385ba170ccd18d620f930ae7"
+    },
+    {
+      "source": "plugins/maister/commands/reviews-reality-check.md",
+      "target": "maister-reviews-reality-check/SKILL.md",
+      "source_sha256": "a98ec01a40b89c04bef21ee25fc0445880a0fa12debf8489ff0a3ede6e86e38e"
+    },
+    {
+      "source": "plugins/maister/commands/reviews-spec-audit.md",
+      "target": "maister-reviews-spec-audit/SKILL.md",
+      "source_sha256": "0103c7c2c504c343277a48d85326ad14e6628fec957041fff260d33a0edae8b6"
+    },
+    {
+      "source": "plugins/maister/commands/work.md",
+      "target": "maister-work/SKILL.md",
+      "source_sha256": "f3fd5d90f76362c88df32a46fc1b7ba86dc67a13b83c0f8495a9f661d24326f7"
+    }
   ],
   "source_exclusions": [
-    { "source": "codebase-analyzer", "rationale": "Internal engine materialized under Cursor lib/skills by the package overlay, outside this public-skill projection." },
-    { "source": "docs-manager", "rationale": "Internal engine materialized under Cursor lib/skills by the package overlay, outside this public-skill projection." },
-    { "source": "implementation-plan-executor", "rationale": "Internal engine materialized under Cursor lib/skills by the package overlay, outside this public-skill projection." },
-    { "source": "implementation-verifier", "rationale": "Internal engine materialized under Cursor lib/skills by the package overlay, outside this public-skill projection." },
-    { "source": "orchestrator-framework", "rationale": "Framework content is materialized under Cursor lib/orchestrator-framework, outside this public-skill projection." }
+    {
+      "source": "codebase-analyzer",
+      "rationale": "Internal engine materialized under Cursor lib/skills by the package overlay, outside this public-skill projection."
+    },
+    {
+      "source": "docs-manager",
+      "rationale": "Internal engine materialized under Cursor lib/skills by the package overlay, outside this public-skill projection."
+    },
+    {
+      "source": "implementation-plan-executor",
+      "rationale": "Internal engine materialized under Cursor lib/skills by the package overlay, outside this public-skill projection."
+    },
+    {
+      "source": "implementation-verifier",
+      "rationale": "Internal engine materialized under Cursor lib/skills by the package overlay, outside this public-skill projection."
+    },
+    {
+      "source": "orchestrator-framework",
+      "rationale": "Framework content is materialized under Cursor lib/orchestrator-framework, outside this public-skill projection."
+    }
   ],
   "preserved_exceptions": [
-    { "target": "maister-quick-plan/SKILL.md", "source": "historical platforms/cursor/overrides/skills/quick-plan/SKILL.md", "mapping_rationale": "Cursor has no native Claude plan-mode tools; preserve the validated file-based planning workflow until its canonical host seam exists.", "sha256": "01b504f8cbda2292137d0cc17665c80c91540378d6a5b721dc361c8586fb95a4", "mode": "0644" },
-    { "target": "maister-quick-bugfix/SKILL.md", "source": "historical platforms/cursor/overrides/skills/quick-bugfix/SKILL.md", "mapping_rationale": "Cursor has no native Claude plan-mode tools; preserve the validated file-based bugfix workflow until its canonical host seam exists.", "sha256": "ea8cfff89c4ac41257111a55ba0b5dbac9f89bc0076d8107b8a26d5ffd150cf2", "mode": "0644" },
-    { "target": "maister-bye/SKILL.md", "source": "historical platforms/cursor/build.sh#generate_utility_skills", "mapping_rationale": "Cursor-native lifecycle utility has no canonical plugins/maister/skills source.", "sha256": "95af97671ff9d944163d738484715a3b28045e6d9e779e1b3a8fb688ba93a882", "mode": "0644" },
-    { "target": "maister-dev/SKILL.md", "source": "historical platforms/cursor/build.sh#generate_utility_skills", "mapping_rationale": "Cursor-native development alias has no canonical plugins/maister/skills source.", "sha256": "0f02e32d22def1fc8f125eb291df5e5337fcb48752c7c17a7bf3bd4c4b19b97e", "mode": "0644" },
-    { "target": "maister-next/SKILL.md", "source": "historical platforms/cursor/build.sh#generate_utility_skills", "mapping_rationale": "Cursor-native lifecycle utility has no canonical plugins/maister/skills source.", "sha256": "14cae76a0aab7059e5518f803eef6883a85921aa8c2526f80a5699f76255d7bc", "mode": "0644" },
-    { "target": "maister-resume/SKILL.md", "source": "historical platforms/cursor/build.sh#generate_utility_skills", "mapping_rationale": "Cursor-native lifecycle utility has no canonical plugins/maister/skills source.", "sha256": "22af5bf9ed50738674f506524ea5c9d5380f4856e4bb87596aadd05e0e6a7911", "mode": "0644" },
-    { "target": "maister-status/SKILL.md", "source": "historical platforms/cursor/build.sh#generate_utility_skills", "mapping_rationale": "Cursor-native lifecycle utility has no canonical plugins/maister/skills source.", "sha256": "5607918056fbb9a4be524d3ea0393bcc3d201eff7bf480671af18c426c4a7198", "mode": "0644" }
+    {
+      "target": "maister-quick-plan/SKILL.md",
+      "source": "historical platforms/cursor/overrides/skills/quick-plan/SKILL.md",
+      "mapping_rationale": "Cursor has no native Claude plan-mode tools; preserve the validated file-based planning workflow until its canonical host seam exists.",
+      "sha256": "01b504f8cbda2292137d0cc17665c80c91540378d6a5b721dc361c8586fb95a4",
+      "mode": "0644"
+    },
+    {
+      "target": "maister-quick-bugfix/SKILL.md",
+      "source": "historical platforms/cursor/overrides/skills/quick-bugfix/SKILL.md",
+      "mapping_rationale": "Cursor has no native Claude plan-mode tools; preserve the validated file-based bugfix workflow until its canonical host seam exists.",
+      "sha256": "ea8cfff89c4ac41257111a55ba0b5dbac9f89bc0076d8107b8a26d5ffd150cf2",
+      "mode": "0644"
+    },
+    {
+      "target": "maister-bye/SKILL.md",
+      "source": "historical platforms/cursor/build.sh#generate_utility_skills",
+      "mapping_rationale": "Cursor-native lifecycle utility has no canonical plugins/maister/skills source.",
+      "sha256": "95af97671ff9d944163d738484715a3b28045e6d9e779e1b3a8fb688ba93a882",
+      "mode": "0644"
+    },
+    {
+      "target": "maister-dev/SKILL.md",
+      "source": "historical platforms/cursor/build.sh#generate_utility_skills",
+      "mapping_rationale": "Cursor-native development alias has no canonical plugins/maister/skills source.",
+      "sha256": "0f02e32d22def1fc8f125eb291df5e5337fcb48752c7c17a7bf3bd4c4b19b97e",
+      "mode": "0644"
+    },
+    {
+      "target": "maister-next/SKILL.md",
+      "source": "historical platforms/cursor/build.sh#generate_utility_skills",
+      "mapping_rationale": "Cursor-native lifecycle utility has no canonical plugins/maister/skills source.",
+      "sha256": "14cae76a0aab7059e5518f803eef6883a85921aa8c2526f80a5699f76255d7bc",
+      "mode": "0644"
+    },
+    {
+      "target": "maister-resume/SKILL.md",
+      "source": "historical platforms/cursor/build.sh#generate_utility_skills",
+      "mapping_rationale": "Cursor-native lifecycle utility has no canonical plugins/maister/skills source.",
+      "sha256": "22af5bf9ed50738674f506524ea5c9d5380f4856e4bb87596aadd05e0e6a7911",
+      "mode": "0644"
+    },
+    {
+      "target": "maister-status/SKILL.md",
+      "source": "historical platforms/cursor/build.sh#generate_utility_skills",
+      "mapping_rationale": "Cursor-native lifecycle utility has no canonical plugins/maister/skills source.",
+      "sha256": "5607918056fbb9a4be524d3ea0393bcc3d201eff7bf480671af18c426c4a7198",
+      "mode": "0644"
+    }
   ]
 }

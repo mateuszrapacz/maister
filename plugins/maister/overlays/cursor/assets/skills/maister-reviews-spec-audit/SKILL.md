@@ -28,7 +28,7 @@ You are performing senior auditor review of specifications to verify completenes
 **Resolve and dispatch exact spec-auditor NOW:**
 
 ```
-resolveAgent({ logical_role_id: "maister:spec-auditor" })
+resolveAgent({ logical_role_id: "maister-spec-auditor" })
 dispatchAgent:
   actor: reviews-spec-audit
   work_item: specification-audit

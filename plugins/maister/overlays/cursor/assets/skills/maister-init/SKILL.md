@@ -26,7 +26,7 @@ invoke `bin/reconcile-gate-config.sh reconcile .maister/config.yml on|off`.
 This is a project-only configuration transaction. A missing `advisor:` mapping
 receives the complete exact defaults. A present mapping must already be
 complete and canonical; legacy actor-model fields, unknown fields, unsafe YAML,
-and any role value other than exact `maister:advisor` fail before replacement.
+and any role value other than exact `maister-advisor` fail before replacement.
 The managed top-level key must be the canonical plain `advisor:` mapping.
 
 If staging, replacement, or restoration fails, stop initialization and
@@ -75,7 +75,7 @@ Check if `.maister/` directory already exists.
 
 ## PHASE 2: Project Analysis
 
-Resolve `resolveAgent({ logical_role_id: "maister:project-analyzer" })`, then dispatch with the Phase 2 actor, project-analysis work item, conversation output contract, and bounded project context.
+Resolve `resolveAgent({ logical_role_id: "maister-project-analyzer" })`, then dispatch with the Phase 2 actor, project-analysis work item, conversation output contract, and bounded project context.
 
 Wait for completion. Store analysis results for use in Phases 3 and 6.
 
@@ -140,7 +140,7 @@ Store selection for Phase 5.
 
 ## PHASE 5: Initialize Documentation Structure
 
-Resolve `resolveAgent({ logical_role_id: "maister:docs-operator" })`, then dispatch with the init actor, documentation-structure work item, filesystem output contract, and this bounded task:
+Resolve `resolveAgent({ logical_role_id: "maister-docs-operator" })`, then dispatch with the init actor, documentation-structure work item, filesystem output contract, and this bounded task:
 
 > "Initialize documentation structure. Standards selection: [array from Phase 4]. [If --standards-from was provided: Standards source path: [resolved path]/.maister/docs/standards/. Copy standards from this external path instead of built-in defaults.] Only copy selected standard categories. Do NOT copy project templates — only create the project/ directory. Project documentation will be generated in Phase 6 with real content from project analysis. Create placeholder sections in INDEX.md for skipped categories."
 
@@ -163,8 +163,8 @@ html_output: true
 advisor:
   enabled: false
   gate_policies: {}
-  advisor_agent: maister:advisor
-  arbiter_agent: maister:advisor
+  advisor_agent: maister-advisor
+  arbiter_agent: maister-advisor
   arbiter_enabled_on_disagreement: true
   retry:
     advisor_attempts: 3
@@ -199,7 +199,7 @@ Write each file to `.maister/docs/project/`.
 
 ## PHASE 7: Validate
 
-**Step 1**: Resolve `resolveAgent({ logical_role_id: "maister:docs-operator" })`, then dispatch with the validation actor, documentation-index work item, filesystem output contract, and this bounded task:
+**Step 1**: Resolve `resolveAgent({ logical_role_id: "maister-docs-operator" })`, then dispatch with the validation actor, documentation-index work item, filesystem output contract, and this bounded task:
 
 > "Regenerate INDEX.md to include all newly created project documentation. Then verify project instructions are properly integrated with `.maister/docs/` documentation."
 

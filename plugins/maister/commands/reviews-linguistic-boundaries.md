@@ -1,5 +1,5 @@
 ---
-name: maister:reviews-linguistic-boundaries
+name: maister-reviews-linguistic-boundaries
 description: Verify linguistic boundaries between bounded contexts via language.md files
 ---
 

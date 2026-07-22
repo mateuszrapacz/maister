@@ -1,5 +1,5 @@
 ---
-name: maister:reviews-pragmatic
+name: maister-reviews-pragmatic
 description: Run pragmatic code review to detect over-engineering and ensure code matches project scale
 ---
 
@@ -24,7 +24,7 @@ You are performing pragmatic analysis to identify over-engineering, unnecessary 
 **Resolve and dispatch exact code-quality-pragmatist NOW:**
 
 ```
-resolveAgent({ logical_role_id: "maister:code-quality-pragmatist" })
+resolveAgent({ logical_role_id: "maister-code-quality-pragmatist" })
 dispatchAgent:
   actor: reviews-pragmatic
   work_item: pragmatic-code-review
@@ -60,17 +60,17 @@ The code-quality-pragmatist agent will:
 
 **Example 1**: Review specific feature
 ```
-User: /maister:reviews-pragmatic .maister/tasks/development/2025-11-17-user-management/
+User: /maister-reviews-pragmatic .maister/tasks/development/2025-11-17-user-management/
 ```
 
 **Example 2**: Review source directory
 ```
-User: /maister:reviews-pragmatic src/features/payments/
+User: /maister-reviews-pragmatic src/features/payments/
 ```
 
 **Example 3**: Review specific file
 ```
-User: /maister:reviews-pragmatic src/services/cache-service.ts
+User: /maister-reviews-pragmatic src/services/cache-service.ts
 ```
 
 ## What to Expect

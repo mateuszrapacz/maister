@@ -30,7 +30,7 @@ You are performing automated code analysis to identify quality, security, and pe
 **Resolve and dispatch exact code-reviewer NOW:**
 
 ```
-resolveAgent({ logical_role_id: "maister:code-reviewer" })
+resolveAgent({ logical_role_id: "maister-code-reviewer" })
 dispatchAgent:
   actor: reviews-code
   work_item: code-quality-review
