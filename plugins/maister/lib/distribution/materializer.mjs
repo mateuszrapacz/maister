@@ -123,7 +123,7 @@ const HISTORICAL_REFERENCE_EXCEPTIONS = Object.freeze({
     "../verification/implementation-verification.html",
     "[twin].md",
   ]),
-  "agents/user-docs-generator.md": Object.freeze([
+  "agents/maister-user-docs-generator.md": Object.freeze([
     "screenshots/01-action.png",
     "screenshots/02-action.png",
   ]),
@@ -856,7 +856,7 @@ function isHistoricalReferenceException(target, entryPath, reference) {
   }
   if (target === "codex" && entryPath === "skills/orchestrator-framework/agents/e2e-test-verifier.md" && exceptions.includes(reference)) return true;
   if (target === "codex" && entryPath === "skills/orchestrator-framework/agents/user-docs-generator.md" && exceptions.includes(reference)) return true;
-  return target === "cursor" && entryPath === "agents/user-docs-generator.md" && exceptions.includes(reference);
+  return target === "cursor" && entryPath === "agents/maister-user-docs-generator.md" && exceptions.includes(reference);
 }
 
 function validateInternalReferences(stagingRoot, target, files, entries) {

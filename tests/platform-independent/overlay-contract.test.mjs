@@ -87,7 +87,7 @@ const REQUIRED_INVENTORY = {
   cursor: [
     ".cursor-plugin/plugin.json",
     "skills/maister-*/SKILL.md",
-    "agents/*.md",
+    "agents/maister-*.md",
     "rules/*.mdc",
     "hooks/hooks.json",
   ],
@@ -712,4 +712,118 @@ test("keeps checked-in Cursor and Kiro agent assets limited to explicit support 
       "maister.json",
     ],
   );
+});
+
+test("Cursor ownership globs require agents/maister-*.md and hooks/maister-*.sh", () => {
+  for (const source of [readFixture("cursor"), loadOverlay(checkedInOverlayPaths("cursor")).overlay]) {
+    assert.ok(source.inventory.required.includes("agents/maister-*.md"));
+    assert.equal(source.inventory.required.includes("agents/*.md"), false);
+    assert.ok(source.inventory.optional.includes("hooks/maister-*.sh"));
+    assert.equal(source.inventory.optional.includes("hooks/*.sh"), false);
+    assert.deepEqual(source.validation.executable_paths, ["hooks/maister-*.sh"]);
+  }
+  const fixtureInventory = loadOverlay(fixturePaths("cursor")).inventory;
+  const checkedInInventory = loadOverlay(checkedInOverlayPaths("cursor")).inventory;
+  assert.ok(fixtureInventory.required.includes("agents/maister-*.md"));
+  assert.ok(fixtureInventory.optional.includes("hooks/maister-*.sh"));
+  assert.ok(checkedInInventory.required.includes("agents/maister-*.md"));
+  assert.ok(checkedInInventory.optional.includes("hooks/maister-*.sh"));
+});
+
+test("Cursor path_template and explore destination use maister-prefixed agent leaves", () => {
+  for (const source of [readFixture("cursor"), loadOverlay(checkedInOverlayPaths("cursor")).overlay]) {
+    assert.equal(source.agent_projection.destinations[0].path_template, "agents/maister-{role_id}.md");
+    assert.equal(
+      source.agent_projection.support_inventory[0].assets[0].destination,
+      "agents/maister-explore.md",
+    );
+  }
+});
+
+test("Cursor hooks.json commands and hook assets use maister-*.sh basenames only", () => {
+  const hooksRoot = path.join(CHECKED_IN_OVERLAY_ROOT, "cursor/assets/hooks");
+  const hooksJson = JSON.parse(fs.readFileSync(path.join(hooksRoot, "hooks.json"), "utf8"));
+  const commands = Object.values(hooksJson.hooks).flat().map(({ command }) => command);
+  assert.ok(commands.length > 0);
+  for (const command of commands) {
+    assert.match(command, /\$\{CURSOR_PLUGIN_ROOT\}\/hooks\/maister-[a-z0-9-]+\.sh$/u);
+    assert.equal(command.includes("maister-maister-"), false);
+  }
+
+  const hookScripts = fs.readdirSync(hooksRoot).filter((name) => name.endsWith(".sh")).sort();
+  assert.equal(hookScripts.length, 8);
+  for (const name of hookScripts) {
+    assert.match(name, /^maister-[a-z0-9-]+\.sh$/u);
+    assert.equal(name.startsWith("maister-maister-"), false);
+  }
+  assert.deepEqual(hookScripts, [
+    "maister-block-destructive-commands.sh",
+    "maister-block-risky-subagents.sh",
+    "maister-post-compact-reminder.sh",
+    "maister-session-end-hook-state-cleanup.sh",
+    "maister-skill-invocation-reminder.sh",
+    "maister-stop-state-reminder.sh",
+    "maister-subagent-start-tracker.sh",
+    "maister-subagent-stop-cleanup.sh",
+  ]);
+});
+
+test("FR-8: Cursor skills and rules remain maister-prefixed without this-task renames", () => {
+  const skillsRoot = path.join(CHECKED_IN_OVERLAY_ROOT, "cursor/assets/skills");
+  const skillDirs = fs.readdirSync(skillsRoot).filter((name) => {
+    return fs.statSync(path.join(skillsRoot, name)).isDirectory();
+  });
+  assert.ok(skillDirs.length > 0);
+  for (const name of skillDirs) {
+    assert.match(name, /^maister-[a-z0-9-]+$/u);
+    assert.equal(name.startsWith("maister-maister-"), false);
+  }
+
+  const rulesRoot = path.join(CHECKED_IN_OVERLAY_ROOT, "cursor/assets/rules");
+  const rules = fs.readdirSync(rulesRoot).filter((name) => name.endsWith(".mdc"));
+  assert.ok(rules.length > 0);
+  for (const name of rules) {
+    assert.match(name, /^maister-[a-z0-9-]+\.mdc$/u);
+  }
+
+  // Cursor packages slash commands as skills; there is no separate commands asset tree.
+  assert.equal(fs.existsSync(path.join(CHECKED_IN_OVERLAY_ROOT, "cursor/assets/commands")), false);
+});
+
+test("FR-8: Pi and Kiro production path templates stay prefixed templates (untouched by Cursor rename)", () => {
+  const pi = loadOverlay(checkedInOverlayPaths("pi")).overlay;
+  assert.equal(pi.agent_projection.destinations[0].path_template, "agents/maister-{role_id}.md");
+  assert.ok(pi.inventory.required.includes("agents/maister-*.md"));
+
+  const kiro = loadOverlay(checkedInOverlayPaths("kiro-cli")).overlay;
+  assert.equal(kiro.agent_projection.destinations[0].path_template, "agents/maister-{role_id}.json");
+  assert.ok(kiro.inventory.required.includes("agents/maister*.json"));
+  assert.ok(kiro.validation.executable_paths.includes("hooks/maister-*.sh"));
+});
+
+test("Cursor parity baseline agent evidence uses maister-prefixed leaves (M2)", () => {
+  const baseline = JSON.parse(
+    fs.readFileSync(path.join(CHECKED_IN_OVERLAY_ROOT, "cursor/parity-baseline.json"), "utf8"),
+  );
+  assert.equal(baseline.target, "cursor");
+
+  const inventory = baseline.rules.find((rule) => rule.id === "cursor-prefixed-agent-leaf-inventory");
+  assert.ok(inventory);
+  assert.ok(inventory.paths.length > 0);
+  for (const entryPath of inventory.paths) {
+    assert.match(entryPath, /^agents\/maister-[a-z0-9-]+\.md$/u);
+    assert.equal(entryPath.includes("maister-maister-"), false);
+  }
+  assert.ok(inventory.paths.includes("agents/maister-explore.md"));
+  assert.ok(inventory.paths.includes("agents/maister-advisor.md"));
+
+  const deletions = baseline.rules.find((rule) => rule.id === "cursor-short-agent-leaf-deletions");
+  assert.ok(deletions);
+  assert.ok(deletions.paths.includes("agents/advisor.md"));
+  assert.ok(deletions.paths.includes("agents/explore.md"));
+  assert.equal(deletions.paths.some((entryPath) => entryPath.startsWith("agents/maister-")), false);
+
+  const semantic = baseline.rules.find((rule) => rule.id === "cursor-common-source-semantic-migration");
+  assert.ok(semantic);
+  assert.equal(semantic.paths.some((entryPath) => entryPath.startsWith("agents/")), false);
 });

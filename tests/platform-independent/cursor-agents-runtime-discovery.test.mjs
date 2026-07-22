@@ -57,9 +57,9 @@ function writePluginAgents(pluginRoot, names) {
   const agentsDir = path.join(pluginRoot, "agents");
   fs.mkdirSync(agentsDir, { recursive: true });
   for (const name of names) {
-    const role = name.replace(/^maister-/, "");
+    // Prefixed plugin leaves (maister-*.md); seed short dual-write leaves separately for prune tests.
     fs.writeFileSync(
-      path.join(agentsDir, `${role}.md`),
+      path.join(agentsDir, `${name}.md`),
       `---\nname: ${name}\ndescription: "fixture ${name}"\nmodel: inherit\n---\n\n# ${name}\n`,
       "utf8",
     );
@@ -70,6 +70,17 @@ function writePluginAgents(pluginRoot, names) {
     JSON.stringify({ name: "maister-cursor", agents: "./agents/" }, null, 2),
     "utf8",
   );
+}
+
+function seedShortAgentLeaves(agentsDir, shortBasenames, contentsByName = {}) {
+  fs.mkdirSync(agentsDir, { recursive: true });
+  for (const basename of shortBasenames) {
+    fs.writeFileSync(
+      path.join(agentsDir, basename),
+      contentsByName[basename] ?? `PRIOR ${basename}\n`,
+      "utf8",
+    );
+  }
 }
 
 test("Cursor plugin packages createMaisterAgentBridgeV1 at the distribution bridge path", async () => {
@@ -169,7 +180,7 @@ test("install CLI accepts --agents-fallback for optional user/project agents dua
   assert.equal(parsed.agentsFallback, true);
 });
 
-test("agents-fallback dual-write copies leaves and backs up prior same-named files", async () => {
+test("agents-fallback dual-write copies prefixed leaves into home and cwd destinations", async () => {
   const { maybeDualWriteCursorAgents } = await import(
     "../../plugins/maister/lib/distribution/cursor-agents-fallback.mjs"
   );
@@ -177,10 +188,7 @@ test("agents-fallback dual-write copies leaves and backs up prior same-named fil
   const pluginRoot = path.join(root, "plugin");
   const home = path.join(root, "home");
   const cwd = path.join(root, "cwd");
-  writePluginAgents(pluginRoot, ["maister-explore"]);
-  const homeAgents = path.join(home, ".cursor", "agents");
-  fs.mkdirSync(homeAgents, { recursive: true });
-  fs.writeFileSync(path.join(homeAgents, "explore.md"), "PRIOR\n", "utf8");
+  writePluginAgents(pluginRoot, ["maister-advisor", "maister-explore"]);
 
   const status = maybeDualWriteCursorAgents({
     target: "cursor",
@@ -192,14 +200,176 @@ test("agents-fallback dual-write copies leaves and backs up prior same-named fil
   assert.equal(status.attempted, true);
   assert.equal(status.ok, true);
   assert.equal(status.errors.length, 0);
+  const homeAgents = path.join(home, ".cursor", "agents");
+  const cwdAgents = path.join(cwd, ".cursor", "agents");
   assert.ok(status.destinations.includes(homeAgents));
-  assert.ok(fs.existsSync(path.join(homeAgents, ".maister-backup", "explore.md")));
-  assert.equal(fs.readFileSync(path.join(homeAgents, ".maister-backup", "explore.md"), "utf8"), "PRIOR\n");
-  assert.match(fs.readFileSync(path.join(homeAgents, "explore.md"), "utf8"), /maister-explore/);
-  assert.match(
-    fs.readFileSync(path.join(cwd, ".cursor", "agents", "explore.md"), "utf8"),
-    /maister-explore/,
+  assert.ok(status.destinations.includes(cwdAgents));
+  for (const dest of [homeAgents, cwdAgents]) {
+    assert.match(fs.readFileSync(path.join(dest, "maister-advisor.md"), "utf8"), /maister-advisor/);
+    assert.match(fs.readFileSync(path.join(dest, "maister-explore.md"), "utf8"), /maister-explore/);
+  }
+});
+
+test("agents-fallback dual-write prunes allowlisted short leaves from both destinations", async () => {
+  const { maybeDualWriteCursorAgents } = await import(
+    "../../plugins/maister/lib/distribution/cursor-agents-fallback.mjs"
   );
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-dual-write-prune-"));
+  const pluginRoot = path.join(root, "plugin");
+  const home = path.join(root, "home");
+  const cwd = path.join(root, "cwd");
+  writePluginAgents(pluginRoot, ["maister-advisor", "maister-explore"]);
+  const homeAgents = path.join(home, ".cursor", "agents");
+  const cwdAgents = path.join(cwd, ".cursor", "agents");
+  seedShortAgentLeaves(homeAgents, ["advisor.md", "explore.md"]);
+  seedShortAgentLeaves(cwdAgents, ["advisor.md", "explore.md"]);
+
+  const status = maybeDualWriteCursorAgents({
+    target: "cursor",
+    agentsFallback: true,
+    activeRoot: pluginRoot,
+    home,
+    cwd,
+  });
+  assert.equal(status.ok, true);
+  assert.equal(status.errors.length, 0);
+  for (const dest of [homeAgents, cwdAgents]) {
+    assert.equal(fs.existsSync(path.join(dest, "advisor.md")), false);
+    assert.equal(fs.existsSync(path.join(dest, "explore.md")), false);
+    assert.equal(fs.existsSync(path.join(dest, "maister-advisor.md")), true);
+    assert.equal(fs.existsSync(path.join(dest, "maister-explore.md")), true);
+  }
+  assert.ok(Array.isArray(status.pruned));
+  assert.ok(status.pruned.includes("advisor.md"));
+  assert.ok(status.pruned.includes("explore.md"));
+});
+
+test("agents-fallback dual-write preserves operator-owned unrelated agent files", async () => {
+  const { maybeDualWriteCursorAgents } = await import(
+    "../../plugins/maister/lib/distribution/cursor-agents-fallback.mjs"
+  );
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-dual-write-preserve-"));
+  const pluginRoot = path.join(root, "plugin");
+  const home = path.join(root, "home");
+  const cwd = path.join(root, "cwd");
+  writePluginAgents(pluginRoot, ["maister-advisor"]);
+  const homeAgents = path.join(home, ".cursor", "agents");
+  seedShortAgentLeaves(homeAgents, ["advisor.md", "my-custom-agent.md"], {
+    "my-custom-agent.md": "OPERATOR OWNED\n",
+  });
+
+  const status = maybeDualWriteCursorAgents({
+    target: "cursor",
+    agentsFallback: true,
+    activeRoot: pluginRoot,
+    home,
+    cwd,
+  });
+  assert.equal(status.ok, true);
+  assert.equal(fs.existsSync(path.join(homeAgents, "advisor.md")), false);
+  assert.equal(
+    fs.readFileSync(path.join(homeAgents, "my-custom-agent.md"), "utf8"),
+    "OPERATOR OWNED\n",
+  );
+  assert.ok(!status.pruned.includes("my-custom-agent.md"));
+});
+
+test("agents-fallback dual-write backs up allowlisted short leaves before prune (H1)", async () => {
+  const { maybeDualWriteCursorAgents } = await import(
+    "../../plugins/maister/lib/distribution/cursor-agents-fallback.mjs"
+  );
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-dual-write-backup-"));
+  const pluginRoot = path.join(root, "plugin");
+  const home = path.join(root, "home");
+  const cwd = path.join(root, "cwd");
+  writePluginAgents(pluginRoot, ["maister-explore"]);
+  const homeAgents = path.join(home, ".cursor", "agents");
+  seedShortAgentLeaves(homeAgents, ["explore.md"], { "explore.md": "PRIOR SHORT\n" });
+
+  const status = maybeDualWriteCursorAgents({
+    target: "cursor",
+    agentsFallback: true,
+    activeRoot: pluginRoot,
+    home,
+    cwd,
+  });
+  assert.equal(status.ok, true);
+  const backupPath = path.join(homeAgents, ".maister-backup", "explore.md");
+  assert.equal(fs.existsSync(backupPath), true);
+  assert.equal(fs.readFileSync(backupPath, "utf8"), "PRIOR SHORT\n");
+  assert.equal(fs.existsSync(path.join(homeAgents, "explore.md")), false);
+  assert.ok(status.backups.some((entry) => entry === backupPath || entry.endsWith(`${path.sep}.maister-backup${path.sep}explore.md`)));
+});
+
+test("agents-fallback dual-write reports prune I/O failure without throwing", async () => {
+  const { maybeDualWriteCursorAgents } = await import(
+    "../../plugins/maister/lib/distribution/cursor-agents-fallback.mjs"
+  );
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-dual-write-prune-fail-"));
+  const pluginRoot = path.join(root, "plugin");
+  const home = path.join(root, "home");
+  const cwd = path.join(root, "cwd");
+  writePluginAgents(pluginRoot, ["maister-advisor"]);
+  const homeAgents = path.join(home, ".cursor", "agents");
+  seedShortAgentLeaves(homeAgents, ["advisor.md"]);
+  // Block .maister-backup directory creation so prune backup fails after copy.
+  fs.mkdirSync(homeAgents, { recursive: true });
+  fs.writeFileSync(path.join(homeAgents, ".maister-backup"), "not-a-directory\n", "utf8");
+
+  let thrown = null;
+  let status;
+  try {
+    status = maybeDualWriteCursorAgents({
+      target: "cursor",
+      agentsFallback: true,
+      activeRoot: pluginRoot,
+      home,
+      cwd,
+    });
+  } catch (error) {
+    thrown = error;
+  }
+  assert.equal(thrown, null);
+  assert.equal(status.attempted, true);
+  assert.equal(status.ok, false);
+  assert.ok(status.errors.some((entry) => entry.destination === homeAgents));
+  // cwd still succeeds independently
+  assert.equal(fs.existsSync(path.join(cwd, ".cursor", "agents", "maister-advisor.md")), true);
+});
+
+test("agents-fallback dual-write skips prune when fallback disabled or non-cursor", async () => {
+  const { maybeDualWriteCursorAgents } = await import(
+    "../../plugins/maister/lib/distribution/cursor-agents-fallback.mjs"
+  );
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-dual-write-skip-"));
+  const pluginRoot = path.join(root, "plugin");
+  const home = path.join(root, "home");
+  const cwd = path.join(root, "cwd");
+  writePluginAgents(pluginRoot, ["maister-advisor"]);
+  const homeAgents = path.join(home, ".cursor", "agents");
+  seedShortAgentLeaves(homeAgents, ["advisor.md"]);
+
+  const skippedFallback = maybeDualWriteCursorAgents({
+    target: "cursor",
+    agentsFallback: false,
+    activeRoot: pluginRoot,
+    home,
+    cwd,
+  });
+  assert.equal(skippedFallback.attempted, false);
+  assert.deepEqual(skippedFallback.pruned, []);
+  assert.equal(fs.existsSync(path.join(homeAgents, "advisor.md")), true);
+
+  const skippedTarget = maybeDualWriteCursorAgents({
+    target: "codex",
+    agentsFallback: true,
+    activeRoot: pluginRoot,
+    home,
+    cwd,
+  });
+  assert.equal(skippedTarget.attempted, false);
+  assert.deepEqual(skippedTarget.pruned, []);
+  assert.equal(fs.existsSync(path.join(homeAgents, "advisor.md")), true);
 });
 
 test("Cursor verify success message includes reload guidance", async () => {

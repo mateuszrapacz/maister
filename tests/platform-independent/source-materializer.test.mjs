@@ -768,7 +768,11 @@ test("runs projection after trusted assembly and source revalidation but before 
     testHooks: {
       onPhase: (phase) => phases.push(phase),
       afterProjection: ({ stagingRoot: projectedRoot }) => {
-        assert.equal(fs.existsSync(path.join(projectedRoot, "agents/advisor.md")), true);
+        assert.equal(fs.existsSync(path.join(projectedRoot, "agents/maister-advisor.md")), true);
+        assert.equal(
+          fs.existsSync(path.join(projectedRoot, "agents/maister-user-docs-generator.md")),
+          true,
+        );
       },
     },
   });
@@ -782,7 +786,11 @@ test("runs projection after trusted assembly and source revalidation but before 
     "candidate-validated",
     "provenance-finalized",
   ]);
-  assert.equal(result.validation.inventory.files.includes("agents/advisor.md"), true);
+  assert.equal(result.validation.inventory.files.includes("agents/maister-advisor.md"), true);
+  assert.equal(
+    result.validation.inventory.files.includes("agents/maister-user-docs-generator.md"),
+    true,
+  );
 });
 
 test("binds projection schema, projector, canonical set, manifest, and projected tree into provenance", async () => {
@@ -816,10 +824,10 @@ test("rejects projected mode drift during normal candidate validation", async ()
     materialize({
       ...productionOptions("cursor", path.join(tempDirectory(), "stage")),
       testHooks: {
-        afterProjection: ({ stagingRoot }) => fs.chmodSync(path.join(stagingRoot, "agents/advisor.md"), 0o600),
+        afterProjection: ({ stagingRoot }) => fs.chmodSync(path.join(stagingRoot, "agents/maister-advisor.md"), 0o600),
       },
     }),
-    (error) => error.code === "E_MATERIALIZE_MODE" && error.details.path === "agents/advisor.md",
+    (error) => error.code === "E_MATERIALIZE_MODE" && error.details.path === "agents/maister-advisor.md",
   );
 });
 
@@ -828,22 +836,22 @@ test("rejects projected byte drift during normal candidate hash validation", asy
     materialize({
       ...productionOptions("cursor", path.join(tempDirectory(), "stage")),
       testHooks: {
-        afterProjection: ({ stagingRoot }) => fs.appendFileSync(path.join(stagingRoot, "agents/advisor.md"), "drift\n"),
+        afterProjection: ({ stagingRoot }) => fs.appendFileSync(path.join(stagingRoot, "agents/maister-advisor.md"), "drift\n"),
       },
     }),
-    (error) => error.code === "E_MATERIALIZE_HASH" && error.details.path === "agents/advisor.md",
+    (error) => error.code === "E_MATERIALIZE_HASH" && error.details.path === "agents/maister-advisor.md",
   );
 });
 
 for (const scenario of [
   {
     name: "missing",
-    mutate: (stagingRoot) => fs.rmSync(path.join(stagingRoot, "instructions/maister-advisor.md")),
+    mutate: (stagingRoot) => fs.rmSync(path.join(stagingRoot, "agents/instructions/maister-advisor.md")),
   },
   {
     name: "escaping",
     mutate: (stagingRoot) => {
-      const descriptorPath = path.join(stagingRoot, "maister-advisor.json");
+      const descriptorPath = path.join(stagingRoot, "agents/maister-advisor.json");
       const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
       descriptor.prompt = "file://./../outside.md";
       fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor)}\n`);
@@ -852,7 +860,7 @@ for (const scenario of [
   {
     name: "absolute",
     mutate: (stagingRoot) => {
-      const descriptorPath = path.join(stagingRoot, "maister-advisor.json");
+      const descriptorPath = path.join(stagingRoot, "agents/maister-advisor.json");
       const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
       descriptor.prompt = "file:///outside.md";
       fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor)}\n`);
@@ -865,7 +873,7 @@ for (const scenario of [
         ...productionOptions("kiro-cli", path.join(tempDirectory(), "stage")),
         testHooks: { afterProjection: ({ stagingRoot }) => scenario.mutate(stagingRoot) },
       }),
-      (error) => error.code === "E_MATERIALIZE_REFERENCE" && error.details.path === "maister-advisor.json",
+      (error) => error.code === "E_MATERIALIZE_REFERENCE" && error.details.path === "agents/maister-advisor.json",
     );
   });
 }
@@ -918,7 +926,7 @@ test("materialization writes generated host files only to staging and runtime co
   const stagingRoot = path.join(tempDirectory(), "stage");
   await materialize(productionOptions("cursor", stagingRoot));
 
-  assert.equal(fs.existsSync(path.join(stagingRoot, "agents/advisor.md")), true);
+  assert.equal(fs.existsSync(path.join(stagingRoot, "agents/maister-advisor.md")), true);
   assert.equal(hashTree(ROOT).contentHash, sourceBefore);
   const runtimeRoot = path.join(PROJECTION_PLUGIN_ROOT, "skills/orchestrator-framework/bin/agent-runtime");
   for (const entry of fs.readdirSync(runtimeRoot)) {

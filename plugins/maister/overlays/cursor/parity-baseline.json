@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "baseline_version": "2026-07-18.1",
+  "baseline_version": "2026-07-22.1",
   "target": "cursor",
   "rules": [
     {
@@ -10,8 +10,18 @@
       "rationale": "The maintained Cursor plugin manifest carries the current canonical repository metadata while the immutable migration oracle retains its reviewed historical manifest bytes.",
       "path": ".cursor-plugin/plugin.json",
       "observation": {
-        "legacy": { "present": true, "type": "file", "mode": "0644", "sha256": "8222d44532879c67f0d9b55bc0446e59cd64bd7f00e313527a8e192df1ee5539" },
-        "materialized": { "present": true, "type": "file", "mode": "0644", "sha256": "9306574f24e7c3c50495f94465a54254349ec845b41c6a2336e2673d77af118d" }
+        "legacy": {
+          "present": true,
+          "type": "file",
+          "mode": "0644",
+          "sha256": "8222d44532879c67f0d9b55bc0446e59cd64bd7f00e313527a8e192df1ee5539"
+        },
+        "materialized": {
+          "present": true,
+          "type": "file",
+          "mode": "0644",
+          "sha256": "9306574f24e7c3c50495f94465a54254349ec845b41c6a2336e2673d77af118d"
+        }
       }
     },
     {
@@ -875,34 +885,6 @@
       "paths": [
         "skills/maister-standards-discover/SKILL.md",
         "skills/maister-standards-update/SKILL.md",
-        "agents/e2e-test-verifier.md",
-        "agents/advisor.md",
-        "agents/bottleneck-analyzer.md",
-        "agents/code-quality-pragmatist.md",
-        "agents/code-reviewer.md",
-        "agents/codebase-analysis-reporter.md",
-        "agents/docs-operator.md",
-        "agents/gap-analyzer.md",
-        "agents/html-companion-writer.md",
-        "agents/implementation-completeness-checker.md",
-        "agents/implementation-planner.md",
-        "agents/information-gatherer.md",
-        "agents/production-readiness-checker.md",
-        "agents/project-analyzer.md",
-        "agents/reality-assessor.md",
-        "agents/research-planner.md",
-        "agents/research-synthesizer.md",
-        "agents/solution-brainstormer.md",
-        "agents/solution-designer.md",
-        "agents/spec-auditor.md",
-        "agents/specification-creator.md",
-        "agents/task-classifier.md",
-        "agents/task-group-implementer.md",
-        "agents/test-suite-runner.md",
-        "agents/thermo-nuclear-code-quality-review-subagent.md",
-        "agents/thermo-nuclear-review-subagent.md",
-        "agents/ui-mockup-generator.md",
-        "agents/user-docs-generator.md",
         "skills/maister-development/SKILL.md",
         "skills/maister-migration/SKILL.md",
         "skills/maister-performance/SKILL.md",
@@ -943,398 +925,6 @@
             "type": "file",
             "mode": "0644",
             "sha256": "3967f0d637c5e03dd00a88daedfa339338893a1774767f8b88986f34d2deb165"
-          }
-        },
-        "agents/e2e-test-verifier.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "7c933abd73f742b2d04270be68dcdbfd1fabe815002649e0e3914312ff60ee20"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "60d8313f5abec4d6edc8040996d6e5132180a632f582fb95568923bd6e1178fc"
-          }
-        },
-        "agents/advisor.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "63eccc04e169c2fd8c6b218d0a0cf6d332811f900be5c78f8efee366e39b9e25"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "6e0096eb9c8fcf99762f1e2f9487699912115c93e7261c93c43615107ba5261e"
-          }
-        },
-        "agents/bottleneck-analyzer.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "65e594eaa750dffd32f1b84ed778f42ef05625f0984c4b54e31eaf426696d9e3"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "bae364cef0b72a864bfd2bd324c7340960cfeba123dacd5f16e48ed7f9e805f3"
-          }
-        },
-        "agents/code-quality-pragmatist.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "578c765782f46f48173ce922d6058159008c6bda5afb5f0ff043b4153cbb05e4"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "193e5234fe1f2032ff5168571ff97569e1735c31d38b4779082906f05cf02f01"
-          }
-        },
-        "agents/code-reviewer.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "0ff9bba6651e3f1707b34dfc2d7d17c39e16c244c459b0149d5e410157faaf4b"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "3b7adcea376171f5b4dde13f64ef10768754f6af00c7ab760b7f0caa4093df09"
-          }
-        },
-        "agents/codebase-analysis-reporter.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "4e20ae38eb2ab6aa9b3162b32fffcb986aa05ed7978a3da734fc49dc3f63d54c"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "6704b79e26b9bee11ac8746a48b0e39fc431f21cef9131cf91f82efdbb3d46c3"
-          }
-        },
-        "agents/docs-operator.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "81f68bd7c48abf69a9439cc9d782c033e231d41208830cd9390d47a10b2a1134"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "d1101845ad23b19555115714ecb1198626e1b895fb209e3504d38a00c41226ea"
-          }
-        },
-        "agents/gap-analyzer.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "b642b8f459f642d8d8c0a1ff201b73e0c518a690f94d4b9a58f2e3fc9ffa5594"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "1a9c7e519e5fff4e5ddb8635e19246a9df70533bb8e9a6ba5f0e214a2dd3d404"
-          }
-        },
-        "agents/html-companion-writer.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "498e711e7502d7b624a0032e77fc26a116f8dcf57e27de069840e3677d010010"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "0db04799aa1fd7a81299b78063296946590275981d69760042f3fcdfe0b0fd95"
-          }
-        },
-        "agents/implementation-completeness-checker.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "8c3496a199b2c73139ac9c8133816517db50addb25f50728d2739059897e21ca"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "18f76d55a3797d61859055b9b222f9a7c9b791e74d259a6976325457bdcfffcb"
-          }
-        },
-        "agents/implementation-planner.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "2f4c95f1ab6b6694f89d68026a459d1fcb458ce8743a2b0cd737de24bee88c8d"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "1885507c52987f3f9681193c0a13d544c1296fe0d02a302a0bfac4905973424a"
-          }
-        },
-        "agents/information-gatherer.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "658ff8aa8667427173b5296f0b90790b7f9475dd3a8b54289c4f3953da5b1c36"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "013e8ff3e6a1199babe0fd04e8359d4edcfb09c92dd3566f345eb5b9cf7d5ec6"
-          }
-        },
-        "agents/production-readiness-checker.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "22220334b3681b35778883bff60385014a086ba468b5b119f138213c79bba952"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "2711e04e974334077f6e80f63a40df611517b1b30cb34b18b8c37be38a4cfc85"
-          }
-        },
-        "agents/project-analyzer.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "2a2b06cae88338de570f3d928fb303ab1fe5a73639221aa6fccce4d6c960f127"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "4c3a2c5197f38a17ae49e52193fb09a1d743e5923c4d532ae6eda2f645c414f3"
-          }
-        },
-        "agents/reality-assessor.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "870d45fbb711b1a31c2dbf0e4f2f58b0e1e966d4f89b955ffc5febe68d7b388d"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "2015693f36be196891c3e80632e3b16d5f662d0dfa7659e1e8c4523e2bf008a2"
-          }
-        },
-        "agents/research-planner.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "884e641ae6363fefa89a84532684129155996a74d5ff228eef551c903196b20c"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "c2c03df4bf4c5a37b450fd7b2d98e992625efffdf69e1e7af403437f0cbf5692"
-          }
-        },
-        "agents/research-synthesizer.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "c79759cf3d521caab5e5a552939f8f238ef5d9b04c99f45f2c2c71e6487f0d10"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "070b38df0b974084f4a62798680cf68ca0b4ab8c31c784e7202021adcf48d1be"
-          }
-        },
-        "agents/solution-brainstormer.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "59c24f26a6fe27472e2f0a4944e18a959755723a5414618660c081885376e7da"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "75f8b95e2148c9613cffbe03ad747259f78008bc9f9b9f50a24cd5dd49278d9f"
-          }
-        },
-        "agents/solution-designer.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "b79de138e5cbf399949ec7793ebc21b46dd5f69bbe998734ef3c2e0a83b1d2eb"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "6db1301871548710f746eded491c565aa6b0ae4cc0152474ef167fc0f1a98c4d"
-          }
-        },
-        "agents/spec-auditor.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "f815b4d3a1e5f5849f923896298cc8fc56cc75c5fa3861ed9d1be85a4fc186fa"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "58ba32136a0dbf949ec7e4291c270a2f077b1c937635c5dbcdfc747e057039b3"
-          }
-        },
-        "agents/specification-creator.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "cfb6821cc24124805e4113bed688d9b62a17cfdada9b6d3c70ff9e86e969a3b9"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "ff513274109eba99de5e1032ac6eb9fb7bf4bebdd78f7542381ae3cf3aa94332"
-          }
-        },
-        "agents/task-classifier.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "05ce1a6bc78ddacb05c166f45389b2489f4dd7f347b4218bc5e5a48edbdcdc79"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "4ce445d11150051804284ae5bc33e2168568c712f19b836cbb7775d2de0f0e1d"
-          }
-        },
-        "agents/task-group-implementer.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "b2974c12e19aa9cb02aa61eeb65e430dddc7a881823ae92ece92a4367343cbb5"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "1e45db61eb114df6ef53c082997ec39aef0bd9fba77113739f628106bd5382f5"
-          }
-        },
-        "agents/test-suite-runner.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "be7188633bdca9e5183f5d6418b797336877a088fe684538dcb79a1c19d28d5b"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "4be0f346ede713ed29ecfc27b61f06d0c6dbc64b49e3d61891980c6fa5632051"
-          }
-        },
-        "agents/thermo-nuclear-code-quality-review-subagent.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "ec31cc5dc25b67ba24ba2c79a511288f19bc44d78f7ad6ee72f11010bb12ebdd"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "c8c2f4c23ddd9a4fdc0ddb8faf62e2a00f4ae753ed2782fb8163f8f527d9ce60"
-          }
-        },
-        "agents/thermo-nuclear-review-subagent.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "e29305f8b78dae62123a366384f496526eb0a3d41394022535b676f273f9df5b"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "50509b337347ddd4e6ee98e8613716d8e2137faa5d64706dc9cf4576660cad65"
-          }
-        },
-        "agents/ui-mockup-generator.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "f15767b538ea8c694cfb0c4540c84ef0781e41acbe0c184506717068f888fe0f"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "bc87feecc149271cb452c27729ed7e0631d1f5d72c56b5397e765c43768a0538"
-          }
-        },
-        "agents/user-docs-generator.md": {
-          "legacy": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "a80089dc524923f88bb1168cc7ccd522a83ae049cfaedc5c41a2d102fde05b6e"
-          },
-          "materialized": {
-            "present": true,
-            "type": "file",
-            "mode": "0644",
-            "sha256": "ee3c663cd1aedbe8ec2879da7384deb64c29d50775bdae00f0fac7e51b9d1ee1"
           }
         },
         "skills/maister-development/SKILL.md": {
@@ -1525,6 +1115,722 @@
             "type": "file",
             "mode": "0755",
             "sha256": "7b6dff13a2300c228c7cf4b4dbaa87222430f529ab953ba237cfb23b3d18f8a5"
+          }
+        }
+      }
+    },
+    {
+      "id": "cursor-short-agent-leaf-deletions",
+      "category": "expected-deletion",
+      "observed_category": "inventory",
+      "rationale": "Cursor agent leaves moved from short basenames to maister-prefixed paths; legacy short agent Markdown is an expected deletion against the current projection.",
+      "paths": [
+        "agents/advisor.md",
+        "agents/bottleneck-analyzer.md",
+        "agents/code-quality-pragmatist.md",
+        "agents/code-reviewer.md",
+        "agents/codebase-analysis-reporter.md",
+        "agents/docs-operator.md",
+        "agents/e2e-test-verifier.md",
+        "agents/explore.md",
+        "agents/gap-analyzer.md",
+        "agents/html-companion-writer.md",
+        "agents/implementation-completeness-checker.md",
+        "agents/implementation-planner.md",
+        "agents/information-gatherer.md",
+        "agents/production-readiness-checker.md",
+        "agents/project-analyzer.md",
+        "agents/reality-assessor.md",
+        "agents/research-planner.md",
+        "agents/research-synthesizer.md",
+        "agents/solution-brainstormer.md",
+        "agents/solution-designer.md",
+        "agents/spec-auditor.md",
+        "agents/specification-creator.md",
+        "agents/task-classifier.md",
+        "agents/task-group-implementer.md",
+        "agents/test-suite-runner.md",
+        "agents/thermo-nuclear-code-quality-review-subagent.md",
+        "agents/thermo-nuclear-review-subagent.md",
+        "agents/ui-mockup-generator.md",
+        "agents/user-docs-generator.md"
+      ],
+      "observations": {
+        "agents/advisor.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "63eccc04e169c2fd8c6b218d0a0cf6d332811f900be5c78f8efee366e39b9e25"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/bottleneck-analyzer.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "65e594eaa750dffd32f1b84ed778f42ef05625f0984c4b54e31eaf426696d9e3"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/code-quality-pragmatist.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "578c765782f46f48173ce922d6058159008c6bda5afb5f0ff043b4153cbb05e4"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/code-reviewer.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0ff9bba6651e3f1707b34dfc2d7d17c39e16c244c459b0149d5e410157faaf4b"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/codebase-analysis-reporter.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4e20ae38eb2ab6aa9b3162b32fffcb986aa05ed7978a3da734fc49dc3f63d54c"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/docs-operator.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "81f68bd7c48abf69a9439cc9d782c033e231d41208830cd9390d47a10b2a1134"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/e2e-test-verifier.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "7c933abd73f742b2d04270be68dcdbfd1fabe815002649e0e3914312ff60ee20"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/explore.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "118bf52398598678e1b9a126be3e78516eab886bc0411e9d837aa3304ad54575"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/gap-analyzer.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b642b8f459f642d8d8c0a1ff201b73e0c518a690f94d4b9a58f2e3fc9ffa5594"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/html-companion-writer.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "498e711e7502d7b624a0032e77fc26a116f8dcf57e27de069840e3677d010010"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/implementation-completeness-checker.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "8c3496a199b2c73139ac9c8133816517db50addb25f50728d2739059897e21ca"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/implementation-planner.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2f4c95f1ab6b6694f89d68026a459d1fcb458ce8743a2b0cd737de24bee88c8d"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/information-gatherer.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "658ff8aa8667427173b5296f0b90790b7f9475dd3a8b54289c4f3953da5b1c36"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/production-readiness-checker.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "22220334b3681b35778883bff60385014a086ba468b5b119f138213c79bba952"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/project-analyzer.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2a2b06cae88338de570f3d928fb303ab1fe5a73639221aa6fccce4d6c960f127"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/reality-assessor.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "870d45fbb711b1a31c2dbf0e4f2f58b0e1e966d4f89b955ffc5febe68d7b388d"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/research-planner.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "884e641ae6363fefa89a84532684129155996a74d5ff228eef551c903196b20c"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/research-synthesizer.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c79759cf3d521caab5e5a552939f8f238ef5d9b04c99f45f2c2c71e6487f0d10"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/solution-brainstormer.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "59c24f26a6fe27472e2f0a4944e18a959755723a5414618660c081885376e7da"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/solution-designer.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b79de138e5cbf399949ec7793ebc21b46dd5f69bbe998734ef3c2e0a83b1d2eb"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/spec-auditor.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f815b4d3a1e5f5849f923896298cc8fc56cc75c5fa3861ed9d1be85a4fc186fa"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/specification-creator.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "cfb6821cc24124805e4113bed688d9b62a17cfdada9b6d3c70ff9e86e969a3b9"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/task-classifier.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "05ce1a6bc78ddacb05c166f45389b2489f4dd7f347b4218bc5e5a48edbdcdc79"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/task-group-implementer.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "b2974c12e19aa9cb02aa61eeb65e430dddc7a881823ae92ece92a4367343cbb5"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/test-suite-runner.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "be7188633bdca9e5183f5d6418b797336877a088fe684538dcb79a1c19d28d5b"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/thermo-nuclear-code-quality-review-subagent.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ec31cc5dc25b67ba24ba2c79a511288f19bc44d78f7ad6ee72f11010bb12ebdd"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/thermo-nuclear-review-subagent.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "e29305f8b78dae62123a366384f496526eb0a3d41394022535b676f273f9df5b"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/ui-mockup-generator.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "f15767b538ea8c694cfb0c4540c84ef0781e41acbe0c184506717068f888fe0f"
+          },
+          "materialized": {
+            "present": false
+          }
+        },
+        "agents/user-docs-generator.md": {
+          "legacy": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "a80089dc524923f88bb1168cc7ccd522a83ae049cfaedc5c41a2d102fde05b6e"
+          },
+          "materialized": {
+            "present": false
+          }
+        }
+      }
+    },
+    {
+      "id": "cursor-prefixed-agent-leaf-inventory",
+      "category": "packaging",
+      "observed_category": "inventory",
+      "rationale": "These exact paths are the accepted Cursor agent projection after the maister- disk basename prefix migration; legacy trees used short agent leaves.",
+      "paths": [
+        "agents/maister-advisor.md",
+        "agents/maister-bottleneck-analyzer.md",
+        "agents/maister-code-quality-pragmatist.md",
+        "agents/maister-code-reviewer.md",
+        "agents/maister-codebase-analysis-reporter.md",
+        "agents/maister-docs-operator.md",
+        "agents/maister-e2e-test-verifier.md",
+        "agents/maister-explore.md",
+        "agents/maister-gap-analyzer.md",
+        "agents/maister-html-companion-writer.md",
+        "agents/maister-implementation-completeness-checker.md",
+        "agents/maister-implementation-planner.md",
+        "agents/maister-information-gatherer.md",
+        "agents/maister-production-readiness-checker.md",
+        "agents/maister-project-analyzer.md",
+        "agents/maister-reality-assessor.md",
+        "agents/maister-research-planner.md",
+        "agents/maister-research-synthesizer.md",
+        "agents/maister-solution-brainstormer.md",
+        "agents/maister-solution-designer.md",
+        "agents/maister-spec-auditor.md",
+        "agents/maister-specification-creator.md",
+        "agents/maister-task-classifier.md",
+        "agents/maister-task-group-implementer.md",
+        "agents/maister-test-suite-runner.md",
+        "agents/maister-thermo-nuclear-code-quality-review-subagent.md",
+        "agents/maister-thermo-nuclear-review-subagent.md",
+        "agents/maister-ui-mockup-generator.md",
+        "agents/maister-user-docs-generator.md"
+      ],
+      "observations": {
+        "agents/maister-advisor.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "6e0096eb9c8fcf99762f1e2f9487699912115c93e7261c93c43615107ba5261e"
+          }
+        },
+        "agents/maister-bottleneck-analyzer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "bae364cef0b72a864bfd2bd324c7340960cfeba123dacd5f16e48ed7f9e805f3"
+          }
+        },
+        "agents/maister-code-quality-pragmatist.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "193e5234fe1f2032ff5168571ff97569e1735c31d38b4779082906f05cf02f01"
+          }
+        },
+        "agents/maister-code-reviewer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "3b7adcea376171f5b4dde13f64ef10768754f6af00c7ab760b7f0caa4093df09"
+          }
+        },
+        "agents/maister-codebase-analysis-reporter.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "6704b79e26b9bee11ac8746a48b0e39fc431f21cef9131cf91f82efdbb3d46c3"
+          }
+        },
+        "agents/maister-docs-operator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "d1101845ad23b19555115714ecb1198626e1b895fb209e3504d38a00c41226ea"
+          }
+        },
+        "agents/maister-e2e-test-verifier.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "60d8313f5abec4d6edc8040996d6e5132180a632f582fb95568923bd6e1178fc"
+          }
+        },
+        "agents/maister-explore.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "118bf52398598678e1b9a126be3e78516eab886bc0411e9d837aa3304ad54575"
+          }
+        },
+        "agents/maister-gap-analyzer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "1a9c7e519e5fff4e5ddb8635e19246a9df70533bb8e9a6ba5f0e214a2dd3d404"
+          }
+        },
+        "agents/maister-html-companion-writer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "0db04799aa1fd7a81299b78063296946590275981d69760042f3fcdfe0b0fd95"
+          }
+        },
+        "agents/maister-implementation-completeness-checker.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "18f76d55a3797d61859055b9b222f9a7c9b791e74d259a6976325457bdcfffcb"
+          }
+        },
+        "agents/maister-implementation-planner.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "1885507c52987f3f9681193c0a13d544c1296fe0d02a302a0bfac4905973424a"
+          }
+        },
+        "agents/maister-information-gatherer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "013e8ff3e6a1199babe0fd04e8359d4edcfb09c92dd3566f345eb5b9cf7d5ec6"
+          }
+        },
+        "agents/maister-production-readiness-checker.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2711e04e974334077f6e80f63a40df611517b1b30cb34b18b8c37be38a4cfc85"
+          }
+        },
+        "agents/maister-project-analyzer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4c3a2c5197f38a17ae49e52193fb09a1d743e5923c4d532ae6eda2f645c414f3"
+          }
+        },
+        "agents/maister-reality-assessor.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "2015693f36be196891c3e80632e3b16d5f662d0dfa7659e1e8c4523e2bf008a2"
+          }
+        },
+        "agents/maister-research-planner.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c2c03df4bf4c5a37b450fd7b2d98e992625efffdf69e1e7af403437f0cbf5692"
+          }
+        },
+        "agents/maister-research-synthesizer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "070b38df0b974084f4a62798680cf68ca0b4ab8c31c784e7202021adcf48d1be"
+          }
+        },
+        "agents/maister-solution-brainstormer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "75f8b95e2148c9613cffbe03ad747259f78008bc9f9b9f50a24cd5dd49278d9f"
+          }
+        },
+        "agents/maister-solution-designer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "6db1301871548710f746eded491c565aa6b0ae4cc0152474ef167fc0f1a98c4d"
+          }
+        },
+        "agents/maister-spec-auditor.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "58ba32136a0dbf949ec7e4291c270a2f077b1c937635c5dbcdfc747e057039b3"
+          }
+        },
+        "agents/maister-specification-creator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ff513274109eba99de5e1032ac6eb9fb7bf4bebdd78f7542381ae3cf3aa94332"
+          }
+        },
+        "agents/maister-task-classifier.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4ce445d11150051804284ae5bc33e2168568c712f19b836cbb7775d2de0f0e1d"
+          }
+        },
+        "agents/maister-task-group-implementer.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "1e45db61eb114df6ef53c082997ec39aef0bd9fba77113739f628106bd5382f5"
+          }
+        },
+        "agents/maister-test-suite-runner.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "4be0f346ede713ed29ecfc27b61f06d0c6dbc64b49e3d61891980c6fa5632051"
+          }
+        },
+        "agents/maister-thermo-nuclear-code-quality-review-subagent.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "c8c2f4c23ddd9a4fdc0ddb8faf62e2a00f4ae753ed2782fb8163f8f527d9ce60"
+          }
+        },
+        "agents/maister-thermo-nuclear-review-subagent.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "50509b337347ddd4e6ee98e8613716d8e2137faa5d64706dc9cf4576660cad65"
+          }
+        },
+        "agents/maister-ui-mockup-generator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "bc87feecc149271cb452c27729ed7e0631d1f5d72c56b5397e765c43768a0538"
+          }
+        },
+        "agents/maister-user-docs-generator.md": {
+          "legacy": {
+            "present": false
+          },
+          "materialized": {
+            "present": true,
+            "type": "file",
+            "mode": "0644",
+            "sha256": "ee3c663cd1aedbe8ec2879da7384deb64c29d50775bdae00f0fac7e51b9d1ee1"
           }
         }
       }

@@ -10,14 +10,15 @@
     "requiredRole": "maister:advisor"
   },
   "cursor-frontmatter-v1": {
-    "path": "agents/advisor.md",
+    "path": "agents/maister-advisor.md",
     "required": [
       "name: maister-advisor",
       "model: inherit",
       "color: purple"
     ],
     "forbidden": [
-      "readonly:"
+      "readonly:",
+      "name: maister-maister-"
     ]
   },
   "kiro-descriptor-v1": {

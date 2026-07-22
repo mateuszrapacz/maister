@@ -268,7 +268,7 @@ function canonicalOutputs(agentIr, rowsByRole, target) {
       }, codexSchema(role)));
     } else if (target === "cursor") {
       const agent = destinations.get("agent");
-      if (!agent || agent.path !== `agents/${role.role_id}.md`) {
+      if (!agent || agent.path !== `agents/maister-${role.role_id}.md`) {
         failAgentProjection("E_AGENT_PROJECTION_BINDING", `Cursor destination does not match exact native identity for ${role.role_id}`);
       }
       outputs.push(textOutput({

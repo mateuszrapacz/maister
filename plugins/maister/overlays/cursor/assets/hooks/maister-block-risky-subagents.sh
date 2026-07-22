@@ -3,7 +3,7 @@
 #
 # Cursor beforeShellExecution does not expose subagent identity (command/cwd/sandbox only).
 # subagentStart is the reliable hook for subagent-type policy; write-capable maister agents
-# are tracked by subagent-start-tracker.sh for best-effort shell correlation via preToolUse.
+# are tracked by maister-subagent-start-tracker.sh for best-effort shell correlation via preToolUse.
 
 INPUT=$(cat)
 SUBAGENT_TYPE=$(echo "$INPUT" | jq -r '.subagent_type // empty')

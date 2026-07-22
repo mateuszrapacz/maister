@@ -1898,7 +1898,7 @@ export async function executeLifecycle(command, options) {
         portableCoreHash,
       }, paths);
       // Fallback dual-write is secondary to the committed plugin path; never fail install/update.
-      let dualWrite = { attempted: false, ok: true, copied: 0, destinations: [], backups: [], errors: [] };
+      let dualWrite = { attempted: false, ok: true, copied: 0, destinations: [], backups: [], pruned: [], errors: [] };
       try {
         dualWrite = maybeDualWriteCursorAgents({
           target: paths.target,
@@ -1913,6 +1913,7 @@ export async function executeLifecycle(command, options) {
           copied: 0,
           destinations: [],
           backups: [],
+          pruned: [],
           errors: [{ destination: paths.activeRoot, message: error.message }],
         };
       }

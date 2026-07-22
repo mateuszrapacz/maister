@@ -277,7 +277,7 @@
       "destinations": [
         {
           "kind": "agent",
-          "path_template": "agents/{role_id}.md",
+          "path_template": "agents/maister-{role_id}.md",
           "mode": "0644"
         }
       ],
@@ -596,7 +596,7 @@
         {
           "kind": "agent",
           "source": "assets/support-agents/explore.md",
-          "destination": "agents/explore.md",
+          "destination": "agents/maister-explore.md",
           "mode": "0644"
         }
       ]

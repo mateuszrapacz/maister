@@ -46,8 +46,8 @@ function targetContract(target) {
     representation: "kiro-descriptor-prompt",
     nativeId: (roleId) => `maister-${roleId}`,
     destinations: (roleId) => [
-      { kind: "descriptor", path: `maister-${roleId}.json`, mode: "0644" },
-      { kind: "prompt", path: `instructions/maister-${roleId}.md`, mode: "0644" },
+      { kind: "descriptor", path: `agents/maister-${roleId}.json`, mode: "0644" },
+      { kind: "prompt", path: `agents/instructions/maister-${roleId}.md`, mode: "0644" },
     ],
   };
 }
@@ -143,7 +143,7 @@ function createProjection(manifest, target) {
 
 function inventoryIdentity(target, outputPath) {
   return target === "kiro-cli"
-    ? { root_id: "kiro_native_agents", path: outputPath.startsWith("agents/") ? outputPath.slice(7) : outputPath }
+    ? { root_id: "plugin_private", path: outputPath }
     : { root_id: "plugin_private", path: outputPath };
 }
 

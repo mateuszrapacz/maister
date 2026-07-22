@@ -207,10 +207,30 @@ test("Cursor emits all exact maister native IDs including E2E with no Advisor-on
     .filter(({ ownership }) => ownership === "canonical")
     .map(({ path: outputPath }) => outputPath);
 
-  assert.deepEqual(canonicalPaths, context.agentIr.roles.map(({ role_id }) => `agents/${role_id}.md`));
-  assert.ok(canonicalPaths.includes("agents/e2e-test-verifier.md"));
-  assert.match(outputByPath(projection, "agents/advisor.md").content, /^---\nname: maister-advisor\n/u);
-  assert.equal(outputByPath(projection, "agents/advisor.md").content.includes("readonly:"), false);
+  assert.deepEqual(
+    canonicalPaths,
+    context.agentIr.roles.map(({ role_id: roleId }) => `agents/maister-${roleId}.md`),
+  );
+  assert.ok(canonicalPaths.includes("agents/maister-e2e-test-verifier.md"));
+  const advisor = outputByPath(projection, "agents/maister-advisor.md").content;
+  assert.match(advisor, /^---\nname: maister-advisor\n/u);
+  assert.equal(advisor.includes("readonly:"), false);
+  assert.equal(advisor.includes("name: maister-maister-"), false);
+  for (const outputPath of canonicalPaths) {
+    assert.match(outputPath, /^agents\/maister-[a-z0-9-]+\.md$/u);
+  }
+});
+
+test("Cursor explore destination is agents/maister-explore.md without double-prefixed name", () => {
+  const projection = createProjection("cursor");
+  const explore = outputByPath(projection, "agents/maister-explore.md");
+  assert.equal(explore.ownership, "support");
+  assert.match(explore.content, /^---\nname: maister-explore\n/u);
+  assert.equal(explore.content.includes("name: maister-maister-"), false);
+  assert.equal(
+    projection.outputs.some(({ path: outputPath }) => outputPath === "agents/explore.md"),
+    false,
+  );
 });
 
 test("Pi emits one exact package-agent descriptor per canonical role", () => {
@@ -352,7 +372,7 @@ test("unresolved Kiro prompt URIs fail projection validation", () => {
 test("hand-edited candidate outputs fail without overwriting any staged bytes", () => {
   const context = loadContext();
   const stagingRoot = fs.mkdtempSync(path.join(os.tmpdir(), "maister-projection-drift-"));
-  const handEditedPath = path.join(stagingRoot, "agents/advisor.md");
+  const handEditedPath = path.join(stagingRoot, "agents/maister-advisor.md");
   fs.mkdirSync(path.dirname(handEditedPath), { recursive: true });
   fs.writeFileSync(handEditedPath, "hand edited\n", { mode: 0o644 });
   const before = snapshotFiles(stagingRoot);

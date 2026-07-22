@@ -68,11 +68,11 @@ inventory:
   required:
     - .cursor-plugin/plugin.json
     - "skills/maister-*/SKILL.md"
-    - "agents/*.md"
+    - "agents/maister-*.md"
     - "rules/*.mdc"
     - hooks/hooks.json
   optional:
-    - "hooks/*.sh"
+    - "hooks/maister-*.sh"
   forbidden:
     - ".codex-plugin/**"
     - "skills/**/agents/openai.yaml"
@@ -89,7 +89,7 @@ validation:
     - .codex-plugin
     - .claude-plugin
   executable_paths:
-    - "hooks/*.sh"
+    - "hooks/maister-*.sh"
   syntax_checks:
     - "json:.cursor-plugin/plugin.json"
     - "json:hooks/hooks.json"
@@ -139,7 +139,7 @@ native_assets:
   - source: assets/hooks/hooks.json
     destination: hooks/hooks.json
     mode: "0644"
-    sha256: 9439e06b8f6156c304a5528ebdcfe56c4eac5d4197bb0fdfbdd0da31f68795db
+    sha256: 80cfa7542e9be5a90520016fded84e1965e1532d541ea0130496fe6d930a74e5
 agent_projection:
   schema_version: 1
   contract: agent-projection-v1.json
@@ -177,7 +177,7 @@ agent_projection:
     - user-docs-generator
   destinations:
     - kind: agent
-      path_template: agents/{role_id}.md
+      path_template: agents/maister-{role_id}.md
       mode: "0644"
   transform_ids:
     - canonical-body-v1
@@ -192,5 +192,5 @@ agent_projection:
       assets:
         - kind: agent
           source: assets/support-agents/explore.md
-          destination: agents/explore.md
+          destination: agents/maister-explore.md
           mode: "0644"

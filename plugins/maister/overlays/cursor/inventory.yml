@@ -4,12 +4,12 @@ overlay_version: 1.0.0
 required:
   - .cursor-plugin/plugin.json
   - "skills/maister-*/SKILL.md"
-  - "agents/*.md"
+  - "agents/maister-*.md"
   - "rules/*.mdc"
   - hooks/hooks.json
   - runtime/cursor-bridge-v1.mjs
 optional:
-  - "hooks/*.sh"
+  - "hooks/maister-*.sh"
 forbidden:
   - ".codex-plugin/**"
   - "skills/**/agents/openai.yaml"
@@ -54,7 +54,7 @@ agent_projection:
     - user-docs-generator
   destinations:
     - kind: agent
-      path_template: agents/{role_id}.md
+      path_template: agents/maister-{role_id}.md
       mode: "0644"
   transform_ids:
     - canonical-body-v1
@@ -69,5 +69,5 @@ agent_projection:
       assets:
         - kind: agent
           source: assets/support-agents/explore.md
-          destination: agents/explore.md
+          destination: agents/maister-explore.md
           mode: "0644"

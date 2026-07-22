@@ -31,15 +31,20 @@ export function successMessage(options, extras = {}) {
     return completed;
   }
   const reloadGuidance =
-    "Reload or restart Cursor before claiming Task or subagent_type discovery of maister-*. " +
-    "Agent files on disk alone do not mean the Task enum has enumerated them.";
+    "Reload or restart Cursor before claiming Task/subagent_type discovery of maister-* agents " +
+    "or maister-* hook scripts. Disk inventory alone does not mean Cursor has re-enumerated them.";
   const parts = [completed];
   if (options.command !== "verify" && options.agentsFallback) {
     const dualWrite = extras.dualWrite;
     if (dualWrite?.attempted) {
       if (dualWrite.ok) {
+        const pruned = Array.isArray(dualWrite.pruned) ? dualWrite.pruned : [];
+        const uniquePruned = [...new Set(pruned)];
+        const pruneNote = uniquePruned.length > 0
+          ? `; pruned ${uniquePruned.length} short leaf(ves) (${uniquePruned.slice(0, 5).join(", ")}${uniquePruned.length > 5 ? ", …" : ""}) after backup under .maister-backup/`
+          : "; no allowlisted short leaves to prune (priors backed up under .maister-backup/ when overwritten)";
         parts.push(
-          `--agents-fallback dual-write copied ${dualWrite.copied} leaf(ves) to ${dualWrite.destinations.join(", ")} (secondary to the Cursor plugin path; priors backed up under .maister-backup/)`,
+          `--agents-fallback dual-write copied ${dualWrite.copied} leaf(ves) to ${dualWrite.destinations.join(", ")} (secondary to the Cursor plugin path${pruneNote})`,
         );
       } else {
         const detail = dualWrite.errors?.map((entry) => `${entry.destination}: ${entry.message}`).join("; ")
