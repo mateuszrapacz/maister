@@ -1,5 +1,5 @@
 ---
-name: maister:product-design
+name: product-design
 description: Interactive product/feature design orchestrator. Transforms fuzzy ideas into structured product briefs through collaborative exploration, iterative refinement, and visual prototyping. Adaptive phases detect design complexity and adjust depth.
 user-invocable: true
 ---

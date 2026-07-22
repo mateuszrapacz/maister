@@ -155,7 +155,7 @@ import { pathToFileURL } from "node:url";
 
 const root = process.argv[2];
 const projector = await import(pathToFileURL(path.join(root, "plugins/maister/lib/distribution/cursor-skill-projector.mjs")));
-const source = Buffer.from(`---\nname: maister:development\n---\nResolve resolveAgent({ logical_role_id: "maister:advisor", ...verifiedRuntimeInputs }).\nInvoke skill: "maister:development".\nResume skill: "maister:[orchestrator-name]".\n`);
+const source = Buffer.from(`---\nname: development\n---\nResolve resolveAgent({ logical_role_id: "maister:advisor", ...verifiedRuntimeInputs }).\nInvoke skill: "maister:development".\nResume skill: "maister:[orchestrator-name]".\n`);
 const transformed = projector.applyCursorTransforms(
   source,
   "maister-development/SKILL.md",

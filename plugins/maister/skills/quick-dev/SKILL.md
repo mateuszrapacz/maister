@@ -1,5 +1,5 @@
 ---
-name: maister:quick-dev
+name: quick-dev
 description: Implement a task directly with Maister standards enforcement (no planning mode)
 argument-hint: "[task description]"
 ---

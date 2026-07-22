@@ -1,5 +1,5 @@
 ---
-name: maister:quick-plan
+name: quick-plan
 description: Enter planning mode with Maister standards enforcement
 argument-hint: "[task description]"
 ---

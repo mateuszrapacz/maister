@@ -362,3 +362,25 @@ test("Codex skills do not carry the unsupported disable-model-invocation frontma
   visit(root);
   assert.deepEqual(offenders, []);
 });
+
+test("Codex skill frontmatter uses host-relative names without a duplicated plugin prefix", () => {
+  const root = path.resolve(import.meta.dirname, "../../plugins/maister/skills");
+  const mismatches = [];
+  const visit = (directory) => {
+    for (const name of fs.readdirSync(directory)) {
+      const candidate = path.join(directory, name);
+      const stat = fs.lstatSync(candidate);
+      if (stat.isDirectory()) visit(candidate);
+      else if (name === "SKILL.md") {
+        const content = fs.readFileSync(candidate, "utf8");
+        const frontmatterName = /^name:\s*(\S+)$/mu.exec(content)?.[1];
+        const expectedName = path.basename(path.dirname(candidate));
+        if (frontmatterName !== expectedName || frontmatterName.startsWith("maister:")) {
+          mismatches.push({ path: candidate, frontmatterName, expectedName });
+        }
+      }
+    }
+  };
+  visit(root);
+  assert.deepEqual(mismatches, []);
+});
