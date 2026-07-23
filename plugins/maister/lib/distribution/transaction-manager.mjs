@@ -78,6 +78,7 @@ import {
 } from "./recovery.mjs";
 import { maybeDualWriteCursorAgents } from "./cursor-agents-fallback.mjs";
 import { probeCursorForInstall } from "./host-probes/cursor.mjs";
+import { probeKiroCliForInstall } from "./host-probes/kiro-cli.mjs";
 
 const INSTALLER_VERSION = "1.0.0";
 const CONTROL_PLANE_SCHEMA_VERSION = 1;
@@ -336,6 +337,43 @@ function withCursorHybridHostProbe({
 		unavailableEvidenceReason:
 			options.unavailableEvidenceReason ??
 			"cursor-live-invocation-unobservable-from-cli",
+	};
+}
+
+/**
+ * Kiro CLI install: attach hybrid disk E5 when the caller did not supply native
+ * evidence. E6 stays unavailable — CLI cannot prove live nativePort.launch.
+ */
+function withKiroCliHybridHostProbe({
+	options,
+	paths,
+	overlay,
+	provenance,
+	timestamp,
+}) {
+	if (paths?.target !== "kiro-cli") return options;
+	if (nativeEvidenceInput(options).length > 0) return options;
+	const probe = probeKiroCliForInstall({
+		kiroHome: paths.activeRoot,
+		overlay,
+		provenance,
+		now: timestamp,
+		clock: () => timestamp,
+	});
+	if (!probe?.records?.length) {
+		return {
+			...options,
+			unavailableEvidenceReason:
+				options.unavailableEvidenceReason ??
+				"kiro-cli-live-invocation-unobservable-from-cli",
+		};
+	}
+	return {
+		...options,
+		hostProbe: probe,
+		unavailableEvidenceReason:
+			options.unavailableEvidenceReason ??
+			"kiro-cli-live-invocation-unobservable-from-cli",
 	};
 }
 
@@ -2703,8 +2741,14 @@ async function installOrUpdate(command, options, paths) {
 			),
 			timestamp: e4Timestamp,
 		});
-		const evidenceOptions = withCursorHybridHostProbe({
-			options,
+		const evidenceOptions = withKiroCliHybridHostProbe({
+			options: withCursorHybridHostProbe({
+				options,
+				paths,
+				overlay,
+				provenance: materialized.provenance,
+				timestamp: e4Timestamp,
+			}),
 			paths,
 			overlay,
 			provenance: materialized.provenance,
