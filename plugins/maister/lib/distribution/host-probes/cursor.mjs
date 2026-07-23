@@ -157,6 +157,14 @@ export function probeCursorForInstall({
       canonical_set_digest: provenance.agent_projection?.canonical_set_digest ?? provenance.canonical_set_digest,
       manifest_digest: provenance.agent_projection?.manifest_digest ?? provenance.manifest_digest,
       projected_tree_digest: provenance.agent_projection?.projected_tree_digest ?? provenance.projected_tree_digest,
+      source_hash: provenance.source_hash ?? provenance.sourceHash,
+      overlay_hash: provenance.overlay_hash ?? provenance.overlayHash,
+      materialized_hash: provenance.materialized_hash ?? provenance.materializedHash,
+      provenance_hash: provenance.provenance_hash ?? provenance.provenanceHash,
+      attestation_digest: provenance.attestation_digest ?? provenance.attestationDigest,
+      artifact_digest: provenance.artifact_digest ?? provenance.artifactDigest,
+      portable_core_tree_hash:
+        provenance.portable_core_tree_hash ?? provenance.portableCoreTreeHash,
     },
   });
 }

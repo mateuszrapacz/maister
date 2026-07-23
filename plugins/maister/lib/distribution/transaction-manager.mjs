@@ -306,10 +306,19 @@ function withCursorHybridHostProbe({
 }) {
 	if (paths?.target !== "cursor") return options;
 	if (nativeEvidenceInput(options).length > 0) return options;
+	const binding = evidenceBinding(
+		provenance,
+		options.scenarioVersion ?? DEFAULT_SCENARIO_VERSION,
+	);
 	const probe = probeCursorForInstall({
 		pluginRoot: paths.activeRoot,
 		overlay,
-		provenance,
+		// Include transaction hash binding up front so evidence_id digests match.
+		provenance: {
+			...provenance,
+			...binding,
+			hostVersion: provenance.hostVersion,
+		},
 		now: timestamp,
 		clock: () => timestamp,
 	});
