@@ -1,5 +1,8 @@
 # Visual Companion
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
+
 Documents the browser-based visual companion architecture for the product-design orchestrator. Provides high-fidelity visual feedback by rendering HTML/CSS mockups in a browser during design sessions.
 
 ---

@@ -3,6 +3,8 @@ name: maister-reviews-production-readiness
 description: Verify production deployment readiness with comprehensive checks
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 **ACTION REQUIRED**: This command delegates through the common exact-role runtime. The `<command-name>` tag refers to THIS command, not the target. Resolve and dispatch production-readiness-checker now with bounded path and target arguments. Do not execute the check inline.
 
 You are verifying production deployment readiness using the `production-readiness-checker` subagent.

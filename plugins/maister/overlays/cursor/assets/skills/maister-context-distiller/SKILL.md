@@ -4,6 +4,8 @@ description: Distill bounded contexts by finding safe generalizations across dom
 argument-hint: "[domain description, event storming output, or list of concepts to analyze]"
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Context Distiller
 
 **Invocation guard**: This skill activates ONLY when the user explicitly asks for bounded-context distillation or strategic-design generalization analysis. Trigger phrases: "context distiller", "distill bounded contexts", "bounded context distillation", "generalize concepts", "can X be generalized with Y", "context split", "strategic design", "event storming ambiguity", "same word different meaning", "uogólnienie kontekstu".

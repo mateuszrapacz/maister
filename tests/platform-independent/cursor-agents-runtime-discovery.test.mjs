@@ -164,6 +164,114 @@ test("probeCursor hybrid default discover observes maister-* names from plugin a
   );
   assert.equal(e5.provenance.discovery_subject, "plugin-disk-agents");
   assert.match(e5.provenance.remediation ?? "", /not live Task/i);
+  const e6 = result.records.find((record) => record.capability === "E6");
+  assert.ok(e6, "expected E6 record");
+  assert.equal(e6.result, "unavailable");
+  assert.equal(
+    e6.provenance?.reason ?? e6.reason,
+    "cursor-live-invocation-unobservable-from-cli",
+  );
+});
+
+test("cursorHybridDiscoveryManifest maps canonical + support agents to maister-* ids", async () => {
+  const { cursorHybridDiscoveryManifest } = await import(
+    "../../plugins/maister/lib/distribution/host-probes/cursor.mjs"
+  );
+  const manifest = cursorHybridDiscoveryManifest({
+    agent_projection: {
+      canonical_roles: ["advisor", "code-reviewer"],
+      support_inventory: [
+        {
+          support_id: "explore",
+          native_role_external_id: "explore",
+          assets: [
+            {
+              kind: "agent",
+              source: "assets/support-agents/explore.md",
+              destination: "agents/maister-explore.md",
+              mode: "0644",
+            },
+          ],
+        },
+      ],
+    },
+  });
+  assert.deepEqual(
+    manifest.rows.map((row) => row.native_role_external_id).sort(),
+    ["maister-advisor", "maister-code-reviewer", "maister-explore"],
+  );
+});
+
+test("Cursor skill projection injects AskQuestion inline-chat fallback adapter", async () => {
+  const { applyCursorTransforms } = await import(
+    "../../plugins/maister/lib/distribution/cursor-skill-projector.mjs"
+  );
+  const transformationIds = new Set([
+    "cursor-skill-name-v1",
+    "cursor-question-tool-v1",
+  ]);
+  const source = Buffer.from(
+    [
+      "---",
+      "name: development",
+      "description: fixture",
+      "---",
+      "",
+      "# Development",
+      "",
+      "Use AskUserQuestion at every gate.",
+      "do NOT exempt you from invoking `AskUserQuestion` at a gate.",
+      "",
+    ].join("\n"),
+    "utf8",
+  );
+  const projected = applyCursorTransforms(
+    source,
+    "maister-development/SKILL.md",
+    transformationIds,
+  ).toString("utf8");
+  assert.match(projected, /Cursor user-gate adapter:/);
+  assert.match(projected, /AskQuestion/);
+  assert.match(projected, /inline chat/);
+  assert.doesNotMatch(projected, /AskUserQuestion/);
+  assert.match(
+    projected,
+    /presenting the gate via `AskQuestion` \(or inline chat fallback if `AskQuestion` is unavailable\)/,
+  );
+});
+
+test("Cursor verify success message separates install green from live Task enum", async () => {
+  const { successMessage, cursorEvidenceHonestyGuidance } = await import(
+    "../../plugins/maister/bin/maister-install.mjs"
+  );
+  const evidence = [
+    { capability: "E1", result: "passed" },
+    { capability: "E2", result: "passed" },
+    { capability: "E3", result: "passed" },
+    { capability: "E4", result: "passed" },
+    {
+      capability: "E5",
+      result: "passed",
+      provenance: { discovery_subject: "plugin-disk-agents" },
+    },
+    {
+      capability: "E6",
+      result: "unavailable",
+      provenance: { reason: "cursor-live-invocation-unobservable-from-cli" },
+    },
+  ];
+  const guidance = cursorEvidenceHonestyGuidance(evidence);
+  assert.match(guidance, /E1–E4 install\/materialize green/);
+  assert.match(guidance, /plugin-disk-agents/);
+  assert.match(guidance, /NOT live Task/);
+  assert.match(guidance, /E6 unavailable/);
+  const message = successMessage(
+    { command: "verify", target: "cursor" },
+    { evidence },
+  );
+  assert.match(message, /Reload or restart Cursor/i);
+  assert.match(message, /Task/);
+  assert.match(message, /plugin-disk-agents/);
 });
 
 test("install CLI accepts --agents-fallback for optional user/project agents dual-write", () => {
@@ -370,11 +478,4 @@ test("agents-fallback dual-write skips prune when fallback disabled or non-curso
   assert.equal(skippedTarget.attempted, false);
   assert.deepEqual(skippedTarget.pruned, []);
   assert.equal(fs.existsSync(path.join(homeAgents, "advisor.md")), true);
-});
-
-test("Cursor verify success message includes reload guidance", async () => {
-  const { successMessage } = await import("../../plugins/maister/bin/maister-install.mjs");
-  const message = successMessage({ command: "verify", target: "cursor" });
-  assert.match(message, /Reload or restart Cursor/i);
-  assert.match(message, /Task/);
 });

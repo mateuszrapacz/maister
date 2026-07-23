@@ -3,6 +3,8 @@ name: maister-reviews-reality-check
 description: Comprehensive reality assessment of completed work to verify it actually works and is production-ready
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 **ACTION REQUIRED**: This command delegates through the common exact-role runtime. The `<command-name>` tag refers to THIS command, not the target. Resolve and dispatch reality-assessor now with the bounded task path. Do not execute the assessment inline.
 
 You are running a comprehensive reality check using the `reality-assessor` agent.

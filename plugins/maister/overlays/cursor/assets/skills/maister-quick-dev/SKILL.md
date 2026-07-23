@@ -4,6 +4,8 @@ description: Implement a task directly with Maister standards enforcement (no pl
 argument-hint: "[task description]"
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Quick Dev — Direct Development with Standards Enforcement
 
 This works exactly as if you asked the main agent to implement the task directly — no plan mode. The one addition: discover and enforce the project's coding standards from `.maister/docs/`.

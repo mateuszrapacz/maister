@@ -4,6 +4,8 @@ description: Interactive product/feature design orchestrator. Transforms fuzzy i
 user-invocable: true
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Product Design Orchestrator
 
 Interactive workflow for product and feature design -- from fuzzy idea to development-ready product brief. Phases adapt based on detected design characteristics (greenfield vs enhancement, simple vs complex, UI-focused vs backend). Uses a hybrid interaction architecture: agents for unbiased generative work, inline interactive phases for convergent and evaluative work. Visual companion renders HTML/CSS mockups in a browser for rich design feedback.
@@ -16,7 +18,7 @@ Interactive workflow for product and feature design -- from fuzzy idea to develo
 
 Before doing anything else, settle this policy now and do not re-litigate it at any gate:
 
-**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from invoking `AskQuestion` at a gate. They apply only to your discretionary clarifications.
+**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from presenting the gate via `AskQuestion` (or inline chat fallback if `AskQuestion` is unavailable) at a gate. They apply only to your discretionary clarifications.
 
 If you find yourself reasoning "the user has been approving everything, so I can skip this gate" or "auto-mode is on, so I should minimize questions" — that reasoning IS the failure mode. STOP and fire the gate.
 
@@ -304,7 +306,7 @@ Invoke `phase-0-characteristics` through the engine — "I detected these design
 **Output**: `orchestrator-state.yml` (characteristics, collected URLs, research topics, user files list)
 **State**: Set `design_context.design_characteristics`, `design_context.complexity_level`, `design_context.collected_urls`, `design_context.research_topics`, `design_context.user_files_list`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 ---
 
@@ -364,7 +366,7 @@ Invoke `phase-0-characteristics` through the engine — "I detected these design
 **Output**: `analysis/design-context.md`
 **State**: Update `phase_summaries.context_synthesis`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 ---
 
@@ -458,7 +460,7 @@ Invoke `phase-7-mockups` through the engine with exact options:
 **Output**: `analysis/personas.md`
 **State**: Update `phase_summaries.persona_exploration` with `personas`, `user_journeys`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 Invoke the engine as `phase-3-exit` with question "Personas defined. Continue to Idea Generation?", options `["Continue to Idea Generation", "Pause workflow"]`, original recommendation "Continue to Idea Generation".
 
@@ -550,7 +552,7 @@ Invoke `design-direction` through the engine with exact options:
 **Output**: `analysis/design-decisions.md` (+ `.html` companion)
 **State**: Update `phase_summaries.idea_convergence` with `selected_approach`, `trade_offs_accepted`, `key_decisions`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 Invoke the engine as `phase-5-exit` with question "Design direction approved. Continue to Feature Specification?", options `["Continue to Feature Specification", "Pause workflow"]`, original recommendation "Continue to Feature Specification".
 
@@ -716,7 +718,7 @@ Mockups are saved to `analysis/mockups/` automatically on each POST to the visua
 **Output**: `analysis/mockups/` (mockup files)
 **State**: Update `phase_summaries.visual_prototyping` with `mockup_references`, `design_context.visual_companion` status
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 Invoke the engine as `phase-7-exit` with question "Visual prototyping complete. Continue to Review & Handoff?", options `["Continue to Review & Handoff", "Pause workflow"]`, original recommendation "Continue to Review & Handoff".
 

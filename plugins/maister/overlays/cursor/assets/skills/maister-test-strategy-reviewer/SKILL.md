@@ -4,6 +4,8 @@ description: Reviews test code and suggests when testing strategy mismatches the
 argument-hint: "[path to test file or directory, or description of what to review]"
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Test Strategy Reviewer
 
 **Invocation guard**: This skill activates ONLY when the user explicitly asks for test strategy review or analysis. Trigger phrases: "review my tests", "test strategy", "is my test strategy correct", "am I testing this right", "testing approach".

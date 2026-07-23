@@ -11,9 +11,10 @@ orchestrator:
     - phase-7
     - phase-8
     - phase-10
+    - phase-11
   failed_phases: []
   created: 2026-07-22T12:05:00Z
-  updated: 2026-07-22T17:24:00Z
+  updated: 2026-07-23T16:50:00Z
   task_path: .maister/tasks/development/2026-07-22-codex-lifecycle-commands
   gate_history:
     - schema_version: 2
@@ -586,7 +587,7 @@ task:
   title: Add Codex Maister lifecycle skills
   description: Add Codex support for maister:bye, maister:resume, maister:status, and the related dev/next session shortcuts in parity with Cursor.
   workflow_type: development
-  status: in_progress
+  status: completed
   task_path: .maister/tasks/development/2026-07-22-codex-lifecycle-commands
   project_doc_paths:
     - .maister/docs/INDEX.md
@@ -741,10 +742,10 @@ phases:
   - id: phase-10
     status: completed
   - id: phase-11
-    status: in_progress
+    status: completed
   - id: phase-12
     status: skipped
   - id: phase-13
     status: skipped
   - id: phase-14
-    status: pending
+    status: skipped

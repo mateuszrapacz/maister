@@ -4,6 +4,8 @@ description: Critiques requirements and interactively rebuilds them. Applies 4 c
 argument-hint: "[requirements text, ticket, or spec to critique]"
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Requirements Critic
 
 **Invocation guard**: This skill activates ONLY when the user explicitly asks for critique, review, or analysis of requirements. Trigger phrases: "criticize", "critique", "review this ticket", "what's wrong with", "is this requirement good", "check my requirements", "any issues with this spec".

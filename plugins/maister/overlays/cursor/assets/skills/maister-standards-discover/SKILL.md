@@ -3,6 +3,8 @@ name: maister-standards-discover
 description: Discover coding standards from project configuration files, code patterns, documentation, and external sources (PRs, CI/CD)
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Standards Discovery Skill
 
 Analyzes multiple project sources in parallel to discover coding standards, conventions, and best practices. Aggregates findings with confidence scoring, presents for user approval, and applies approved standards via `docs-manager` skill.

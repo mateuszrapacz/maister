@@ -4,6 +4,8 @@ description: Orchestrates comprehensive research workflows from question definit
 user-invocable: true
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Research Orchestrator
 
 Systematic research workflow from question definition to evidence-based documentation.
@@ -16,7 +18,7 @@ Systematic research workflow from question definition to evidence-based document
 
 Before doing anything else, settle this policy now and do not re-litigate it at any gate:
 
-**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from invoking `AskQuestion` at a gate. They apply only to your discretionary clarifications.
+**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from presenting the gate via `AskQuestion` (or inline chat fallback if `AskQuestion` is unavailable) at a gate. They apply only to your discretionary clarifications.
 
 If you find yourself reasoning "the user has been approving everything, so I can skip this gate" or "auto-mode is on, so I should minimize questions" — that reasoning IS the failure mode. STOP and fire the gate.
 

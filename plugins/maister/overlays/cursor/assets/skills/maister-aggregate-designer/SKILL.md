@@ -4,6 +4,8 @@ description: Interactive wizard for designing consistency units (aggregates). Gu
 argument-hint: "[domain description or list of commands/requirements]"
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Aggregate Designer — Interactive Wizard
 
 **Invocation guard**: This skill activates ONLY when the user explicitly asks to design aggregates or consistency units. Trigger phrases: "projektowanie agregatów", "jednostki spójności", "jakie komendy się blokują", "granica agregatu", "współbieżna walka o zasoby", "rywalizacja o zasoby", "designing aggregates", "consistency units", "aggregate boundary", "concurrent resource contention", "which commands block each other", "resource contention".

@@ -77,6 +77,7 @@ import {
 	snapshotState,
 } from "./recovery.mjs";
 import { maybeDualWriteCursorAgents } from "./cursor-agents-fallback.mjs";
+import { probeCursorForInstall } from "./host-probes/cursor.mjs";
 
 const INSTALLER_VERSION = "1.0.0";
 const CONTROL_PLANE_SCHEMA_VERSION = 1;
@@ -290,6 +291,43 @@ function nativeEvidenceInput(options = {}) {
 			{ field: "evidenceRecords" },
 		);
 	return supplied;
+}
+
+/**
+ * Cursor install: attach hybrid disk E5 when the caller did not supply native
+ * evidence. E6 stays unavailable — CLI cannot prove live Task enum.
+ */
+function withCursorHybridHostProbe({
+	options,
+	paths,
+	overlay,
+	provenance,
+	timestamp,
+}) {
+	if (paths?.target !== "cursor") return options;
+	if (nativeEvidenceInput(options).length > 0) return options;
+	const probe = probeCursorForInstall({
+		pluginRoot: paths.activeRoot,
+		overlay,
+		provenance,
+		now: timestamp,
+		clock: () => timestamp,
+	});
+	if (!probe?.records?.length) {
+		return {
+			...options,
+			unavailableEvidenceReason:
+				options.unavailableEvidenceReason ??
+				"cursor-live-task-enum-unobservable-from-cli",
+		};
+	}
+	return {
+		...options,
+		hostProbe: probe,
+		unavailableEvidenceReason:
+			options.unavailableEvidenceReason ??
+			"cursor-live-invocation-unobservable-from-cli",
+	};
 }
 
 function createValidatedPortableEvidence({
@@ -2656,10 +2694,17 @@ async function installOrUpdate(command, options, paths) {
 			),
 			timestamp: e4Timestamp,
 		});
+		const evidenceOptions = withCursorHybridHostProbe({
+			options,
+			paths,
+			overlay,
+			provenance: materialized.provenance,
+			timestamp: e4Timestamp,
+		});
 		const evidence = collectCandidateEvidence({
 			target: paths.target,
 			provenance: materialized.provenance,
-			options,
+			options: evidenceOptions,
 			timestamp: e4Timestamp,
 			records: [...portableEvidence, e4],
 		});

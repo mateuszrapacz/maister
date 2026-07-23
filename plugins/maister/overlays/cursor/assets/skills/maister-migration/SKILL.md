@@ -4,6 +4,8 @@ description: Orchestrates the complete migration workflow from current state ana
 user-invocable: true
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Migration Orchestrator
 
 Systematic migration workflow from current state analysis to verified migration with rollback capabilities.
@@ -16,7 +18,7 @@ Systematic migration workflow from current state analysis to verified migration 
 
 Before doing anything else, settle this policy now and do not re-litigate it at any gate:
 
-**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from invoking `AskQuestion` at a gate. They apply only to your discretionary clarifications.
+**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from presenting the gate via `AskQuestion` (or inline chat fallback if `AskQuestion` is unavailable) at a gate. They apply only to your discretionary clarifications.
 
 If you find yourself reasoning "the user has been approving everything, so I can skip this gate" or "auto-mode is on, so I should minimize questions" — that reasoning IS the failure mode. STOP and fire the gate.
 
@@ -211,7 +213,7 @@ Use for:
 4. Recommend migration strategy (incremental/big-bang/dual-run/phased)
 5. External research via WebSearch for version upgrades
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 Invoke the engine as `phase-2-exit` with question "Continue to migration strategy?", options `["Continue to migration strategy", "Pause workflow"]`, original recommendation "Continue to migration strategy", and the gap summary as read-only context.
 
@@ -242,7 +244,7 @@ Invoke the engine as `phase-2-exit` with question "Continue to migration strateg
 **Output**: `analysis/requirements.md`, `implementation/spec.md`, `analysis/rollback-plan.md`, optionally `analysis/dual-run-plan.md`
 **State**: Update `rollback_plan_created`, `dual_run_configured`
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 Invoke the engine as `phase-3-exit` with question "Continue to implementation planning?", options `["Continue to implementation planning", "Pause workflow"]`, original recommendation "Continue to implementation planning", and the spec summary as read-only context.
 
@@ -259,7 +261,7 @@ Invoke the engine as `phase-3-exit` with question "Continue to implementation pl
 
 **Context to pass to subagent**: task_path, task_type (migration), migration_type, task_description, phase_summaries (current_state_analysis, gap_analysis, specification), html_style_guide_path (for the implementation-plan.html companion)
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 Invoke the engine as `phase-4-exit` with question "Continue to execute migration?", options `["Continue to execute migration", "Pause workflow"]`, original recommendation "Continue to execute migration", and the plan summary as read-only context.
 
@@ -291,7 +293,7 @@ Invoke the engine as `phase-4-exit` with question "Continue to execute migration
 3. Update state: add Phase 5 to `completed_phases`
 4. Proceed to Phase 6
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 Invoke the engine as `phase-5-exit` with question "Continue to verification?", options `["Continue to verification", "Pause workflow"]`, original recommendation "Continue to verification", and the implementation summary as read-only context.
 
@@ -317,7 +319,7 @@ Invoke the engine as `phase-5-exit` with question "Continue to verification?", o
 2. Update state: add Phase 6 to `completed_phases`
 3. Evaluate verdict: if PASS → Phase 8, if fixable issues → Phase 7, otherwise stop workflow
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 Invoke the engine as `phase-6-exit` with question "Continue to Phase [7 or 8]?", options `["Continue to the named next phase", "Pause workflow"]`, original recommendation "Continue to the named next phase", and the verification summary as read-only context.
 
@@ -350,7 +352,7 @@ Invoke the engine as `phase-6-exit` with question "Continue to Phase [7 or 8]?",
 - ⚠️ Max iterations (3) reached → invoke `rollback-or-proceed` with exact options `["Rollback changes", "Proceed with warnings", "Stop workflow"]`.
 - ❌ Data integrity issues → HALT immediately, recommend rollback
 
-→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
+→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
 Invoke the engine as `phase-7-exit` with question "Continue to documentation?", options `["Continue to documentation", "Pause workflow"]`, original recommendation "Continue to documentation", and the final verification report as read-only context.
 

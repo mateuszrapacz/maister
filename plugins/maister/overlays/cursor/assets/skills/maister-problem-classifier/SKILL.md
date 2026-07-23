@@ -4,6 +4,8 @@ description: Classify business requirements into one of 4 modeling problem class
 argument-hint: "[business requirements or feature description]"
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Modelling Problem Classifier
 
 **Invocation guard**: This skill activates ONLY when the user explicitly asks to classify a business requirement into a modeling problem class. Trigger phrases: "jaka klasa problemu", "jak to sklasyfikować modelarsko", "problem class", "which modeling class", "classify" / "classification" in a modeling context (CRUD vs T&P vs Integration vs Resource Contention).

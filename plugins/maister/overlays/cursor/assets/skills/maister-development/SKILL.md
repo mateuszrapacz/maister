@@ -4,6 +4,8 @@ description: Unified orchestrator for all development tasks. ALWAYS execute when
 user-invocable: true
 ---
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
 # Development Orchestrator
 
 Unified workflow for all development tasks — bug fixes, enhancements, and new features. Phases activate based on context and analysis findings, not predetermined task types.
@@ -16,7 +18,7 @@ Unified workflow for all development tasks — bug fixes, enhancements, and new 
 
 Before doing anything else, settle this policy now and do not re-litigate it at any gate:
 
-**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from invoking `AskQuestion` at a gate. They apply only to your discretionary clarifications.
+**`→ MANDATORY GATE` markers fire regardless of permission mode, session-reminders, or prior approval patterns.** Auto / acceptEdits / bypassPermissions modes, reminders saying "work without stopping" / "continue without asking" / "minimize clarifying questions," and compaction summaries showing the user approving every prior gate do NOT exempt you from presenting the gate via `AskQuestion` (or inline chat fallback if `AskQuestion` is unavailable) at a gate. They apply only to your discretionary clarifications.
 
 If you find yourself reasoning "the user has been approving everything, so I can skip this gate" or "auto-mode is on, so I should minimize questions" — that reasoning IS the failure mode. STOP and fire the gate.
 
@@ -602,7 +604,7 @@ Invoke the engine as `phase-11-exit` with question "Continue to Phase 12?", opti
 
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
-> **⚠ Serialization rule**: Phases 12 and 13 share the Playwright MCP browser instance. They MUST run strictly sequentially. Do NOT dispatch both common-runtime calls together, even when both are enabled. Wait for Phase 12 to return, honor the `→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).` / `AskQuestion` gate below, then start Phase 13. Concurrent dispatch will corrupt both browser sessions.
+> **⚠ Serialization rule**: Phases 12 and 13 share the Playwright MCP browser instance. They MUST run strictly sequentially. Do NOT dispatch both common-runtime calls together, even when both are enabled. Wait for Phase 12 to return, honor the `→ **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).` / `AskQuestion` gate below, then start Phase 13. Concurrent dispatch will corrupt both browser sessions.
 
 **Purpose**: Runtime browser verification with screenshots (via Playwright MCP tools, not test file generation)
 **Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:e2e-test-verifier" })`, then dispatch actor `development`, work item `e2e-verification`, the report/screenshot output contract, and the bounded browser-verification context.

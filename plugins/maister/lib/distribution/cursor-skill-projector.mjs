@@ -314,6 +314,44 @@ async function treeFingerprint(root) {
 	return hash.digest("hex");
 }
 
+const CURSOR_ASK_QUESTION_ADAPTER = [
+	"",
+	"**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.",
+	"",
+].join("\n");
+
+function injectCursorAskQuestionFallback(value) {
+	if (!value.includes("AskQuestion")) return { value, injected: false };
+	if (value.includes("Cursor user-gate adapter:"))
+		return { value, injected: false };
+	if (value.startsWith("---\n")) {
+		const end = value.indexOf("\n---\n", 4);
+		if (end !== -1) {
+			const insertAt = end + "\n---\n".length;
+			return {
+				value:
+					value.slice(0, insertAt) +
+					CURSOR_ASK_QUESTION_ADAPTER +
+					value.slice(insertAt),
+				injected: true,
+			};
+		}
+	}
+	const heading = value.match(/^# .+$/m);
+	if (heading && heading.index !== undefined) {
+		const insertAt = heading.index + heading[0].length;
+		return {
+			value:
+				value.slice(0, insertAt) +
+				"\n" +
+				CURSOR_ASK_QUESTION_ADAPTER +
+				value.slice(insertAt),
+			injected: true,
+		};
+	}
+	return { value: CURSOR_ASK_QUESTION_ADAPTER + value, injected: true };
+}
+
 function applyCursorTransforms(
 	buffer,
 	targetRelative,
@@ -371,6 +409,26 @@ function applyCursorTransforms(
 		'subagent_type: "maister-explore"',
 	);
 	apply("cursor-question-tool-v1", "AskUserQuestion", "AskQuestion");
+	apply(
+		"cursor-question-tool-v1",
+		"do NOT exempt you from invoking `AskQuestion` at a gate",
+		"do NOT exempt you from presenting the gate via `AskQuestion` (or inline chat fallback if `AskQuestion` is unavailable) at a gate",
+	);
+	apply(
+		"cursor-question-tool-v1",
+		"Invoke `AskQuestion` now. Proceeding without a user response is a protocol violation",
+		"Present the gate now via `AskQuestion` (or an inline chat question with the same options if `AskQuestion` is unavailable). Proceeding without a user response is a protocol violation",
+	);
+	apply(
+		"cursor-question-tool-v1",
+		"invoke AskQuestion at every mandatory gate checkpoint",
+		"present every mandatory gate via AskQuestion (inline chat fallback if unavailable)",
+	);
+	{
+		const injected = injectCursorAskQuestionFallback(value);
+		value = injected.value;
+		if (injected.injected) applied.add("cursor-question-tool-v1");
+	}
 	value = value.replace(/`EnterPlanMode`[^`]*`/g, (match) => {
 		applied.add("cursor-plan-mode-v1");
 		return "";

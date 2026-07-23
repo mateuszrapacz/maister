@@ -27,9 +27,14 @@ const OVERLAY_ROOT = path.resolve(import.meta.dirname, "../overlays");
  * Disk or hybrid discover alone is not Task enum evidence.
  */
 export function successMessage(options, extras = {}) {
-	if (options.command === "status") return "installation status loaded";
-	const completed = `${options.command} completed`;
-	const cursorReloadCommands = ["install", "update", "verify"];
+	if (options.command === "status" && options.target !== "cursor") {
+		return "installation status loaded";
+	}
+	const completed =
+		options.command === "status"
+			? "installation status loaded"
+			: `${options.command} completed`;
+	const cursorReloadCommands = ["install", "update", "verify", "status"];
 	if (
 		options.target !== "cursor" ||
 		!cursorReloadCommands.includes(options.command)
@@ -40,7 +45,7 @@ export function successMessage(options, extras = {}) {
 		"Reload or restart Cursor before claiming Task/subagent_type discovery of maister-* agents " +
 		"or maister-* hook scripts. Disk inventory alone does not mean Cursor has re-enumerated them.";
 	const parts = [completed];
-	if (options.command !== "verify" && options.agentsFallback) {
+	if (options.command !== "verify" && options.command !== "status" && options.agentsFallback) {
 		const dualWrite = extras.dualWrite;
 		if (dualWrite?.attempted) {
 			if (dualWrite.ok) {
@@ -68,8 +73,47 @@ export function successMessage(options, extras = {}) {
 			);
 		}
 	}
+	parts.push(cursorEvidenceHonestyGuidance(extras.evidence ?? extras.receipt?.evidence));
 	parts.push(reloadGuidance);
 	return parts.join(". ");
+}
+
+/**
+ * Separate install-green (E1–E4) from hybrid disk E5 and live Task E6.
+ */
+export function cursorEvidenceHonestyGuidance(evidence) {
+	const rows = Array.isArray(evidence) ? evidence : [];
+	const byCap = new Map(rows.map((row) => [row?.capability, row]));
+	const e1to4 = ["E1", "E2", "E3", "E4"].map((cap) => byCap.get(cap)?.result);
+	const installGreen = e1to4.length === 4 && e1to4.every((result) => result === "passed");
+	const e5 = byCap.get("E5");
+	const e6 = byCap.get("E6");
+	const e5Subject = e5?.provenance?.discovery_subject;
+	const layers = [];
+	layers.push(
+		installGreen
+			? "Evidence layers: E1–E4 install/materialize green"
+			: "Evidence layers: E1–E4 not fully green (see evidence[])",
+	);
+	if (e5?.result === "passed" && e5Subject === "plugin-disk-agents") {
+		layers.push(
+			"E5 hybrid disk agent inventory matched (discovery_subject=plugin-disk-agents; NOT live Task enum)",
+		);
+	} else if (e5?.result === "passed") {
+		layers.push(`E5 ${e5.result} (subject=${e5Subject ?? "unspecified"})`);
+	} else {
+		layers.push(
+			`E5 ${e5?.result ?? "missing"} — disk/hybrid ≠ live Task/subagent_type enumeration`,
+		);
+	}
+	if (e6?.result === "passed") {
+		layers.push("E6 native runtime passed");
+	} else {
+		layers.push(
+			`E6 ${e6?.result ?? "missing"} (${e6?.provenance?.reason ?? e6?.reason ?? "unproven"}) — prove live maister-* Task only in a Cursor session after reload`,
+		);
+	}
+	return layers.join("; ");
 }
 
 function checkoutOverlayRoot(root, target) {
@@ -162,7 +206,11 @@ export async function runCli(argv, { env = process.env, git, github } = {}) {
 			command: options.command,
 			target: options.target,
 			code: 0,
-			message: successMessage(options, { dualWrite: result.dualWrite }),
+			message: successMessage(options, {
+				dualWrite: result.dualWrite,
+				receipt: result.receipt,
+				evidence: result.receipt?.evidence,
+			}),
 			receiptPath: result.receiptPath,
 			journalPath: result.journalPath,
 			receipt: result.receipt,

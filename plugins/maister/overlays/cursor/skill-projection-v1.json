@@ -10,7 +10,7 @@
     },
     {
       "id": "cursor-question-tool-v1",
-      "rationale": "Cursor exposes AskQuestion rather than AskUserQuestion."
+      "rationale": "Cursor exposes AskQuestion rather than AskUserQuestion. Prefer AskQuestion when the session mounts it; if the tool is missing (e.g. some Grok 4.5 sessions), fall back to an inline chat question with the same options and wait for the reply — never skip the gate."
     },
     {
       "id": "cursor-framework-path-v1",

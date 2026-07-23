@@ -1,5 +1,8 @@
 # Interaction Patterns
 
+**Cursor user-gate adapter:** Prefer the `AskQuestion` tool for mandatory gates and clarifying choices. If `AskQuestion` is not available in this session (for example `Tool not found: AskQuestion`, as with some Grok 4.5 sessions), fall back to an **inline chat question** that lists the same options, then WAIT for the user's reply before continuing. Never skip a gate because the tool is missing.
+
+
 Guides interaction quality in the product-design orchestrator's interactive phases. Defines two cognitive modes, the iterative refinement loop, and AskQuestion option design.
 
 ---

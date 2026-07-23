@@ -31,3 +31,6 @@ export {
   probeKiroCli,
   probePi,
 };
+
+export { cursorHybridDiscoveryManifest, probeCursorForInstall } from "./cursor.mjs";
+
