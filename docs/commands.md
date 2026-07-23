@@ -28,45 +28,30 @@ The plugin classifies the task type with confidence scoring, asks for confirmati
 
 ---
 
-## Pi shortcuts
+## Unified lifecycle commands
 
-The Pi package registers collision-safe aliases for Maister workflows and
-lifecycle state. Workflow aliases forward to canonical skills or prompts;
-lifecycle aliases preserve normal state handling:
+The portable core ships the same six prefixed flow-control skills for every
+host: `maister-bye`, `maister-dev`, `maister-next`, `maister-resume`,
+`maister-status`, and `maister-work`. Installation projects that canonical set
+into each host's native command vocabulary:
 
-| Command | Forwards to |
-| --- | --- |
-| `/maister-work` | `/work` |
-| `/maister-development` | `/skill:maister:development` |
-| `/maister-init` | `/skill:maister:init` |
-| `/maister-performance` | `/skill:maister:performance` |
-| `/maister-migration` | `/skill:maister:migration` |
-| `/maister-research` | `/skill:maister:research` |
-| `/maister-product-design` | `/skill:maister:product-design` |
-| `/maister-bye` | Preserve workflow state |
-| `/maister-resume` | Resume saved workflow state |
-| `/maister-status` | Read saved workflow state |
+| Skill | Codex | Cursor | Kiro CLI | Pi |
+| --- | --- | --- | --- | --- |
+| `maister-bye` | `$maister:bye` | `/maister-bye` | `/maister-bye` | `/maister-bye` |
+| `maister-dev` | `$maister:dev` | `/maister-dev` | `/maister-dev` | `/maister-dev` |
+| `maister-next` | `$maister:next` | `/maister-next` | `/maister-next` | `/maister-next` |
+| `maister-resume` | `$maister:resume` | `/maister-resume` | `/maister-resume` | `/maister-resume` |
+| `maister-status` | `$maister:status` | `/maister-status` | `/maister-status` | `/maister-status` |
+| `maister-work` | `$maister:work` | `/maister-work` | `/maister-work` | `/maister-work` |
 
-Arguments are passed unchanged. Example:
+`maister-dev` is the only convenience alias and routes to
+`maister-development`; no unprefixed lifecycle aliases are installed. Pi
+registers these public commands through its extension and forwards internally
+to `/skill:maister-*`. Arguments are passed unchanged. `maister-bye` never marks an in-progress
+workflow as completed; `maister-next` and `maister-status` are read-only.
+Example:
 
 `/maister-development Add filtering --e2e`
-
-## Codex lifecycle shortcuts
-
-The Codex plugin exposes the following native skills under the `$maister:*`
-namespace:
-
-| Command | Behavior |
-| --- | --- |
-| `$maister:bye` | Preserve the active `orchestrator-state.yml` and summarize a resumable handoff. |
-| `$maister:dev` | Forward the supplied input to `$maister:development`. |
-| `$maister:next` | Suggest exactly one next workflow action without executing it. |
-| `$maister:resume` | Resume the matching workflow from persisted `orchestrator-state.yml` state. |
-| `$maister:status` | Report workflow state, blockers, pending gates, and the next incomplete action without changing state. |
-
-Pass an explicit task path to `resume`, `status`, `next`, or `bye` when working
-with a task other than the latest active state. `bye` never marks an in-progress
-workflow as completed; `next` and `status` are read-only.
 
 ## Development
 
@@ -75,7 +60,7 @@ workflow as completed; `next` and `status` are read-only.
 Starts the unified development workflow (14 adaptive phases) or resumes an existing one. All arguments are optional — when run without a description, the plugin extracts it from your current conversation. Pass an existing task path to resume. Task type (bug/enhancement/feature) is auto-detected from context when `--type` is omitted.
 
 | Flag | Description |
-|------|-------------|
+| ------ | ------------- |
 | `--type=bug\|enhancement\|feature` | Specify task type (auto-detected if omitted) |
 | `--e2e` | Include E2E testing phase |
 | `--user-docs` | Generate user documentation phase |
@@ -114,7 +99,7 @@ You can optionally provide profiling data (flame graphs, APM screenshots) — th
 Starts migration workflow (8 phases) with mandatory rollback planning and risk assessment, or resumes an existing one. Can be run without arguments — the plugin extracts migration details from your conversation.
 
 | Flag | Description |
-|------|-------------|
+| ------ | ------------- |
 | `--type=code\|data\|architecture\|general` | Migration type (affects risk focus) |
 | `--from=PHASE` | Start from or resume at a specific phase |
 | `--reset-attempts` | Reset failed attempt counters (resume) |
@@ -131,7 +116,7 @@ Starts migration workflow (8 phases) with mandatory rollback planning and risk a
 Starts research workflow (8 phases) with multi-source gathering, synthesis, and optional solution brainstorming, or resumes an existing one. Can be run without arguments — the plugin extracts the research question from your conversation.
 
 | Flag | Description |
-|------|-------------|
+| ------ | ------------- |
 | `--type=technical\|requirements\|literature\|mixed` | Research methodology type |
 | `--brainstorm` | Force brainstorming + design phases |
 | `--no-brainstorm` | Skip brainstorming phases |
@@ -152,7 +137,7 @@ Research output can feed into development: `/maister:development --research=.mai
 Starts the interactive product/feature design workflow (9 adaptive phases) or resumes an existing one. Transforms ideas into structured product briefs through collaborative exploration, iterative refinement, and visual prototyping. Can be run without arguments — the plugin extracts the design brief from your conversation.
 
 | Flag | Description |
-|------|-------------|
+| ------ | ------------- |
 | `--research=PATH` | Start design informed by a completed research task |
 | `--no-visual` | Skip browser-based visual companion (use ASCII mockups only) |
 | `--from=PHASE` | Start from or resume at a specific phase |
@@ -228,7 +213,7 @@ If `.maister/` already exists, offers to backup, update, or cancel.
 Auto-discovers coding standards from multiple sources in parallel: config files, source code patterns, documentation, pull requests, and CI/CD pipelines.
 
 | Flag | Description |
-|------|-------------|
+| ------ | ------------- |
 | `--scope=full\|quick\|frontend\|backend\|testing\|custom` | Discovery scope (default: `full`) |
 | `--confidence=N` | Minimum confidence threshold, 0-100 (default: `60`) |
 | `--auto-apply` | Auto-apply standards with 90%+ confidence |

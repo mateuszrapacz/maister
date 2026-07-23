@@ -1,6 +1,6 @@
 ---
 name: maister-dev
-description: "Shortcut for /maister-development. Use for development tasks."
+description: "Alias for /maister-development. Use for development tasks."
 user-invocable: true
 ---
 

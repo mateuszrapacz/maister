@@ -1,3 +1,5 @@
+# pi-lens-ignore: line-length
+# yaml-language-server: $schema=../../../../../plugins/maister/overlays/schema/overlay-v1.schema.json
 schema_version: 1
 overlay_id: maister/kiro-cli
 overlay_version: 1.0.0
@@ -36,6 +38,12 @@ settings:
     managed_keys:
       - mcpServers.playwright
     merge_policy: preserve_unmanaged_refuse_drift
+  - path: settings/settings.json
+    format: json
+    ownership: managed_keys
+    managed_keys:
+      - chat.defaultAgent
+    merge_policy: preserve_unmanaged_refuse_drift
 semantic_bindings:
   user_gate:
     adapter: kiro-cli.chat_gate
@@ -64,6 +72,12 @@ semantic_bindings:
 inventory:
   required:
     - "skills/maister-**/SKILL.md"
+    - skills/maister-bye/SKILL.md
+    - skills/maister-dev/SKILL.md
+    - skills/maister-next/SKILL.md
+    - skills/maister-resume/SKILL.md
+    - skills/maister-status/SKILL.md
+    - skills/maister-work/SKILL.md
     - "agents/maister*.json"
     - "agents/instructions/maister-*.md"
     - "steering/maister-*.md"
@@ -71,6 +85,7 @@ inventory:
     - maister-agent-tools.json
   optional:
     - settings/mcp.json
+    - settings/settings.json
   forbidden:
     - ".codex-plugin/**"
     - ".cursor-plugin/**"

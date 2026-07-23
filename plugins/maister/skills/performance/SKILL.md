@@ -196,7 +196,7 @@ Pass `task_type="enhancement"` and the performance-focused description. The code
 ### Phase 2: Static Performance Analysis
 
 **Purpose**: Identify bottlenecks through static code analysis + optional user profiling data
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-bottleneck-analyzer" })`, then dispatch actor `performance`, work item `bottleneck-analysis`, output `analysis/performance-analysis.md`, and bounded code/profiling context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:bottleneck-analyzer" })`, then dispatch actor `performance`, work item `bottleneck-analysis`, output `analysis/performance-analysis.md`, and bounded code/profiling context.
 **Output**: `analysis/performance-analysis.md`
 **State**: Update `performance_context.bottlenecks_identified`, `performance_context.user_data_available`, `performance_context.bottleneck_priorities`
 
@@ -213,7 +213,7 @@ Pass `task_type="enhancement"` and the performance-focused description. The code
 
 **INVOKE NOW** — common runtime call:
 
-4. `resolveAgent({ logical_role_id: "maister-bottleneck-analyzer" })`, then dispatch the actor, work item, output, and bounded context described above.
+4. `resolveAgent({ logical_role_id: "maister:bottleneck-analyzer" })`, then dispatch the actor, work item, output, and bounded context described above.
 
 **Context to pass**: task_path, description, codebase analysis summary from Phase 1, user data paths (if any)
 
@@ -252,7 +252,7 @@ Invoke the engine as `phase-2-exit` with question "Performance analysis complete
 
 **INVOKE NOW** — common runtime call:
 
-4. `resolveAgent({ logical_role_id: "maister-specification-creator" })`, then dispatch actor `performance`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
+4. `resolveAgent({ logical_role_id: "maister:specification-creator" })`, then dispatch actor `performance`, work item `specification`, output `implementation/spec.md`, and the bounded context below.
 
 **Context to pass**: task_path, task_type="performance", task_description, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), phase_summaries (codebase_analysis, bottleneck_analysis), html_style_guide_path (for the spec.html companion)
 
@@ -269,7 +269,7 @@ Invoke the engine as `phase-3-exit` with question "Continue to specification aud
 > **Phase entry self-check**: Require either the preceding explicit user-gate call or matching schema-v2 automatic evidence: complete non-denylisted terminal gate, applied selection, acknowledged dispatch, and this phase's durable `in_progress` checkpoint. Without either, STOP and resolve the gate. Protected gates always require explicit user evidence.
 
 **Purpose**: Independent review of optimization specification
-**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister-spec-auditor" })`, then dispatch actor `performance`, work item `spec-audit`, output `verification/spec-audit.md`, and bounded optimization-spec context.
+**Execute**: Common runtime — `resolveAgent({ logical_role_id: "maister:spec-auditor" })`, then dispatch actor `performance`, work item `spec-audit`, output `verification/spec-audit.md`, and bounded optimization-spec context.
 **Output**: `verification/spec-audit.md`
 **State**: Update `options.spec_audit_enabled`
 
@@ -298,7 +298,7 @@ Invoke the engine as `phase-4-exit` with question "Continue to implementation pl
 
 **INVOKE NOW** — common runtime call:
 
-**Execute**: `resolveAgent({ logical_role_id: "maister-implementation-planner" })`, then dispatch actor `performance`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and the bounded context below.
+**Execute**: `resolveAgent({ logical_role_id: "maister:implementation-planner" })`, then dispatch actor `performance`, work item `implementation-plan`, output `implementation/implementation-plan.md`, and the bounded context below.
 **Output**: `implementation/implementation-plan.md`
 **State**: Update task groups and dependencies
 
@@ -460,8 +460,8 @@ orchestrator:
         clarify: manual
         convergence: manual
         verify-matrix: manual
-      advisor_agent: maister-advisor
-      arbiter_agent: maister-advisor
+      advisor_agent: maister:advisor
+      arbiter_agent: maister:advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3

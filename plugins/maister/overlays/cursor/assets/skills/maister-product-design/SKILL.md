@@ -71,7 +71,7 @@ Cross-cutting rules from `orchestrator-patterns.md` (same as the development and
 
 1. **Artifact Summary Contract (§ 7)**: every artifact opens with TL;DR / Key Decisions / Open Questions & Risks. This applies to subagent prompts (solution-brainstormer, information-gatherer already comply) AND to the artifacts this orchestrator writes directly (`problem-statement.md`, `personas.md`, `design-decisions.md`, `feature-spec.md`, `outputs/product-brief.md`). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` — verbatim, never re-summarized.
 2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark `in_progress` before executing), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks — the operator reviews them on the dashboard while answering; status stays `in_progress` until the gate passes), after every phase completion (including skipped phases 3/7, with reason), every gate decision, after each refinement-loop iteration that changes an artifact, and at finalization. Every rewrite starts with `date -u` (one call per turn). Register Phase 7 mockups as artifacts (`analysis/mockups/{slug}.html` — they ARE html; set both `path` and `html` to the mockup path).
-3. **HTML companions (§ 9) — delegated, because this orchestrator writes its hero artifacts INLINE**. Right after each hero md is finalized, use `resolveAgent({ logical_role_id: "maister-html-companion-writer" })`, then dispatch actor `product-design`, a stable companion work item, the sibling `.html` output contract, and bounded `md_path`, `html_style_guide_path`, `artifact_label`, and `report_suite` context. Apply this to `analysis/design-decisions.md` (Phase 5), `analysis/feature-spec.md` (Phase 6), and `outputs/product-brief.md` (Phase 8, after final approval). Register the returned `html_path` in `phase_summaries.[phase].artifacts[].html` so dashboard hero cards link HTML first. Companion generation never blocks — on `status: failed` keep the md and continue. (`analysis/alternatives.md` already gets a companion from exact `maister-solution-brainstormer` in Phase 4; `problem-statement.md`/`personas.md` are secondary.)
+3. **HTML companions (§ 9) — delegated, because this orchestrator writes its hero artifacts INLINE**. Right after each hero md is finalized, use `resolveAgent({ logical_role_id: "maister:html-companion-writer" })`, then dispatch actor `product-design`, a stable companion work item, the sibling `.html` output contract, and bounded `md_path`, `html_style_guide_path`, `artifact_label`, and `report_suite` context. Apply this to `analysis/design-decisions.md` (Phase 5), `analysis/feature-spec.md` (Phase 6), and `outputs/product-brief.md` (Phase 8, after final approval). Register the returned `html_path` in `phase_summaries.[phase].artifacts[].html` so dashboard hero cards link HTML first. Companion generation never blocks — on `status: failed` keep the md and continue. (`analysis/alternatives.md` already gets a companion from exact `maister-solution-brainstormer` in Phase 4; `problem-statement.md`/`personas.md` are secondary.)
 4. **Advisor gates (§ 2.2)**: classify every design decision gate, resolve it through the configured manual/advisor/fully_automatic policy, persist the full record in `orchestrator.gate_history` after each decision, and never let advisor output modify artifacts or implementation scope. Generate `outputs/decision-summary.md` and its HTML companion at completion or blocked/failed termination.
 
 Every design direction, persona, convergence, refinement, optional-phase,
@@ -345,7 +345,7 @@ Invoke `phase-0-characteristics` through the engine — "I detected these design
    - "I'll look that up..." -- STOP. Delegate to information-gatherer.
 
    **INVOKE NOW** -- common runtime calls (parallel, one per topic):
-   `resolveAgent({ logical_role_id: "maister-information-gatherer" })`, then dispatch actor `product-design`, one stable work item per topic, that topic's findings output, and bounded topic/scope context.
+   `resolveAgent({ logical_role_id: "maister:information-gatherer" })`, then dispatch actor `product-design`, one stable work item per topic, that topic's findings output, and bounded topic/scope context.
 
    **Context to pass**: research topic, scope constraints, task_path
 
@@ -479,7 +479,7 @@ Invoke the engine as `phase-3-exit` with question "Personas defined. Continue to
 
 **INVOKE NOW** -- common runtime call:
 
-`resolveAgent({ logical_role_id: "maister-solution-brainstormer" })`, then dispatch actor `product-design`, work item `design-alternatives`, output `analysis/alternatives.md`, and the bounded context below.
+`resolveAgent({ logical_role_id: "maister:solution-brainstormer" })`, then dispatch actor `product-design`, work item `design-alternatives`, output `analysis/alternatives.md`, and the bounded context below.
 
 **Context to pass** (Pattern 7):
 - `task_path`
@@ -689,7 +689,7 @@ The visual companion is the **default and preferred** rendering method. Always a
 > You should only reach this section if Step 1 failed (server could not start on any port) or the user explicitly passed `--no-visual`. If the visual companion is running, do NOT use this fallback.
 
 **INVOKE NOW** -- common runtime call:
-`resolveAgent({ logical_role_id: "maister-ui-mockup-generator" })`, then dispatch actor `product-design`, work item `visual-prototypes`, the mockup output contract, and the bounded context below.
+`resolveAgent({ logical_role_id: "maister:ui-mockup-generator" })`, then dispatch actor `product-design`, work item `visual-prototypes`, the mockup output contract, and the bounded context below.
 
 **Context to pass**: task_path, spec sections from Phase 6, design context from Phase 1, selected approach from Phase 5
 
@@ -849,8 +849,8 @@ orchestrator:
         clarify: manual
         convergence: manual
         verify-matrix: manual
-      advisor_agent: maister-advisor
-      arbiter_agent: maister-advisor
+      advisor_agent: maister:advisor
+      arbiter_agent: maister:advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3

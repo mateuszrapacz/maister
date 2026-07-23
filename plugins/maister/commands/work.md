@@ -12,7 +12,7 @@ Auto-classifies tasks and routes to the appropriate workflow orchestrator. Suppo
 ## Usage
 
 ```bash
-/work [task description | task folder path | issue identifier]
+/maister-work [task description | task folder path | issue identifier]
 ```
 
 ### Input Types
@@ -31,18 +31,18 @@ Auto-classifies tasks and routes to the appropriate workflow orchestrator. Suppo
 
 ```bash
 # Resume existing task
-/work ".maister/tasks/development/2025-10-23-login-timeout"
-/work "2025-10-26-user-auth"
+/maister-work ".maister/tasks/development/2025-10-23-login-timeout"
+/maister-work "2025-10-26-user-auth"
 
 # New task (auto-classifies)
-/work "Fix login timeout error on mobile devices"
-/work "Add user authentication with email/password"
-/work "Improve dashboard loading performance"
+/maister-work "Fix login timeout error on mobile devices"
+/maister-work "Add user authentication with email/password"
+/maister-work "Improve dashboard loading performance"
 
 # From issue tracker
-/work "#456"
-/work "PROJ-123"
-/work "AB#789"
+/maister-work "#456"
+/maister-work "PROJ-123"
+/maister-work "AB#789"
 ```
 
 ## How It Works
@@ -151,7 +151,7 @@ Examples:
 1. **Resolve and dispatch exact task-classifier** to determine workflow type:
 
 ```
-resolveAgent({ logical_role_id: "maister-task-classifier" })
+resolveAgent({ logical_role_id: "maister:task-classifier" })
 dispatchAgent:
   actor: work
   work_item: classify-new-task
@@ -218,7 +218,7 @@ Then route to selected workflow using Skill tool.
 ```
 Display:
 "Task cancelled. You can:
-- Run /work again when ready
+- Run /maister-work again when ready
 - Use specific workflow commands directly:
   /maister-development, /maister-performance, etc."
 ```
@@ -241,7 +241,7 @@ Display:
 
 ### With Task Classifier
 
-The `/work` command delegates classification through exact `maister-task-classifier` dispatch, which:
+The `/maister-work` command delegates classification through exact `maister-task-classifier` dispatch, which:
 - Fetches issue details from GitHub/Jira/Azure DevOps (via MCP, CLI tools, or WebFetch)
 - Analyzes codebase context for better classification
 - Uses confidence-based user confirmation

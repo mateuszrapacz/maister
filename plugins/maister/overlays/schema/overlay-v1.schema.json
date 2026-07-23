@@ -33,7 +33,7 @@
     "settings": {
       "type": "array",
       "items": { "$ref": "#/$defs/setting" },
-      "minItems": 1
+      "minItems": 0
     },
     "semantic_bindings": {
       "type": "object",
@@ -129,7 +129,10 @@
         "destination": { "$ref": "#/$defs/relativePath" },
         "kind": { "enum": ["file", "tree", "template"] },
         "mode": { "$ref": "#/$defs/mode" },
-        "ownership": { "enum": ["whole_file", "managed_keys", "plugin_private"] }
+        "ownership": { "enum": ["whole_file", "managed_keys", "plugin_private"] },
+        "merge": { "type": "boolean" },
+        "child_prefix": { "type": "string", "pattern": "^[a-z0-9-]*$" },
+        "native": { "type": "boolean" }
       }
     },
     "setting": {

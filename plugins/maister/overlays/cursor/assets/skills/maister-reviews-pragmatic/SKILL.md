@@ -24,7 +24,7 @@ You are performing pragmatic analysis to identify over-engineering, unnecessary 
 **Resolve and dispatch exact code-quality-pragmatist NOW:**
 
 ```
-resolveAgent({ logical_role_id: "maister-code-quality-pragmatist" })
+resolveAgent({ logical_role_id: "maister:code-quality-pragmatist" })
 dispatchAgent:
   actor: reviews-pragmatic
   work_item: pragmatic-code-review

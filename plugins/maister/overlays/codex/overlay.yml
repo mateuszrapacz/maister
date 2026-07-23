@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schema/overlay-v1.schema.json
 schema_version: 1
 overlay_id: maister/codex
 overlay_version: 1.0.0
@@ -18,13 +19,6 @@ layout:
     mode: "0755"
     ownership: whole_file
     merge: true
-  - source: assets/skills
-    destination: skills
-    kind: tree
-    mode: "0755"
-    ownership: whole_file
-    merge: true
-    native: true
   - source: common/agents
     destination: skills/orchestrator-framework/agents
     kind: tree
@@ -70,6 +64,12 @@ inventory:
   required:
     - .codex-plugin/plugin.json
     - "skills/**/SKILL.md"
+    - skills/bye/SKILL.md
+    - skills/dev/SKILL.md
+    - skills/next/SKILL.md
+    - skills/resume/SKILL.md
+    - skills/status/SKILL.md
+    - skills/work/SKILL.md
     - "skills/**/agents/openai.yaml"
     - hooks/hooks.json
     - skills/orchestrator-framework/bin/gate-evaluator.mjs
@@ -181,6 +181,7 @@ agent_projection:
       path_template: skills/orchestrator-framework/agents/{role_id}.md
       mode: "0644"
     - kind: output-schema
+      # pi-lens-ignore: line-length
       path_template: skills/orchestrator-framework/agent-schemas/{role_id}.schema.json
       mode: "0644"
   transform_ids:

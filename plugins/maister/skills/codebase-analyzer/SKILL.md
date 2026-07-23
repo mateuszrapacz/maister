@@ -94,7 +94,7 @@ If combining roles into one agent, also read `references/combined.md` for mergin
 
 **3b. Adapt templates** — Replace `[description]` with the actual task description. Select the correct task-type section (Bug / Enhancement / Feature).
 
-**3c. Launch analysis work** — For each selected concern, use `resolveAgent({ logical_role_id: "maister-project-analyzer" })`, then dispatch actor `codebase-analyzer`, a stable concern-specific work item, response-only findings output, and the adapted bounded prompt. Dispatch all selected concerns as one parallel batch.
+**3c. Launch analysis work** — For each selected concern, use `resolveAgent({ logical_role_id: "maister:project-analyzer" })`, then dispatch actor `codebase-analyzer`, a stable concern-specific work item, response-only findings output, and the adapted bounded prompt. Dispatch all selected concerns as one parallel batch.
 
 **IMPORTANT**: Every Explore agent prompt MUST include this instruction:
 > IMPORTANT: Do NOT create, write, or modify any files. Output all findings as text in your response only.
@@ -106,7 +106,7 @@ If combining roles into one agent, also read `references/combined.md` for mergin
 After all analysis dispatches complete, resolve exact `maister-codebase-analysis-reporter` and provide the collected response outputs:
 
 ```
-resolveAgent({ logical_role_id: "maister-codebase-analysis-reporter" })
+resolveAgent({ logical_role_id: "maister:codebase-analysis-reporter" })
 dispatchAgent:
   actor: codebase-analyzer
   work_item: merge-analysis-findings

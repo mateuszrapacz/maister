@@ -30,72 +30,72 @@ command_origins:
     destination: prompts/modeling-aggregate-designer.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: 9f80a86f66a9a83e5a410851f087309d3dc0da486afc5693889948e33ff35087
+    sha256: e26cc4e9edf01a3fcf72d2fc5bbb297549a7cdf7e352e945986b6b9fa35a5ecf
   - source: commands/modeling-context-distiller.md
     destination: prompts/modeling-context-distiller.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: 8199bc624c4cf946ff08f0a05244e3cd65610388384723c750519cbcecbbecea
+    sha256: 670532520a79a3ca141ee58acf24429c1f86aaac6403a4f90b4f2cbf5e073cf3
   - source: commands/quick-metaprogram-classifier.md
     destination: prompts/quick-metaprogram-classifier.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: 0571d8b2165bd62bf1522cf6a41596c82b22b5db80c24462d96d52c417b92f60
+    sha256: 2b6f9a9139bde51a093063bcd1a6ba03498a7e04eabe81ae39d0035fb9192551
   - source: commands/quick-problem-classifier.md
     destination: prompts/quick-problem-classifier.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: 68e2b2e255434e87b046deb7926799834b535e86965bb956a4f1425ac850bea9
+    sha256: e69cdf60ecc6e826e1b2a91bd325737e9e89abc9aeee1e9286ec6effb8989f7b
   - source: commands/quick-requirements-critic.md
     destination: prompts/quick-requirements-critic.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: a0c18c0f0799cebdcee7b22eae69c33cf5776584ffc071c17374ba353e9d9586
+    sha256: 47a92e07e63e7e29267b5740f2048ea4104082cc01e8b8b9b0dba0cb84ec61a8
   - source: commands/quick-transcript-critic.md
     destination: prompts/quick-transcript-critic.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: 98ab55db3d0e7042d634cb32c50eecdf211dd96dd9fc6c7d8da709cd90021b25
+    sha256: 1fe14bf43f6b96aac392f1dbf60d3a41657b0889f08b056482eff5d55b296037
   - source: commands/reviews-code.md
     destination: prompts/reviews-code.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: 41f74eddea48b0c95e7d0381317b23e6379a6a9d670f8585d6afabba6a58acca
+    sha256: e0c61dedf8f20eb6eeeb18e5f545ed67b7e0ef09309c873dbdc1af132e0d3740
   - source: commands/reviews-linguistic-boundaries.md
     destination: prompts/reviews-linguistic-boundaries.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: 7db5aabd22181440f4dac7a49be0d0ac0b3574071151c686a9c1fad1867b9594
+    sha256: efd40a7e2b6ef618d84b934adc8f12809fbbc52d33a4ec035a1bf7dc3592a269
   - source: commands/reviews-pragmatic.md
     destination: prompts/reviews-pragmatic.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: b07186d87723010cb28ef8a4ba8eecbcaf854991125ed57c17857a6e00f6117f
+    sha256: 6649c4756db2c8c215ac0597153cf6567c889fc69e6a19ee69d86c76eb15a29e
   - source: commands/reviews-production-readiness.md
     destination: prompts/reviews-production-readiness.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: 6f743f360cbf3415d63d6befbdad4e762655e53a385ba170ccd18d620f930ae7
+    sha256: 03bd8cc813963348bf0b9d580206433569aa9fb96465a3b492e6c2a486e942fb
   - source: commands/reviews-reality-check.md
     destination: prompts/reviews-reality-check.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: a98ec01a40b89c04bef21ee25fc0445880a0fa12debf8489ff0a3ede6e86e38e
+    sha256: 1faaddf8d0b71c50f5eb4f21b4a6a977b94b944ba732731e0e59b3d89dba2254
   - source: commands/reviews-spec-audit.md
     destination: prompts/reviews-spec-audit.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: 0103c7c2c504c343277a48d85326ad14e6628fec957041fff260d33a0edae8b6
+    sha256: e508aeb2b4c1ee36e3b30234fa3c7d06a5f495d9fa0e40a954a6bcf2d252c944
   - source: commands/reviews-test-strategy.md
     destination: prompts/reviews-test-strategy.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: c444cd58625ecbdb875af0a985f3149e0941992a1a69356635924667420dfd9c
+    sha256: ad3d837b4b957b0c25de4e82ac27d41c2e9dc25e9b80dd372ed32d6896f1be56
   - source: commands/work.md
     destination: prompts/work.md
     kind: prompt
     transform_id: pi-prompt-v1
-    sha256: f3fd5d90f76362c88df32a46fc1b7ba86dc67a13b83c0f8495a9f661d24326f7
+    sha256: 8f2f24557bd9138a8b6f7d763378bbe9a327172a9227f64ccb71ce3be2446084
 skill_origins:
   - source: skills/aggregate-designer
     destination: skills/aggregate-designer

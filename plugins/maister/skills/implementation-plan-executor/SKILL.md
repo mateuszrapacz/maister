@@ -121,7 +121,7 @@ For each wave:
    ✅ Right: Resolve all N plans, then issue all N common-runtime dispatches before awaiting the batch results.
 
    Per-call parameters:
-   - `resolveAgent({ logical_role_id: "maister-task-group-implementer" })`
+   - `resolveAgent({ logical_role_id: "maister:task-group-implementer" })`
    - `dispatchAgent({ plan, task: { actor, work_item, output, bounded_task }, adapters })`
    - `actor`: `implementation-plan-executor`
    - `work_item`: stable task-group identity

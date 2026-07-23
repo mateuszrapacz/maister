@@ -11,6 +11,7 @@ Before the first common-runtime delegation, the host invokes the shipped `bin/ma
 **Always use Skill/Task tools to delegate. Never execute delegated work inline.**
 
 When a phase requires delegation:
+
 1. Use the **Skill tool** for **skills** — loads SKILL.md instructions into the main agent's context; the main agent executes the skill's instructions and continues with the orchestrator workflow afterward
 2. Use the **Task tool** for **subagents/agents** — spawns an isolated subprocess that returns results when complete
 3. Wait for completion before continuing
@@ -24,7 +25,7 @@ When a phase requires delegation:
 ### Anti-Patterns
 
 | Anti-Pattern | Why It's Wrong | Correct Approach |
-|--------------|----------------|------------------|
+| -------------- | ---------------- | ------------------ |
 | "I'll analyze the codebase..." | Bypasses codebase-analyzer skill | Use `Skill` tool with `maister-codebase-analyzer` |
 | "Let me create the specification..." | Bypasses specification-creator | Use `Task` tool with `maister-specification-creator` subagent |
 | "Looking at the gaps between..." | Bypasses gap-analyzer subagent | Use `Task` tool with `maister-gap-analyzer` |
@@ -45,6 +46,7 @@ These do NOT require delegation:
 For all analysis, planning, implementation, and verification phases: **ALWAYS DELEGATE**.
 
 **Never acceptable inline** (regardless of perceived task simplicity):
+
 - Specification creation → always delegate to `maister-specification-creator` subagent
 - Implementation planning → always delegate to `maister-implementation-planner` subagent
 - Gap analysis → always delegate to `maister-gap-analyzer` subagent
@@ -108,7 +110,7 @@ Advisor mode changes who analyzes a gate response; it does not grant an agent pe
 
 Every canonical-role delegation uses the common runtime in two fail-closed
 steps. Resolve the requested role with
-`resolveAgent({ logical_role_id: "maister-<role_id>", target, dispatch_id, manifest, projection, paths, hooks })`,
+`resolveAgent({ logical_role_id: "maister:<role_id>", target, dispatch_id, manifest, projection, paths, hooks })`,
 then invoke
 `dispatchAgent({ plan, task: { actor, work_item, output, bounded_task }, adapters })`.
 The bounded task carries the decision actor or workflow actor, stable work-item
@@ -131,11 +133,11 @@ At every gate, before invoking any platform mechanism:
    existing native user gate unchanged. If no user gate is available, persist
    `blocked`; never synthesize a user answer.
 6. For `advisor` or supported `fully_automatic`, resolve the exact configured `advisor_agent` and dispatch it through the common runtime. The bounded task contains actor `advisor`, the gate-decision work item, the exact four-field response output contract, the exact question and every option, the original recommendation when one exists, the current dashboard and relevant artifacts, prior gate history and phase summaries, and the current gate type and safety policy.
-6. Require the exact four-key response map with `selected_option`, `rationale`, `confidence`, and `escalate_to_user`; reject extra decision fields, duplicate YAML keys, and options not in the supplied list. Retry malformed, unavailable, or timed-out calls using `advisor.retry.advisor_attempts` and `advisor.retry.backoff`. Persist each attempt and backoff timestamp. `confidence: low` is not an automatic approval.
-7. When the advisor agrees with the original recommendation, record the advisor decision and continue automatically for the configured non-denylisted gate. When no original recommendation exists, the advisor may choose one available option without arbitration.
-8. When the advisor disagrees with the original recommendation and arbitration is enabled, create exactly one logical arbiter decision in `arbiter_pending`. Resolve the exact configured `arbiter_agent` and dispatch it through the same common runtime. The bounded task contains actor `arbiter`, the arbiter-decision work item, the exact four-field response output contract, both recommendations and rationales, and the same read-only workflow context. Retry only within that arbiter record with `advisor.retry.arbiter_attempts` and the same backoff policy; never start a second arbiter or loop back to the advisor.
-9. In `advisor` mode, show the original recommendation, advisor recommendation, and arbiter result to the user; the user makes the final choice. In `fully_automatic`, the arbiter may choose between the competing recommendations for non-denylisted gates, and the orchestrator continues through `phase_continue(selected_option)` after terminal state/report persistence. It must not synthesize input into a user prompt. If the arbiter cannot produce a valid, sufficiently confident result, fail closed: return to a manual gate or stop the workflow in fully automatic mode. Never start an unbounded arbitration loop.
-10. Compute the deterministic idempotency key from `phase_id`, `gate_type`, question, and ordered options before any invocation. Reuse terminal `decided`, `blocked`, or `failed` records without another runtime or user call. Persist the complete decision record before changing phase status or continuing: question, options, gate type, original recommendation, advisor response, arbiter response, retry attempts, logical role IDs, dispatch IDs, effective common execution-profile observations, selected option, final actor, rationale, confidence, escalation, and any user override. Append it to `orchestrator.gate_history[]` once and mirror the concise record in the phase's `gate` field.
+7. Require the exact four-key response map with `selected_option`, `rationale`, `confidence`, and `escalate_to_user`; reject extra decision fields, duplicate YAML keys, and options not in the supplied list. Retry malformed, unavailable, or timed-out calls using `advisor.retry.advisor_attempts` and `advisor.retry.backoff`. Persist each attempt and backoff timestamp. `confidence: low` is not an automatic approval.
+8. When the advisor agrees with the original recommendation, record the advisor decision and continue automatically for the configured non-denylisted gate. When no original recommendation exists, the advisor may choose one available option without arbitration.
+9. When the advisor disagrees with the original recommendation and arbitration is enabled, create exactly one logical arbiter decision in `arbiter_pending`. Resolve the exact configured `arbiter_agent` and dispatch it through the same common runtime. The bounded task contains actor `arbiter`, the arbiter-decision work item, the exact four-field response output contract, both recommendations and rationales, and the same read-only workflow context. Retry only within that arbiter record with `advisor.retry.arbiter_attempts` and the same backoff policy; never start a second arbiter or loop back to the advisor.
+10. In `advisor` mode, show the original recommendation, advisor recommendation, and arbiter result to the user; the user makes the final choice. In `fully_automatic`, the arbiter may choose between the competing recommendations for non-denylisted gates, and the orchestrator continues through `phase_continue(selected_option)` after terminal state/report persistence. It must not synthesize input into a user prompt. If the arbiter cannot produce a valid, sufficiently confident result, fail closed: return to a manual gate or stop the workflow in fully automatic mode. Never start an unbounded arbitration loop.
+11. Compute the deterministic idempotency key from `phase_id`, `gate_type`, question, and ordered options before any invocation. Reuse terminal `decided`, `blocked`, or `failed` records without another runtime or user call. Persist the complete decision record before changing phase status or continuing: question, options, gate type, original recommendation, advisor response, arbiter response, retry attempts, logical role IDs, dispatch IDs, effective common execution-profile observations, selected option, final actor, rationale, confidence, escalation, and any user override. Append it to `orchestrator.gate_history[]` once and mirror the concise record in the phase's `gate` field.
 
 The final workflow summary must be generated from `gate_history`, not from transient dashboard data. Write both `outputs/decision-summary.md` and, when `orchestrator.options.html_output` is true, `outputs/decision-summary.html`. The summary includes every decision, all alternatives, explanations, full context links, arbitration history, retry failures, resume reuse, and the terminal workflow status. Generate it after successful completion and after blocked or failed termination. Reports must be written after the terminal state record and before phase continuation.
 
@@ -144,6 +146,7 @@ Implementation is a separate protected boundary. Advisors, arbiters, and automat
 ### AUTO-CONTINUE Rules
 
 When a phase ends with `→ **AUTO-CONTINUE**`:
+
 - You MAY output a brief phase summary (1-2 lines)
 - Do NOT end your turn
 - Do NOT use AskUserQuestion
@@ -177,7 +180,7 @@ provenance, chooses workflow targets, claims dispatch, or starts target work.
 ### Anti-Patterns
 
 | Anti-Pattern | Why It's Wrong |
-|--------------|----------------|
+| -------------- | ---------------- |
 | Proceeding without AskUserQuestion at phase gates | User loses control, can't review or stop |
 | Saying "I'll pause here" without tool call | Words are not pauses. Tool invocation required. |
 | Auto-accepting subagent decisions without asking | User must consent to scope/approach decisions |
@@ -241,7 +244,7 @@ When a subagent returns `decisions_needed` items, the orchestrator MUST present 
 **Anti-Patterns** (NEVER do this):
 
 | Anti-Pattern | Why It's Wrong |
-|---|---|
+| --- | --- |
 | "I'll accept the recommended defaults" | User loses control over critical scope decisions |
 | Logging decisions without asking | Documentation is not consent |
 | "The recommendations are clear, no need to ask" | Clarity is not consent. User may disagree. |
@@ -370,7 +373,7 @@ task:
 Orchestrators add domain-specific fields using `[domain]_context`:
 
 | Domain | Context Field | Example Fields |
-|--------|---------------|----------------|
+| -------- | --------------- | ---------------- |
 | Development | `task_context` | risk_level, ui_heavy, architecture_decision |
 | Performance | `performance_context` | baseline_p95, target_p95, optimizations_completed |
 | Migration | `migration_context` | migration_type, steps_completed |
@@ -471,7 +474,7 @@ Task system IDs are ephemeral to a session. On resume:
 5. **Restore task items** — Re-create phase tasks and mark completed ones
 
 | Starting From | Required Prerequisites |
-|---------------|----------------------|
+| --------------- | ---------------------- |
 | Gap Analysis | `analysis/codebase-analysis.md` |
 | Specification | `analysis/gap-analysis.md` |
 | Planning | `implementation/spec.md` |
@@ -496,7 +499,7 @@ If prerequisites missing, use AskUserQuestion: "Start from Phase 1", "Specify di
 ### Fixability Assessment
 
 | Likely Fixable | Likely Not Fixable |
-|----------------|-------------------|
+| ---------------- | ------------------- |
 | Lint errors | Architecture decisions |
 | Formatting issues | Design trade-offs |
 | Missing imports | Test logic errors |
@@ -506,7 +509,7 @@ If prerequisites missing, use AskUserQuestion: "Start from Phase 1", "Specify di
 ### Exit Conditions
 
 | Condition | Action |
-|-----------|--------|
+| ----------- | -------- |
 | Verification passes | Proceed to next phase |
 | User chooses "Proceed with known issues" | Proceed with warning logged |
 | Max iterations (3) reached | Ask user how to proceed |
@@ -530,6 +533,7 @@ Workflow artifacts accumulate deep detail for subagent context — but the human
 ```
 
 **Rules**:
+
 - TL;DR is hard-capped at 5 lines. It states conclusions, not process ("Auth via middleware on 3 routes; no schema changes" — not "This document analyzes...").
 - Omit `Key Decisions` / `Open Questions / Risks` sections entirely when empty — never write "None".
 - Full detail follows below the block, unchanged. The block is a lens, not a replacement.
@@ -547,12 +551,14 @@ Workflow artifacts accumulate deep detail for subagent context — but the human
 Each task directory carries a self-contained HTML dashboard so the operator can monitor workflow progress at a glance and deep-dive only when needed.
 
 **Files** (both at task root):
+
 - `dashboard.html` — static viewer, copied verbatim from `[plugin]/skills/orchestrator-framework/assets/dashboard.html` at initialization (§ 5). NEVER generated or modified by the model — it is a maintained plugin asset.
 - `dashboard-data.js` — data projection written by the orchestrator. The viewer reads it via `<script>` (`window.MAISTER_DATA = {...}`), so it works from `file://` with no server.
 
 **Every rewrite starts with the clock**: run `date -u +"%Y-%m-%dT%H:%M:%SZ"` via Bash before writing (one call covers all timestamps in the same turn) — `generated`, `started`, `completed`, and state `updated` all take that value. Never guess the time, never reuse a value from an earlier turn (§ 4 Timestamp Rule).
 
 **When to rewrite `dashboard-data.js`** (full rewrite each time — it is a projection of `orchestrator-state.yml` plus `phase_summaries`, never an incremental patch):
+
 1. At initialization (all phases pending)
 2. **When a phase starts** (set its status to `in_progress` — BEFORE delegating to the skill/subagent, so the operator sees the running phase, not just the last completed one)
 3. **BEFORE firing every phase exit gate** — the phase's work is finished while the workflow waits (possibly long) for the user's answer. Register the phase's artifacts, summary, decisions, and risks NOW; the status stays `in_progress` until the gate passes (per § 2 state ordering). The operator reviews the finished work on the dashboard while deciding at the gate — a gate fired against a stale dashboard defeats its purpose.
@@ -618,7 +624,7 @@ The viewer decides presentation (hero artifacts per workflow type, collapsed dra
 Selected high-value artifacts get a rich HTML companion written by the **same subagent** that writes the markdown, at the same time (one context read, md and HTML never drift):
 
 | Artifact (md) | Companion (html) | Written by |
-|---------------|------------------|------------|
+| --------------- | ------------------ | ------------ |
 | `implementation/spec.md` | `implementation/spec.html` | specification-creator |
 | `implementation/implementation-plan.md` | `implementation/implementation-plan.html` | implementation-planner |
 | `verification/implementation-verification.md` | `verification/implementation-verification.html` | implementation-verifier |
@@ -631,6 +637,7 @@ Selected high-value artifacts get a rich HTML companion written by the **same su
 | `outputs/decision-summary.md` | `outputs/decision-summary.html` | finalization / html-companion-writer |
 
 **Rules**:
+
 - The markdown remains the source of truth for subagent context passing — subagents read md, humans read HTML. The companion adds visual structure (severity badges, matrices, embedded screenshots), never unique content.
 - Companions follow the shared style guide: `references/html-report-style.md` (sibling of this file). Self-contained single file, no external resources, relative links/images only.
 - When `options.html_output` is true, orchestrators MUST pass the absolute path of that style guide to every companion-writing subagent as `html_style_guide_path` (you know it — it sits next to the patterns file you read at initialization). When false, omit it (the config gate above).

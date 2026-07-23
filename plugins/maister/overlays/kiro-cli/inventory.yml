@@ -3,6 +3,12 @@ target: kiro-cli
 overlay_version: 1.0.0
 required:
   - "skills/maister-**/SKILL.md"
+  - skills/maister-bye/SKILL.md
+  - skills/maister-dev/SKILL.md
+  - skills/maister-next/SKILL.md
+  - skills/maister-resume/SKILL.md
+  - skills/maister-status/SKILL.md
+  - skills/maister-work/SKILL.md
   - "agents/maister*.json"
   - "agents/instructions/maister-*.md"
   - "steering/maister-*.md"
@@ -10,6 +16,7 @@ required:
   - maister-agent-tools.json
 optional:
   - settings/mcp.json
+  - settings/settings.json
 forbidden:
   - ".codex-plugin/**"
   - ".cursor-plugin/**"

@@ -1,6 +1,6 @@
 # Build pipeline
 
-`plugins/maister/common/`, canonical portable skills, and `plugins/maister/overlays/` are distribution inputs. There are no independently maintained generated target trees and no host builder that rewrites a second source of truth. Cursor's checked-in compatibility projection is a deterministic, drift-checked migration exception; its source mappings, transformations, exclusions, and preserved exception hashes must remain explicit until the projection is removed.
+`plugins/maister/common/`, canonical portable skills, and `plugins/maister/overlays/` are distribution inputs. There are no independently maintained generated target trees and no host builder that rewrites a second source of truth. Target-specific skill naming and invocation syntax is applied during materialization from the canonical source; do not add host-owned lifecycle skill copies. Cursor's checked-in compatibility projection is a deterministic, drift-checked migration exception; its source mappings, transformations, exclusions, and preserved exception hashes must remain explicit until the projection is removed.
 
 Use the target-aware entry points:
 

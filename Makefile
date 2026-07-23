@@ -1,3 +1,4 @@
+# shellcheck disable=SC1064,SC1065,SC1072,SC1073
 SHELL := /bin/bash
 
 TARGET ?= codex
@@ -33,7 +34,7 @@ test-platform-independent:
 	node --test tests/platform-independent/*.test.mjs
 
 test-core:
-	node --test tests/platform-independent/overlay-contract.test.mjs tests/platform-independent/source-materializer.test.mjs
+	node --test tests/platform-independent/overlay-contract.test.mjs tests/platform-independent/source-materializer.test.mjs tests/platform-independent/flow-skill-projection.test.mjs
 	node --test tests/platform-independent/installer-transaction.test.mjs
 
 test-runtime:

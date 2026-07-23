@@ -98,7 +98,7 @@ Use the Read tool to load ONLY the reference files for phases you will execute:
 
 **Step 3: Adapt templates** — Replace `[scope]`, `[confidence]`, and other placeholders with actual values. Replace the `[output_file]` placeholder in each template with the actual temp file path for that phase (e.g., `{tmpdir}/config.yml`).
 
-**Step 4: Launch bounded discovery in parallel** — For each phase, use `resolveAgent({ logical_role_id: "maister-information-gatherer" })`, then dispatch actor `standards-discover`, a stable phase work item, response-only findings output, and that phase's bounded read-only discovery context.
+**Step 4: Launch bounded discovery in parallel** — For each phase, use `resolveAgent({ logical_role_id: "maister:information-gatherer" })`, then dispatch actor `standards-discover`, a stable phase work item, response-only findings output, and that phase's bounded read-only discovery context.
 
 > ❌ **WRONG** — launching one agent per message, waiting for result, then launching the next.
 > ✅ **CORRECT** — launching ALL applicable agents (2–4 Task calls) in a SINGLE message.
@@ -172,7 +172,7 @@ For each approved standard:
 
 1. **Prepare content** — Standard name, description, examples (preferred/avoid), rationale from evidence, source citations. Format each standard as a `###` heading with 1-10 lines description (excluding code snippets). Group related standards into the same topic file. Add brief code examples only when they clarify the practice.
 2. **Check if file exists** — Determine create vs update action
-3. Resolve `resolveAgent({ logical_role_id: "maister-docs-operator" })`, then dispatch actor `standards-discover`, one stable apply-standard work item, the standard file output, and bounded prepared content. For updates, include the existing content and merge requirement. Wait for completion before the next standard.
+3. Resolve `resolveAgent({ logical_role_id: "maister:docs-operator" })`, then dispatch actor `standards-discover`, one stable apply-standard work item, the standard file output, and bounded prepared content. For updates, include the existing content and merge requirement. Wait for completion before the next standard.
 4. After all standards are applied, dispatch exact `maister-docs-operator` with actor `standards-discover`, work item `regenerate-index`, output `.maister/docs/INDEX.md`, and bounded index context.
 5. Dispatch exact `maister-docs-operator` with actor `standards-discover`, work item `verify-project-instructions`, response-only verification output, and bounded integration context. Then display the application summary.
 

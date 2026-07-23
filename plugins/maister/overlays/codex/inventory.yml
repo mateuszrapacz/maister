@@ -4,6 +4,12 @@ overlay_version: 1.0.0
 required:
   - .codex-plugin/plugin.json
   - "skills/**/SKILL.md"
+  - skills/bye/SKILL.md
+  - skills/dev/SKILL.md
+  - skills/next/SKILL.md
+  - skills/resume/SKILL.md
+  - skills/status/SKILL.md
+  - skills/work/SKILL.md
   - "skills/**/agents/openai.yaml"
   - hooks/hooks.json
   - skills/orchestrator-framework/bin/gate-evaluator.mjs
@@ -57,6 +63,7 @@ agent_projection:
       path_template: skills/orchestrator-framework/agents/{role_id}.md
       mode: "0644"
     - kind: output-schema
+      # pi-lens-ignore: line-length
       path_template: skills/orchestrator-framework/agent-schemas/{role_id}.schema.json
       mode: "0644"
   transform_ids:
