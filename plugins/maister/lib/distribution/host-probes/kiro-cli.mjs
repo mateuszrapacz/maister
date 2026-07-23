@@ -160,6 +160,10 @@ export function probeKiroCliForInstall({
       canonical_set_digest: provenance.agent_projection?.canonical_set_digest ?? provenance.canonical_set_digest,
       manifest_digest: provenance.agent_projection?.manifest_digest ?? provenance.manifest_digest,
       projected_tree_digest: provenance.agent_projection?.projected_tree_digest ?? provenance.projected_tree_digest,
+      source_hash: provenance.sourceHash ?? provenance.source_hash,
+      overlay_hash: provenance.overlayHash ?? provenance.overlay_hash,
+      materialized_hash: provenance.materializedHash ?? provenance.materialized_hash,
+      provenance_hash: provenance.provenanceHash ?? provenance.provenance_hash,
     },
   });
 }
