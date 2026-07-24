@@ -26,8 +26,7 @@ Report:
 
 For a terminal workflow, report that it is completed and do not describe its
 skipped phases as blockers. If there is no non-terminal workflow, say that no
-workflow is currently active and suggest `$maister-maister-work` for a new
-task.
+workflow is currently active and suggest `/maister-work` for a new task.
 
 Do not start or resume the workflow. If no active workflow exists, say so
 clearly and suggest `/maister-init` or `/maister-work`.

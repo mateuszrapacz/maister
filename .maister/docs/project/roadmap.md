@@ -2,13 +2,38 @@
 
 ## Current baseline
 
-- One common source with Codex, Cursor, and Kiro CLI overlays.
+- One common source with Codex, Cursor, Kiro CLI, and Pi overlays.
 - Immutable source and provenance validation.
 - Transactional install/update/uninstall/rollback/recovery with receipts and journals.
 - Evidence freshness per capability, with explicit unavailable native outcomes.
 - Shadow parity and negative topology checks at the migration boundary.
 - Bounded immutable GitHub checkout resolution using the same checkout for source and overlay.
 - Self-contained deterministic target archives with sorted entries, extracted lifecycle smoke, `SHA256SUMS`, CycloneDX artifact inventory, unsigned reproducibility provenance, and pinned release actions.
+
+## Next release plan — v2.2.2
+
+Release `v2.2.2` is the next patch release after the current `2.2.1` baseline. It is a GitHub-only release; there is no npm or alternate registry publication.
+
+### Included scope
+
+- Keep lifecycle command suggestions host-native: Codex uses `$maister:maister-work`, Cursor and Kiro CLI use `/maister-work`, and Pi uses `/skill:maister-work`.
+- Protect the shared `status` and `next` projection with a regression test covering Codex, Cursor, Kiro CLI, and Pi.
+- Keep Cursor's checked-in projection regenerated from the canonical lifecycle skills with source fingerprints updated.
+- Retain the Codex `0.145.0` E5/E6 bridge and its fail-closed evidence requirements.
+
+### Release gates
+
+- [x] Lifecycle command projection fix and cross-host regression coverage.
+- [x] Validate Cursor projection and all four target overlays.
+- [x] Verify repository topology and `git diff --check`.
+- [ ] Update `package.json`, `package-lock.json`, and `VERSION` to `2.2.2`.
+- [ ] Run the complete release validation from a clean checkout, including `make validate`, release policy tests, launcher validation, and deterministic package tests.
+- [ ] Generate one passed portable-core E3 attestation and package `codex`, `cursor`, `kiro-cli`, and `pi` with the same attestation bytes.
+- [ ] Verify checksums, SBOM, provenance, target admission, and extracted install/verify/uninstall lifecycle evidence.
+- [ ] Push the release commit and exact tag `v2.2.2`; never move or reuse an existing release tag.
+- [ ] Confirm GitHub publication, exact public bytes, anonymous cross-platform smoke, and final release evidence.
+
+Release publication remains blocked by a dirty checkout, missing or unavailable required evidence, failed deterministic packaging, unresolved transaction/recovery state, or any mismatch between the tag, source commit, package version, and release artifacts.
 
 ## Next priorities
 

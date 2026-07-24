@@ -25,7 +25,7 @@ skill, or user decision and explain the reason in one sentence. Do not execute
 the suggested action.
 
 If the selected workflow is terminal, do not invent a failed phase or gate
-adapter blocker. Suggest `$maister:maister-work` for a new task instead. If the
+adapter blocker. Suggest `/maister-work` for a new task instead. If the
 selected workflow has an actual failed phase, blocker, or pending gate, report
 that item as the next action.
 

@@ -65,6 +65,45 @@ test("projects the shared flow skill set into each host command vocabulary", () 
 	assert.doesNotMatch(cursor, /`\/work`/u);
 });
 
+test("projects lifecycle suggestions into the native command vocabulary", () => {
+	const forbiddenCommandForms = [
+		/\$maister:maister-maister-work/u,
+		/\$maister-maister-work/u,
+		/`\/maister-maister-work`/u,
+		/`\/skill:maister-maister-work`/u,
+	];
+	const expectations = {
+		codex: {
+			command: "`$maister:maister-work`",
+		},
+		cursor: {
+			command: "`/maister-work`",
+		},
+		"kiro-cli": {
+			command: "`/maister-work`",
+		},
+		pi: {
+			command: "`/skill:maister-work`",
+		},
+	};
+
+	for (const target of Object.keys(expectations)) {
+		for (const skillId of ["status", "next"]) {
+			const projected = projectFlowSkillContent(canonicalSkill(skillId), {
+				target,
+				skillId,
+			});
+			assert.ok(
+				projected.includes(expectations[target].command),
+				`${target}/${skillId} is missing ${expectations[target].command}`,
+			);
+			for (const forbidden of forbiddenCommandForms) {
+				assert.doesNotMatch(projected, forbidden);
+			}
+		}
+	}
+});
+
 test("materializes Cursor flow skills from the canonical source", async () => {
 	const root = fs.mkdtempSync(
 		path.join(os.tmpdir(), "maister-cursor-flow-skills-"),
