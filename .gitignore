@@ -10,6 +10,7 @@
 
 /.worktrees/
 /.maister-kiro-build.lock.d/
+/.maister-resolved-commit.json
 
 # Pix Agent
 .pi/

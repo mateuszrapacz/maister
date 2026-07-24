@@ -105,7 +105,7 @@ jobs:
       - name: Pin release npm client
         run: |
           npm install --global "npm@${{ env.RELEASE_NPM_VERSION }}"
-          node -e 'const expected=process.env.RELEASE_NPM_VERSION; const actual=require("node:child_process").execFileSync("npm",["--version"],{encoding:"utf8"}).trim(); if(actual!==expected) throw new Error(`expected npm ${expected}, received ${actual}`)'
+          node -e 'const expected=process.env.RELEASE_NPM_VERSION; const npmCommand=process.platform === "win32" ? "npm.cmd" : "npm"; const actual=require("node:child_process").execFileSync(npmCommand,["--version"],{encoding:"utf8"}).trim(); if(actual!==expected) throw new Error(`expected npm ${expected}, received ${actual}`)'
       - name: Verify launcher, archive, transaction, and platform contracts
         run: |
           npm ci
