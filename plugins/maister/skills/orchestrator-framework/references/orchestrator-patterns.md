@@ -296,8 +296,8 @@ advisor:
     clarify: manual
     convergence: manual
     verify-matrix: manual
-  advisor_agent: maister-advisor
-  arbiter_agent: maister-advisor
+  advisor_agent: maister:advisor
+  arbiter_agent: maister:advisor
   arbiter_enabled_on_disagreement: true
   retry:
     advisor_attempts: 3
@@ -333,8 +333,8 @@ orchestrator:
     advisor:
       enabled: false
       gate_policies: {}               # gate_type -> manual | advisor | fully_automatic
-      advisor_agent: maister-advisor
-      arbiter_agent: maister-advisor
+      advisor_agent: maister:advisor
+      arbiter_agent: maister:advisor
       arbiter_enabled_on_disagreement: true
       retry:
         advisor_attempts: 3

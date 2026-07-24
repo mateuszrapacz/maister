@@ -26,7 +26,7 @@ invoke `bin/reconcile-gate-config.sh reconcile .maister/config.yml on|off`.
 This is a project-only configuration transaction. A missing `advisor:` mapping
 receives the complete exact defaults. A present mapping must already be
 complete and canonical; legacy actor-model fields, unknown fields, unsafe YAML,
-and any role value other than exact `maister-advisor` fail before replacement.
+and any role value other than exact `maister:advisor` fail before replacement.
 The managed top-level key must be the canonical plain `advisor:` mapping.
 
 If staging, replacement, or restoration fails, stop initialization and
@@ -163,8 +163,8 @@ html_output: true
 advisor:
   enabled: false
   gate_policies: {}
-  advisor_agent: maister-advisor
-  arbiter_agent: maister-advisor
+  advisor_agent: maister:advisor
+  arbiter_agent: maister:advisor
   arbiter_enabled_on_disagreement: true
   retry:
     advisor_attempts: 3

@@ -68,7 +68,7 @@
     {
       "source": "init",
       "target": "maister-init",
-      "source_fingerprint": "24320720ea5b9fe7a608330c5286ec566826f8467d7511a13846375cf5eecaae"
+      "source_fingerprint": "7e9c74d54d1617f66d83cce9c4952c8127271a094dc2911950d125c155f0c300"
     },
     {
       "source": "linguistic-boundary-verifier",
