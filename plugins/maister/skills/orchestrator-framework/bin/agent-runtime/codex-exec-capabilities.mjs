@@ -40,7 +40,7 @@ function typed(status, code, message, observation, details = {}) {
   });
 }
 
-function validateObservation(observation) {
+export function validateCodexCapabilityObservation(observation) {
   exactFields(observation, TOP_LEVEL_FIELDS, "Codex capability observation");
   if (observation.schema_version !== CODEX_EXEC_CAPABILITY_SCHEMA_VERSION) {
     throw new TypeError(`Codex capability schema_version must be ${CODEX_EXEC_CAPABILITY_SCHEMA_VERSION}`);
@@ -82,7 +82,7 @@ export function createCodexExecCapabilityInspector({ port } = {}) {
       if (!mapping(plan) || !mapping(plan.policy)) throw new TypeError("Codex capability inspection requires a dispatch plan");
       let observation;
       try {
-        observation = validateObservation(await port.inspect({
+      observation = validateCodexCapabilityObservation(await port.inspect({
           schema_version: CODEX_EXEC_CAPABILITY_SCHEMA_VERSION,
           adapter_id: plan.adapter_id,
           host_version: plan.host_version,

@@ -37,18 +37,24 @@ into each host's native command vocabulary:
 
 | Skill | Codex | Cursor | Kiro CLI | Pi |
 | --- | --- | --- | --- | --- |
-| `maister-bye` | `$maister:bye` | `/maister-bye` | `/maister-bye` | `/maister-bye` |
-| `maister-dev` | `$maister:dev` | `/maister-dev` | `/maister-dev` | `/maister-dev` |
-| `maister-next` | `$maister:next` | `/maister-next` | `/maister-next` | `/maister-next` |
-| `maister-resume` | `$maister:resume` | `/maister-resume` | `/maister-resume` | `/maister-resume` |
-| `maister-status` | `$maister:status` | `/maister-status` | `/maister-status` | `/maister-status` |
-| `maister-work` | `$maister:work` | `/maister-work` | `/maister-work` | `/maister-work` |
+| `maister-bye` | `$maister:maister-bye` | `/maister-bye` | `/maister-bye` | `/maister-bye` |
+| `maister-dev` | `$maister:maister-dev` | `/maister-dev` | `/maister-dev` | `/maister-dev` |
+| `maister-next` | `$maister:maister-next` | `/maister-next` | `/maister-next` | `/maister-next` |
+| `maister-resume` | `$maister:maister-resume` | `/maister-resume` | `/maister-resume` | `/maister-resume` |
+| `maister-status` | `$maister:maister-status` | `/maister-status` | `/maister-status` | `/maister-status` |
+| `maister-work` | `$maister:maister-work` | `/maister-work` | `/maister-work` | `/maister-work` |
 
 `maister-dev` is the only convenience alias and routes to
 `maister-development`; no unprefixed lifecycle aliases are installed. Pi
 registers these public commands through its extension and forwards internally
 to `/skill:maister-*`. Arguments are passed unchanged. `maister-bye` never marks an in-progress
 workflow as completed; `maister-next` and `maister-status` are read-only.
+
+The Codex package keeps the same identity at the filesystem boundary: every
+skill is materialized below `skills/maister-*`, projected agent prompt/schema
+leaves use `maister-*`, and hook scripts use `maister-*.sh`. The `$maister:`
+namespace identifies the plugin; the second `maister-` identifies the resource
+and prevents short-name collisions with another plugin.
 Example:
 
 `/maister-development Add filtering --e2e`

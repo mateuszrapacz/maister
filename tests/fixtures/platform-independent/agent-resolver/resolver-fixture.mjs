@@ -28,8 +28,8 @@ function targetContract(target) {
       representation: "codex-prompt-schema",
       nativeId: () => null,
       destinations: (roleId) => [
-        { kind: "prompt", path: `skills/orchestrator-framework/agents/${roleId}.md`, mode: "0644" },
-        { kind: "output-schema", path: `skills/orchestrator-framework/agent-schemas/${roleId}.schema.json`, mode: "0644" },
+        { kind: "prompt", path: `skills/maister-orchestrator-framework/agents/maister-${roleId}.md`, mode: "0644" },
+        { kind: "output-schema", path: `skills/maister-orchestrator-framework/agent-schemas/maister-${roleId}.schema.json`, mode: "0644" },
       ],
     };
   }

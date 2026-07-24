@@ -255,12 +255,12 @@
       "destinations": [
         {
           "kind": "prompt",
-          "path_template": "skills/orchestrator-framework/agents/{role_id}.md",
+          "path_template": "skills/maister-orchestrator-framework/agents/maister-{role_id}.md",
           "mode": "0644"
         },
         {
           "kind": "output-schema",
-          "path_template": "skills/orchestrator-framework/agent-schemas/{role_id}.schema.json",
+          "path_template": "skills/maister-orchestrator-framework/agent-schemas/maister-{role_id}.schema.json",
           "mode": "0644"
         }
       ],

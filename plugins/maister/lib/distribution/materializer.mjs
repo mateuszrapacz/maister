@@ -59,7 +59,7 @@ const PI_PACKAGE_MANIFEST = Object.freeze({
 
 const HISTORICAL_TEMPLATE_EXCEPTIONS = Object.freeze({
 	codex: Object.freeze({
-		"skills/product-design/server/template.html": new Set([
+		"skills/maister-product-design/server/template.html": new Set([
 			"{{TITLE}}",
 			"{{NAV}}",
 			"{{CONTENT}}",
@@ -94,35 +94,35 @@ const HISTORICAL_TEMPLATE_EXCEPTIONS = Object.freeze({
 
 const HISTORICAL_VOCABULARY_EXCEPTIONS = Object.freeze({
 	codex: Object.freeze({
-		"skills/docs-manager/docs/INDEX.md": Object.freeze(["claude"]),
-		"skills/docs-manager/SKILL.md": Object.freeze(["claude"]),
-		"skills/init/SKILL.md": Object.freeze(["claude"]),
-		"skills/migration/references/migration-strategies.md": Object.freeze([
+		"skills/maister-docs-manager/docs/INDEX.md": Object.freeze(["claude"]),
+		"skills/maister-docs-manager/SKILL.md": Object.freeze(["claude"]),
+		"skills/maister-init/SKILL.md": Object.freeze(["claude"]),
+		"skills/maister-migration/references/migration-strategies.md": Object.freeze([
 			"claude",
 		]),
-		"skills/migration/references/migration-types.md": Object.freeze(["claude"]),
-		"skills/orchestrator-framework/agents/e2e-test-verifier.md": Object.freeze([
+		"skills/maister-migration/references/migration-types.md": Object.freeze(["claude"]),
+		"skills/maister-orchestrator-framework/agents/maister-e2e-test-verifier.md": Object.freeze([
 			"claude",
 		]),
-		"skills/orchestrator-framework/assets/dashboard.html": Object.freeze([
+		"skills/maister-orchestrator-framework/assets/dashboard.html": Object.freeze([
 			"cursor",
 		]),
-		"skills/orchestrator-framework/bin/orchestrator-state-repository.mjs":
+		"skills/maister-orchestrator-framework/bin/orchestrator-state-repository.mjs":
 			Object.freeze(["cursor"]),
-		"skills/orchestrator-framework/references/gate-decision-engine.md":
+		"skills/maister-orchestrator-framework/references/gate-decision-engine.md":
 			Object.freeze(["cursor", "kiro"]),
-		"skills/orchestrator-framework/references/host-capabilities.yml":
+		"skills/maister-orchestrator-framework/references/host-capabilities.yml":
 			Object.freeze(["cursor", "kiro"]),
-		"skills/orchestrator-framework/references/html-report-style.md":
+		"skills/maister-orchestrator-framework/references/html-report-style.md":
 			Object.freeze(["cursor"]),
-		"skills/orchestrator-framework/references/orchestrator-patterns.md":
+		"skills/maister-orchestrator-framework/references/orchestrator-patterns.md":
 			Object.freeze(["claude"]),
-		"skills/product-design/server/template.html": Object.freeze(["cursor"]),
-		"skills/quick-plan/SKILL.md": Object.freeze(["claude"]),
-		"skills/standards-discover/references/docs-extractor-prompt.md":
+		"skills/maister-product-design/server/template.html": Object.freeze(["cursor"]),
+		"skills/maister-quick-plan/SKILL.md": Object.freeze(["claude"]),
+		"skills/maister-standards-discover/references/docs-extractor-prompt.md":
 			Object.freeze(["claude"]),
-		"skills/standards-discover/SKILL.md": Object.freeze(["claude"]),
-		"skills/standards-update/SKILL.md": Object.freeze(["claude"]),
+		"skills/maister-standards-discover/SKILL.md": Object.freeze(["claude"]),
+		"skills/maister-standards-update/SKILL.md": Object.freeze(["claude"]),
 	}),
 	"kiro-cli": Object.freeze({
 		"skills/maister-docs-manager/docs/INDEX.md": Object.freeze(["claude"]),
@@ -157,7 +157,7 @@ const HISTORICAL_VOCABULARY_EXCEPTIONS = Object.freeze({
 });
 
 const HISTORICAL_REFERENCE_EXCEPTIONS = Object.freeze({
-	"skills/orchestrator-framework/references/html-report-style.md":
+	"skills/maister-orchestrator-framework/references/html-report-style.md":
 		Object.freeze([
 			"../dashboard.html",
 			"spec.html",
@@ -169,10 +169,10 @@ const HISTORICAL_REFERENCE_EXCEPTIONS = Object.freeze({
 		"screenshots/01-action.png",
 		"screenshots/02-action.png",
 	]),
-	"skills/orchestrator-framework/agents/e2e-test-verifier.md": Object.freeze([
+	"skills/maister-orchestrator-framework/agents/maister-e2e-test-verifier.md": Object.freeze([
 		"screenshots/...",
 	]),
-	"skills/orchestrator-framework/agents/user-docs-generator.md": Object.freeze([
+	"skills/maister-orchestrator-framework/agents/maister-user-docs-generator.md": Object.freeze([
 		"screenshots/01-action.png",
 		"screenshots/02-action.png",
 	]),
@@ -1245,21 +1245,21 @@ function isHistoricalReferenceException(target, entryPath, reference) {
 	const exceptions = HISTORICAL_REFERENCE_EXCEPTIONS[entryPath] ?? [];
 	if (
 		entryPath ===
-			"skills/orchestrator-framework/references/html-report-style.md" &&
+			"skills/maister-orchestrator-framework/references/html-report-style.md" &&
 		(target === "codex" || target === "kiro-cli")
 	) {
 		if (exceptions.includes(reference)) return true;
 	}
 	if (
 		target === "codex" &&
-		entryPath === "skills/orchestrator-framework/agents/e2e-test-verifier.md" &&
+		entryPath === "skills/maister-orchestrator-framework/agents/maister-e2e-test-verifier.md" &&
 		exceptions.includes(reference)
 	)
 		return true;
 	if (
 		target === "codex" &&
 		entryPath ===
-			"skills/orchestrator-framework/agents/user-docs-generator.md" &&
+			"skills/maister-orchestrator-framework/agents/maister-user-docs-generator.md" &&
 		exceptions.includes(reference)
 	)
 		return true;

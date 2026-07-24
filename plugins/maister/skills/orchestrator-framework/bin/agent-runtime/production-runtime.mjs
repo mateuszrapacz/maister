@@ -126,31 +126,6 @@ function assertReceiptProjection(receipt, projection) {
   }
 }
 
-function unavailableCodexCapabilityPort() {
-  return Object.freeze({
-    async inspect() {
-      return {
-        schema_version: 1,
-        executable: { available: false, path: null },
-        authentication: { available: false, authenticated: false },
-        version: { value: "unknown", allowed: false },
-        controls: {
-          working_root: false,
-          model: false,
-          reasoning_effort: false,
-          sandbox: false,
-          jsonl: false,
-          output_schema: false,
-          last_message: false,
-          ignore_user_config: false,
-        },
-        model: { available: false, supported: false, value: null },
-        reasoning: { available: false, supported: false, value: null },
-      };
-    },
-  });
-}
-
 function unavailableNativePort() {
   return Object.freeze({
     hostVersion: "unknown",
@@ -162,10 +137,21 @@ function unavailableNativePort() {
 }
 
 function codexResolverHooks(capabilityPort) {
-  let cached;
-  const inspect = () => {
-    cached ??= Promise.resolve(capabilityPort.inspect({ schema_version: 1, adapter_id: "codex.exec" }));
-    return cached;
+  const cached = new Map();
+  const inspect = (request = { schema_version: 1, adapter_id: "codex.exec" }) => {
+    const key = JSON.stringify(request);
+    if (!cached.has(key)) cached.set(key, Promise.resolve(capabilityPort.inspect(request)));
+    return cached.get(key);
+  };
+  const inspectPolicy = async (policy) => {
+    const base = await inspect();
+    return inspect({
+      schema_version: 1,
+      adapter_id: "codex.exec",
+      host_version: base.version?.value ?? "unknown",
+      required_model: policy.model,
+      required_reasoning_effort: policy.reasoning_effort,
+    });
   };
   return {
     externalCollisions: async () => ({ collisions: [] }),
@@ -174,8 +160,14 @@ function codexResolverHooks(capabilityPort) {
     version: async () => { const value = await inspect(); return { available: value.version?.allowed === true, supported: value.version?.allowed === true, host_version: value.version?.value ?? "unknown" }; },
     auth: async () => { const value = await inspect(); return { available: value.authentication?.available === true, authenticated: value.authentication?.authenticated === true }; },
     controls: async () => { const value = await inspect(); return { available: Boolean(value.controls), unsupported_controls: Object.entries(value.controls ?? {}).filter(([, supported]) => supported !== true).map(([control]) => control) }; },
-    model: async ({ policy }) => { const value = await inspect(); return { available: value.model?.available === true, supported: value.model?.supported === true && value.model.value === policy.model }; },
-    reasoning: async ({ policy }) => { const value = await inspect(); return { available: value.reasoning?.available === true, supported: value.reasoning?.supported === true && value.reasoning.value === policy.reasoning_effort }; },
+    model: async ({ policy }) => {
+      const value = await inspectPolicy(policy);
+      return { available: value.model?.available === true, supported: value.model?.supported === true && value.model.value === policy.model };
+    },
+    reasoning: async ({ policy }) => {
+      const value = await inspectPolicy(policy);
+      return { available: value.reasoning?.available === true, supported: value.reasoning?.supported === true && value.reasoning.value === policy.reasoning_effort };
+    },
   };
 }
 
@@ -243,7 +235,7 @@ export function createProductionAgentRuntime({
   pluginSourceRoot,
 } = {}) {
   const installed = loadInstalledAgentRuntimeInputs({ target, home, env, pluginSourceRoot });
-  const codexPort = capabilityPort ?? unavailableCodexCapabilityPort();
+  const codexPort = capabilityPort;
   const nativePort = target === "cursor"
     ? nativePorts.cursor ?? unavailableNativePort()
     : target === "kiro-cli"

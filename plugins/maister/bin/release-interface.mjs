@@ -183,6 +183,7 @@ function assertPackageClosure(stage, target) {
 		`overlays/${target}/overlay.yml`,
 		`overlays/${target}/inventory.yml`,
 	];
+	if (target === "codex") required.push("lib/distribution/bridges/codex-bridge-v1.mjs");
 	for (const relative of required) {
 		const candidate = path.join(pluginRoot, relative);
 		if (!fs.existsSync(candidate) || fs.lstatSync(candidate).isSymbolicLink()) {

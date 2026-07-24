@@ -31,10 +31,7 @@ test("projects the shared flow skill set into each host command vocabulary", () 
 				target,
 				skillId,
 			});
-			assert.equal(
-				frontmatterName(projected),
-				target === "codex" ? skillId : `maister-${skillId}`,
-			);
+			assert.equal(frontmatterName(projected), `maister-${skillId}`);
 			assert.doesNotMatch(projected, /(^|\s)\/(?:work|dev)\b/u);
 		}
 	}
@@ -43,7 +40,7 @@ test("projects the shared flow skill set into each host command vocabulary", () 
 		target: "codex",
 		skillId: "work",
 	});
-	assert.match(codex, /\$maister:work/u);
+	assert.match(codex, /\$maister:maister-work/u);
 	assert.match(codex, /maister:task-classifier/u);
 	assert.doesNotMatch(codex, /^user-invocable:/mu);
 
@@ -115,7 +112,7 @@ test("adapts materialized flow skill paths without host-owned source copies", ()
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), "maister-flow-skills-"));
 	try {
 		for (const [target, directory] of [
-			["codex", ""],
+			["codex", "maister-"],
 			["cursor", "maister-"],
 			["kiro-cli", "maister-"],
 			["pi", ""],
@@ -154,7 +151,7 @@ test("adapts materialized flow skill paths without host-owned source copies", ()
 						"utf8",
 					),
 				),
-				target === "codex" ? "bye" : "maister-bye",
+				"maister-bye",
 			);
 		}
 	} finally {

@@ -132,10 +132,11 @@ function availableVersion() {
 }
 
 function codexCapability(overrides = {}) {
-  return {
-    adapter_id: "codex.exec",
-    authentication: true,
-    allowed_version: true,
+  const base = {
+    schema_version: 1,
+    executable: { available: true, path: "/usr/local/bin/codex" },
+    authentication: { available: true, authenticated: true },
+    version: { value: "1.2.3", allowed: true },
     controls: {
       working_root: true,
       model: true,
@@ -146,7 +147,25 @@ function codexCapability(overrides = {}) {
       last_message: true,
       ignore_user_config: true,
     },
-    ...overrides,
+    model: { available: true, supported: true, value: null },
+    reasoning: { available: true, supported: true, value: null },
+  };
+  return {
+    ...base,
+    authentication: { ...base.authentication, ...overrides.authentication },
+    version: { ...base.version, ...overrides.version },
+    controls: { ...base.controls, ...overrides.controls },
+    model: { ...base.model, ...overrides.model },
+    reasoning: { ...base.reasoning, ...overrides.reasoning },
+  };
+}
+
+function codexCapabilityPort(overrides = {}) {
+  const observation = codexCapability(overrides);
+  return {
+    inspect() {
+      return structuredClone(observation);
+    },
   };
 }
 
@@ -461,7 +480,7 @@ test("creates complete immutable provenance hashes for source, overlay, material
       overlay_id: "maister/codex",
       overlay_version: "1.0.0",
       contractHash: overlayHash,
-      target: { id: "codex", host_version_constraint: ">=1.0.0" },
+      target: { id: "codex", host_version_constraint: "0.145.0" },
     },
     hostVersion: "1.2.3",
     contentHash: materializedHash,
@@ -490,7 +509,7 @@ test("creates complete immutable provenance hashes for source, overlay, material
         overlay_id: "maister/codex",
         overlay_version: "1.0.0",
         contractHash: overlayHash,
-        target: { id: "codex", host_version_constraint: ">=1.0.0" },
+        target: { id: "codex", host_version_constraint: "0.145.0" },
       },
       contentHash: materializedHash,
     }),
@@ -643,9 +662,11 @@ test("Codex version success alone never passes E5 or E6", () => {
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest: nativeManifest("codex"),
+    capabilityPort: { inspect() { return null; } },
+    invoke: null,
   });
   assert.deepEqual(result.records.map(({ result: outcome }) => outcome), ["unavailable", "unavailable"]);
-  assert.equal(result.records[0].provenance.reason, "safe-adapter-not-configured");
+  assert.equal(result.records[0].provenance.reason, "safe-adapter-unavailable");
   assert.equal(result.records[1].provenance.reason, "scenario-not-configured");
 });
 
@@ -655,7 +676,7 @@ test("Codex E5 passes only with its authenticated managed exec control surface",
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest: nativeManifest("codex"),
-    discover: () => codexCapability(),
+    capabilityPort: codexCapabilityPort(),
   });
   assert.equal(result.records[0].result, "passed");
   assert.equal(result.records[0].provenance.discovery_subject, "codex.exec");
@@ -667,7 +688,7 @@ test("Codex missing authentication is unavailable rather than a discovery pass",
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest: nativeManifest("codex"),
-    discover: () => codexCapability({ authentication: false }),
+    capabilityPort: codexCapabilityPort({ authentication: { authenticated: false } }),
   });
   assert.equal(result.records[0].result, "unavailable");
   assert.equal(result.records[0].provenance.reason, "authentication-unavailable");
@@ -679,7 +700,7 @@ test("Codex missing a required exec control is unavailable rather than structura
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest: nativeManifest("codex"),
-    discover: () => codexCapability({ controls: { ...codexCapability().controls, output_schema: false } }),
+    capabilityPort: codexCapabilityPort({ controls: { output_schema: false } }),
   });
   assert.equal(result.records[0].result, "unavailable");
   assert.equal(result.records[0].provenance.reason, "required-control-unavailable");
@@ -748,7 +769,7 @@ test("Codex E6 resolves production-shaped namespaced manifest rows for two ordin
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest: nativeManifest("codex"),
-    discover: () => codexCapability(),
+    capabilityPort: codexCapabilityPort(),
     invoke: (request) => {
       calls.push(request);
       return matchingInvocation(request);
@@ -773,7 +794,7 @@ test("Codex E6 remains unavailable when effective policy only echoes the request
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest: nativeManifest("codex"),
-    discover: () => codexCapability(),
+    capabilityPort: codexCapabilityPort(),
     invoke: (request) => {
       const observation = matchingInvocation(request);
       delete observation.execution_policy_evidence;
@@ -792,7 +813,7 @@ test("a missing required E6 role is unavailable with a precise reason instead of
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest,
-    discover: () => codexCapability(),
+    capabilityPort: codexCapabilityPort(),
     invoke: matchingInvocation,
   });
   assert.equal(result.records[1].result, "unavailable");
@@ -805,7 +826,7 @@ test("a discovery timeout does not contaminate a successful E6 record or returne
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest: nativeManifest("codex"),
-    discover: () => { throw new HostProbeTimeoutError("codex", ["discovery"], 25); },
+    capabilityPort: { inspect() { throw new HostProbeTimeoutError("codex", ["discovery"], 25); } },
     invoke: matchingInvocation,
   });
   assert.equal(result.records[0].result, "failed");
@@ -849,7 +870,7 @@ test("E6 fails when a started Codex scenario times out", () => {
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest: nativeManifest("codex"),
-    discover: () => codexCapability(),
+    capabilityPort: codexCapabilityPort(),
     invoke: () => ({ started: true, timed_out: true }),
   });
   assert.equal(result.records[1].result, "failed");
@@ -863,7 +884,7 @@ test("E6 fails when an invocation observation has a stale projection digest", ()
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest,
-    discover: () => codexCapability(),
+    capabilityPort: codexCapabilityPort(),
     invoke: (request) => ({ ...matchingInvocation(request), projected_tree_digest: "e".repeat(64) }),
   });
   assert.equal(result.records[1].result, "failed");
@@ -877,7 +898,7 @@ test("E6 fails when the role-specific behavior is wrong despite matching identit
     run: availableVersion,
     provenance: nativeProvenance("codex"),
     manifest,
-    discover: () => codexCapability(),
+    capabilityPort: codexCapabilityPort(),
     invoke: (request) => ({ ...matchingInvocation(request), behavior: "wrong-behavior" }),
   });
   assert.equal(result.records[1].result, "failed");

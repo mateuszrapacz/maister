@@ -21,6 +21,7 @@ const REQUEST_FIELDS = [
 ];
 const TARGETS = new Set(["codex", "cursor", "kiro-cli", "pi"]);
 const PACKAGED_PLUGIN_ROOT = path.resolve(import.meta.dirname, "../../../..");
+export const CODEX_BRIDGE_MODULE = path.join(PACKAGED_PLUGIN_ROOT, "lib/distribution/bridges/codex-bridge-v1.mjs");
 
 export class ProductionOwnerError extends Error {
   constructor(code, message, details = {}) {
@@ -73,13 +74,16 @@ function validateRequest(candidate) {
   const taskPath = realPath(candidate.gate_context.context?.task_path, "gate_context.context.task_path");
   const statePath = realPath(candidate.state_path, "state_path", { file: true });
   if (path.dirname(statePath) !== taskPath) fail("E_AGENT_OWNER_PATH", "state_path must be owned directly by gate_context.context.task_path", { state_path: statePath, task_path: taskPath });
+  const bridgeModule = candidate.target === "codex" && candidate.bridge_module === null
+    ? CODEX_BRIDGE_MODULE
+    : candidate.bridge_module;
   return Object.freeze({
     ...structuredClone(candidate),
     home: realPath(candidate.home, "home"),
     state_root: realPath(candidate.state_root, "state_root"),
     working_root: realPath(candidate.working_root, "working_root"),
     state_path: statePath,
-    bridge_module: candidate.bridge_module === null ? null : realPath(candidate.bridge_module, "bridge_module", { file: true }),
+    bridge_module: bridgeModule === null ? null : realPath(bridgeModule, "bridge_module", { file: true }),
   });
 }
 

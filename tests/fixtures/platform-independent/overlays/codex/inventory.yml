@@ -4,15 +4,15 @@ overlay_version: 1.0.0
 required:
   - .codex-plugin/plugin.json
   - "skills/**/SKILL.md"
-  - skills/bye/SKILL.md
-  - skills/dev/SKILL.md
-  - skills/next/SKILL.md
-  - skills/resume/SKILL.md
-  - skills/status/SKILL.md
-  - skills/work/SKILL.md
+  - skills/maister-bye/SKILL.md
+  - skills/maister-dev/SKILL.md
+  - skills/maister-next/SKILL.md
+  - skills/maister-resume/SKILL.md
+  - skills/maister-status/SKILL.md
+  - skills/maister-work/SKILL.md
   - "skills/**/agents/openai.yaml"
   - hooks/hooks.json
-  - skills/orchestrator-framework/bin/gate-evaluator.mjs
+  - skills/maister-orchestrator-framework/bin/gate-evaluator.mjs
 optional:
   - "skills/**/agents/*.yaml"
 forbidden:
@@ -60,10 +60,10 @@ agent_projection:
     - user-docs-generator
   destinations:
     - kind: prompt
-      path_template: skills/orchestrator-framework/agents/{role_id}.md
+      path_template: skills/maister-orchestrator-framework/agents/maister-{role_id}.md
       mode: "0644"
     - kind: output-schema
-      path_template: skills/orchestrator-framework/agent-schemas/{role_id}.schema.json
+      path_template: skills/maister-orchestrator-framework/agent-schemas/maister-{role_id}.schema.json
       mode: "0644"
   transform_ids:
     - canonical-body-v1

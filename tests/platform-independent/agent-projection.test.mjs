@@ -168,7 +168,7 @@ test("named transform fixtures bind canonical bodies and host-specific shapes", 
   const cursor = createProjection("cursor");
   const kiro = createProjection("kiro-cli");
 
-  const codexPrompt = outputByPath(codex, "skills/orchestrator-framework/agents/advisor.md").content;
+	const codexPrompt = outputByPath(codex, "skills/maister-orchestrator-framework/agents/maister-advisor.md").content;
   for (const required of fixture["canonical-body-v1"].required) assert.ok(codexPrompt.includes(required));
   const codexSchema = JSON.parse(outputByPath(codex, fixture["codex-output-schema-v1"].path).content);
   assert.equal(codexSchema.properties.logical_role_id.const, fixture["codex-output-schema-v1"].requiredRole);
@@ -188,12 +188,12 @@ test("Codex emits complete prompts and role-specific schemas without native TOML
 
   for (const role of context.agentIr.roles) {
     assert.equal(
-      outputByPath(projection, `skills/orchestrator-framework/agents/${role.role_id}.md`).content,
+	      outputByPath(projection, `skills/maister-orchestrator-framework/agents/maister-${role.role_id}.md`).content,
       role.instruction_body,
     );
     const schema = JSON.parse(outputByPath(
       projection,
-      `skills/orchestrator-framework/agent-schemas/${role.role_id}.schema.json`,
+	      `skills/maister-orchestrator-framework/agent-schemas/maister-${role.role_id}.schema.json`,
     ).content);
     assert.equal(schema.properties.logical_role_id.const, role.logical_role_id);
   }

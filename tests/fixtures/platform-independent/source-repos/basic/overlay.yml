@@ -3,7 +3,7 @@ overlay_id: maister/codex
 overlay_version: 1.0.0
 target:
   id: codex
-  host_version_constraint: ">=1.0.0"
+  host_version_constraint: "0.145.0"
   discovery_roots:
     - .codex/plugins/local/maister
 layout:

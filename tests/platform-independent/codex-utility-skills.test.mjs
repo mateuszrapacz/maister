@@ -38,7 +38,7 @@ function productionOptions(stagingRoot) {
 }
 
 function readSkill(stagingRoot, command) {
-	const filePath = path.join(stagingRoot, "skills", command, "SKILL.md");
+	const filePath = path.join(stagingRoot, "skills", `maister-${command}`, "SKILL.md");
 	const text = fs.readFileSync(filePath, "utf8");
 	const match = /^---\n([\s\S]*?)\n---\n/u.exec(text);
 	assert.ok(match, `${command} must have frontmatter`);
@@ -57,19 +57,63 @@ test("materializes the six Codex lifecycle skills with deterministic safe contra
 
 	for (const command of COMMANDS) {
 		const skill = readSkill(firstRoot, command);
-		assert.equal(skill.frontmatter.name, command);
+		assert.equal(skill.frontmatter.name, `maister-${command}`);
 		assert.equal(fs.statSync(skill.filePath).mode & 0o777, 0o644);
 		assert.doesNotMatch(
 			skill.text,
 			/(?:\.cursor-plugin|\.claude-plugin|\bclaude\b|\banthropic\b|\bcursor\b|\bpi\b)/iu,
 		);
 	}
+	const skillDirectories = fs
+		.readdirSync(path.join(firstRoot, "skills"), { withFileTypes: true })
+		.filter((entry) => entry.isDirectory())
+		.map((entry) => entry.name);
+	assert.ok(skillDirectories.length > 0);
+	assert.ok(skillDirectories.every((name) => /^maister-[a-z0-9-]+$/u.test(name)));
+	assert.ok(skillDirectories.every((name) => !name.startsWith("maister-maister-")));
+	const agentRoot = path.join(
+		firstRoot,
+		"skills",
+		"maister-orchestrator-framework",
+		"agents",
+	);
+	const agentFiles = fs
+		.readdirSync(agentRoot)
+		.filter((name) => name.endsWith(".md"))
+		.sort();
+	assert.ok(agentFiles.length > 0);
+	assert.ok(agentFiles.every((name) => /^maister-[a-z0-9-]+\.md$/u.test(name)));
 
-	assert.match(readSkill(firstRoot, "dev").text, /\$maister:development/u);
-	assert.match(readSkill(firstRoot, "resume").text, /\$maister:development/u);
+	const hookRoot = path.join(firstRoot, "hooks");
+	const hookScripts = fs
+		.readdirSync(hookRoot)
+		.filter((name) => name.endsWith(".sh"))
+		.sort();
+	assert.deepEqual(hookScripts, [
+		"maister-block-destructive-commands.sh",
+		"maister-post-compact-reminder.sh",
+		"maister-skill-invocation-reminder.sh",
+	]);
+	assert.ok(hookScripts.every((name) => !name.startsWith("maister-maister-")));
+	const hooks = JSON.parse(fs.readFileSync(path.join(hookRoot, "hooks.json"), "utf8"));
+	const hookCommands = Object.values(hooks.hooks)
+		.flat()
+		.flatMap((entry) => entry.hooks ?? [])
+		.map((entry) => entry.command)
+		.filter(Boolean);
+	assert.ok(hookCommands.every((command) => /\/hooks\/maister-[a-z0-9-]+\.sh"$/u.test(command)));
+
+	assert.match(readSkill(firstRoot, "dev").text, /\$maister:maister-development/u);
+	assert.match(readSkill(firstRoot, "resume").text, /\$maister:maister-development/u);
 	assert.match(readSkill(firstRoot, "resume").text, /--from=<phase>/u);
 	assert.match(readSkill(firstRoot, "next").text, /Do not execute/u);
+	assert.match(readSkill(firstRoot, "next").text, /top-level task state files/u);
+	assert.match(readSkill(firstRoot, "next").text, /newest top-level task/u);
+	assert.match(readSkill(firstRoot, "next").text, /Never prefer an older/u);
 	assert.match(readSkill(firstRoot, "status").text, /Do not start or resume/u);
+	assert.match(readSkill(firstRoot, "status").text, /top-level task state files/u);
+	assert.match(readSkill(firstRoot, "status").text, /newest top-level task/u);
+	assert.match(readSkill(firstRoot, "status").text, /Never prefer an older/u);
 	assert.match(
 		readSkill(firstRoot, "bye").text,
 		/Do not mark an in-progress workflow as completed/u,
@@ -99,14 +143,14 @@ test("keeps native precedence explicit and unrelated collisions fail closed", ()
 
 	const common = {
 		source: "common/lifecycle.md",
-		destination: "skills/bye/SKILL.md",
+		destination: "skills/maister-bye/SKILL.md",
 		kind: "file",
 		mode: "0644",
 		ownership: "whole_file",
 	};
 	const native = {
 		source: "assets/native.md",
-		destination: "skills/bye/SKILL.md",
+		destination: "skills/maister-bye/SKILL.md",
 		kind: "file",
 		mode: "0644",
 		ownership: "whole_file",

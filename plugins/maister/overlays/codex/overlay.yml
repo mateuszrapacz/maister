@@ -4,7 +4,7 @@ overlay_id: maister/codex
 overlay_version: 1.0.0
 target:
   id: codex
-  host_version_constraint: ">=1.0.0"
+  host_version_constraint: "0.145.0"
   discovery_roots:
     - .codex/plugins/local/maister
 layout:
@@ -13,17 +13,14 @@ layout:
     kind: tree
     mode: "0755"
     ownership: whole_file
+    child_prefix: "maister-"
   - source: assets/agent-metadata
     destination: skills
     kind: tree
     mode: "0755"
     ownership: whole_file
+    child_prefix: "maister-"
     merge: true
-  - source: common/agents
-    destination: skills/orchestrator-framework/agents
-    kind: tree
-    mode: "0755"
-    ownership: whole_file
   - source: assets/plugin.json
     destination: .codex-plugin/plugin.json
     kind: file
@@ -64,15 +61,15 @@ inventory:
   required:
     - .codex-plugin/plugin.json
     - "skills/**/SKILL.md"
-    - skills/bye/SKILL.md
-    - skills/dev/SKILL.md
-    - skills/next/SKILL.md
-    - skills/resume/SKILL.md
-    - skills/status/SKILL.md
-    - skills/work/SKILL.md
+    - skills/maister-bye/SKILL.md
+    - skills/maister-dev/SKILL.md
+    - skills/maister-next/SKILL.md
+    - skills/maister-resume/SKILL.md
+    - skills/maister-status/SKILL.md
+    - skills/maister-work/SKILL.md
     - "skills/**/agents/openai.yaml"
     - hooks/hooks.json
-    - skills/orchestrator-framework/bin/gate-evaluator.mjs
+    - skills/maister-orchestrator-framework/bin/gate-evaluator.mjs
   optional:
     - "skills/**/agents/*.yaml"
   forbidden:
@@ -140,7 +137,7 @@ native_assets:
   - source: assets/hooks/hooks.json
     destination: hooks/hooks.json
     mode: "0644"
-    sha256: 18975241e66ba4184ca90c92c73bcdd2053aa4172203537023e58bbdfab360b0
+    sha256: 32cc02295236fe9b7188c68fa68cead9ae69f5bedf9032acef435a313f318404
 agent_projection:
   schema_version: 1
   contract: agent-projection-v1.json
@@ -178,11 +175,11 @@ agent_projection:
     - user-docs-generator
   destinations:
     - kind: prompt
-      path_template: skills/orchestrator-framework/agents/{role_id}.md
+      path_template: skills/maister-orchestrator-framework/agents/maister-{role_id}.md
       mode: "0644"
     - kind: output-schema
       # pi-lens-ignore: line-length
-      path_template: skills/orchestrator-framework/agent-schemas/{role_id}.schema.json
+      path_template: skills/maister-orchestrator-framework/agent-schemas/maister-{role_id}.schema.json
       mode: "0644"
   transform_ids:
     - canonical-body-v1

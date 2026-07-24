@@ -122,3 +122,18 @@ test("the shipped agent-gate owner closes the production runtime-to-gate call gr
   assert.match(cli, /import \{ runProductionAgentGate \} from "\.\.\/skills\/orchestrator-framework\/bin\/agent-runtime\/production-owner\.mjs"/u);
   assert.match(cli, /await runProductionAgentGate\(/u);
 });
+
+test("Codex production topology registers one canonical capability bridge", () => {
+  const bridgePath = path.join(ROOT, "plugins/maister/lib/distribution/bridges/codex-bridge-v1.mjs");
+  const probePath = path.join(ROOT, "plugins/maister/lib/distribution/host-probes/codex.mjs");
+  const ownerPath = path.join(ROOT, "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/production-owner.mjs");
+  const runtimePath = path.join(ROOT, "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/production-runtime.mjs");
+  const releasePath = path.join(ROOT, "plugins/maister/bin/release-interface.mjs");
+  assert.equal(fs.existsSync(bridgePath), true);
+  assert.match(fs.readFileSync(probePath, "utf8"), /codex-bridge-v1\.mjs/u);
+  assert.match(fs.readFileSync(probePath, "utf8"), /capabilityPort\.inspect/u);
+  assert.match(fs.readFileSync(ownerPath, "utf8"), /CODEX_BRIDGE_MODULE/u);
+  assert.match(fs.readFileSync(runtimePath, "utf8"), /codexResolverHooks/u);
+  assert.match(fs.readFileSync(releasePath, "utf8"), /lib\/distribution\/bridges\/codex-bridge-v1\.mjs/u);
+  assert.equal(fs.existsSync(path.join(ROOT, "plugins/maister/overlays/codex/assets/runtime/codex-bridge-v1.mjs")), false);
+});

@@ -12,7 +12,7 @@ export const FLOW_SKILL_IDS = Object.freeze([
 
 const FLOW_SKILL_SET = new Set(FLOW_SKILL_IDS);
 const TARGET_SKILL_PATHS = Object.freeze({
-	codex: (id) => `skills/${id}/SKILL.md`,
+	codex: (id) => `skills/maister-${id}/SKILL.md`,
 	"kiro-cli": (id) => `skills/maister-${id}/SKILL.md`,
 	pi: (id) => `skills/${id}/SKILL.md`,
 	cursor: (id) => `skills/maister-${id}/SKILL.md`,
@@ -20,7 +20,7 @@ const TARGET_SKILL_PATHS = Object.freeze({
 
 function replaceInvocation(value, target) {
 	if (target === "codex") {
-		return value.replace(/\/maister-([a-z0-9-]+)/gu, "$maister:$1");
+		return value.replace(/\/maister-([a-z0-9-]+)/gu, "$maister:maister-$1");
 	}
 	if (target === "kiro-cli") {
 		return value.replace(/maister:([a-z0-9-]+)/gu, "maister-$1");
@@ -31,10 +31,8 @@ function replaceInvocation(value, target) {
 	return value;
 }
 
-function adaptCodexFrontmatter(value, skillId) {
-	return value
-		.replace(`name: maister-${skillId}`, `name: ${skillId}`)
-		.replace(/^user-invocable: true\n?/mu, "");
+function adaptCodexFrontmatter(value) {
+	return value.replace(/^user-invocable: true\n?/mu, "");
 }
 
 function adaptCursorFrontmatter(value, skillId) {
@@ -46,7 +44,7 @@ export function projectFlowSkillContent(content, { target, skillId } = {}) {
 		return content;
 	if (!Object.hasOwn(TARGET_SKILL_PATHS, target)) return content;
 	const adapted = replaceInvocation(content, target);
-	if (target === "codex") return adaptCodexFrontmatter(adapted, skillId);
+	if (target === "codex") return adaptCodexFrontmatter(adapted);
 	if (target === "cursor") return adaptCursorFrontmatter(adapted, skillId);
 	return adapted;
 }

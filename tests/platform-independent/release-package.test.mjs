@@ -353,6 +353,7 @@ test("target archives contain the canonical projection contract and runtime clos
       "plugins/maister/bin/maister-install.mjs",
       "plugins/maister/bin/project-agents.mjs",
       "plugins/maister/lib/distribution/agent-projector.mjs",
+      "plugins/maister/lib/distribution/bridges/codex-bridge-v1.mjs",
       "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/agent-resolver.mjs",
       "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/create-runtime.mjs",
       "plugins/maister/skills/orchestrator-framework/bin/agent-runtime/production-runtime.mjs",
@@ -581,7 +582,7 @@ test("the public CLI keeps one injected GitHub checkout for source and overlay r
     "--home",
     home,
     "--json",
-  ], { env: { ...process.env, XDG_STATE_HOME: state, MAISTER_EVIDENCE_NOW: TEST_EVIDENCE_NOW }, github });
+  ], { env: { ...process.env, XDG_STATE_HOME: state, MAISTER_EVIDENCE_NOW: TEST_EVIDENCE_NOW, MAISTER_CODEX_NATIVE_DEPLOYMENT: "0" }, github });
 
   assert.equal(result.status, 0, result.output);
   const response = JSON.parse(result.output);

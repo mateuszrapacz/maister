@@ -6,7 +6,7 @@
     ]
   },
   "codex-output-schema-v1": {
-    "path": "skills/orchestrator-framework/agent-schemas/advisor.schema.json",
+    "path": "skills/maister-orchestrator-framework/agent-schemas/maister-advisor.schema.json",
     "requiredRole": "maister:advisor"
   },
   "cursor-frontmatter-v1": {

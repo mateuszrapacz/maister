@@ -147,7 +147,15 @@ export function runCodexInvocationScenario({ target = "codex", manifest, provena
   const resolved = scenarioRows(manifest, target, provenance);
   if (!resolved.rows) return { result: "unavailable", reason: resolved.reason };
   for (const scenario of resolved.rows) {
-    const validation = validateObservation({ target, request: requestFor({ target, scenario, provenance }), observation: invoke(requestFor({ target, scenario, provenance })) });
+    const request = requestFor({ target, scenario, provenance });
+    let observation;
+    try {
+      observation = invoke(request);
+    } catch (error) {
+      if (error?.kind === "E_HOST_PROBE_TIMEOUT") throw error;
+      return { result: "unavailable", reason: error?.code ?? "invocation-failed" };
+    }
+    const validation = validateObservation({ target, request, observation });
     if (validation.result !== "passed") return validation;
   }
   return { result: "passed" };
