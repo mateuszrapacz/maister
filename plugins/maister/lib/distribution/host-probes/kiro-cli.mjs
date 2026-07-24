@@ -43,7 +43,15 @@ function observeKiroCliAgentNames(kiroHome) {
       continue;
     }
     const name = descriptor?.name;
-    if (typeof name === "string" && name.length > 0) nativeRoleExternalIds.push(name);
+    // Kiro keeps user-owned descriptors beside Maister's managed leaves. Only
+    // the reserved Maister namespace belongs to this probe's discovery set.
+    if (
+      typeof name === "string" &&
+      name.length > 0 &&
+      (name === "maister" || name.startsWith("maister-"))
+    ) {
+      nativeRoleExternalIds.push(name);
+    }
   }
   return {
     native_role_external_ids: nativeRoleExternalIds,

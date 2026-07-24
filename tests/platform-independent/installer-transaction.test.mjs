@@ -462,7 +462,9 @@ function addReceiptOwnedStaleLeaf(
 
 function readActiveSnapshot(box, target = "codex") {
 	const active = activePath(box, target);
-	return fs.existsSync(active) ? hashTree(active) : null;
+	return fs.existsSync(active)
+		? hashTree(active, { allowMissingSymlinks: true })
+		: null;
 }
 
 function clearJournals(box, target = "codex") {

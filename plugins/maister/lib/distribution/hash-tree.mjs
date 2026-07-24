@@ -25,7 +25,10 @@ export function hashFile(filePath) {
   }
 }
 
-export function hashTree(root, { ignore = () => false } = {}) {
+export function hashTree(
+  root,
+  { ignore = () => false, allowMissingSymlinks = false } = {},
+) {
   let rootStat;
   try {
     rootStat = fs.statSync(root);
@@ -54,7 +57,9 @@ export function hashTree(root, { ignore = () => false } = {}) {
         entries.push({ path: childRelative, type: "directory", mode });
         visit(child, childRelative);
       } else if (stat.isSymbolicLink()) {
-        const target = assertSafeSymlink(child, realRoot);
+        const target = assertSafeSymlink(child, realRoot, {
+          allowMissing: allowMissingSymlinks,
+        });
         entries.push({ path: childRelative, type: "symlink", mode, target });
       } else if (stat.isFile()) {
         entries.push({

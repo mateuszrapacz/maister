@@ -37,6 +37,7 @@ import {
 import { probeCodex } from "../../plugins/maister/lib/distribution/host-probes/codex.mjs";
 import { probeCursor } from "../../plugins/maister/lib/distribution/host-probes/cursor.mjs";
 import { probeKiroCli } from "../../plugins/maister/lib/distribution/host-probes/kiro-cli.mjs";
+import { runCursorInvocationScenario } from "../../plugins/maister/lib/distribution/host-probes/scenarios/cursor.mjs";
 import {
   assertCleanRepositoryTopology,
   assertCleanTopology,
@@ -749,6 +750,39 @@ test("Kiro E5 fails for a missing observed manifest identity", () => {
   assert.equal(result.records[0].provenance.reason, "native-inventory-mismatch");
 });
 
+test("Kiro E5 ignores unrelated user-owned descriptors beside Maister leaves", () => {
+  const manifest = nativeManifest("kiro-cli");
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "maister-kiro-probe-"));
+  const agents = path.join(home, "agents");
+  fs.mkdirSync(agents, { recursive: true });
+  for (const row of manifest.rows) {
+    fs.writeFileSync(
+      path.join(agents, `${row.native_role_external_id}.json`),
+      `${JSON.stringify({ name: row.native_role_external_id })}\n`,
+    );
+  }
+  fs.writeFileSync(
+    path.join(agents, "user-owned.json"),
+    `${JSON.stringify({ name: "user-owned" })}\n`,
+  );
+  try {
+    const result = probeKiroCli({
+      now: NOW,
+      run: availableVersion,
+      provenance: nativeProvenance("kiro-cli"),
+      manifest,
+      kiroHome: home,
+    });
+    assert.equal(result.records[0].result, "passed");
+    assert.deepEqual(
+      result.records[0].provenance.native_role_external_ids,
+      manifest.rows.map((row) => row.native_role_external_id).sort(),
+    );
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
 test("missing a safe versioned E6 scenario remains unavailable", () => {
   const manifest = nativeManifest("cursor");
   const result = probeCursor({
@@ -759,7 +793,7 @@ test("missing a safe versioned E6 scenario remains unavailable", () => {
     discover: () => ({ native_role_external_ids: manifest.rows.map((row) => row.native_role_external_id) }),
   });
   assert.equal(result.records[1].result, "unavailable");
-  assert.equal(result.records[1].provenance.reason, "scenario-not-configured");
+  assert.equal(result.records[1].provenance.reason, "cursor-live-invocation-unobservable-from-cli");
 });
 
 test("Codex E6 resolves production-shaped namespaced manifest rows for two ordinary roles and advisor", () => {
@@ -845,6 +879,7 @@ test("E6 fails after launch when Cursor reports the wrong native identity", () =
     manifest,
     discover: () => ({ native_role_external_ids: manifest.rows.map((row) => row.native_role_external_id) }),
     invoke: (request) => ({ ...matchingInvocation(request), observed_native_role_external_id: "maister-wrong-role" }),
+    runScenario: runCursorInvocationScenario,
   });
   assert.equal(result.records[1].result, "failed");
   assert.equal(result.records[1].provenance.reason, "wrong-observed-identity");
