@@ -88,7 +88,7 @@
     {
       "source": "next",
       "target": "maister-next",
-      "source_fingerprint": "acc92d956f0aafd5cf21c176b1c800f69db7a0a2f6e4cf90d15b80b8d06d1e74"
+      "source_fingerprint": "dacca84f76a2ceb02e50d37cba07f58a3b987213e7a316ee21fb239fe7fb8fbe"
     },
     {
       "source": "performance",
@@ -148,7 +148,7 @@
     {
       "source": "status",
       "target": "maister-status",
-      "source_fingerprint": "55534be610c9b49af3cb0011e4f8b5e838b7f61dbaf4abfe1d3a50708f1f711e"
+      "source_fingerprint": "c312ad08ffd6a8fda6480df725f3991412fea3faee3545c1ce20f91d67038aac"
     },
     {
       "source": "test-strategy-reviewer",
