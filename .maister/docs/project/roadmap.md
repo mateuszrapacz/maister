@@ -9,6 +9,7 @@
 - Shadow parity and negative topology checks at the migration boundary.
 - Bounded immutable GitHub checkout resolution using the same checkout for source and overlay.
 - Self-contained deterministic target archives with sorted entries, extracted lifecycle smoke, `SHA256SUMS`, CycloneDX artifact inventory, unsigned reproducibility provenance, and pinned release actions.
+- CI uses the supported Node range `>=22 <26` instead of pinning release validation to one major version; the package engine floor remains `>=22`.
 
 ## Next release plan — v2.2.2
 

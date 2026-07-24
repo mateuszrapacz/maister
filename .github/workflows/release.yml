@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RELEASE_NODE_VERSION: "22"
+  RELEASE_NODE_VERSION: ">=22 <26"
   RELEASE_NPM_VERSION: "11.4.2"
 
 jobs:
