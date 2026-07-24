@@ -33,4 +33,5 @@ export {
 };
 
 export { cursorHybridDiscoveryManifest, probeCursorForInstall } from "./cursor.mjs";
+export { kiroCliDiscoveryManifest, probeKiroCliForInstall } from "./kiro-cli.mjs";
 
