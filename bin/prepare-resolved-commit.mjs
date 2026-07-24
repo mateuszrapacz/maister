@@ -13,6 +13,7 @@ const TEMP_PREFIX = `${MANIFEST_NAME}.tmp-`;
 const TEMP_PATTERN = /^\.maister-resolved-commit\.json\.tmp-\d+-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const STABLE_SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u;
 const FULL_COMMIT = /^[0-9a-f]{40}$/u;
+const NPM_RESOLVED_COMMIT = /^(?:git\+)?(?:https?|ssh):\/\/(?:git@)?github\.com\/mateuszrapacz\/maister\.git#([0-9a-f]{40})$/u;
 const GIT_REQUEST = Object.freeze({
   executable: "git",
   argv: Object.freeze(["rev-parse", "--verify", "HEAD^{commit}"]),
@@ -125,6 +126,13 @@ function validateManifest(manifest, packageVersion) {
   }
 }
 
+export function resolvedCommitFromNpmEnvironment(environment = process.env) {
+  const resolved = typeof environment.npm_package_resolved === "string"
+    ? environment.npm_package_resolved
+    : "";
+  return NPM_RESOLVED_COMMIT.exec(resolved)?.[1] ?? null;
+}
+
 function cleanupStaleProducerTemporaries(packageRoot) {
   for (const name of fs.readdirSync(packageRoot)) {
     if (!name.startsWith(TEMP_PREFIX) || !TEMP_PATTERN.test(name)) continue;
@@ -211,6 +219,7 @@ export async function prepareResolvedCommit({
   packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url))),
   runCommand = runBoundedCommand,
   renameFile = fs.renameSync,
+  environment = process.env,
 } = {}) {
   const checkout = captureDirectory(packageRoot);
   const packageJsonPath = path.join(checkout.path, "package.json");
@@ -232,16 +241,19 @@ export async function prepareResolvedCommit({
     argv: [...GIT_REQUEST.argv],
     cwd: checkout.path,
   });
-  const resolvedCommit = result.stdout.toString("utf8").replace(/\n$/u, "");
-  if (
-    result.code !== 0
-    || result.signal !== null
-    || result.timedOut
-    || result.stdoutTruncated
-    || result.stderrTruncated
-    || !FULL_COMMIT.test(resolvedCommit)
-    || result.stdout.length !== resolvedCommit.length + (result.stdout.at(-1) === 0x0a ? 1 : 0)
-  ) {
+  const gitResolvedCommit = result.stdout.toString("utf8").replace(/\n$/u, "");
+  const resolvedCommit = (
+    result.code === 0
+    && result.signal === null
+    && !result.timedOut
+    && !result.stdoutTruncated
+    && !result.stderrTruncated
+    && FULL_COMMIT.test(gitResolvedCommit)
+    && result.stdout.length === gitResolvedCommit.length + (result.stdout.at(-1) === 0x0a ? 1 : 0)
+  )
+    ? gitResolvedCommit
+    : resolvedCommitFromNpmEnvironment(environment);
+  if (!resolvedCommit) {
     throw packageIdentityError("Git did not resolve one lowercase full commit");
   }
 

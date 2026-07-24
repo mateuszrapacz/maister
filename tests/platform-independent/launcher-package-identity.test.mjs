@@ -10,7 +10,10 @@ import {
   readPackageMetadata,
   readResolvedCommitManifest,
 } from "../../lib/launcher/package-contract.mjs";
-import { prepareResolvedCommit } from "../../bin/prepare-resolved-commit.mjs";
+import {
+  prepareResolvedCommit,
+  resolvedCommitFromNpmEnvironment,
+} from "../../bin/prepare-resolved-commit.mjs";
 
 const VERSION = "2.2.1";
 const COMMIT = "0123456789abcdef0123456789abcdef01234567";
@@ -126,6 +129,44 @@ test("prepare records the actual checkout commit with the fixed bounded Git requ
     assert.equal(fs.statSync(path.join(packageRoot, MANIFEST_NAME)).mode & 0o777, 0o600);
   }
   assert.deepEqual(fs.readdirSync(packageRoot).filter((name) => name.startsWith(TEMP_PREFIX)), []);
+});
+
+test("prepare accepts npm's immutable GitHub resolution when npm materializes a tarball without .git", async (t) => {
+  const packageRoot = createPackageRoot(t);
+
+  assert.equal(
+    resolvedCommitFromNpmEnvironment({
+      npm_package_resolved: "git+https://github.com/" + PACKAGE_REPOSITORY + ".git#" + COMMIT,
+    }),
+    COMMIT,
+  );
+  assert.equal(
+    resolvedCommitFromNpmEnvironment({
+      npm_package_resolved: "git+https://github.com/" + PACKAGE_REPOSITORY + ".git#v2.2.2",
+    }),
+    null,
+  );
+
+  const manifest = await prepareResolvedCommit({
+    packageRoot,
+    environment: {
+      npm_package_resolved: "git+https://github.com/" + PACKAGE_REPOSITORY + ".git#" + COMMIT,
+    },
+    async runCommand() {
+      return {
+        code: 128,
+        signal: null,
+        stdout: Buffer.alloc(0),
+        stderr: Buffer.from("fatal: not a git repository\n"),
+        timedOut: false,
+        stdoutTruncated: false,
+        stderrTruncated: false,
+      };
+    },
+  });
+
+  assert.deepEqual(manifest, validManifest());
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(packageRoot, MANIFEST_NAME), "utf8")), validManifest());
 });
 
 test("failed atomic replacement preserves a prior manifest and cleans only the owned temporary", async (t) => {
